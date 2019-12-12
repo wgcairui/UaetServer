@@ -13,6 +13,7 @@ const SchemaTerminalClient = new Schema({
   DevMac: { type: Number, required: true },
   name: String,
   Jw: String,
+  mountNode: String,
   mountDev: { type: String, required: true }, // 模块挂载设备
   protocol: { type: String, required: true }, // 模块挂载协议
   registerDate: { type: Date, default: new Date() }
