@@ -1,46 +1,54 @@
 const { ApolloServer, gql } = require("apollo-server-koa");
+const { NodeClient } = require("../mongoose/node");
 
 const typeDefs = gql`
   scalar Date
   #data type
-  type user {
-    userId: ID
-    name: String
-    user: String
-    userGroup: String
-    mail: String
-    orgin: String
-    tel: Int
-    creatTime: Date
-    modifyTime: Date
-    address: String
-    status: Boolean
-  }
   type result {
     msg: String
     ok: Int
     n: Int
     nModified: Int
   }
-
+  type Node {
+    Name: String
+    IP: String
+    Port: Int
+    MaxConnections: String
+  }
   #Query
   type Query {
-    hello: String
-    User(user: String, mail: String): user
-    Users: [user]
+    #
+    Node(IP: String, Name: String): Node
   }
 
   #mutation
   type Mutation {
     #admin
-    modify_select_user(user: String): result
-    disable_select_user(user: String, status: Boolean): result
-    delete_select_user(user: String): result
-    #register
-    userRegister(arg: String): result
+    setNode(arg: String): result
   }
 `;
 
-const resolvers = {};
+const resolvers = {
+  Query: {
+    async Node(root, { IP, Name }) {
+      // eslint-disable-next-line no-return-await
+      return await NodeClient.findOne({
+        $or: [{ IP: IP || "" }, { Name: Name || "" }]
+      });
+    }
+  },
+  Mutation: {
+    async setNode(root, { arg }) {
+      const { Name, IP, Port, MaxConnections } = JSON.parse(arg);
+      // eslint-disable-next-line no-return-await
+      return await NodeClient.updateOne(
+        { IP },
+        { $set: { Name, Port, MaxConnections } },
+        { upsert: true }
+      );
+    }
+  }
+};
 
 module.exports = new ApolloServer({ typeDefs, resolvers });

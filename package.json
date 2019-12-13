@@ -37,7 +37,8 @@
     "koa-socket-2": "^1.2.0",
     "mongoose": "^5.8.0",
     "npm": "^6.13.4",
-    "nuxt": "^2.0.0"
+    "nuxt": "^2.0.0",
+    "vue-notifications": "^1.0.2"
   },
   "devDependencies": {
     "nodemon": "^1.18.9",

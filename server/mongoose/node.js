@@ -27,12 +27,14 @@ const SchemaTerminalClientResult = new Schema({
   time: Date
 });
 
-export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
-export const TerminalClient = mongoose.model(
+const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
+const TerminalClient = mongoose.model(
   "NodeTerminalClient",
   SchemaTerminalClient
 );
-export const TerminalClientResult = mongoose.model(
+const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
   SchemaTerminalClientResult
 );
+
+module.exports = { NodeClient, TerminalClient, TerminalClientResult };
