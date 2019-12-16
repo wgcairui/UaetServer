@@ -23,6 +23,14 @@
       </b-form-group>
       <b-button block @click="submit">提交</b-button>
     </b-form>
+    <b-table-lite
+      :items="Nodes"
+      :fields="['Name', 'IP', 'Port', 'MaxConnections', 'oprate']"
+    >
+      <template v-slot:cell(oprate)="row">
+        <b-button @click="deleteNode(row.item)">delete</b-button>
+      </template>
+    </b-table-lite>
   </div>
 </template>
 <script>
@@ -39,7 +47,8 @@ export default {
         Port: 9000,
         MaxConnections: 2000
       },
-      apolloIP: null
+      apolloIP: null,
+      Nodes: []
     };
   },
   computed: {
@@ -59,14 +68,14 @@ export default {
         this.accont.Name = newVal.Name;
         this.accont.Port = newVal.Port;
         this.accont.MaxConnections = newVal.MaxConnections;
-        this.$bvToast.toast("节点已存在",{toaster:"b-toaster-top-full"})
+        this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" });
       }
     }
   },
   apollo: {
     apolloIP: {
       query: gql`
-        query getNodeIpSat($IP: String,) {
+        query getNodeIpSat($IP: String) {
           Node(IP: $IP) {
             Name
             IP
@@ -77,11 +86,24 @@ export default {
       `,
       variables() {
         return {
-          IP: this.accont.IP,
+          IP: this.accont.IP
         };
       },
-      update: (data) => data.Node
-    }
+      update: (data) => data.Node,
+      skip() {
+        return this.accont.IP.split(".").length < 4;
+      }
+    },
+    Nodes: gql`
+      {
+        Nodes {
+          Name
+          IP
+          Port
+          MaxConnections
+        }
+      }
+    `
   },
   methods: {
     submit() {
@@ -102,7 +124,27 @@ export default {
             arg: JSON.stringify(this.$data.accont)
           }
         })
-        .then((res) => console.log(res));
+        .then((res) => {
+          this.$apollo.queries.Nodes.refresh();
+          this.$bvModal.msgBoxOk("添加节点成功");
+        });
+    },
+    deleteNode(item) {
+      this.$apollo
+        .mutate({
+          mutation: gql`
+            mutation deleteNode($IP: String) {
+              deleteNode(IP: $IP) {
+                ok
+                msg
+              }
+            }
+          `,
+          variables: {
+            IP: item.IP
+          }
+        })
+        .then(() => this.$apollo.queries.Nodes.refresh());
     }
   }
 };

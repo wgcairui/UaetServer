@@ -14,9 +14,13 @@ const SchemaTerminalClient = new Schema({
   name: String,
   Jw: String,
   mountNode: String,
-  mountDev: { type: String, required: true }, // 模块挂载设备
-  protocol: { type: String, required: true }, // 模块挂载协议
-  registerDate: { type: Date, default: new Date() }
+  mountDevs: [
+    new Schema({
+      mountDev: { type: String, required: true }, // 模块挂载设备
+      protocol: { type: String, required: true }, // 模块挂载协议
+      registerDate: { type: Date, default: new Date() }
+    })
+  ]
 });
 // 终端设备上传数据
 const SchemaTerminalClientResult = new Schema({

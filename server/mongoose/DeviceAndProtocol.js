@@ -30,10 +30,18 @@ const SchemaProtocols = new Schema({
       shiftNum: { type: Number, default: 1 },
       pop: { type: Boolean, default: false },
       popNum: { type: Number, default: 1 },
-      resize: [[String]] // 分割结果 [["power","1-5"，1]]代表第一和第五个字符是结果，倍率为1不修改结果，否则结果×倍率
+      resize: String,
+      formResize: [
+        new Schema({
+          name: String,
+          regx: String,
+          bl: Number
+        })
+      ] // 分割结果 [["power","1-5"，1]]代表第一和第五个字符是结果，倍率为1不修改结果，否则结果×倍率
     })
   ]
 });
 
-export const DevsType = mongoose.model("DevType", SchemaDev);
-export const DeviceProtocol = mongoose.model("DeviceProtocol", SchemaProtocols);
+const DevsType = mongoose.model("DevType", SchemaDev);
+const DeviceProtocol = mongoose.model("DeviceProtocol", SchemaProtocols);
+module.exports = { DeviceProtocol, DevsType };
