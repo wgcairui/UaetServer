@@ -8,6 +8,16 @@ const SchemaNodeClient = new Schema({
   MaxConnections: Number,
   clients: [String]
 });
+// 节点状态流
+const SchemaNodeRunInfo = new Schema({
+  hostname: String,
+  totalmem: String,
+  freemem: String,
+  loadavg: String,
+  type: String,
+  uptime: Date
+});
+
 // 4G终端信息
 const SchemaTerminalClient = new Schema({
   DevMac: { type: Number, required: true },
@@ -40,5 +50,11 @@ const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
   SchemaTerminalClientResult
 );
+const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
-module.exports = { NodeClient, TerminalClient, TerminalClientResult };
+module.exports = {
+  NodeClient,
+  TerminalClient,
+  TerminalClientResult,
+  NodeRunInfo
+};

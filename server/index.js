@@ -13,12 +13,17 @@ const Socket = require("./socket/socket.node");
 const ApolloServer = require("./apollo/apollo");
 // Router
 const router = require("./router/index");
+// Event
+const Event = require("./event/index");
 
 const app = new Koa();
 
+// new Socket
 const ioNode = new Socket({ namespace: "Node" });
 ioNode.attach(app);
+Event.attach(app);
 
+// new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
 
 app.use(error());

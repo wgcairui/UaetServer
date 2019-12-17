@@ -5,7 +5,7 @@ module.exports = async (ctx, next) => {
   console.log(type);
 
   const body = ctx.request.body;
-  // console.log(body.data);
+  console.log(body.data);
 
   await next();
 };
