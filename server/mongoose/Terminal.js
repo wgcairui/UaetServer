@@ -3,6 +3,7 @@ const { mongoose, Schema } = require("./index");
 const SchemaTerminal = new Schema({
   DevMac: { type: String, required: true },
   name: { type: String, required: true },
+  Jw: String,
   mountNode: { type: String, required: true },
   mountDevs: [
     new Schema({

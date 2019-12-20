@@ -5,47 +5,46 @@ const SchemaNodeClient = new Schema({
   Name: String,
   IP: String,
   Port: Number,
-  MaxConnections: Number,
-  clients: [String]
+  MaxConnections: Number
 });
 // 节点状态流
 const SchemaNodeRunInfo = new Schema({
+  updateTime: { type: Date, default: new Date() },
   hostname: String,
   totalmem: String,
   freemem: String,
-  loadavg: String,
+  loadavg: [Number],
   type: String,
-  uptime: Date
-});
-
-// 4G终端信息
-const SchemaTerminalClient = new Schema({
-  DevMac: { type: Number, required: true },
-  name: String,
-  Jw: String,
-  mountNode: String,
-  mountDevs: [
+  uptime: String,
+  NodeName: String,
+  Connections: Number,
+  SocketMaps: [
     new Schema({
-      mountDev: { type: String, required: true }, // 模块挂载设备
-      protocol: { type: String, required: true }, // 模块挂载协议
-      registerDate: { type: Date, default: new Date() }
+      _id: false,
+      mac: String,
+      port: Number,
+      ip: String,
+      jw: String
     })
   ]
 });
+
 // 终端设备上传数据
 const SchemaTerminalClientResult = new Schema({
-  mac: { type: Number, required: true },
-  data: [Number],
-  content: String,
+  stat: String,
+  buffer: new Schema({
+    type: String,
+    data: [Number]
+  }),
+  time: Date,
+  mac: String,
   type: Number,
-  time: Date
+  protocol: String,
+  content: String
 });
 
 const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
-const TerminalClient = mongoose.model(
-  "NodeTerminalClient",
-  SchemaTerminalClient
-);
+
 const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
   SchemaTerminalClientResult
@@ -54,7 +53,6 @@ const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
 module.exports = {
   NodeClient,
-  TerminalClient,
   TerminalClientResult,
   NodeRunInfo
 };

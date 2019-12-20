@@ -1,7 +1,7 @@
 module.exports = {
   runArg: {
     Query: {
-      Inteltime: 10000
+      Inteltime: 2000
     }
   }
 };

@@ -1,5 +1,6 @@
 const EventEmitter = require("events");
 const config = require("../config");
+const Query = require("../bin/Query");
 const { NodeClient } = require("../mongoose/node");
 class Event extends EventEmitter {
   constructor() {
@@ -10,6 +11,8 @@ class Event extends EventEmitter {
       disNodeClient: "disNodeClient",
       connectNodeClient: "connectNodeClient"
     };
+    //
+    this.Query = new Query();
     // 节点IP->socketID
     this.nodeIPSocketIDMaps = new Map();
     // 节点登记信息
@@ -18,7 +21,10 @@ class Event extends EventEmitter {
     this.QueryNode = new Map();
     this.start();
   }
-  start() {
+
+  async start() {
+    //
+    await this.Query.start();
     // 挂载监听
     // 初始化数据填充
     this.on(this.env.addNodeClient, this.addNodeClient)
@@ -26,20 +32,27 @@ class Event extends EventEmitter {
       .on(this.env.disNodeClient, this._disNodeClient)
       .emit(this.env.addNodeClient);
   }
-  _connectNodeClient({ IP, socket }) {
-    this.nodeIPSocketIDMaps.set(IP, socket.id);
-    socket.emit("registerSuccess", this.nodeRegisterInfo.get(IP));
-    this.QueryNode.set(IP, function() {
-      setInterval(() => {}, config.runArg.Query);
-    });
-  }
-  _disNodeClient({ IP }) {
-    this.nodeIPSocketIDMaps.delete(IP);
-    this.QueryNode.delete(IP);
-  }
   attach(app) {
     app.context.Event = this;
   }
+  _connectNodeClient({ IP, socket, data }) {
+    this.nodeIPSocketIDMaps.set(IP, socket.id);
+    const registerInfo = this.nodeRegisterInfo.get(IP);
+
+    socket.emit("registerSuccess", registerInfo);
+    this.QueryNode.set(
+      IP,
+      setInterval(() => {
+        this.Query.SendQuery({ IP, socket });
+      }, config.runArg.Query.Inteltime)
+    );
+  }
+  _disNodeClient({ IP }) {
+    // this.nodeIPSocketIDMaps.set(IP,null);
+    clearInterval(this.QueryNode.get(IP));
+    // this.QueryNode.delete(IP);
+  }
+
   async addNodeClient(ip) {
     const node = await NodeClient.find();
     if (this.nodeIPSocketIDMaps.size === 0) {
