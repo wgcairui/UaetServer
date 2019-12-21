@@ -152,7 +152,7 @@
 </template>
 
 <script>
-import separated from "../../components/separated";
+import separated from "~/components/separated";
 import gql from "graphql-tag";
 export default {
   components: {

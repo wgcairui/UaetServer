@@ -19,10 +19,10 @@ export default {
   data() {
     return {
       navItem: [
-        { to: { name: "tool-addTerminal" }, text: "添加终端" },
-        { to: { name: "tool-addDev" }, text: "添加设备类型" },
-        { to: { name: "tool-addNode" }, text: "添加节点" },
-        { to: { name: "tool-addProtocol" }, text: "添加协议" }
+        { to: { name: "tool-index-addTerminal" }, text: "添加终端" },
+        { to: { name: "tool-index-addDev" }, text: "添加设备类型" },
+        { to: { name: "tool-index-addNode" }, text: "添加节点" },
+        { to: { name: "tool-index-addProtocol" }, text: "添加协议" }
       ]
     };
   },
