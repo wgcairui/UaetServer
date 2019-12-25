@@ -1,20 +1,20 @@
 <template>
   <b-container fluid>
-    <headers :title="this.$route.name">
+    <my-head :title="this.$route.name">
       <b-nav>
         <b-nav-item v-for="(i, key) in navItem" :key="key" v-bind="i">{{
           i.text
         }}</b-nav-item>
       </b-nav>
-    </headers>
+    </my-head>
     <nuxt  class=" py-4" />
   </b-container>
 </template>
 <script>
-import Headers from "~/components/Header.vue";
+import MyHead from "~/components/MyHead.vue";
 export default {
   components: {
-    Headers
+    MyHead
   },
   data() {
     return {

@@ -1,0 +1,163 @@
+<template>
+  <b-container fluid>
+    <my-head title="注册"></my-head>
+    <b-container>
+      <b-row class="h-75">
+        <b-col
+          cols="12"
+          ref="loginBody"
+          class="d-flex flex-column h-auto w-50 p-4"
+        >
+          <b-form>
+            <b-form-group label="账号:" label-for="user" v-bind="label">
+              <b-form-input
+                id="user"
+                v-model.trim="accont.user"
+                :state="userStat"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group label="昵称：" label-for="name" v-bind="label">
+              <b-form-input id="name" v-model.trim="accont.name"></b-form-input>
+            </b-form-group>
+            <b-form-group label="密码:" label-for="passwd" v-bind="label">
+              <b-form-input
+                id="passwd"
+                type="password"
+                v-model.trim="accont.passwd"
+                :state="passwdStat"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group label="重复密码:" label-for="passwd2" v-bind="label">
+              <b-form-input
+                id="passwd2"
+                type="password"
+                v-model.trim="accont.passwd2"
+                :state="passwd2Stat"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group label="邮箱:" label-for="mail" v-bind="label">
+              <b-form-input
+                id="mail"
+                v-model.trim="accont.mail"
+                :state="mailStat"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group label="组织:" label-for="company" v-bind="label">
+              <b-form-input
+                id="company"
+                v-model.trim="accont.company"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group class="p-3">
+              <b-button @click="register" block variant="info">
+                注册
+              </b-button>
+            </b-form-group>
+          </b-form>
+        </b-col>
+      </b-row>
+    </b-container>
+  </b-container>
+</template>
+<script>
+import MyHead from "~/components/MyHead";
+import gql from "graphql-tag";
+export default {
+  auth: false,
+  components: {
+    MyHead
+  },
+  data() {
+    return {
+      label: {
+        labelCols: "12",
+        labelColsSm: "2",
+        labelAlignSm: "right"
+      },
+      accont: {
+        name: "admin",
+        user: "admin",
+        passwd: "123456",
+        passwd2: "123456",
+        mail: "260338538@qq.com",
+        company: "ladis"
+      },
+      User: null
+    };
+  },
+  computed: {
+    userStat() {
+      console.log(this.User);
+      return (
+        this.accont.user !== "" &&
+        this.accont.user.length < 20 &&
+        this.User !== this.accont.user
+      );
+    },
+    passwdStat() {
+      return this.accont.passwd !== "" && this.accont.passwd.length < 20;
+    },
+    passwd2Stat() {
+      return this.accont.passwd === this.accont.passwd2;
+    },
+    mailStat() {
+      let mailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+      let a = mailReg.test(this.accont.mail);
+      console.log(a);
+      return a;
+    }
+  },
+  apollo: {
+    User: {
+      query: gql`
+        query getUser($user: String) {
+          User(user: $user) {
+            user
+          }
+        }
+      `,
+      variables() {
+        return { user: this.accont.user };
+      },
+      update: (data) => (data.User ? data.User.user : null)
+    }
+  },
+  methods: {
+    register() {
+      let { name, user, passwd, mail, company } = this.$data.accont;
+      if (
+        !this.userStat ||
+        !this.passwdStat ||
+        !this.passwd2Stat ||
+        !this.mailStat
+      )
+        return this.$bvModal.msgBoxOk("输入的参数格式错误");
+      this.$apollo
+        .mutate({
+          mutation: gql`
+            mutation addUserAccont($arg: JSON) {
+              addUser(arg: $arg) {
+                ok
+                msg
+              }
+            }
+          `,
+          variables: {
+            arg: { name, user, passwd, mail, company }
+          }
+        })
+        .then(({ data }) => {
+          if (data.addUser.ok && data.addUser.ok == 1) {
+            this.$bvModal
+              .msgBoxOk(data.addUser.msg)
+              .then((stat) => this.$router.push({ name: "login" }));
+          } else this.$bvModal.msgBoxOk(data.addUser.msg);
+        })
+        .catch((e) => {
+          console.log(e);
+          this.$bvModal.msgBoxOk("提交错误，请检查网络是否连接");
+        });
+    }
+  }
+};
+</script>

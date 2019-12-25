@@ -1,7 +1,7 @@
 module.exports = {
   mode: "spa",
   server: {
-    // host: "0.0.0.0",
+    host: process.env.NODE_ENV === "production" ? "116.62.48.175" : "0.0.0.0",
     port: 9010
   },
   /*
@@ -27,7 +27,7 @@ module.exports = {
   /*
    ** Global CSS
    */
-  css: [],
+  css: ["~/assets/iconfont.css"],
   /*
    ** Plugins to load before mounting the App
    */
@@ -50,8 +50,44 @@ module.exports = {
     // Doc: https://axios.nuxtjs.org/usage
     "@nuxtjs/axios",
     // https://npm.taobao.org/package/%40nuxtjs%2Fapollo
-    "@nuxtjs/apollo"
+    "@nuxtjs/apollo",
+    // https://auth.nuxtjs.org/
+    "@nuxtjs/auth"
   ],
+  axios: {
+    proxy: true, // Can be also an object with default options
+    // baseURL: process.env.NODE_ENV === "production" ? "116.62.48.175" : "localhost"
+    // proxy: true,
+    credentials: true
+  },
+  /*
+   ** Axios module configuration
+   ** See https://axios.nuxtjs.org/options
+   */
+  // https://auth.nuxtjs.org/schemes/local.html
+  auth: {
+    strategies: {
+      local: {
+        endpoints: {
+          login: {
+            url: "/api/auth/login",
+            method: "post",
+            propertyName: "token"
+          },
+          logout: { url: "/api/auth/logout", method: "post" },
+          user: { url: "/api/auth/user", method: "get", propertyName: "user" }
+        },
+        tokenRequired: true,
+        tokenType: "bearer"
+      }
+    },
+    redirect: {
+      login: "/login",
+      logout: "/login",
+      // callback: '/admin/edit',
+      home: "/"
+    }
+  },
   // Give apollo module options
   apollo: {
     tokenName: "Uart", // optional, default: apollo-token
@@ -109,11 +145,6 @@ module.exports = {
     }
   },
   /*
-   ** Axios module configuration
-   ** See https://axios.nuxtjs.org/options
-   */
-  axios: {},
-  /*
    ** Build configuration
    */
   build: {
@@ -121,5 +152,8 @@ module.exports = {
      ** You can extend webpack config here
      */
     extend(config, ctx) {}
+  },
+  router: {
+    middleware: ["auth"]
   }
 };

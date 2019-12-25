@@ -103,7 +103,7 @@
   </div>
 </template>
 <script>
-import Headers from "~/components/Header.vue";
+import Headers from "~/components/MyHead.vue";
 import gql from "graphql-tag";
 export default {
   components: {

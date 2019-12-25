@@ -4,6 +4,7 @@ const Koa = require("koa");
 const consola = require("consola");
 const body = require("koa-body");
 const error = require("koa-error");
+// const koaLogger = require("koa-logger");
 const cors = require("@koa/cors");
 // nuxt
 const { Nuxt, Builder } = require("nuxt");
@@ -26,6 +27,7 @@ Event.attach(app);
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
 
+// app.use(koaLogger());
 app.use(error());
 app.use(body());
 app.use(cors());

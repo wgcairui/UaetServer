@@ -14,11 +14,15 @@ module.exports = async (ctx, next) => {
     case "RunData":
       {
         const { NodeInfo, TcpServer } = body;
+        console.log({ ...TcpServer });
+
         NodeRunInfo.updateOne(
           { NodeName: TcpServer.NodeName },
           { $set: { ...TcpServer, ...NodeInfo } },
           { upsert: true }
-        );
+        )
+          .then((res) => console.log(res))
+          .catch((e) => console.log(e));
       }
       break;
 
