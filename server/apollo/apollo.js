@@ -5,6 +5,7 @@ const { ApolloServer, gql } = require("apollo-server-koa");
 const { GraphQLJSON, GraphQLJSONObject } = require("graphql-type-json");
 
 const { BcryptDo } = require("../bin/bcrypt");
+const { JwtVerify } = require("../bin/Secret");
 
 const { NodeClient, NodeRunInfo } = require("../mongoose/node");
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
@@ -171,7 +172,7 @@ const resolvers = {
       return await NodeRunInfo.find(NodeName ? { NodeName } : {});
     },
     // 用户
-    async User(root, { user }) {
+    async User(root, { user }, ctx) {
       return await Users.findOne({ user });
     },
     async Users() {
@@ -262,4 +263,12 @@ const resolvers = {
   }
 };
 
-module.exports = new ApolloServer({ typeDefs, resolvers });
+const context = ({ ctx }) => {
+  const token = ctx.cookies.get("auth._token.local");
+  if (!token) throw new Error("you must be logged in");
+  const user = JwtVerify(token.slice(9, token.length));
+  if (!user || !user.user) throw new Error("you must be logged in");
+  return { ...user, loggedIn: true };
+};
+
+module.exports = new ApolloServer({ typeDefs, resolvers, context });

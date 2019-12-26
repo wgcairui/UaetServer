@@ -1,9 +1,15 @@
 /* eslint-disable */
 <template>
-  <b-col cols="12" class=" border-bottom m-2 p-1"
-    ><span @click="backto" v-show="back"
-      ><i class=" el-icon-back"></i><span class=" text-dark mx-2">|</span></span
-    ><b>{{ title }}</b>
+  <b-col cols="12" class=" border-bottom m-2 p-1 d-flex flex-row">
+    <div>
+      <span @click="backto" v-show="back"
+        ><i class=" el-icon-back"></i
+        ><span class=" text-dark mx-2">|</span></span
+      ><b>{{ title }}</b>
+    </div>
+    <div class=" ml-auto">
+      <slot></slot>
+    </div>
   </b-col>
 </template>
 

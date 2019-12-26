@@ -8,20 +8,17 @@ module.exports = async (ctx) => {
   const body = ctx.request.body;
   switch (type) {
     case "login":
-      const result = { state: false, msg: "" };
       const { user, passwd } = body;
       const u = await Users.findOne({ $or: [{ user }, { mail: user }] });
-      if (!u) result.msg = "账号错误，没有此用户";
-      const psSata = BcryptCompare(passwd, u.passwd);
-      console.log(psSata);
 
-      if (!psSata) result.msg = "密码错误";
-      if (psSata) {
-        result.state = true;
-        result.msg = "validation success";
-        result.token = JwtSign({ payload: { user } });
-      }
-      ctx.body = result;
+      ctx.assert(u, 400, "userNan");
+
+      const pwStat = await BcryptCompare(passwd, u.passwd);
+      console.log(pwStat);
+      ctx.assert(pwStat, 400, "passwdError");
+      // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
+      if (u && pwStat) ctx.body = { token: JwtSign({ payload: { user } }) };
+
       break;
     case "logout":
       ctx.body = await new Promise((resolve) => {
