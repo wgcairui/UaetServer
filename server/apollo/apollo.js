@@ -10,7 +10,7 @@ const { JwtVerify } = require("../bin/Secret");
 const { NodeClient, NodeRunInfo } = require("../mongoose/node");
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
 const { Terminal } = require("../mongoose/Terminal");
-const { Users } = require("../mongoose/user");
+const { Users, UserBindDevice } = require("../mongoose/user");
 
 const typeDefs = gql`
   scalar Date
@@ -100,6 +100,11 @@ const typeDefs = gql`
     status: Boolean
     messageId: String
   }
+  # 用户绑定的设备
+  type BindDevice {
+    user: String
+    UTs: [Terminal]
+  }
   #Query
   type Query {
     #tool
@@ -116,6 +121,8 @@ const typeDefs = gql`
     #user
     User(user: String): User
     Users: [User]
+    #BindDevice
+    BindDevice: BindDevice
   }
 
   #mutation
@@ -132,6 +139,8 @@ const typeDefs = gql`
     addTerminalMountDev(arg: JSON): result
     #User
     addUser(arg: JSON): result
+    #addUserTerminal
+    addUserTerminal(type: String, id: String): result
   }
 `;
 
@@ -177,8 +186,16 @@ const resolvers = {
     },
     async Users() {
       return await Users.find();
+    },
+    // 绑定设备信息
+    async BindDevice(root, arg, ctx) {
+      const Bind = await UserBindDevice.findOne({ user: ctx.user }).lean();
+      if (!Bind) return null;
+      Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } });
+      return Bind;
     }
   },
+
   Mutation: {
     // 设置节点
     async setNode(root, { arg }) {
@@ -259,6 +276,23 @@ const resolvers = {
           return { ok: 1, msg: "账号注册成功" };
         })
         .catch((e) => console.log(e));
+    },
+    // 添加用户绑定终端
+    async addUserTerminal(root, { type, id }, ctx) {
+      switch (type) {
+        case "UT":
+          return await UserBindDevice.updateOne(
+            { user: ctx.user },
+            { $addToSet: { UTs: id } },
+            { upsert: true }
+          );
+        case "EC":
+          return await UserBindDevice.updateOne(
+            { user: ctx.user },
+            { $addToSet: { ECs: id } },
+            { upsert: true }
+          );
+      }
     }
   }
 };
