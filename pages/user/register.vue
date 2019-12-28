@@ -1,5 +1,5 @@
 <template>
-  <b-container fluid>
+  <b-container fluid class="p-0">
     <my-head title="注册"></my-head>
     <b-container>
       <b-row class="h-75">
@@ -87,7 +87,6 @@ export default {
   },
   computed: {
     userStat() {
-      console.log(this.User);
       return (
         this.accont.user !== "" &&
         this.accont.user.length < 20 &&
@@ -102,9 +101,7 @@ export default {
     },
     mailStat() {
       let mailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
-      let a = mailReg.test(this.accont.mail);
-      console.log(a);
-      return a;
+      return mailReg.test(this.accont.mail);
     }
   },
   apollo: {
@@ -154,7 +151,6 @@ export default {
           } else this.$bvModal.msgBoxOk(data.addUser.msg);
         })
         .catch((e) => {
-          console.log(e);
           this.$bvModal.msgBoxOk("提交错误，请检查网络是否连接");
         });
     }

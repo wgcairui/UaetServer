@@ -1,6 +1,6 @@
 /* eslint-disable */
 <template>
-  <b-col cols="12" class=" border-bottom m-2 p-1 d-flex flex-row">
+  <b-col cols="12" class=" border-bottom my-2 px-3 d-flex flex-row">
     <div>
       <span @click="backto" v-show="back"
         ><i class=" el-icon-back"></i

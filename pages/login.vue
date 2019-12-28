@@ -13,10 +13,10 @@
               <h4 class="text-success login-left">login</h4>
               <div class=" ml-auto">
                 <b-link class="m-1 text-info" :to="{ name: 'user-register' }">
-                  Register
+                  注册
                 </b-link>
                 <b-link class="m-1 ml-2 text-info" :to="{ name: 'user-reset' }"
-                  >reset</b-link
+                  >重置</b-link
                 >
               </div>
             </div>

@@ -10,6 +10,7 @@ const { JwtVerify } = require("../bin/Secret");
 const { NodeClient, NodeRunInfo } = require("../mongoose/node");
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
 const { Terminal } = require("../mongoose/Terminal");
+const { EcTerminal } = require("../mongoose/EnvironmentalControl");
 const { Users, UserBindDevice } = require("../mongoose/user");
 
 const typeDefs = gql`
@@ -66,6 +67,12 @@ const typeDefs = gql`
     mountNode: String
     mountDevs: [MountDev]
   }
+  #环控
+  type ECterminal {
+    ECid: String
+    name: String
+    model: String
+  }
   #节点的socket终端数据
   type NodeInfoTerminal {
     mac: String
@@ -104,6 +111,7 @@ const typeDefs = gql`
   type BindDevice {
     user: String
     UTs: [Terminal]
+    ECs: [ECterminal]
   }
   #Query
   type Query {
@@ -116,13 +124,19 @@ const typeDefs = gql`
     DevTypes: [DevType]
     Terminal(DevMac: String): Terminal
     Terminals: [Terminal]
+    ECterminal(ECid: String): ECterminal
+    EcTerminals: [ECterminal]
     #admin
     NodeInfo(NodeName: String): [NodeInfo]
     #user
     User(user: String): User
     Users: [User]
     #BindDevice
+    #由ctx提供user
     BindDevice: BindDevice
+    BindDevices: [BindDevice]
+    #获取用户组
+    userGroup: String
   }
 
   #mutation
@@ -176,6 +190,13 @@ const resolvers = {
     async Terminals() {
       return await Terminal.find();
     },
+    // 环控终端信息
+    async ECterminal(root, { ECid }) {
+      return await EcTerminal.findOne({ ECid });
+    },
+    EcTerminals: async () => {
+      return await EcTerminal.find({});
+    },
     // 节点信息
     async NodeInfo(root, { NodeName }) {
       return await NodeRunInfo.find(NodeName ? { NodeName } : {});
@@ -192,7 +213,21 @@ const resolvers = {
       const Bind = await UserBindDevice.findOne({ user: ctx.user }).lean();
       if (!Bind) return null;
       Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } });
+      Bind.ECs = await EcTerminal.find({ ECid: { $in: Bind.ECs } });
       return Bind;
+    },
+    async BindDevices() {
+      const Bind = await UserBindDevice.find({}).lean();
+      if (!Bind || Bind.length === 0) return null;
+      Bind.forEach(async (el) => {
+        el.UTs = await Terminal.find({ DevMac: { $in: el.UTs } });
+      });
+      // Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } });
+      return await Bind;
+    },
+    // 获取用户组
+    userGroup(root, arg, ctx) {
+      return ctx.userGroup;
     }
   },
 
@@ -298,9 +333,20 @@ const resolvers = {
 };
 
 const context = ({ ctx }) => {
+  // 获取Token
   const token = ctx.cookies.get("auth._token.local");
-  if (!token) throw new Error("you must be logged in");
-  const user = JwtVerify(token.slice(9, token.length));
+  // 没有token则检查body，注册和重置页面的请求则通过
+  if (token === "false") {
+    // 获取gragpl
+    const { operationName } = ctx.request.body;
+    const guestQuery = ["getUser", "addUserAccont"];
+    if (operationName && guestQuery.includes(operationName))
+      return { user: "guest", loggedIn: false };
+    else throw new Error("query error");
+  }
+  // 解构token
+  const user = JwtVerify(token.replace("bearer%20", ""));
+  //
   if (!user || !user.user) throw new Error("you must be logged in");
   return { ...user, loggedIn: true };
 };

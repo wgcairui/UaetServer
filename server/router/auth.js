@@ -9,7 +9,7 @@ module.exports = async (ctx) => {
   switch (type) {
     case "login":
       const { user, passwd } = body;
-      const u = await Users.findOne({ $or: [{ user }, { mail: user }] });
+      const u = await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
 
       ctx.assert(u, 400, "userNan");
 
@@ -17,7 +17,7 @@ module.exports = async (ctx) => {
       console.log(pwStat);
       ctx.assert(pwStat, 400, "passwdError");
       // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
-      if (u && pwStat) ctx.body = { token: JwtSign({ payload: { user } }) };
+      if (u && pwStat) ctx.body = { token: JwtSign({ payload: { ...u } }) };
 
       break;
     case "logout":

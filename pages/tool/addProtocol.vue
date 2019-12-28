@@ -1,7 +1,8 @@
 <template>
   <div>
+    <my-head title="添加设备"></my-head>
     <separated title="添加设备协议"></separated>
-    <b-form>
+    <b-form class="p-3">
       <b-form-group label="协议类型：" v-bind="forGroup">
         <b-form-select
           v-model="accont.Type"
@@ -109,6 +110,7 @@
           </b-form-group>
           <b-form-group label="解析结果" v-bind="forGroup">
             <b-table-lite
+            responsive
               bordered
               :items="formResize"
               :fields="instructResultFields"
@@ -124,7 +126,7 @@
       </b-card-body>
     </b-card>
     <separated title="所有协议指令"></separated>
-    <b-table-lite :items="Protocols" :fields="ProtocolsFields">
+    <b-table-lite :items="Protocols" :fields="ProtocolsFields" responsive>
       <template v-slot:cell(instruct)="row">
         <b-button @click="row.toggleDetails">详情</b-button>
       </template>
@@ -134,6 +136,7 @@
       <template v-slot:row-details="row">
         <b-card>
           <b-table-lite
+          responsive
             :items="row.item.instruct"
             :fields="[
               'name',
@@ -152,11 +155,13 @@
 </template>
 
 <script>
+import MyHead from '@/components/MyHead'
 import separated from "~/components/separated";
 import gql from "graphql-tag";
 export default {
   components: {
-    separated
+    separated,
+    MyHead
   },
   data() {
     return {

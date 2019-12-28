@@ -1,6 +1,7 @@
 <template>
   <div>
-    <b-form>
+    <my-head title="添加节点"></my-head>
+    <b-form class="p-3">
       <b-form-group label="节点名称:" v-bind="forGroup">
         <b-form-input trim v-model="accont.Name"></b-form-input>
       </b-form-group>
@@ -26,6 +27,7 @@
     <b-table-lite
       :items="Nodes"
       :fields="['Name', 'IP', 'Port', 'MaxConnections', 'oprate']"
+      responsive
     >
       <template v-slot:cell(oprate)="row">
         <b-button @click="deleteNode(row.item)">delete</b-button>
@@ -35,9 +37,12 @@
 </template>
 <script>
 //import Vuenotifications from "vue-notifications"
+import MyHead from '@/components/MyHead'
 import gql from "graphql-tag";
-import { ok } from "http-assert";
 export default {
+  components:{
+    MyHead
+  },
   data() {
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },

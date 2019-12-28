@@ -1,6 +1,7 @@
 <template>
   <div>
-    <b-form>
+    <my-head title="添加终端"></my-head>
+    <b-form class=" p-5">
       <b-form-group label="设备Mac:" label-align-sm="right" label-cols-md="2">
         <b-form-input
           number
@@ -38,7 +39,7 @@
       </b-form-group>
       <b-button block @click="addTerminal">提交</b-button>
     </b-form>
-    <b-table-lite :items="Terminals" :fields="TerminalsFields">
+    <b-table-lite :items="Terminals" :fields="TerminalsFields" responsive>
       <template v-slot:cell(mountDevs)="row">
         <i>{{ formMountDevs(row.value) }}</i>
       </template>
@@ -103,11 +104,11 @@
   </div>
 </template>
 <script>
-import Headers from "~/components/MyHead.vue";
+import MyHead from '@/components/MyHead'
 import gql from "graphql-tag";
 export default {
   components: {
-    Headers
+    MyHead
   },
   data() {
     return {

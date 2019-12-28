@@ -1,7 +1,8 @@
 <template>
   <div>
+    <my-head title="添加设备"></my-head>
     <separated title="添加设备"></separated>
-    <b-form>
+    <b-form class=" p-2">
       <b-form-group label="设备型号:" v-bind="forGroup">
         <b-form-input trim v-model="accont.DevModel"></b-form-input>
       </b-form-group>
@@ -36,10 +37,12 @@
 </template>
 <script>
 import separated from "~/components/separated";
+import MyHead from '@/components/MyHead'
 import gql from "graphql-tag";
 export default {
   components: {
-    separated
+    separated,
+    MyHead
   },
   data() {
     return {
