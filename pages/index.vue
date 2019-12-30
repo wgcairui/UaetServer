@@ -60,7 +60,7 @@
       </div>
     </b-navbar>
 
-    <b-row no-gutters class="flex-grow-1">
+    <b-row no-gutters class="flex-grow-1 main-page">
       <transition>
         <nuxt />
       </transition>
@@ -109,5 +109,8 @@ export default {
 .nav-link,
 .dropdown-toggle span {
   color: aliceblue !important;
+}
+.main-page{
+  height: calc(100vh - 57px);
 }
 </style>
