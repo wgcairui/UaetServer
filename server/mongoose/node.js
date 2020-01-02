@@ -33,9 +33,17 @@ const SchemaNodeRunInfo = new Schema({
 const SchemaTerminalClientResult = new Schema({
   stat: String,
   buffer: new Schema({
+    _id: false,
     type: String,
     data: [Number]
   }),
+  result: [
+    new Schema({
+      _id: false,
+      name: String,
+      value: String
+    })
+  ],
   time: Date,
   mac: String,
   type: Number,

@@ -11,21 +11,26 @@
           v-for="(link, key) in BindDevice.UTs"
           :key="key"
         >
-          <b-card>
-            <b-card-title
-              ><i class=" iconfont">&#xec4a;</i>{{ link.name }}</b-card-title
-            >
-            <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
-            <b-card-body>
-              <i class=" iconfont">&#xec24;</i>
-              <span>{{
-                link.mountDevs.reduce(
-                  (res, cur) => res + cur.mountDev + cur.pid + ",",
-                  ""
-                )
-              }}</span>
-            </b-card-body>
-          </b-card>
+          <b-link
+            :to="{ name: 'index-UT', query: { DevMac: link.DevMac } }"
+            class=" text-decoration-none text-dark"
+          >
+            <b-card>
+              <b-card-title
+                ><i class=" iconfont">&#xec4a;</i>{{ link.name }}</b-card-title
+              >
+              <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
+              <b-card-body>
+                <i class=" iconfont">&#xec24;</i>
+                <span>{{
+                  link.mountDevs.reduce(
+                    (res, cur) => res + cur.mountDev + cur.pid + ",",
+                    ""
+                  )
+                }}</span>
+              </b-card-body>
+            </b-card>
+          </b-link>
         </b-col>
       </b-row>
       <b-row id="ECs">
@@ -37,16 +42,21 @@
           v-for="(link, key) in BindDevice.ECs"
           :key="key"
         >
-          <b-card>
-            <b-card-title
-              ><i class=" iconfont">&#xebd8;</i>{{ link.name }}</b-card-title
-            >
-            <b-card-sub-title>&nbsp;{{ link.ECid }}</b-card-sub-title>
-            <b-card-body>
-              <i class=" iconfont">&#xeb63;</i>
-              <span>{{ link.model }}</span>
-            </b-card-body>
-          </b-card>
+          <b-link
+            :to="{ name: 'index-EC', query: { ECid: link.ECid } }"
+            class=" text-decoration-none text-dark"
+          >
+            <b-card>
+              <b-card-title
+                ><i class=" iconfont">&#xebd8;</i>{{ link.name }}</b-card-title
+              >
+              <b-card-sub-title>&nbsp;{{ link.ECid }}</b-card-sub-title>
+              <b-card-body>
+                <i class=" iconfont">&#xeb63;</i>
+                <span>{{ link.model }}</span>
+              </b-card-body>
+            </b-card>
+          </b-link>
         </b-col>
       </b-row>
     </b-container>

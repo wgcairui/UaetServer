@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
-const { TerminalClientResult, NodeRunInfo } = require("../mongoose/node");
+const { NodeRunInfo } = require("../mongoose/node");
+const ProtocolPares = require("../bin/ProtocolPares");
 module.exports = async (ctx, next) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
@@ -8,7 +9,10 @@ module.exports = async (ctx, next) => {
     case "UartData":
       {
         const { data } = body;
-        TerminalClientResult.insertMany(data);
+        console.log(data);
+
+        // eslint-disable-next-line require-await
+        data.forEach(async (el) => ProtocolPares(el));
       }
       break;
     case "RunData":

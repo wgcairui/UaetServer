@@ -25,7 +25,10 @@ const SchemaProtocols = new Schema({
   instruct: [
     new Schema({
       name: String, // 指令名称--GQS
-      resultType: { type: String, enum: ["utf8", "hex"] }, // 怎么格式化返回结果
+      resultType: {
+        type: String,
+        enum: ["utf8", "hex", "float", "short", "int"]
+      }, // 怎么格式化返回结果
       shift: { type: Boolean, default: false }, // 结果是否需要去除头部符号
       shiftNum: { type: Number, default: 1 },
       pop: { type: Boolean, default: false },
