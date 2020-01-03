@@ -6,15 +6,15 @@ module.exports = async (ctx, next) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
   switch (type) {
+    // 透传设备数据上传接口
     case "UartData":
       {
         const { data } = body;
-        console.log(data);
-
         // eslint-disable-next-line require-await
         data.forEach(async (el) => ProtocolPares(el));
       }
       break;
+    // 透传运行数据上传接口
     case "RunData":
       {
         const { NodeInfo, TcpServer } = body;

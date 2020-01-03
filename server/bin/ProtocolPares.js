@@ -1,4 +1,5 @@
 const Event = require("../event/index");
+const Tool = require("../bin/tool");
 const { TerminalClientResult } = require("../mongoose/node");
 
 const pares = (data) => {
@@ -23,6 +24,9 @@ const pares = (data) => {
               valBuf = Number.parseFloat(
                 (valBuf.readInt16BE() * bl).toFixed(1)
               );
+              break;
+            case "float":
+              valBuf = Tool.HexToSingle(valBuf);
               break;
           }
           return { name, value: valBuf };

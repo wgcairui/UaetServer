@@ -7,7 +7,11 @@ const { GraphQLJSON, GraphQLJSONObject } = require("graphql-type-json");
 const { BcryptDo } = require("../bin/bcrypt");
 const { JwtVerify } = require("../bin/Secret");
 
-const { NodeClient, NodeRunInfo } = require("../mongoose/node");
+const {
+  NodeClient,
+  NodeRunInfo,
+  TerminalClientResult
+} = require("../mongoose/node");
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
 const { Terminal } = require("../mongoose/Terminal");
 const { EcTerminal } = require("../mongoose/EnvironmentalControl");
@@ -113,6 +117,21 @@ const typeDefs = gql`
     UTs: [Terminal]
     ECs: [ECterminal]
   }
+  # terminalData
+  type terminalData {
+    name: String
+    value: String
+  }
+  # 透传设备数据
+  type UartTerminalData {
+    stat: String
+    result: [terminalData]
+    time: Date
+    mac: String
+    type: Int
+    protocol: String
+    content: String
+  }
   #Query
   type Query {
     #tool
@@ -137,6 +156,8 @@ const typeDefs = gql`
     BindDevices: [BindDevice]
     #获取用户组
     userGroup: String
+    #获取透传设备数据
+    UartTerminalData(DevMac: String): [UartTerminalData]
   }
 
   #mutation
@@ -228,6 +249,10 @@ const resolvers = {
     // 获取用户组
     userGroup(root, arg, ctx) {
       return ctx.userGroup;
+    },
+    // 获取透传设备数据
+    async UartTerminalData(root, { DevMac }) {
+      return await TerminalClientResult.find({ name: DevMac });
     }
   },
 

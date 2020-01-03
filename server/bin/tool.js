@@ -88,8 +88,11 @@ class Tool {
   // 整数转高低字节
   static Value2BytesInt16(str = 0) {
     const arr = [];
+    // 创建一个空buffer，
     const buffer = Buffer.alloc(2);
-    buffer.writeInt16BE(str);
+    // 写入一个有符号的 16 位整数值，可以是负数
+    buffer.writeInt16BE(Number.parseInt(str));
+    // 转换为高低字节，封装为字节数组
     buffer.forEach((el) => arr.push(el));
     return arr;
   }

@@ -68,7 +68,7 @@
           <b-form-group label="结果集:" v-bind="forGroup">
             <b-form-select
               v-model="instruct.resultType"
-              :options="['hex', 'utf8']"
+              :options="['hex', 'utf8','float','short','int']"
             ></b-form-select>
           </b-form-group>
           <b-form-group label="字符去头处理:" v-bind="forGroup">
