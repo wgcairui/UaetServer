@@ -11,6 +11,7 @@
               class="tree"
               :radius="6"
               @clickedNode="treeSelect"
+              @clickedText="treeSelect"
             >
             </tree>
           </b-card>
@@ -26,32 +27,19 @@ export default {
   components: { tree },
   data() {
     return {
-      Terminal: {
-        name: "father",
-        children: [
-          {
-            name: "son1xssssssssssssssss",
-            value: 345
-          },
-          {
-            name: "son2"
-          },
-          {
-            name: "3"
-          },
-          {
-            name: "3"
-          },
-          {
-            name: "3"
-          }
-        ]
-      },
+      Terminal: null
     };
   },
   methods: {
-    treeSelect(a) {
-      console.log(a);
+    treeSelect({ data }) {
+      let { mountDev, name, children } = data;
+      if (children) return;
+      console.log(mountDev);
+      
+      switch (mountDev) {
+        case "温湿度":
+          break;
+      }
     }
   },
   apollo: {
@@ -74,20 +62,27 @@ export default {
         return { DevMac: this.$route.query.DevMac };
       },
       update: (data) => {
-        let { mountDevs } = data.Terminal;
-        let children = mountDevs.map((el) =>
-          Object.assign(el, { name: el.mountDev })
-        );
-        console.log(Object.assign(data.Terminal, { children }));
-        
-        return Object.assign(data.Terminal, { children });
+        if (!data.Terminal) return { name: "null Node" };
+        const children = data.Terminal.mountDevs.map((el) => ({
+          name: el.mountDev + el.pid,
+          mountDev: el.mountDev
+        }));
+        data.Terminal = Object.assign(data.Terminal, { children });
+        return data.Terminal;
+      },
+      skip() {
+        return false;
       }
     }
   }
 };
 </script>
-<style scoped>
+<style>
 .tree {
   min-height: 368px;
+}
+.treeclass .nodetree text {
+  font-size: 18px !important;
+  word-wrap: break-word;
 }
 </style>

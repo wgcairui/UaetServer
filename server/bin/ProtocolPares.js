@@ -15,6 +15,7 @@ const pares = (data) => {
       {
         const buf = Buffer.from(buffer.data.slice(3, 3 + buffer.data[2]));
         const { formResize, resultType } = instruct;
+        data.pid = buf.slice(0, 1).readUInt8();
         data.result = formResize.map(({ name, regx, bl }) => {
           const [start, len] = regx.split("-");
           let valBuf = buf.slice(start - 1, start - 1 + len);

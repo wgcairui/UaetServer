@@ -44,6 +44,7 @@ const SchemaTerminalClientResult = new Schema({
       value: String
     })
   ],
+  pid: { type: Number, min: 0, max: 255 },
   time: Date,
   mac: String,
   type: Number,

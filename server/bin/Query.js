@@ -63,6 +63,7 @@ class Query {
             mac: DevMac,
             type: Type,
             protocol,
+            pid,
             content: tool.Crc16modbus(pid, name)
           });
         }

@@ -17,6 +17,7 @@ const data = () => {
     time: new Date(),
     mac: "866262045427977",
     type: 485,
+    pid: 0,
     protocol: "温湿度1",
     content: "000300000002c5da"
   };
