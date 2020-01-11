@@ -22,6 +22,7 @@ const SchemaDev = new Schema({
 const SchemaProtocols = new Schema({
   Type: { type: Number, enum: [485, 232] },
   Protocol: String, // 协议名称
+  ProtocolType: { type: String, enum: ["ups", "air", "em", "th"] },
   instruct: [
     new Schema({
       name: String, // 指令名称--GQS
@@ -30,15 +31,18 @@ const SchemaProtocols = new Schema({
         enum: ["utf8", "hex", "float", "short", "int"]
       }, // 怎么格式化返回结果
       shift: { type: Boolean, default: false }, // 结果是否需要去除头部符号
-      shiftNum: { type: Number, default: 1 },
-      pop: { type: Boolean, default: false },
-      popNum: { type: Number, default: 1 },
+      shiftNum: { type: Number, default: 1 }, // 头部去除个数
+      pop: { type: Boolean, default: false }, // 结果是否需要去除尾部部符号
+      popNum: { type: Number, default: 1 }, // 尾部去除个数
       resize: String,
       formResize: [
         new Schema({
+          _id: false,
           name: String,
+          enName: String,
           regx: String,
-          bl: Number
+          bl: Number,
+          unit: String
         })
       ] // 分割结果 [["power","1-5"，1]]代表第一和第五个字符是结果，倍率为1不修改结果，否则结果×倍率
     })

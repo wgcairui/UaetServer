@@ -27,30 +27,37 @@ export default {
   components: { tree },
   data() {
     return {
-      Terminal: null
+      // Terminal: null
     };
   },
+
   methods: {
     treeSelect({ data }) {
       let { mountDev, name, children } = data;
       if (children) return;
       console.log(mountDev);
-      
+
       switch (mountDev) {
         case "温湿度":
+          this.$router.push({
+            name: "Dev-th",
+            query: { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
+          });
           break;
       }
     }
   },
-  apollo: {
-    Terminal: {
+  async asyncData({ route, query, app }) {
+    let client = app.apolloProvider.defaultClient;
+    let { data } = await client.query({
       query: gql`
         query getUserTerminal($DevMac: String) {
           Terminal(DevMac: $DevMac) {
             DevMac
             name
             mountNode
-            mountDevs {
+            children: mountDevs {
+              name: mountDev
               mountDev
               protocol
               pid
@@ -58,22 +65,15 @@ export default {
           }
         }
       `,
-      variables() {
-        return { DevMac: this.$route.query.DevMac };
-      },
-      update: (data) => {
-        if (!data.Terminal) return { name: "null Node" };
-        const children = data.Terminal.mountDevs.map((el) => ({
-          name: el.mountDev + el.pid,
-          mountDev: el.mountDev
-        }));
-        data.Terminal = Object.assign(data.Terminal, { children });
-        return data.Terminal;
-      },
-      skip() {
-        return false;
+      variables: {
+        DevMac: query.DevMac
       }
-    }
+    });
+    let Terminal = data.Terminal;
+    Terminal.children = Terminal.children.map((el) =>
+      Object.assign(el, { name: el.mountDev + el.pid })
+    );
+    return { Terminal };
   }
 };
 </script>

@@ -1,6 +1,10 @@
+/* eslint-disable no-console */
 const Event = require("../event/index");
 const Tool = require("../bin/tool");
-const { TerminalClientResult } = require("../mongoose/node");
+const {
+  TerminalClientResult,
+  TerminalClientResults
+} = require("../mongoose/node");
 
 const pares = (data) => {
   const { buffer, protocol, content, type } = data;
@@ -16,7 +20,7 @@ const pares = (data) => {
         const buf = Buffer.from(buffer.data.slice(3, 3 + buffer.data[2]));
         const { formResize, resultType } = instruct;
         data.pid = buf.slice(0, 1).readUInt8();
-        data.result = formResize.map(({ name, regx, bl }) => {
+        data.result = formResize.map(({ name, regx, bl, unit }) => {
           const [start, len] = regx.split("-");
           let valBuf = buf.slice(start - 1, start - 1 + len);
           switch (resultType) {
@@ -30,12 +34,19 @@ const pares = (data) => {
               valBuf = Tool.HexToSingle(valBuf);
               break;
           }
-          return { name, value: valBuf };
+          return { name, value: valBuf, unit };
         });
       }
       break;
   }
-  new TerminalClientResult(data).save();
+  // 透传结果集保存到数据集，所有数据
+  new TerminalClientResults(data).save();
+  // 透传结果集保存到数据集，最新数据
+  TerminalClientResult.updateOne(
+    { mac: data.mac, pid: data.pid },
+    { $set: { ...data } },
+    { upsert: true }
+  ).catch((e) => console.log(e));
   return data;
 };
 

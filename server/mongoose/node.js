@@ -41,10 +41,11 @@ const SchemaTerminalClientResult = new Schema({
     new Schema({
       _id: false,
       name: String,
-      value: String
+      value: String,
+      unit: String
     })
   ],
-  pid: { type: Number, min: 0, max: 255 },
+  pid: { type: Number, min: 0, max: 255, default: 0 },
   time: Date,
   mac: String,
   type: Number,
@@ -56,12 +57,21 @@ const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
 
 const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
-  SchemaTerminalClientResult
+  SchemaTerminalClientResult,
+  "NodeTerminalClientResult"
 );
+
+const TerminalClientResults = mongoose.model(
+  "NodeTerminalClientResults",
+  SchemaTerminalClientResult,
+  "NodeTerminalClientResults"
+);
+
 const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
 module.exports = {
   NodeClient,
   TerminalClientResult,
+  TerminalClientResults,
   NodeRunInfo
 };

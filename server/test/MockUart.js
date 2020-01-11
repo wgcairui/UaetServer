@@ -27,5 +27,6 @@ console.log(data());
 setInterval(() => {
   axios
     .post("http://127.0.0.1:9010/Api/Node/UartData", { data: [data()] })
-    .then(() => console.log("post success"));
+    .then(() => console.log("post success"))
+    .catch(() => console.log("post error"));
 }, 5000);

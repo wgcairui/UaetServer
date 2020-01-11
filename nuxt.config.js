@@ -31,7 +31,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [],
+  plugins: [{ src: "~/plugins/tree.js", ssr: false }],
   /*
    ** Nuxt.js dev-modules
    */
@@ -52,8 +52,45 @@ module.exports = {
     // https://npm.taobao.org/package/%40nuxtjs%2Fapollo
     "@nuxtjs/apollo",
     // https://auth.nuxtjs.org/
-    "@nuxtjs/auth"
+    "@nuxtjs/auth",
+    // https://nuxt-community.github.io/nuxt-i18n/basic-usage.html#nuxt-link
+    "nuxt-i18n"
   ],
+  //
+  i18n: {
+    locales: [
+      {
+        code: "en",
+        name: "English",
+        iso: "en-US"
+      },
+      {
+        code: "zh",
+        name: "简体中文",
+        iso: "zh-CN"
+      }
+    ],
+    defaultLocale: "zh",
+    vueI18n: {
+      fallbackLocale: "zh",
+      messages: {
+        en: require("./locales/en.json"),
+        zh: require("./locales/zh.json")
+      }
+    },
+    // Routes generation strategy, can be set to one of the following:
+    // - 'no_prefix': routes won't be prefixed
+    // - 'prefix_except_default': add locale prefix for every locale except default
+    // - 'prefix': add locale prefix for every locale
+    // - 'prefix_and_default': add locale prefix for every locale and default
+    strategy: "no_prefix",
+    detectBrowserLanguage: {
+      useCookie: true,
+      alwaysRedirect: true,
+      cookieKey: "UartServer_i18n"
+    }
+  },
+  // axios
   axios: {
     proxy: true, // Can be also an object with default options
     // baseURL: process.env.NODE_ENV === "production" ? "116.62.48.175" : "localhost"
@@ -130,7 +167,7 @@ module.exports = {
     clientConfigs: {
       default: {
         // required
-        httpEndpoint: "http://116.62.48.175:9010",
+        httpEndpoint: "http://127.0.0.1:9010",
         // optional
         // override HTTP endpoint in browser only
         browserHttpEndpoint: "/graphql",
@@ -138,9 +175,17 @@ module.exports = {
         // See https://www.apollographql.com/docs/link/links/http.html#options
         httpLinkOptions: {
           credentials: "same-origin"
-        }
+        },
         // You can use `wss` for secure connection (recommended in production)
         // Use `null` to disable subscriptions
+        // wsEndpoint: "ws://127.0.0.1:9010", // optional
+        // LocalStorage token
+        tokenName: "apollo-token" // optional
+        // Enable Automatic Query persisting with Apollo Engine
+        // persisting: false, // Optional
+        // Use websockets for everything (no HTTP)
+        // You need to pass a `wsEndpoint` for this to work
+        // websocketsOnly: false // Optional
       }
     }
   },

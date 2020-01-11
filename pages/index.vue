@@ -77,7 +77,31 @@ export default {
     };
   },
   created() {
-    this.$apollo.addSmartQuery("userGroup", {
+    this.$apollo
+      .query({
+        query: gql`
+          {
+            userGroup
+          }
+        `
+      })
+      .then(({ data }) => {
+        switch (data.userGroup) {
+          case "admin":
+            this.isUser = false;
+            this.$router.push({ name: "index-tool" });
+            break;
+          case "root":
+            this.isUser = false;
+            this.$router.push({ name: "index-admin" });
+            break;
+          default:
+            this.isUser = true;
+            this.$router.push({ name: "index-Uart" });
+            break;
+        }
+      });
+    /* this.$apollo.addSmartQuery("userGroup", {
       query: gql`
         {
           userGroup
@@ -99,7 +123,7 @@ export default {
             break;
         }
       }
-    });
+    }); */
   }
 };
 </script>
@@ -110,7 +134,7 @@ export default {
 .dropdown-toggle span {
   color: aliceblue !important;
 }
-.main-page{
+.main-page {
   height: calc(100vh - 57px);
 }
 </style>

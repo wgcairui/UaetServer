@@ -10,7 +10,8 @@ const { JwtVerify } = require("../bin/Secret");
 const {
   NodeClient,
   NodeRunInfo,
-  TerminalClientResult
+  TerminalClientResult,
+  TerminalClientResults
 } = require("../mongoose/node");
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
 const { Terminal } = require("../mongoose/Terminal");
@@ -50,6 +51,7 @@ const typeDefs = gql`
   type Protocol {
     Type: String
     Protocol: String
+    ProtocolType: String
     instruct: [ProtocolInstruct]
   }
   #设备类型
@@ -121,11 +123,13 @@ const typeDefs = gql`
   type terminalData {
     name: String
     value: String
+    unit: String
   }
   # 透传设备数据
   type UartTerminalData {
     stat: String
     result: [terminalData]
+    pid: Int
     time: Date
     mac: String
     type: Int
@@ -157,7 +161,14 @@ const typeDefs = gql`
     #获取用户组
     userGroup: String
     #获取透传设备数据
-    UartTerminalData(DevMac: String): [UartTerminalData]
+    UartTerminalData(DevMac: String, pid: Int): UartTerminalData
+    UartTerminalDatas(DevMac: String, pid: Int, num: Int): [UartTerminalData]
+    UartTerminalFragmentDatas(
+      DevMac: String
+      pid: Int
+      start: String
+      end: String
+    ): [UartTerminalData]
   }
 
   #mutation
@@ -176,6 +187,11 @@ const typeDefs = gql`
     addUser(arg: JSON): result
     #addUserTerminal
     addUserTerminal(type: String, id: String): result
+  }
+
+  # Subscription
+  type Subscription {
+    postAdded: String
   }
 `;
 
@@ -250,9 +266,23 @@ const resolvers = {
     userGroup(root, arg, ctx) {
       return ctx.userGroup;
     },
-    // 获取透传设备数据
-    async UartTerminalData(root, { DevMac }) {
-      return await TerminalClientResult.find({ name: DevMac });
+    // 获取透传设备数据-单条
+    async UartTerminalData(root, { DevMac, pid }) {
+      return await TerminalClientResult.findOne({ mac: DevMac, pid });
+    },
+    // 获取透传设备数据-多条
+    async UartTerminalDatas(root, { DevMac, pid, num }) {
+      return await TerminalClientResults.find({ mac: DevMac, pid })
+        .sort("-_id")
+        .limit(num);
+    },
+    // 获取透传设备数据-时间片段
+    async UartTerminalFragmentDatas(root, { DevMac, pid, start, end }) {
+      return await TerminalClientResults.find({ mac: DevMac, pid })
+        .where("time")
+        .lte(new Date(end))
+        .gte(new Date(start))
+        .exec();
     }
   },
 

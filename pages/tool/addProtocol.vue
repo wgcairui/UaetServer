@@ -9,6 +9,18 @@
           :options="[485, 232]"
         ></b-form-select>
       </b-form-group>
+      <b-form-group label="协议设备类型：" v-bind="forGroup">
+        <b-form-select
+          v-model="accont.ProtocolType"
+          :state="accont.ProtocolType !== ''"
+          :options="[
+            { value: 'ups', text: 'UPS' },
+            { value: 'air', text: '空调' },
+            { value: 'em', text: '电量仪' },
+            { value: 'th', text: '温湿度' }
+          ]"
+        ></b-form-select>
+      </b-form-group>
       <b-form-group label="协议名称：" v-bind="forGroup">
         <b-form-input
           v-model="accont.Protocol"
@@ -68,7 +80,7 @@
           <b-form-group label="结果集:" v-bind="forGroup">
             <b-form-select
               v-model="instruct.resultType"
-              :options="['hex', 'utf8','float','short','int']"
+              :options="['hex', 'utf8', 'float', 'short', 'int']"
             ></b-form-select>
           </b-form-group>
           <b-form-group label="字符去头处理:" v-bind="forGroup">
@@ -105,12 +117,12 @@
             <b-form-textarea
               trim
               v-model="instruct.resize"
-              placeholder="格式：变量名称+字符起始位置-几位字符+倍率，没有倍率则略，例:市电输入+1-5，温度+4-8+0.1，每个变量以/分隔"
+              placeholder="格式：变量名称+字符起始位置-几位字符+倍率+单位，没有倍率则略，例:市电输入+1-5，温度+4-8+0.1+%，每个变量以/分隔"
             ></b-form-textarea>
           </b-form-group>
-          <b-form-group label="解析结果" v-bind="forGroup">
+          <b-form-group label="解析结果:" v-bind="forGroup">
             <b-table-lite
-            responsive
+              responsive
               bordered
               :items="formResize"
               :fields="instructResultFields"
@@ -136,7 +148,7 @@
       <template v-slot:row-details="row">
         <b-card>
           <b-table-lite
-          responsive
+            responsive
             :items="row.item.instruct"
             :fields="[
               'name',
@@ -155,9 +167,10 @@
 </template>
 
 <script>
-import MyHead from '@/components/MyHead'
+import MyHead from "@/components/MyHead";
 import separated from "~/components/separated";
 import gql from "graphql-tag";
+import { parseJsonToJson } from "@/plugins/tools";
 export default {
   components: {
     separated,
@@ -165,22 +178,25 @@ export default {
   },
   data() {
     return {
+      // from-group bind
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       accont: {
         Type: 485,
-        Protocol: ""
+        Protocol: "卡乐控制器",
+        ProtocolType: "air"
       },
       instruct: {
-        name: "QGS",
+        name: "040001001b",
         resultType: "hex",
         shift: false,
         shiftNum: 1,
         pop: false,
         popNum: 1,
-        resize: "CSD+1-2+355",
+        resize: "",
         addModel: true
       },
       instructItems: [],
+      // add protocol
       instructItemsFields: [
         { key: "name", label: "名称" },
         { key: "resultType", label: "结果集" },
@@ -191,10 +207,12 @@ export default {
         { key: "formResize", label: "解析规则" },
         { key: "oprate", label: "操作" }
       ],
+      // protocol result
       instructResultFields: [
         { key: "name", label: "变量名称:" },
         { key: "regx", label: "对应字段:" },
-        { key: "bl", label: "数据倍率(1倍默认不处理数据):" }
+        { key: "bl", label: "数据倍率(1倍默认不处理数据):" },
+        { key: "unit", label: "单位" }
       ],
       apolloProtocol: null,
       Protocols: [],
@@ -202,6 +220,7 @@ export default {
     };
   },
   computed: {
+    // 解析规则分解为Json，{name:"aa",regx:"1-5",bl:"1",unit:"%"}
     formResize() {
       if (this.instruct.resize == "") return [];
       return this.instruct.resize
@@ -209,15 +228,20 @@ export default {
         .split("/")
         .filter((el) => el !== "")
         .map((el) => el.split("+"))
-        .map((el) => ({ name: el[0], regx: el[1] || null, bl: el[2] || 1 }));
+        .map((el) => ({
+          name: el[0],
+          regx: el[1] || null,
+          bl: el[2] || 1,
+          unit: el[3] || null
+        }));
     }
   },
   watch: {
+    // 监测协议是否重复，重复之后填充input
     apolloProtocol: function(newVal) {
       if (newVal) {
         newVal.instruct.forEach((el) => {
           this.instructItems.push(el);
-          console.log(el);
         });
         this.accont.Type = newVal.Type;
         this.instruct = Object.assign(this.instruct, newVal.instruct[0]);
@@ -225,6 +249,7 @@ export default {
     }
   },
   apollo: {
+    // 根据协议名称判断是否协议重复
     apolloProtocol: {
       query: gql`
         query getProtocol($Protocol: String) {
@@ -249,16 +274,18 @@ export default {
           Protocol: this.accont.Protocol
         };
       },
-      update: (data) => data.Protocol,
-      skip() {
+      update: (data) => data.Protocol
+      /* skip() {
         this.accont.Protocol == "";
-      }
+      } */
     },
+    // 获取所有协议
     Protocols: gql`
       {
         Protocols {
           Type
           Protocol
+          ProtocolType
           instruct {
             name
             resultType
@@ -274,6 +301,7 @@ export default {
     `
   },
   methods: {
+    // 添加协议
     addInstruct() {
       let regxBool = this.formResize.some(
         (el) =>
@@ -323,6 +351,12 @@ export default {
         });
     },
     submit() {
+      let accont = parseJsonToJson(this.accont);
+      let instruct = this.instructItems.map((el) => {
+        el.formResize = el.formResize.map((el2) => parseJsonToJson(el2));
+        return parseJsonToJson(el);
+      });
+
       this.$apollo
         .mutate({
           mutation: gql`
@@ -334,12 +368,14 @@ export default {
             }
           `,
           variables: {
-            arg: Object.assign(this.accont, { instruct: this.instructItems })
+            arg: Object.assign(accont, { instruct })
           }
         })
-        .then((res) => {
+        .then(({ data }) => {
           this.$apollo.queries.Protocols.refresh();
-          this.$bvModal.msgBoxOk(res.data.addorSet.ok == 1 ? "上传协议成功" : "上传协议失败");
+          this.$bvModal.msgBoxOk(
+            data.data.setProtocol.ok == 1 ? "上传协议成功" : "上传协议失败"
+          );
         });
     },
     deleteProtocol(item) {
