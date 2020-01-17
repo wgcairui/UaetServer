@@ -1,168 +1,211 @@
 <template>
   <div>
     <my-head title="添加设备"></my-head>
-    <separated title="添加设备协议"></separated>
-    <b-form class="p-3">
-      <b-form-group label="协议类型：" v-bind="forGroup">
-        <b-form-select
-          v-model="accont.Type"
-          :options="[485, 232]"
-        ></b-form-select>
-      </b-form-group>
-      <b-form-group label="协议设备类型：" v-bind="forGroup">
-        <b-form-select
-          v-model="accont.ProtocolType"
-          :state="accont.ProtocolType !== ''"
-          :options="[
-            { value: 'ups', text: 'UPS' },
-            { value: 'air', text: '空调' },
-            { value: 'em', text: '电量仪' },
-            { value: 'th', text: '温湿度' }
-          ]"
-        ></b-form-select>
-      </b-form-group>
-      <b-form-group label="协议名称：" v-bind="forGroup">
-        <b-form-input
-          v-model="accont.Protocol"
-          :state="accont.Protocol !== ''"
-        ></b-form-input>
-      </b-form-group>
-    </b-form>
-    <separated title="指令集"></separated>
-    <b-table-lite
-      responsive
-      ref="table1"
-      id="my-table1"
-      :items="instructItems"
-      :fields="instructItemsFields"
-    >
-      <template v-slot:cell(formResize)="row">
-        <b-button type="link" @click="row.toggleDetails">查看</b-button>
-      </template>
-      <template v-slot:row-details="row">
-        <b-card>
-          <b-table
-            stacked
-            :items="row.item.formResize"
-            :fields="instructResultFields"
-          ></b-table
-        ></b-card>
-      </template>
-      <template v-slot:cell(oprate)="data">
-        <b-button-group>
-          <b-button variant="info" @click="modify(data)">修改</b-button>
-          <b-button variant="danger" @click="rm(data)">删除</b-button>
-        </b-button-group>
-      </template>
-    </b-table-lite>
-    <b-button
-      @click="submit"
-      v-if="instructItems.length > 0"
-      block
-      variant="success"
-      class=" mb-3 "
-      >上传协议</b-button
-    >
-    <separated title="添加协议指令"></separated>
-    <b-card>
-      <b-card-body>
-        <b-form>
-          <b-form-group
-            label="指令字符："
-            v-bind="forGroup"
-            :disabled="!instruct.addModel"
-          >
-            <b-form-input
-              v-model="instruct.name"
-              placeholder="QGS或者010300000002b5c0"
-            ></b-form-input>
-          </b-form-group>
-          <b-form-group label="结果集:" v-bind="forGroup">
-            <b-form-select
-              v-model="instruct.resultType"
-              :options="['hex', 'utf8', 'float', 'short', 'int']"
-            ></b-form-select>
-          </b-form-group>
-          <b-form-group label="字符去头处理:" v-bind="forGroup">
-            <b-input-group>
-              <b-form-checkbox v-model="instruct.shift" class="py-2 mr-3">{{
-                instruct.shiftNum
-              }}</b-form-checkbox>
+    <b-container fluid>
+      <b-row no-gutters>
+        <b-col cols="12">
+          <separated title="添加设备协议"></separated>
+          <b-form class="p-3">
+            <b-form-group label="协议类型：" v-bind="forGroup">
+              <b-form-select
+                v-model="accont.Type"
+                :options="[485, 232]"
+              ></b-form-select>
+            </b-form-group>
+            <b-form-group label="协议设备类型：" v-bind="forGroup">
+              <b-form-select
+                v-model="accont.ProtocolType"
+                :state="accont.ProtocolType !== ''"
+                :options="[
+                  { value: 'ups', text: 'UPS' },
+                  { value: 'air', text: '空调' },
+                  { value: 'em', text: '电量仪' },
+                  { value: 'th', text: '温湿度' }
+                ]"
+              ></b-form-select>
+            </b-form-group>
+            <b-form-group label="协议名称：" v-bind="forGroup">
               <b-form-input
-                type="range"
-                max="5"
-                min="0"
-                v-model="instruct.shiftNum"
-                v-if="instruct.shift"
-                >2</b-form-input
-              >
-            </b-input-group>
-          </b-form-group>
-          <b-form-group label="字符去尾处理:" v-bind="forGroup">
-            <b-input-group>
-              <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">{{
-                instruct.popNum
-              }}</b-form-checkbox>
-              <b-form-input
-                type="range"
-                max="10"
-                min="0"
-                v-model="instruct.popNum"
-                v-if="instruct.pop"
-                >2</b-form-input
-              >
-            </b-input-group>
-          </b-form-group>
-          <b-form-group label="解析规则:" v-bind="forGroup">
-            <b-form-textarea
-              trim
-              v-model="instruct.resize"
-              placeholder="格式：变量名称+字符起始位置-几位字符+倍率+单位，没有倍率则略，例:市电输入+1-5，温度+4-8+0.1+%，每个变量以/分隔"
-            ></b-form-textarea>
-          </b-form-group>
-          <b-form-group label="解析结果:" v-bind="forGroup">
-            <b-table-lite
-              responsive
-              bordered
-              :items="formResize"
-              :fields="instructResultFields"
-            ></b-table-lite>
-          </b-form-group>
-          <b-button
-            @click="addInstruct"
-            block
-            :variant="instruct.addModel ? 'success' : 'info'"
-            >{{ instruct.addModel ? "添加指令" : "修改指令" }}</b-button
-          >
-        </b-form>
-      </b-card-body>
-    </b-card>
-    <separated title="所有协议指令"></separated>
-    <b-table-lite :items="Protocols" :fields="ProtocolsFields" responsive>
-      <template v-slot:cell(instruct)="row">
-        <b-button @click="row.toggleDetails">详情</b-button>
-      </template>
-      <template v-slot:cell(oprate)="data">
-        <b-button @click="deleteProtocol(data.item)">delete</b-button>
-      </template>
-      <template v-slot:row-details="row">
-        <b-card>
+                v-model="accont.Protocol"
+                :state="accont.Protocol !== ''"
+              ></b-form-input>
+            </b-form-group>
+          </b-form>
+        </b-col>
+      </b-row>
+      <b-row no-gutters>
+        <b-col>
+          <separated title="指令集"></separated>
           <b-table-lite
             responsive
-            :items="row.item.instruct"
-            :fields="[
-              'name',
-              'resultType',
-              'shift',
-              'shiftNum',
-              'pop',
-              'popNum',
-              'resize'
-            ]"
-          ></b-table-lite>
-        </b-card>
-      </template>
-    </b-table-lite>
+            ref="table1"
+            id="my-table1"
+            small
+            :items="instructItems"
+            :fields="instructItemsFields"
+          >
+            <template v-slot:cell(formResize)="row">
+              <b-button
+                type="link"
+                size="sm"
+                @click="row.toggleDetails"
+                variant="dark"
+                >查看</b-button
+              >
+            </template>
+            <template v-slot:row-details="row">
+              <b-card>
+                <b-table
+                  striped
+                  borderless
+                  hover
+                  :items="row.item.formResize"
+                  :fields="instructResultFields"
+                >
+                  <template v-slot:cell(isState)="row1">
+                    <b-checkbox v-model="row1.value" disabled></b-checkbox>
+                  </template>
+                </b-table>
+              </b-card>
+            </template>
+            <template v-slot:cell(oprate)="data">
+              <b-button-group>
+                <b-button variant="info" size="sm" @click="modify(data)"
+                  >修改</b-button
+                >
+                <b-button variant="danger" size="sm" @click="rm(data)"
+                  >删除</b-button
+                >
+              </b-button-group>
+            </template>
+          </b-table-lite>
+          <b-button
+            @click="submit"
+            v-if="instructItems.length > 0"
+            block
+            variant="success"
+            class=" mb-3 "
+            >上传协议</b-button
+          >
+        </b-col>
+      </b-row>
+
+      <b-row no-gutters>
+        <b-col>
+          <separated title="添加协议指令"></separated>
+          <b-card>
+            <b-card-body>
+              <b-form>
+                <b-form-group
+                  label="指令字符："
+                  v-bind="forGroup"
+                  :disabled="!instruct.addModel"
+                >
+                  <b-form-input
+                    v-model="instruct.name"
+                    placeholder="QGS或者010300000002b5c0"
+                  ></b-form-input>
+                </b-form-group>
+                <b-form-group label="结果集:" v-bind="forGroup">
+                  <b-form-select
+                    v-model="instruct.resultType"
+                    :options="['hex', 'utf8', 'float', 'short', 'int']"
+                  ></b-form-select>
+                </b-form-group>
+                <b-form-group label="字符去头处理:" v-bind="forGroup">
+                  <b-input-group>
+                    <b-form-checkbox
+                      v-model="instruct.shift"
+                      class="py-2 mr-3"
+                      >{{ instruct.shiftNum }}</b-form-checkbox
+                    >
+                    <b-form-input
+                      type="range"
+                      max="5"
+                      min="0"
+                      v-model="instruct.shiftNum"
+                      v-if="instruct.shift"
+                      >2</b-form-input
+                    >
+                  </b-input-group>
+                </b-form-group>
+                <b-form-group label="字符去尾处理:" v-bind="forGroup">
+                  <b-input-group>
+                    <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">{{
+                      instruct.popNum
+                    }}</b-form-checkbox>
+                    <b-form-input
+                      type="range"
+                      max="10"
+                      min="0"
+                      v-model="instruct.popNum"
+                      v-if="instruct.pop"
+                      >2</b-form-input
+                    >
+                  </b-input-group>
+                </b-form-group>
+                <b-form-group label="解析规则:" v-bind="forGroup">
+                  <b-form-textarea
+                    rows="1"
+                    max-rows="150"
+                    trim
+                    v-model="instruct.resize"
+                    placeholder="格式：变量名称+字符起始位置-几位字符+倍率+单位，没有倍率则略，例:市电输入+1-5，温度+4-8+0.1+%，每个变量以/分隔"
+                  ></b-form-textarea>
+                </b-form-group>
+                <b-form-group label="解析结果:" v-bind="forGroup">
+                  <b-table-lite
+                    responsive
+                    bordered
+                    small
+                    sticky-header
+                    :items="formResize"
+                    :fields="instructResultFields"
+                  ></b-table-lite>
+                </b-form-group>
+                <b-button
+                  @click="addInstruct"
+                  block
+                  :variant="instruct.addModel ? 'success' : 'info'"
+                  >{{ instruct.addModel ? "添加指令" : "修改指令" }}</b-button
+                >
+              </b-form>
+            </b-card-body>
+          </b-card>
+        </b-col>
+      </b-row>
+
+      <b-row no-gutters>
+        <b-col>
+          <separated title="所有协议指令"></separated>
+          <b-table-lite :items="Protocols" :fields="ProtocolsFields" responsive>
+            <template v-slot:cell(instruct)="row">
+              <b-button @click="row.toggleDetails">详情</b-button>
+            </template>
+            <template v-slot:cell(oprate)="data">
+              <b-button @click="deleteProtocol(data.item)">delete</b-button>
+            </template>
+            <template v-slot:row-details="row">
+              <b-card>
+                <b-table-lite
+                  responsive
+                  :items="row.item.instruct"
+                  :fields="[
+                    'name',
+                    'resultType',
+                    'shift',
+                    'shiftNum',
+                    'pop',
+                    'popNum',
+                    'resize'
+                  ]"
+                ></b-table-lite>
+              </b-card>
+            </template>
+          </b-table-lite>
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
@@ -212,6 +255,7 @@ export default {
         { key: "name", label: "变量名称:" },
         { key: "regx", label: "对应字段:" },
         { key: "bl", label: "数据倍率(1倍默认不处理数据):" },
+        { key: "isState", label: "状态量" },
         { key: "unit", label: "单位" }
       ],
       apolloProtocol: null,
@@ -223,7 +267,7 @@ export default {
     // 解析规则分解为Json，{name:"aa",regx:"1-5",bl:"1",unit:"%"}
     formResize() {
       if (this.instruct.resize == "") return [];
-      return this.instruct.resize
+      let result = this.instruct.resize
         .toString()
         .split("/")
         .filter((el) => el !== "")
@@ -232,19 +276,30 @@ export default {
           name: el[0],
           regx: el[1] || null,
           bl: el[2] || 1,
-          unit: el[3] || null
+          unit: el[3] || null,
+          isState: el[3] && el[3].includes("{") ? true : false
         }));
+      return result;
+    },
+    resize() {
+      return this.instruct.resize;
     }
   },
   watch: {
+    resize: function(newVal) {
+      if (newVal.endsWith("/")) this.instruct.resize += "\n";
+    },
     // 监测协议是否重复，重复之后填充input
     apolloProtocol: function(newVal) {
       if (newVal) {
         newVal.instruct.forEach((el) => {
           this.instructItems.push(el);
         });
+        this.accont.ProtocolType = newVal.ProtocolType || "ups";
         this.accont.Type = newVal.Type;
         this.instruct = Object.assign(this.instruct, newVal.instruct[0]);
+      } else {
+        this.instructItems = [];
       }
     }
   },
@@ -374,7 +429,7 @@ export default {
         .then(({ data }) => {
           this.$apollo.queries.Protocols.refresh();
           this.$bvModal.msgBoxOk(
-            data.data.setProtocol.ok == 1 ? "上传协议成功" : "上传协议失败"
+            data.setProtocol.ok == 1 ? "上传协议成功" : "上传协议失败"
           );
         });
     },

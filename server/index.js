@@ -26,7 +26,6 @@ Event.attach(app);
 
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
-
 // app.use(koaLogger());
 app.use(error());
 app.use(body());

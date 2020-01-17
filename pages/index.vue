@@ -83,7 +83,8 @@ export default {
           {
             userGroup
           }
-        `
+        `,
+        fetchPolicy: "no-cache",
       })
       .then(({ data }) => {
         switch (data.userGroup) {

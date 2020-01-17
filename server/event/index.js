@@ -33,7 +33,7 @@ class Event extends EventEmitter {
       .emit(this.env.addNodeClient);
   }
   attach(app) {
-    app.context.Event = this;
+    app.context.$Event = this;
   }
   _connectNodeClient({ IP, socket, data }) {
     this.nodeIPSocketIDMaps.set(IP, socket.id);

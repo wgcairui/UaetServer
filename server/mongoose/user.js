@@ -5,7 +5,7 @@ const { mongoose, Schema } = require("./index");
 const Schema_Users = new Schema({
   userId: String,
   name: String,
-  user: { type: String, index: true, trim: true, required: true },
+  user: { type: String, index: true, trim: true, required: true, unique: true },
   userGroup: {
     type: String,
     enum: ["root", "admin", "user"],

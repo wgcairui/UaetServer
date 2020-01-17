@@ -9,6 +9,9 @@
             row.value.map((el) => parseFloat(el.toFixed(2))).join("/ ")
           }}</i>
         </template>
+        <template v-slot:cell(updateTime)="row">
+          {{time(row.value)}}
+        </template>
       </b-table-lite>
     </b-card>
   </div>
@@ -16,6 +19,7 @@
 <script>
 import MyHead from "@/components/MyHead";
 import gql from "graphql-tag";
+import {paresTime} from '@/plugins/tools'
 export default {
   components: {
     MyHead
@@ -36,8 +40,8 @@ export default {
     };
   },
   methods: {
-    a() {
-      parseFloat();
+    time(time) {
+     return paresTime(time)
     }
   },
   apollo: {

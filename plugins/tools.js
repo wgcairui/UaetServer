@@ -19,7 +19,7 @@ export const TerminalResultArrayToArrayJson = (Arr = [{}], col = "") => {
   }, []);
 };
 // 格式化日期时间
-const paresTime = (time) => {
+export const paresTime = (time) => {
   const T = new Date(time);
   return `${T.getMonth() +
     1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;

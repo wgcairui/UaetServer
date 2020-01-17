@@ -13,9 +13,13 @@ const {
   TerminalClientResult,
   TerminalClientResults
 } = require("../mongoose/node");
+
 const { DeviceProtocol, DevsType } = require("../mongoose/DeviceAndProtocol");
+
 const { Terminal } = require("../mongoose/Terminal");
+
 const { EcTerminal } = require("../mongoose/EnvironmentalControl");
+
 const { Users, UserBindDevice } = require("../mongoose/user");
 
 const typeDefs = gql`
@@ -217,7 +221,7 @@ const resolvers = {
     async DevType(root, { DevModel }) {
       return await DevsType.findOne({ DevModel });
     },
-    async DevTypes() {
+    async DevTypes(root, arg, ctx) {
       return await DevsType.find();
     },
     // 终端信息
@@ -288,61 +292,77 @@ const resolvers = {
 
   Mutation: {
     // 设置节点
-    async setNode(root, { arg }) {
+    async setNode(root, { arg }, ctx) {
       const { Name, IP, Port, MaxConnections } = JSON.parse(arg);
-      return await NodeClient.updateOne(
+      const result = await NodeClient.updateOne(
         { IP },
         { $set: { Name, Port, MaxConnections } },
         { upsert: true }
       );
+      await ctx.$Event.Query.RefreshCacheNode();
+      return result;
     },
     // 删除节点
-    async deleteNode(root, { IP }) {
-      return await NodeClient.deleteOne({ IP });
+    async deleteNode(root, { IP }, ctx) {
+      const result = await NodeClient.deleteOne({ IP });
+      await ctx.$Event.Query.RefreshCacheNode();
+      return result;
     },
     // 设置协议
-    async setProtocol(root, { arg }) {
-      const { Type, Protocol, instruct } = arg;
-      return await DeviceProtocol.updateOne(
+    async setProtocol(root, { arg }, ctx) {
+      const { Type, ProtocolType, Protocol, instruct } = arg;
+      const result = await DeviceProtocol.updateOne(
         { Type, Protocol },
-        { $set: { instruct } },
+        { $set: { ProtocolType, instruct } },
         { upsert: true }
       );
+      await ctx.$Event.Query.RefreshCacheProtocol();
+      return result;
     },
     // 删除协议
-    async deleteProtocol(root, { Protocol }) {
-      return await DeviceProtocol.deleteOne({ Protocol });
+    async deleteProtocol(root, { Protocol }, ctx) {
+      const result = await DeviceProtocol.deleteOne({ Protocol });
+      await ctx.$Event.Query.RefreshCacheProtocol();
+      return result;
     },
     // 添加设备类型
-    async addDevType(root, { arg }) {
+    async addDevType(root, { arg }, ctx) {
       const { Type, DevModel, Protocols } = arg;
-      return await DevsType.updateOne(
+      const result = await DevsType.updateOne(
         { Type, DevModel },
         { $set: { Protocols } },
         { upsert: true }
       );
+      await ctx.$Event.Query.RefreshCacheDevType();
+      return result;
     },
     // 添加设备类型
-    async deleteDevModel(root, { DevModel }) {
-      return await DevsType.deleteOne({ DevModel });
+    async deleteDevModel(root, { DevModel }, ctx) {
+      const result = await DevsType.deleteOne({ DevModel });
+      await ctx.$Event.Query.RefreshCacheDevType();
+      return result;
     },
     // 添加终端信息
-    async addTerminal(root, { arg }) {
+    async addTerminal(root, { arg }, ctx) {
       const { DevMac, name, mountNode, mountDevs } = arg;
-      return await Terminal.updateOne(
+      const result = await Terminal.updateOne(
         { DevMac, name, mountNode },
         { $set: { mountDevs } },
         { upsert: true }
       );
+      await ctx.$Event.Query.RefreshCacheTerminal();
+      return result;
     },
     // 删除终端信息
-    async deleteTerminal(root, { DevMac }) {
-      return await Terminal.deleteOne({ DevMac });
+    async deleteTerminal(root, { DevMac }, ctx) {
+      const result = await Terminal.deleteOne({ DevMac });
+      await ctx.$Event.Query.RefreshCacheTerminal();
+      return result;
     },
     // 添加终端挂载信息
-    async addTerminalMountDev(root, { arg }) {
+    async addTerminalMountDev(root, { arg }, ctx) {
       const { DevMac, mountDev, protocol, pid } = arg;
-      return await Terminal.updateOne(
+      const result = await Terminal.updateOne(
         { DevMac },
         {
           $addToSet: {
@@ -354,6 +374,8 @@ const resolvers = {
           }
         }
       );
+      await ctx.$Event.Query.RefreshCacheTerminal();
+      return result;
     },
     // 添加用户
     async addUser(root, { arg }) {
@@ -403,7 +425,7 @@ const context = ({ ctx }) => {
   const user = JwtVerify(token.replace("bearer%20", ""));
   //
   if (!user || !user.user) throw new Error("you must be logged in");
-  return { ...user, loggedIn: true };
+  return { ...user, loggedIn: true, $Event: ctx.$Event };
 };
 
 module.exports = new ApolloServer({ typeDefs, resolvers, context });

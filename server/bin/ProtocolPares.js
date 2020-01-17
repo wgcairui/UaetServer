@@ -7,7 +7,8 @@ const {
 } = require("../mongoose/node");
 
 const pares = (data) => {
-  const { buffer, protocol, content, type } = data;
+  const { buffer, protocol, content, type, stat } = data;
+  if (stat === "timeOut") return data;
   const Protocol = Event.Query.CacheProtocol.get(protocol);
   if (!Protocol || !Protocol.instruct) return "error";
   const instruct = Protocol.instruct.find((el) => content.includes(el.name));
@@ -23,16 +24,20 @@ const pares = (data) => {
         data.result = formResize.map(({ name, regx, bl, unit }) => {
           const [start, len] = regx.split("-");
           let valBuf = buf.slice(start - 1, start - 1 + len);
-          switch (resultType) {
-            case "hex":
-            case "short":
-              valBuf = Number.parseFloat(
-                (valBuf.readInt16BE() * bl).toFixed(1)
-              );
-              break;
-            case "float":
-              valBuf = Tool.HexToSingle(valBuf);
-              break;
+          try {
+            switch (resultType) {
+              case "hex":
+              case "short":
+                valBuf = Number.parseFloat(
+                  (valBuf.readInt16BE() * bl).toFixed(1)
+                );
+                break;
+              case "float":
+                valBuf = Tool.HexToSingle(valBuf);
+                break;
+            }
+          } catch (error) {
+            console.log(error.message);
           }
           return { name, value: valBuf, unit };
         });
@@ -43,7 +48,7 @@ const pares = (data) => {
   new TerminalClientResults(data).save();
   // 透传结果集保存到数据集，最新数据
   TerminalClientResult.updateOne(
-    { mac: data.mac, pid: data.pid },
+    { mac: data.mac, pid: data.pid, content: data.content },
     { $set: { ...data } },
     { upsert: true }
   ).catch((e) => console.log(e));

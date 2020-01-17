@@ -81,6 +81,7 @@ export default {
         {
           Protocols {
             Type
+            ProtocolType
             Protocol
           }
         }
