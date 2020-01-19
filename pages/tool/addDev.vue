@@ -9,14 +9,14 @@
       <b-form-group label="设备类型:" v-bind="forGroup">
         <b-form-select
           v-model="accont.Type"
-          :options="['UPS', '温湿度', '空调', '电量仪']"
+          :options="[{value:'ups',text:'UPS'}, {value:'air',text:'空调'}, {value:'em',text:'电量仪'}, {value:'th',text:'温湿度'}]"
         ></b-form-select>
       </b-form-group>
       <b-form-group label="设备协议(可多选):" v-bind="forGroup">
         <b-form-select
           multiple
           v-model="accont.Protocols"
-          :options="Protocols"
+          :options="filterProtocols"
         ></b-form-select>
       </b-form-group>
       <b-form-group label="已选协议:" v-bind="forGroup">
@@ -48,7 +48,7 @@ export default {
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       accont: {
-        Type: "UPS",
+        Type: "ups",
         DevModel: "",
         Protocols: []
       },
@@ -66,6 +66,9 @@ export default {
   computed: {
     selectProtocols() {
       return this.accont.Protocols.map((el) => el.Protocol).toString();
+    },
+    filterProtocols(){
+      return this.Protocols.filter(el=>el.ProtocolType === this.accont.Type).map(el=>({ text: el.Protocol, value: el }))
     }
   },
   watch: {
@@ -85,9 +88,9 @@ export default {
             Protocol
           }
         }
-      `,
+      `/* ,
       update: (data) =>
-        data.Protocols.map((el) => ({ text: el.Protocol, value: el }))
+        data.Protocols.map((el) => ({ text: el.Protocol, value: el })) */
     },
     statDevType: {
       query: gql`

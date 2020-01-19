@@ -1,5 +1,12 @@
 /* eslint-disable no-console */
+
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
+const path = require("path");
 const Koa = require("koa");
+
+// const sslify = require("koa-sslify").default;
 // Middleware
 const consola = require("consola");
 const body = require("koa-body");
@@ -19,6 +26,7 @@ const Event = require("./event/index");
 
 const app = new Koa();
 
+// app.use(sslify());
 // new Socket
 const ioNode = new Socket({ namespace: "Node" });
 ioNode.attach(app);
@@ -60,9 +68,21 @@ async function start() {
     nuxt.render(ctx.req, ctx.res);
   });
 
-  app.listen(port, host);
+  http.createServer(app.callback()).listen(port, host);
+  // SSL options
+  const options = {
+    key: fs.readFileSync(path.join(__dirname, "./ssl/119/server.key")),
+    cert: fs.readFileSync(path.join(__dirname, "./ssl/119/server.crt"))
+  };
+  https.createServer(options, app.callback()).listen(443, "192.168.1.119");
+
+  // app.listen(port, host);
   consola.ready({
-    message: `Server listening on http://${host}:${port}`,
+    message: `HTTP Server listening on http://${host}:${port}`,
+    badge: true
+  });
+  consola.ready({
+    message: `HTTPS Server listening on https://${host}:${port - 1}`,
     badge: true
   });
 }

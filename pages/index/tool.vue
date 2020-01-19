@@ -21,6 +21,7 @@ export default {
     return {
       navItem: [
         { to: { name: "tool-addTerminal" }, text: "添加终端", ico: "\ueb63" },
+        { to: { name: "tool-addTerminals" }, text: "批量添加终端", ico: "\ueb63" },
         { to: { name: "tool-addDev" }, text: "添加设备类型", ico: "\uebb8" },
         { to: { name: "tool-addNode" }, text: "添加节点", ico: "\uebd8" },
         { to: { name: "tool-addProtocol" }, text: "添加协议", ico: "\uec56" }
