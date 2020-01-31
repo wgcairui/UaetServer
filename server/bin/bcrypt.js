@@ -1,25 +1,29 @@
-const bcrypt = require("bcrypt");
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const saltRounds = 10;
-
-const BcryptDo = (passwd) => {
-  return new Promise((resolve, reject) => {
-    bcrypt.genSalt(saltRounds, (err, salt) => {
-      if (err) reject(err);
-      bcrypt.hash(passwd, salt, (err, hash) => {
-        if (err) reject(err);
-        resolve(hash);
-      });
+exports.BcryptDo = (passwd) => {
+    return new Promise((resolve, reject) => {
+        bcrypt_1.default.genSalt(saltRounds, (err, salt) => {
+            if (err)
+                reject(err);
+            bcrypt_1.default.hash(passwd, salt, (err, hash) => {
+                if (err)
+                    reject(err);
+                resolve(hash);
+            });
+        });
     });
-  });
 };
-
-const BcryptCompare = (passwd, hash) => {
-  return new Promise((resolve, reject) => {
-    bcrypt.compare(passwd, hash, (err, some) => {
-      if (err) reject(err);
-      resolve(some);
+exports.BcryptCompare = (passwd, hash) => {
+    return new Promise((resolve, reject) => {
+        bcrypt_1.default.compare(passwd, hash, (err, some) => {
+            if (err)
+                reject(err);
+            resolve(some);
+        });
     });
-  });
 };
-
-module.exports = { BcryptCompare, BcryptDo };

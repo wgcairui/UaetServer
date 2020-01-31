@@ -1,90 +1,83 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable no-console */
-
-const http = require("http");
-const https = require("https");
-const fs = require("fs");
-const path = require("path");
-const Koa = require("koa");
-
-// const sslify = require("koa-sslify").default;
+const http_1 = __importDefault(require("http"));
+const https_1 = __importDefault(require("https"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const koa_1 = __importDefault(require("koa"));
 // Middleware
-const consola = require("consola");
-const body = require("koa-body");
-const error = require("koa-error");
+const consola_1 = __importDefault(require("consola"));
+const koa_body_1 = __importDefault(require("koa-body"));
+const koa_error_1 = __importDefault(require("koa-error"));
 // const koaLogger = require("koa-logger");
-const cors = require("@koa/cors");
+const cors_1 = __importDefault(require("@koa/cors"));
 // nuxt
-const { Nuxt, Builder } = require("nuxt");
+const nuxt_1 = require("nuxt");
 // socket
-const Socket = require("./socket/socket.node");
+const socket_node_1 = __importDefault(require("./socket/socket.node"));
 // Apollo
-const ApolloServer = require("./apollo/apollo");
+const apollo_1 = __importDefault(require("./apollo/apollo"));
 // Router
-const router = require("./router/index");
+const index_1 = __importDefault(require("./router/index"));
 // Event
-const Event = require("./event/index");
-
-const app = new Koa();
-
+const index_2 = __importDefault(require("./event/index"));
+const app = new koa_1.default();
 // app.use(sslify());
 // new Socket
-const ioNode = new Socket({ namespace: "Node" });
+const ioNode = new socket_node_1.default({ namespace: "Node" });
 ioNode.attach(app);
-Event.attach(app);
-
+index_2.default.attach(app);
 // new apollo
-ApolloServer.applyMiddleware({ app, path: "/graphql" });
+apollo_1.default.applyMiddleware({ app, path: "/graphql" });
 // app.use(koaLogger());
-app.use(error());
-app.use(body());
-app.use(cors());
-app.use(router.routes()).use(router.allowedMethods());
-
+app.use(koa_error_1.default({}));
+app.use(koa_body_1.default());
+app.use(cors_1.default());
+app.use(index_1.default.routes()).use(index_1.default.allowedMethods());
 async function start() {
-  // Import and Set Nuxt.js options
-  // eslint-disable-next-line import/order
-  const config = require("../nuxt.config.js");
-  config.dev = app.env !== "production";
-  // Instantiate nuxt.js
-  const nuxt = new Nuxt(config);
-
-  const {
-    host = process.env.HOST || "127.0.0.1",
-    port = process.env.PORT || 3000
-  } = nuxt.options.server;
-
-  // Build in development
-  if (config.dev) {
-    const builder = new Builder(nuxt);
-    await builder.build();
-  } else {
-    await nuxt.ready();
-  }
-
-  app.use((ctx) => {
-    ctx.status = 200;
-    ctx.respond = false; // Bypass Koa's built-in response handling
-    ctx.req.ctx = ctx; // This might be useful later on, e.g. in nuxtServerInit or with nuxt-stash
-    nuxt.render(ctx.req, ctx.res);
-  });
-
-  http.createServer(app.callback()).listen(port, host);
-  // SSL options
-  const options = {
-    key: fs.readFileSync(path.join(__dirname, "./ssl/119/server.key")),
-    cert: fs.readFileSync(path.join(__dirname, "./ssl/119/server.crt"))
-  };
-  https.createServer(options, app.callback()).listen(443, "192.168.1.119");
-
-  // app.listen(port, host);
-  consola.ready({
-    message: `HTTP Server listening on http://${host}:${port}`,
-    badge: true
-  });
-  consola.ready({
-    message: `HTTPS Server listening on https://${host}:${port - 1}`,
-    badge: true
-  });
+    // Import and Set Nuxt.js options
+    // eslint-disable-next-line import/order
+    const config = require("../nuxt.config.js");
+    config.dev = app.env !== "production";
+    // Instantiate nuxt.js
+    const nuxt = new nuxt_1.Nuxt(config);
+    const { host = process.env.HOST || "127.0.0.1", port = process.env.PORT || 3000 } = nuxt.options.server;
+    // Build in development
+    if (config.dev) {
+        const builder = new nuxt_1.Builder(nuxt);
+        await builder.build();
+    }
+    else {
+        await nuxt.ready();
+    }
+    app.use((ctx) => {
+        ctx.status = 200;
+        ctx.respond = false; // Bypass Koa's built-in response handling
+        ctx.request.ctx = ctx; // This might be useful later on, e.g. in nuxtServerInit or with nuxt-stash
+        nuxt.render(ctx.req, ctx.res);
+    });
+    http_1.default.createServer(app.callback()).listen(port, host, undefined, () => {
+        consola_1.default.ready({
+            message: `HTTP Server listening on http://${host}:${port}`,
+            badge: true
+        });
+    });
+    // SSL options
+    const options = {
+        key: fs_1.default.readFileSync(path_1.default.join(__dirname, "./ssl/localhost/server.key")),
+        cert: fs_1.default.readFileSync(path_1.default.join(__dirname, "./ssl/localhost/server.crt"))
+    };
+    https_1.default
+        .createServer(options, app.callback())
+        .listen(port - 1, "0.0.0.0", undefined, () => {
+        consola_1.default.ready({
+            message: `HTTPS Server listening on https://${host}:${port - 1}`,
+            badge: true
+        });
+    });
 }
-
 start();
