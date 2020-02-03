@@ -5,7 +5,7 @@ import { NodeClient } from "../mongoose/node";
 import { DefaultContext } from "koa";
 import { Socket } from "socket.io";
 import { NodeClient as nodeClient } from "../bin/interface";
-class Event extends EventEmitter {
+class Event extends EventEmitter.EventEmitter {
   env: {
     addNodeClient: string;
     disNodeClient: string;

@@ -1,7 +1,11 @@
-import { DefaultContext } from "_@types_koa@2.11.0@@types/koa";
-
 /* eslint-disable no-console */
-
+const { register } = require( "ts-node");
+register({
+  project: 'tsconfig.json',
+  compilerOptions: {
+    module: "CommonJS"
+  }
+})
 import http from "http";
 import https from "https";
 import fs from "fs";
@@ -13,8 +17,7 @@ import sslify from "koa-sslify";
 // Middleware
 import consola from "consola";
 import body from "koa-body";
-import error from "koa-error";
-// const koaLogger = require("koa-logger");
+import koaLogger from "koa-logger";
 import cors from "@koa/cors";
 // nuxt
 import { Nuxt, Builder } from "nuxt";
@@ -37,8 +40,7 @@ Event.attach(app);
 
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
-// app.use(koaLogger());
-app.use(error({}));
+app.use(koaLogger());
 app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());
@@ -47,6 +49,7 @@ async function start() {
   // Import and Set Nuxt.js options
   // eslint-disable-next-line import/order
   const config = require("../nuxt.config.js");
+
   config.dev = app.env !== "production";
   // Instantiate nuxt.js
   const nuxt = new Nuxt(config);
@@ -57,13 +60,11 @@ async function start() {
   } = nuxt.options.server;
 
   // Build in development
+  await nuxt.ready()
   if (config.dev) {
     const builder = new Builder(nuxt);
     await builder.build();
-  } else {
-    await nuxt.ready();
-  }
-
+  } 
   app.use((ctx) => {
     ctx.status = 200;
     ctx.respond = false; // Bypass Koa's built-in response handling
@@ -84,7 +85,7 @@ async function start() {
   };
   https
     .createServer(options, app.callback())
-    .listen(port - 1, "0.0.0.0", undefined, () => {
+    .listen(port - 1, host, undefined, () => {
       consola.ready({
         message: `HTTPS Server listening on https://${host}:${port - 1}`,
         badge: true

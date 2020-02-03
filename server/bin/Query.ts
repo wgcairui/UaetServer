@@ -78,12 +78,14 @@ export default class Query {
     for (const { DevMac, mountDevs } of clients) {
       for (const { pid, protocol } of mountDevs) {
         const { Type, instruct } = <protocol>this.CacheProtocol.get(protocol);
+        const time = Date.now()
         for (const { name } of instruct) {
           socket.emit("query", {
             mac: DevMac,
             type: Type,
             protocol,
             pid,
+            time,
             content: tool.Crc16modbus(pid, name)
           });
         }

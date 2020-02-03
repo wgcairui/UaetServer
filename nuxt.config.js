@@ -31,7 +31,10 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: "~/plugins/tree.js", ssr: false }],
+  plugins: [
+    { src: "~/plugins/tree.js", ssr: false },
+    "~/plugins/CompositionApi.js"
+  ],
   /*
    ** Nuxt.js dev-modules
    */
@@ -39,7 +42,8 @@ module.exports = {
     // Doc: https://github.com/nuxt-community/eslint-module
     "@nuxtjs/eslint-module",
     // Doc: https://github.com/nuxt-community/stylelint-module
-    "@nuxtjs/stylelint-module"
+    "@nuxtjs/stylelint-module",
+    "@nuxt/typescript-build"
   ],
   /*
    ** Nuxt.js modules

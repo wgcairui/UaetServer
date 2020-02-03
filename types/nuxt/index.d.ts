@@ -103,7 +103,7 @@ export class Module {
 
     extendRoutes(...args: any[]): void;
 
-    ready(...args: any[]): void;
+    ready(...args: any[]): Promise<void>;
 
     requireModule(...args: any[]): void;
 

@@ -3,7 +3,7 @@
 export = koa_socket_2;
 
 declare class koa_socket_2 {
-    constructor(...args: any[]);
+    constructor(args: any);
 
     attach(...args: any[]): void;
 
