@@ -2,11 +2,11 @@
 import IO from "koa-socket-2";
 import Event from "../event/index";
 import { Socket } from "_@types_socket.io@2.1.4@@types/socket.io";
-import { NodeClient,SocketRegisterInfo } from "../bin/interface";
+import { NodeClient, SocketRegisterInfo } from "../bin/interface";
 
 export default class socket extends IO {
   // 挂载
-  attach(app:any) {
+  attach(app: any) {
     super.attach(app);
     this.start();
   }
@@ -50,7 +50,9 @@ export default class socket extends IO {
   _delDisconnect({ socket }: { socket: Socket }) {
     const IP = socket.conn.remoteAddress;
     console.log(
-      `节点：${(<NodeClient>Event.nodeRegisterInfo.get(IP)).Name}断开连接，清除定时操作`
+      `节点：${
+        (<NodeClient>Event.nodeRegisterInfo.get(IP)).Name
+      }断开连接，清除定时操作`
     );
     Event.emit(Event.env.disNodeClient, { IP, socket });
   }

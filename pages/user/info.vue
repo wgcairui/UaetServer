@@ -1,12 +1,12 @@
 <template>
-  <div class=" w-100">
+  <div class="w-100">
     <my-head title="用户信息"></my-head>
     <b-container>
       <b-row>
         <separated title="详情">
-          <b-button variant="link" class=" text-decoration-none"
-            ><i class="iconfont">&#xeb71;</i>修改信息</b-button
-          >
+          <b-button variant="link" class="text-decoration-none">
+            <i class="iconfont">&#xeb71;</i>修改信息
+          </b-button>
         </separated>
         <b-table-lite stacked :items="user" :fields="userField"></b-table-lite>
       </b-row>
@@ -16,11 +16,12 @@
     </b-container>
   </div>
 </template>
-<script>
-import MyHead from "~/components/MyHead";
-import separated from "~/components/separated";
+<script lang="ts">
+import Vue from "vue";
+import MyHead from "../../components/MyHead.vue";
+import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
-export default {
+export default Vue.extend({
   components: {
     MyHead,
     separated
@@ -61,5 +62,5 @@ export default {
   mounted() {
     console.log(this.$auth.user);
   }
-};
+});
 </script>

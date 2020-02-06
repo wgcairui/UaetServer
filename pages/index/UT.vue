@@ -1,5 +1,5 @@
 <template>
-  <div class=" h-100 w-100">
+  <div class="h-100 w-100">
     <b-container>
       <b-row>
         <b-col cols="12">
@@ -12,22 +12,22 @@
               :radius="6"
               @clickedNode="treeSelect"
               @clickedText="treeSelect"
-            >
-            </tree>
+            ></tree>
           </b-card>
         </b-col>
       </b-row>
     </b-container>
   </div>
 </template>
-<script>
+<script lang="ts">
+import Vue from "vue";
 import gql from "graphql-tag";
 import { tree } from "vued3tree";
-export default {
+export default Vue.extend({
   components: { tree },
   data() {
     return {
-      // Terminal: null
+      Terminal: null
     };
   },
 
@@ -75,7 +75,7 @@ export default {
     );
     return { Terminal };
   }
-};
+});
 </script>
 <style>
 .tree {

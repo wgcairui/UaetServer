@@ -5,9 +5,9 @@
 </template>
 
 <script>
-import MyHead from "~/components/MyHead";
+import MyHead from "../../components/MyHead";
 export default {
-    auth:false,
+  auth: false,
   components: {
     MyHead
   }

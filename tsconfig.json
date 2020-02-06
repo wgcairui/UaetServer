@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
+    "allowUnreachableCode": true, // 不报告执行不到的代码错误。
+    "allowUnusedLabels": true,
     "target": "es2018",
-    "module": "CommonJS",
+    "module": "ESNext",
     "moduleResolution": "node",
     "lib": [
       "esnext",
@@ -11,17 +13,29 @@
     "esModuleInterop": true,
     "allowJs": true,
     "sourceMap": true,
+    "noImplicitReturns": true,
     "strict": true,
+    "noImplicitThis": true,
     "noEmit": true,
     "baseUrl": ".",
+    "skipDefaultLibCheck": false,
     "paths": {
-      "*": ["types/*"],
+      "*": [
+        "types/*",
+        "*"
+      ],
+      "@nuxtjs/auth": [
+        "@types/nuxtjs__auth"
+      ]
     },
     "types": [
       "@types/node",
-      "@nuxt/types"
+      "@nuxt/types",
+      "@types/nuxtjs__auth",
+      "vue/types"
     ]
   },
+
   "exclude": [
     "node_modules"
   ]

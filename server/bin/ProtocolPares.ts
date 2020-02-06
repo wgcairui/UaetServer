@@ -20,12 +20,15 @@ export default (data: queryResult) => {
         const buf = Buffer.from(buffer.data.slice(3, 3 + buffer.data[2]));
         const { formResize, resultType } = instruct;
         data.pid = buf.slice(0, 1).readUInt8(0);
-        data.result = formResize.map(({ name, regx, bl, unit }) => {
-          const [start, len] = regx.split("-");
+        data.result = formResize.map((el) => {
+          const { name, bl, unit, regx } = el;
+
+          const [start, len] = String(regx).split("-");
           let valBuf = buf.slice(
             parseInt(start) - 1,
             parseInt(start) - 1 + parseInt(len)
           );
+
           let value: number = 0;
           try {
             switch (resultType) {

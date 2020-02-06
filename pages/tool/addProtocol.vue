@@ -209,12 +209,14 @@
   </div>
 </template>
 
-<script>
-import MyHead from "@/components/MyHead";
-import separated from "~/components/separated";
+<script lang="ts">
+import vue from "vue";
+import MyHead from "../../components/MyHead.vue";
+import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
-import { parseJsonToJson } from "@/plugins/tools";
-export default {
+import { parseJsonToJson } from "../../plugins/tools";
+import { protocolInstructFormrize, protocol, protocolInstruct } from "../../server/bin/interface";
+export default vue.extend({
   components: {
     separated,
     MyHead
@@ -266,40 +268,41 @@ export default {
   computed: {
     // 解析规则分解为Json，{name:"aa",regx:"1-5",bl:"1",unit:"%"}
     formResize() {
-      if (this.instruct.resize == "") return [];
-      let result = this.instruct.resize
-        .toString()
+      if (this.$data.instruct.resize == "") return [];
+      const resize:string = this.$data.instruct.resize
+
+      let result:protocolInstructFormrize[] = resize
         .split("/")
         .filter((el) => el !== "")
         .map((el) => el.split("+"))
         .map((el) => ({
           name: el[0],
           regx: el[1] || null,
-          bl: el[2] || 1,
+          bl: parseInt(el[2]) || 1,
           unit: el[3] || null,
           isState: el[3] && el[3].includes("{") ? true : false
         }));
       return result;
     },
     resize() {
-      return this.instruct.resize;
+      return <string>this.$data.instruct.resize;
     }
   },
   watch: {
     resize: function(newVal) {
-      if (newVal.endsWith("/")) this.instruct.resize += "\n";
+      if (newVal.endsWith("/")) this.$data.instruct.resize += "\n";
     },
     // 监测协议是否重复，重复之后填充input
-    apolloProtocol: function(newVal) {
+    apolloProtocol: function(newVal:protocol) {
       if (newVal) {
         newVal.instruct.forEach((el) => {
-          this.instructItems.push(el);
+          this.$data.instructItems.push(el);
         });
-        this.accont.ProtocolType = newVal.ProtocolType || "ups";
-        this.accont.Type = newVal.Type;
-        this.instruct = Object.assign(this.instruct, newVal.instruct[0]);
+        this.$data.accont.ProtocolType = newVal.ProtocolType || "ups";
+        this.$data.accont.Type = newVal.Type;
+        this.$data.instruct = Object.assign(this.$data.instruct, newVal.instruct[0]);
       } else {
-        this.instructItems = [];
+        this.$data.instructItems = [];
       }
     }
   },
@@ -326,7 +329,7 @@ export default {
       `,
       variables() {
         return {
-          Protocol: this.accont.Protocol
+          Protocol: this.$data.accont.Protocol
         };
       },
       update: (data) => data.Protocol
@@ -358,59 +361,68 @@ export default {
   methods: {
     // 添加协议
     addInstruct() {
-      let regxBool = this.formResize.some(
+      const formResize:protocolInstructFormrize[] = this.$data.formResize
+      const regxBool = formResize.some(
         (el) =>
           el.name !== "" &&
+          typeof(el.regx) == "string" &&
           el.regx.split("-").length == 2 &&
           el.regx.split("-").some((e) => Number(e)) &&
           Number(el.bl)
       );
       if (!regxBool) return this.$bvModal.msgBoxOk("参数效验错误");
-      let result = JSON.parse(
+      let result:protocolInstruct = JSON.parse(
         JSON.stringify(
-          Object.assign(this.instruct, { formResize: this.formResize })
+          Object.assign(this.$data.instruct, { formResize: this.$data.formResize })
         )
       );
-      if (this.instruct.addModel) {
-        if (this.instructItems.some((val) => val.name == this.instruct.name))
+      const instructItems:protocolInstruct[] = this.$data.instructItems
+      if (this.$data.instruct.addModel) {
+        
+        if (instructItems.some((val) => val.name == this.$data.instruct.name))
           return this.$bvModal.msgBoxOk("指令名称重复");
-        this.instructItems.push(result);
+        this.$data.instructItems.push(result);
       } else
-        this.instructItems.forEach((el, index) => {
+        instructItems.forEach((el, index) => {
           if (el.name == result.name) {
-            this.instructItems[index] = Object.assign(
-              this.instructItems[index],
+            instructItems[index] = Object.assign(
+              instructItems[index],
               result
             );
             return;
           }
         });
 
-      this.instruct.addModel = true;
+      this.$data.instruct.addModel = true;
     },
-    modify(data) {
-      this.instruct = Object.assign(this.instruct, data.item, {
+    modify(data:any) {
+      this.$data.instruct = Object.assign(this.$data.instruct, data.item, {
         addModel: false
       });
     },
-    rm(data) {
+    rm(data:any) {
       this.$bvModal
         .msgBoxConfirm(`确定要删除指令:${data.item.name}吗??`)
         .then(() => {
-          this.instructItems.forEach((el, index) => {
+          const instructItems:protocolInstruct[] = this.$data.instructItems
+          instructItems.forEach((el, index) => {
             if (el.name == data.item.name) {
-              this.instructItems.splice(index, 1);
+             instructItems.splice(index, 1);
               return;
             }
           });
         });
     },
     submit() {
-      let accont = parseJsonToJson(this.accont);
-      let instruct = this.instructItems.map((el) => {
+      /* let accont = parseJsonToJson(this.$data.accont);
+      const instructItems:protocolInstruct[] = this.$data.instructItems
+      let instruct = instructItems.map((el) => {
         el.formResize = el.formResize.map((el2) => parseJsonToJson(el2));
         return parseJsonToJson(el);
-      });
+      }); */
+      let accont = this.$data.accont
+      const instructItems:protocolInstruct[] = this.$data.instructItems
+      let instruct = instructItems
 
       this.$apollo
         .mutate({
@@ -433,7 +445,7 @@ export default {
           );
         });
     },
-    deleteProtocol(item) {
+    deleteProtocol(item:any) {
       this.$apollo
         .mutate({
           mutation: gql`
@@ -456,5 +468,5 @@ export default {
       title: "add Protocol"
     };
   }
-};
+})
 </script>

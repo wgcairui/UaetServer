@@ -1,7 +1,7 @@
 <template>
-  <div class=" d-flex flex-column w-100">
-    <b-container fluid class=" flex-grow-1  d-flex flex-column">
-      <b-row no-gutters class=" py-2">
+  <div class="d-flex flex-column w-100">
+    <b-container fluid class="flex-grow-1 d-flex flex-column">
+      <b-row no-gutters class="py-2">
         <b-col cols="4" class="text-center p-0">
           <switch-quantity title="烟感"></switch-quantity>
         </b-col>
@@ -12,11 +12,9 @@
           <switch-quantity title="门禁"></switch-quantity>
         </b-col>
       </b-row>
-      <b-row
-        no-gutters
-        class=" flex-grow-1 alarm-content py-3 mh-100 overflow-hidden"
-        ><b-col class=" overflow-auto mh-100">
-          <b-list-group id="alarm-list"> </b-list-group>
+      <b-row no-gutters class="flex-grow-1 alarm-content py-3 mh-100 overflow-hidden">
+        <b-col class="overflow-auto mh-100">
+          <b-list-group id="alarm-list"></b-list-group>
         </b-col>
       </b-row>
       <b-row no-gutters class="border-top statu-padding">
@@ -28,7 +26,7 @@
         </b-col>
         <b-col cols="6" sm="3" class="m-0 p-0">
           <span class="text-Critical">
-            <i class="iconfont text-primary  ico">&#xe600;</i>
+            <i class="iconfont text-primary ico">&#xe600;</i>
             UPS功率
           </span>
         </b-col>
@@ -59,7 +57,7 @@
         </b-col>
         <b-col cols="6" sm="3" class="m-0 p-0">
           <span class="text-Critical">
-            <i class="iconfont text-danger  ico">&#xe604;</i>
+            <i class="iconfont text-danger ico">&#xe604;</i>
             热通道温度&#8451;
           </span>
         </b-col>
@@ -90,19 +88,22 @@
     </b-nav>
   </div>
 </template>
-<script>
-import switchQuantity from "@/components/switchQuantity";
-export default {
+<script lang="ts">
+import Vue from "vue";
+import switchQuantity from "../../components/switchQuantity.vue";
+
+export default Vue.extend({
   components: {
     switchQuantity
   },
   data() {
-      return {
-          ECid:this.$route.query.ECid
-      }
-  },
-};
+    return {
+      ECid: this.$route.query.ECid
+    };
+  }
+});
 </script>
+
 <style scoped>
 .text-Critical {
   font-size: 15px;

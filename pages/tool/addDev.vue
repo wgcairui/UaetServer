@@ -2,7 +2,7 @@
   <div>
     <my-head title="添加设备"></my-head>
     <separated title="添加设备"></separated>
-    <b-form class=" p-2">
+    <b-form class="p-2">
       <b-form-group label="设备型号:" v-bind="forGroup">
         <b-form-input trim v-model="accont.DevModel"></b-form-input>
       </b-form-group>
@@ -13,11 +13,7 @@
         ></b-form-select>
       </b-form-group>
       <b-form-group label="设备协议(可多选):" v-bind="forGroup">
-        <b-form-select
-          multiple
-          v-model="accont.Protocols"
-          :options="filterProtocols"
-        ></b-form-select>
+        <b-form-select multiple v-model="accont.Protocols" :options="filterProtocols"></b-form-select>
       </b-form-group>
       <b-form-group label="已选协议:" v-bind="forGroup">
         <b-form-input plaintext v-model="selectProtocols"></b-form-input>
@@ -35,15 +31,19 @@
     </b-table-lite>
   </div>
 </template>
-<script>
-import separated from "~/components/separated";
-import MyHead from '@/components/MyHead'
+<script lang="ts">
+import vue from "vue";
+import separated from "../../components/separated.vue";
+import MyHead from "../../components/MyHead.vue";
 import gql from "graphql-tag";
-export default {
+import { protocol, DevsType } from "../../server/bin/interface";
+
+export default vue.extend({
   components: {
     separated,
     MyHead
   },
+
   data() {
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },
@@ -65,16 +65,21 @@ export default {
   },
   computed: {
     selectProtocols() {
-      return this.accont.Protocols.map((el) => el.Protocol).toString();
+    
+      const Protocols:protocol[] = this.$data.accont.Protocols;
+      return Protocols.map((el) => el.Protocol).toString();
     },
-    filterProtocols(){
-      return this.Protocols.filter(el=>el.ProtocolType === this.accont.Type).map(el=>({ text: el.Protocol, value: el }))
+    filterProtocols() {
+      const Protocols:protocol[] = this.$data.Protocols;
+      return Protocols.filter(
+        (el) => el.ProtocolType === this.$data.accont.Type
+      ).map((el) => ({ text: el.Protocol, value: el }));
     }
   },
   watch: {
     statDevType: function(newVal) {
       if (newVal) {
-        this.accont = Object.assign(this.accont, newVal);
+        this.$data.accont = Object.assign(this.$data.accont, newVal);
       }
     }
   },
@@ -88,7 +93,7 @@ export default {
             Protocol
           }
         }
-      `/* ,
+      ` /* ,
       update: (data) =>
         data.Protocols.map((el) => ({ text: el.Protocol, value: el })) */
     },
@@ -107,7 +112,7 @@ export default {
       `,
       variables() {
         return {
-          DevModel: this.accont.DevModel
+          DevModel: this.$data.accont.DevModel
         };
       }
     },
@@ -145,7 +150,7 @@ export default {
           this.$apollo.queries.DevTypes.refresh();
         });
     },
-    deleteDevModel(item) {
+    deleteDevModel(item:DevsType) {
       this.$bvModal
         .msgBoxConfirm(`确定删除型号"${item.DevModel}"？？？`)
         .then((value) => {
@@ -172,5 +177,5 @@ export default {
         });
     }
   }
-};
+});
 </script>

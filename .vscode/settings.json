@@ -1,0 +1,8 @@
+{
+    "javascript.format.insertSpaceAfterConstructor": true,
+    "javascript.implicitProjectConfig.checkJs": true,
+    "javascript.implicitProjectConfig.experimentalDecorators": true,
+    "typescript.autoClosingTags": false,
+    "javascript.autoClosingTags": false,
+    "typescript.tsserver.maxTsServerMemory": 6072
+}

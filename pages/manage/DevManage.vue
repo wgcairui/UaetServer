@@ -107,11 +107,12 @@
     </b-container>
   </div>
 </template>
-<script>
-import MyHead from "@/components/MyHead";
-import separated from "@/components/separated";
+<script lang="ts">
+import vue from "vue"
+import MyHead from "../../components/MyHead.vue";
+import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
-export default {
+export default vue.extend({
   components: {
     MyHead,
     separated
@@ -253,7 +254,7 @@ export default {
         });
     }
   }
-};
+})
 </script>
 
 <style scoped></style>

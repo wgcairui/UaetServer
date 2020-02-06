@@ -5,10 +5,10 @@ type characterType = "utf8" | "hex" | "float" | "short" | "int";
 
 export interface protocolInstructFormrize {
   name: string;
-  enName: string;
-  regx: string;
+  enName?: string;
+  regx: string | null;
   bl: number;
-  unit: string;
+  unit: string | null;
   isState: boolean;
 }
 export interface protocolInstruct {
@@ -35,7 +35,12 @@ export interface DevsType {
   Protocols: {
     Type: communicationType;
     Protocol: string;
-  };
+  }[];
+}
+export interface TerminalMountDevs{
+  mountDev: string;
+  protocol: string;
+  pid: number;
 }
 /* Terminal */
 export interface Terminal {
@@ -43,11 +48,7 @@ export interface Terminal {
   name: string;
   Jw: string;
   mountNode: string;
-  mountDevs: {
-    mountDev: string;
-    protocol: string;
-    pid: number;
-  }[];
+  mountDevs: TerminalMountDevs[];
 }
 /* NodeClient */
 export interface NodeClient {
@@ -76,20 +77,25 @@ export interface queryResult {
   type: number;
   stat: string;
   pid: number;
-  result: any;
+  result: {
+    name: string;
+    value: number;
+    unit: string|null;
+  }[];
   mac: string;
+  time?: string;
 }
 
-export interface UserInfo{
-    name?: string,
-    user?: string
-    userGroup?: string
-    passwd?: string,
-    mail?: string,
-    company?: string,
-    tel?: number,
-    creatTime?: Date
-    modifyTime?: Date
-    address?:string,
-    status?:boolean
-  }
+export interface UserInfo {
+  name?: string;
+  user?: string;
+  userGroup?: string;
+  passwd?: string;
+  mail?: string;
+  company?: string;
+  tel?: number;
+  creatTime?: Date;
+  modifyTime?: Date;
+  address?: string;
+  status?: boolean;
+}

@@ -9,18 +9,10 @@
         <b-form-input trim v-model="accont.IP" :state="statIP"></b-form-input>
       </b-form-group>
       <b-form-group label="节点端口:" v-bind="forGroup">
-        <b-form-input
-          trim
-          v-model="accont.Port"
-          :state="statPort"
-        ></b-form-input>
+        <b-form-input trim v-model="accont.Port" :state="statPort"></b-form-input>
       </b-form-group>
       <b-form-group label="连接数限制:" v-bind="forGroup">
-        <b-form-input
-          trim
-          v-model="accont.MaxConnections"
-          :state="statMaxConnections"
-        ></b-form-input>
+        <b-form-input trim v-model="accont.MaxConnections" :state="statMaxConnections"></b-form-input>
       </b-form-group>
       <b-button block @click="submit">提交</b-button>
     </b-form>
@@ -35,12 +27,14 @@
     </b-table-lite>
   </div>
 </template>
-<script>
-//import Vuenotifications from "vue-notifications"
-import MyHead from '@/components/MyHead'
+<script lang="ts">
+import vue from "vue";
+import MyHead from "../../components/MyHead.vue";
 import gql from "graphql-tag";
-export default {
-  components:{
+import { NodeClient } from "../../server/bin/interface";
+
+export default vue.extend({
+  components: {
     MyHead
   },
   data() {
@@ -58,21 +52,21 @@ export default {
   },
   computed: {
     statIP() {
-      return this.accont.IP.split(".").length > 3;
+      return this.$data.accont.IP.split(".").length > 3;
     },
     statPort() {
-      return this.accont.Port > 3000;
+      return this.$data.accont.Port > 3000;
     },
     statMaxConnections() {
-      return this.accont.MaxConnections < 2001;
+      return this.$data.accont.MaxConnections < 2001;
     }
   },
   watch: {
     apolloIP: function(newVal) {
       if (newVal) {
-        this.accont.Name = newVal.Name;
-        this.accont.Port = newVal.Port;
-        this.accont.MaxConnections = newVal.MaxConnections;
+        this.$data.accont.Name = newVal.Name;
+        this.$data.accont.Port = newVal.Port;
+        this.$data.accont.MaxConnections = newVal.MaxConnections;
         this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" });
       }
     }
@@ -91,12 +85,12 @@ export default {
       `,
       variables() {
         return {
-          IP: this.accont.IP
+          IP: this.$data.accont.IP
         };
       },
       update: (data) => data.Node,
       skip() {
-        return this.accont.IP.split(".").length < 4;
+        return this.$data.accont.IP.split(".").length < 4;
       }
     },
     Nodes: gql`
@@ -112,7 +106,11 @@ export default {
   },
   methods: {
     submit() {
-      if (!this.statIP || !this.statPort || !this.statMaxConnections) {
+      if (
+        !this.$data.statIP ||
+        !this.$data.statPort ||
+        !this.$data.statMaxConnections
+      ) {
         return this.$bvModal.msgBoxOk("参数不合法!!");
       }
       this.$apollo
@@ -126,7 +124,7 @@ export default {
             }
           `,
           variables: {
-            arg: JSON.stringify(this.$data.accont)
+            arg: JSON.stringify(this.$data.$data.accont)
           }
         })
         .then((res) => {
@@ -134,7 +132,7 @@ export default {
           this.$bvModal.msgBoxOk("添加节点成功");
         });
     },
-    deleteNode(item) {
+    deleteNode(item: NodeClient) {
       this.$apollo
         .mutate({
           mutation: gql`
@@ -152,5 +150,5 @@ export default {
         .then(() => this.$apollo.queries.Nodes.refresh());
     }
   }
-};
+});
 </script>

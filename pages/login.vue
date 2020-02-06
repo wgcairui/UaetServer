@@ -31,33 +31,10 @@
   </b-container>
 </template>
 
-<script >
-import { ref, reactive, createComponent } from "@vue/composition-api";
-import MyHead from "@/components/MyHead.vue";
-/* export default createComponent({
-  setup() {
-    const n = ref(1)
-    const label = reactive({
-      labelCols: "12",
-      labelColsSm: "2",
-      labelAlignSm: "right"
-    });
-    const accont = reactive({
-      user: "admin",
-      passwd: "123456"
-    });
-    const login_submit = ()=>{}
-    return {
-      label,
-      accont,
-      login_submit
-    }
-  }
-}); */
-export default {
-  components: {
-    MyHead
-  },
+<script lang="ts">
+import vue from "vue";
+import MyHead from "../components/MyHead.vue";
+export default vue.extend({
   data() {
     return {
       label: {
@@ -71,10 +48,10 @@ export default {
       }
     };
   },
+  components: { MyHead },
   methods: {
     login_submit() {
       let { user, passwd } = this.$data.accont;
-
       this.$auth
         .loginWith("local", { data: { user, passwd } })
 
@@ -93,7 +70,30 @@ export default {
         });
     }
   }
-}; 
+});
+
+/* 
+export default {
+  components: {
+    MyHead
+  },
+  data() {
+    return {
+      label: {
+        labelCols: "12",
+        labelColsSm: "2",
+        labelAlignSm: "right"
+      },
+      accont: {
+        user: "admin",
+        passwd: "123456"
+      }
+    };
+  },
+  methods: {
+    
+  }
+};  */
 </script>
 <style scoped>
 @media screen and (min-width: 568px) {

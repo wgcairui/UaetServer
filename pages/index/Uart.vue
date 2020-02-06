@@ -72,10 +72,11 @@
     </div>
   </div>
 </template>
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import gql from "graphql-tag";
 import separated from "@/components/separated";
-export default {
+export default Vue.extend({
   components: {
     separated
   },
@@ -117,5 +118,5 @@ export default {
       update: (data) => data.BindDevice || { UTs: [], ECs: [] }
     }
   }
-};
+})
 </script>

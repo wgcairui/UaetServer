@@ -6,19 +6,19 @@
         <separated title="th">{{ data.DateTime }}</separated>
         <b-col cols="6">
           <div class="ths">
-            <i class=" iconfont text-success">&#xe604;</i
-            ><b>{{ data.data.temperature }}&#8451;</b>
+            <i class="iconfont text-success">&#xe604;</i>
+            <b>{{ data.data.temperature }}&#8451;</b>
           </div>
         </b-col>
         <b-col cols="6">
           <div class="ths">
-            <i class=" iconfont text-primary">&#xe604;</i
-            ><b>{{ data.data.humidity }}%</b>
+            <i class="iconfont text-primary">&#xe604;</i>
+            <b>{{ data.data.humidity }}%</b>
           </div>
         </b-col>
-        <b-col cols="12"> </b-col>
+        <b-col cols="12"></b-col>
       </b-row>
-      <b-row class=" mt-5">
+      <b-row class="mt-5">
         <separated title="table"></separated>
         <b-col cols="12">
           <b-table-lite responsive :items="data.result" :fields="field">
@@ -31,8 +31,7 @@
                   name: 'Dev-line',
                   query: { ...$route.query, name: row.item.name }
                 }"
-                >趋势</b-button
-              >
+              >趋势</b-button>
             </template>
           </b-table-lite>
         </b-col>
@@ -40,13 +39,12 @@
     </b-container>
   </div>
 </template>
-
-<script>
-import separated from "@/components/separated";
-import MyHead from "@/components/MyHead";
-import gql from "graphql-tag";
-import { TerminalResultArrayToJson } from "@/plugins/tools";
-export default {
+<script lang="ts">
+import Vue from "vue";
+import separated from "../../components/separated.vue";
+import MyHead from "../../components/MyHead.vue";
+import { queryResult } from "../../server/bin/interface";
+export default Vue.extend({
   components: { MyHead, separated },
   data() {
     return {
@@ -68,14 +66,18 @@ export default {
     };
   },
   computed: {
-    dataType() {
-      return this.$route.query.type;
+    dataType():string {
+      
+      const type:string = this.$route.query.type
+      return type
     },
     data() {
-      if (!this.UartTerminalData) return this.th;
+      if (!this.$data.UartTerminalData) return this.$data.th;
       switch (this.dataType) {
+
         case "ut":
-          let { result, time } = this.UartTerminalData;
+
+          let { result, time }:queryResult = this.UartTerminalData;
           this.th.DateTime = time;
           let th = TerminalResultArrayToJson(result);
           this.th.data.temperature = th["温度"];
@@ -130,7 +132,7 @@ export default {
       title: "温湿度"
     };
   }
-};
+});
 </script>
 
 <style scoped>

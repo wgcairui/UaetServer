@@ -1,11 +1,5 @@
 /* eslint-disable no-console */
-const { register } = require( "ts-node");
-register({
-  project: 'tsconfig.json',
-  compilerOptions: {
-    module: "CommonJS"
-  }
-})
+
 import http from "http";
 import https from "https";
 import fs from "fs";
@@ -40,7 +34,8 @@ Event.attach(app);
 
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
-app.use(koaLogger());
+// app.use(koaLogger());
+
 app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());

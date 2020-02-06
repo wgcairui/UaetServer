@@ -1,12 +1,10 @@
 <template>
-    <my-head title="告警管理"></my-head>
+  <my-head title="告警管理"></my-head>
 </template>
-<script>
-import MyHead from '@/components/MyHead'
-export default {
-    components:{
-        MyHead
-    }
-    
-}
+<script lang="ts">
+import Vue from "vue";
+import MyHead from "../../components/MyHead";
+export default Vue.extend({
+  components: { MyHead }
+});
 </script>
