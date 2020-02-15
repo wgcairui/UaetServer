@@ -23,6 +23,12 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { tree } from "vued3tree";
+import { Terminal } from "../../server/bin/interface";
+interface selectTree {
+  mountDev: string;
+  name: string;
+  children: any;
+}
 export default Vue.extend({
   components: { tree },
   data() {
@@ -32,7 +38,7 @@ export default Vue.extend({
   },
 
   methods: {
-    treeSelect({ data }) {
+    treeSelect({ data }: { data: selectTree }) {
       let { mountDev, name, children } = data;
       if (children) return;
       console.log(mountDev);
@@ -56,7 +62,7 @@ export default Vue.extend({
             DevMac
             name
             mountNode
-            children: mountDevs {
+            mountDevs {
               name: mountDev
               mountDev
               protocol
@@ -69,11 +75,12 @@ export default Vue.extend({
         DevMac: query.DevMac
       }
     });
-    let Terminal = data.Terminal;
-    Terminal.children = Terminal.children.map((el) =>
+    let Terminal: Terminal = data.Terminal;
+    let children = Terminal.mountDevs.map((el) =>
       Object.assign(el, { name: el.mountDev + el.pid })
     );
-    return { Terminal };
+    let Terminals = Object.assign(Terminal, { children });
+    return { Terminals };
   }
 });
 </script>

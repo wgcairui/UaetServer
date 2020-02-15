@@ -1,11 +1,15 @@
 /* eslint-disable no-console */
-import IO from "koa-socket-2";
+import koa_socket_2 from "koa-socket-2";
 import Event from "../event/index";
-import { Socket } from "_@types_socket.io@2.1.4@@types/socket.io";
-import { NodeClient, SocketRegisterInfo } from "../bin/interface";
+import { Socket } from "socket.io";
+import { NodeClient, SocketRegisterInfo, KoaSocketOpts } from "../bin/interface";
 
-export default class socket extends IO {
+export default class IO extends koa_socket_2 {
+  constructor(arg: KoaSocketOpts) {
+    super(arg);
+  }
   // 挂载
+
   attach(app: any) {
     super.attach(app);
     this.start();
@@ -51,7 +55,7 @@ export default class socket extends IO {
     const IP = socket.conn.remoteAddress;
     console.log(
       `节点：${
-        (<NodeClient>Event.nodeRegisterInfo.get(IP)).Name
+      (<NodeClient>Event.nodeRegisterInfo.get(IP)).Name
       }断开连接，清除定时操作`
     );
     Event.emit(Event.env.disNodeClient, { IP, socket });

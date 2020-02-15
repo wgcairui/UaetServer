@@ -54,19 +54,21 @@ export default vue.extend({
       let { user, passwd } = this.$data.accont;
       this.$auth
         .loginWith("local", { data: { user, passwd } })
-
         .catch((error) => {
           if (!error.response || error.response.status !== 400)
-            return this.$bvModal.msgBoxOk("登录遇到未知错误");
-          switch (error.response.data.error) {
-            case "userNan":
-              this.$bvModal.msgBoxOk("用户名错误");
-              break;
-            case "passwdError":
-              this.accont.passwd = "";
-              this.$bvModal.msgBoxOk("用户密码错误");
-              break;
-          }
+            this.$bvModal.msgBoxOk("登录遇到未知错误");
+          else
+          console.log(error.response);
+          
+            switch (error.response.data) {
+              case "userNan":
+                this.$bvModal.msgBoxOk("用户名错误");
+                break;
+              case "passwdError":
+                this.accont.passwd = "";
+                this.$bvModal.msgBoxOk("用户密码错误");
+                break;
+            }
         });
     }
   }

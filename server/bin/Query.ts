@@ -1,4 +1,7 @@
 /* eslint-disable no-console */
+/* 
+数据执行器部分，加载协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
+*/
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
 import { Terminal } from "../mongoose/Terminal";
 import { NodeClient } from "../mongoose/node";
@@ -70,7 +73,7 @@ export default class Query {
     Name?: string;
     socket: SocketIO.Socket;
   }) {
-    if (!IP || (!Name && !socket)) return false;
+    if (!IP || (!Name && !socket)) return
     Name = Name || (<nodeClient>this.CacheNode.get(IP)).Name;
     // console.log(`检索 ${Name} 登记的设备，依次发生查询指令`);
 

@@ -14,7 +14,7 @@ import body from "koa-body";
 import koaLogger from "koa-logger";
 import cors from "@koa/cors";
 // nuxt
-import { Nuxt, Builder } from "nuxt";
+const { Nuxt, Builder } = require("nuxt");
 // socket
 import Socket from "./socket/socket.node";
 // Apollo
@@ -24,7 +24,7 @@ import router from "./router/index";
 // Event
 import Event from "./event/index";
 
-const app = new Koa();
+const app:Koa<Koa.DefaultState, Koa.DefaultContext> = new Koa();
 
 // app.use(sslify());
 // new Socket

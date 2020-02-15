@@ -3,7 +3,7 @@
 /* eslint-disable no-return-await */
 import { ApolloServer, gql } from "apollo-server-koa";
 import { GraphQLJSON, GraphQLJSONObject } from "graphql-type-json";
-import { ParameterizedContext } from "_@types_koa@2.11.0@@types/koa";
+import { ParameterizedContext } from "koa";
 
 const { BcryptDo } = require("../bin/bcrypt");
 const { JwtVerify } = require("../bin/Secret");

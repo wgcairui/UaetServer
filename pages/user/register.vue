@@ -114,31 +114,32 @@ export default Vue.extend({
         !this.$data.passwd2Stat ||
         !this.$data.mailStat
       )
-        return this.$bvModal.msgBoxOk("输入的参数格式错误");
-      this.$apollo
-        .mutate({
-          mutation: gql`
-            mutation addUserAccont($arg: JSON) {
-              addUser(arg: $arg) {
-                ok
-                msg
+        this.$bvModal.msgBoxOk("输入的参数格式错误");
+      else
+        this.$apollo
+          .mutate({
+            mutation: gql`
+              mutation addUserAccont($arg: JSON) {
+                addUser(arg: $arg) {
+                  ok
+                  msg
+                }
               }
+            `,
+            variables: {
+              arg: { name, user, passwd, mail, company }
             }
-          `,
-          variables: {
-            arg: { name, user, passwd, mail, company }
-          }
-        })
-        .then(({ data }) => {
-          if (data.addUser.ok && data.addUser.ok == 1) {
-            this.$bvModal
-              .msgBoxOk(data.addUser.msg)
-              .then((stat) => this.$router.push({ name: "login" }));
-          } else this.$bvModal.msgBoxOk(data.addUser.msg);
-        })
-        .catch((e) => {
-          this.$bvModal.msgBoxOk("提交错误，请检查网络是否连接");
-        });
+          })
+          .then(({ data }) => {
+            if (data.addUser.ok && data.addUser.ok == 1) {
+              this.$bvModal
+                .msgBoxOk(data.addUser.msg)
+                .then((stat) => this.$router.push({ name: "login" }));
+            } else this.$bvModal.msgBoxOk(data.addUser.msg);
+          })
+          .catch((e) => {
+            this.$bvModal.msgBoxOk("提交错误，请检查网络是否连接");
+          });
     }
   }
 });

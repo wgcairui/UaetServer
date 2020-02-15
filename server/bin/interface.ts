@@ -99,3 +99,11 @@ export interface UserInfo {
   address?: string;
   status?: boolean;
 }
+
+export interface KoaSocketOpts {
+  namespace?: string | null;
+
+  hidden?: boolean;
+
+  ioOptions?: SocketIO.ServerOptions;
+}

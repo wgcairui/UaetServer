@@ -31,10 +31,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [
-    { src: "~/plugins/tree.js", ssr: false },
-    "~/plugins/CompositionApi.js"
-  ],
+  plugins: [{ src: "~/plugins/tree.js", ssr: false }],
   /*
    ** Nuxt.js dev-modules
    */
@@ -200,7 +197,7 @@ module.exports = {
     /*
      ** You can extend webpack config here
      */
-    extend(config, ctx) {}
+    extend(config, ctx) { }
   },
   router: {
     middleware: ["auth"]

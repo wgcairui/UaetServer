@@ -5,8 +5,8 @@ import VueRouter,{ Route } from "vue-router";
 import {
   DollarApollo,
   ApolloClientMethods
-} from "@nuxtjs/apollo/node_modules/vue-apollo/types/vue-apollo";
-import { VueApolloComponentOptions } from "@nuxtjs/apollo/node_modules/vue-apollo/types/options";
+} from "vue-apollo/types/vue-apollo";
+import { VueApolloComponentOptions } from "vue-apollo/types/options";
 import { Auth } from "nuxtjs__auth";
 import { BvModal, BvToast } from "bootstrap-vue";
 
