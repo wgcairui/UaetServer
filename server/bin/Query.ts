@@ -10,7 +10,8 @@ import {
   protocol,
   DevsType as devsType,
   Terminal as terminal,
-  NodeClient as nodeClient
+  NodeClient as nodeClient,
+  queryObject
 } from "../bin/interface";
 
 export default class Query {
@@ -81,16 +82,17 @@ export default class Query {
     for (const { DevMac, mountDevs } of clients) {
       for (const { pid, protocol } of mountDevs) {
         const { Type, instruct } = <protocol>this.CacheProtocol.get(protocol);
-        const time = Date.now()
+        const timeStamp = Date.now()
         for (const { name } of instruct) {
-          socket.emit("query", {
+          let query: queryObject = {
             mac: DevMac,
-            type: Type,
+            type: Type as number,
             protocol,
             pid,
-            time,
+            timeStamp,
             content: tool.Crc16modbus(pid, name)
-          });
+          }
+          socket.emit("query", query);
         }
       }
     }

@@ -1,3 +1,6 @@
+import { Socket } from "net";
+import { EventEmitter } from "events";
+
 /* protocol */
 type communicationType = 232 | 485;
 type protocolType = "ups" | "air" | "em" | "th";
@@ -37,7 +40,7 @@ export interface DevsType {
     Protocol: string;
   }[];
 }
-export interface TerminalMountDevs{
+export interface TerminalMountDevs {
   mountDev: string;
   protocol: string;
   pid: number;
@@ -66,26 +69,56 @@ export interface SocketRegisterInfo {
   type: string;
   uptime: number;
 }
+/* query */
+export interface queryObject {
+  mac: string;
+  type: number;
+  protocol: string,
+  pid: number,
+  timeStamp: number
+  content: string
+}
 /* result */
-export interface queryResult {
+export interface queryResult extends queryObject {
   buffer: {
     data: number[];
     type: string;
   };
-  protocol: string;
-  content: string;
-  type: number;
   stat: string;
-  pid: number;
-  result: {
+  result?: {
     name: string;
     value: number;
-    unit: string|null;
+    unit: string | null;
   }[];
-  mac: string;
   time?: string;
 }
 
+/*透传 api 数据 */
+export interface socketNetInfo {
+  ip: string;
+  port: number;
+  mac: string;
+  jw: string;
+}
+
+export interface allSocketInfo {
+  NodeName: string;
+  Connections: number | Error;
+  SocketMaps: socketNetInfo[];
+}
+
+export interface nodeInfo {
+  hostname: string;
+  totalmem: string;
+  freemem: string;
+  loadavg: number[];
+  networkInterfaces: any;
+  type: string;
+  uptime: string;
+  userInfo: any;
+}
+
+/* 用户信息 */
 export interface UserInfo {
   name?: string;
   user?: string;
@@ -102,8 +135,6 @@ export interface UserInfo {
 
 export interface KoaSocketOpts {
   namespace?: string | null;
-
   hidden?: boolean;
-
   ioOptions?: SocketIO.ServerOptions;
 }

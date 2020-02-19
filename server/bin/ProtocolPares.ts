@@ -2,15 +2,15 @@
 import Event from "../event/index";
 import Tool from "../bin/tool";
 import { TerminalClientResult, TerminalClientResults } from "../mongoose/node";
-import { protocol, protocolInstruct, queryResult } from "./interface";
+import { protocolInstruct, queryResult } from "./interface";
 
 export default (data: queryResult) => {
-  const { buffer, protocol, content, type, stat } = data;
+  let result: { name: string; value: number; unit: string | null; }[] = []
+  const { buffer, protocol, content, type, stat, timeStamp } = data;
   if (stat === "timeOut") return data;
-  const Protocol = <protocol>Event.Query.CacheProtocol.get(protocol);
-  const instruct = <protocolInstruct>(
-    Protocol.instruct.find((el) => content.includes(el.name))
-  );
+  const instruct =
+    <protocolInstruct>Event.Query.CacheProtocol.get(protocol)?.instruct.find((el) => content.includes(el.name))
+
   switch (type) {
     case 232:
       break;
@@ -19,17 +19,17 @@ export default (data: queryResult) => {
       {
         const buf = Buffer.from(buffer.data.slice(3, 3 + buffer.data[2]));
         const { formResize, resultType } = instruct;
-        data.pid = buf.slice(0, 1).readUInt8(0);
-        data.result = formResize.map((el) => {
-          const { name, bl, unit, regx } = el;
-
-          const [start, len] = String(regx).split("-");
+        //遍历解析协议，转换结果里面的值
+        result = formResize.map((el) => {
+          //单个数据的限定首尾
+          const [start, len] = el.regx?.split("-") as string[]
           let valBuf = buf.slice(
             parseInt(start) - 1,
             parseInt(start) - 1 + parseInt(len)
           );
 
           let value: number = 0;
+          let bl = el.bl
           try {
             switch (resultType) {
               case "hex":
@@ -44,18 +44,22 @@ export default (data: queryResult) => {
           } catch (error) {
             console.log(error.message);
           }
-          return { name, value, unit };
+          return { name: el.name, value, unit: el.unit };
         });
+        data.pid = buf.slice(0, 1).readUInt8(0);
       }
       break;
   }
   // 透传结果集保存到数据集，所有数据
-  new TerminalClientResults(data).save();
+  TerminalClientResults.updateOne({ timeStamp }, { $set: { ...data }, $addToSet: { result: { $each: result } } }, { upsert: true })
+                        .catch((e) => console.log(e));
   // 透传结果集保存到数据集，最新数据
   TerminalClientResult.updateOne(
     { mac: data.mac, pid: data.pid, content: data.content },
-    { $set: { ...data } },
+    { $set: { ...data }, $addToSet: { result: { $each: result } } },
     { upsert: true }
   ).catch((e) => console.log(e));
+
+
   return data;
 };
