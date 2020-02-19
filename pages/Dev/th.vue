@@ -44,6 +44,7 @@ import Vue from "vue";
 import separated from "../../components/separated.vue";
 import MyHead from "../../components/MyHead.vue";
 import { queryResult } from "../../server/bin/interface";
+import { gql } from "apollo-server-koa";
 export default Vue.extend({
   components: { MyHead, separated },
   data() {
@@ -66,35 +67,54 @@ export default Vue.extend({
     };
   },
   computed: {
-    dataType():string {
-      
-      const type:string = this.$route.query.type
-      return type
+    dataType(): string {
+      return this.$route.query.type;
     },
     data() {
       if (!this.$data.UartTerminalData) return this.$data.th;
-      switch (this.dataType) {
-
+      switch (this.$data.dataType) {
         case "ut":
-
-          let { result, time }:queryResult = this.UartTerminalData;
-          this.th.DateTime = time;
+          let { result, time } = this.$data.UartTerminalData;
+          this.$data.th.DateTime = time;
           let th = TerminalResultArrayToJson(result);
           this.th.data.temperature = th["温度"];
           this.th.data.humidity = th["湿度"];
           this.th.result = result;
-          return this.th;
+          return this.$data.th;
           break;
         default:
-          return this.th;
+          return this.$data.th;
           break;
       }
     }
   },
   apollo: {
     UartTerminalData: {
-      query() {
-        switch (this.dataType) {
+      query: gql`
+        query getUartTerminalData($DevMac: String, $pid: Int) {
+          UartTerminalData(DevMac: $DevMac, pid: $pid) {
+            result {
+              name
+              value
+              unit
+            }
+            pid
+            time
+            mac
+          }
+        }
+      `,
+      variables() {
+        return {
+          pid: Number.parseInt(this.$route.query.pid as string),
+          DevMac: this.$route.query.DevMac
+        };
+      },
+      pollInterval: 5000,
+      fetchPolicy: "cache-and-network"
+    }
+    /* query() {
+        switch (this.$data.dataType) {
           case "ut":
             return gql`
               query getUartTerminalData($DevMac: String, $pid: Int) {
@@ -125,7 +145,7 @@ export default Vue.extend({
       },
       pollInterval: 5000,
       fetchPolicy: "cache-and-network"
-    }
+    } */
   },
   head() {
     return {

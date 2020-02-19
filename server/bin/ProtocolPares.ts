@@ -1,12 +1,15 @@
 /* eslint-disable no-console */
 import Event from "../event/index";
 import Tool from "../bin/tool";
-import { TerminalClientResult, TerminalClientResults } from "../mongoose/node";
+import { TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose/node";
 import { protocolInstruct, queryResult } from "./interface";
 
 export default (data: queryResult) => {
+  // 保存查询结果的原始数据
+  new TerminalClientResults(data).save().catch(e => console.log(e))
+  //
   let result: { name: string; value: number; unit: string | null; }[] = []
-  const { buffer, protocol, content, type, stat, timeStamp } = data;
+  const { buffer, protocol, content, type, stat, timeStamp, mac, pid, time } = data;
   if (stat === "timeOut") return data;
   const instruct =
     <protocolInstruct>Event.Query.CacheProtocol.get(protocol)?.instruct.find((el) => content.includes(el.name))
@@ -46,20 +49,21 @@ export default (data: queryResult) => {
           }
           return { name: el.name, value, unit: el.unit };
         });
-        data.pid = buf.slice(0, 1).readUInt8(0);
       }
       break;
   }
-  // 透传结果集保存到数据集，所有数据
-  TerminalClientResults.updateOne({ timeStamp }, { $set: { ...data }, $addToSet: { result: { $each: result } } }, { upsert: true })
-                        .catch((e) => console.log(e));
+
   // 透传结果集保存到数据集，最新数据
+
+  //保存数据到结果单例
+  TerminalClientResultSingle.updateOne({ mac, pid, content }, { $set: { result, time } }, { upsert: true }).catch((e) => console.log(e));
+  //保存数据到结果集合
   TerminalClientResult.updateOne(
-    { mac: data.mac, pid: data.pid, content: data.content },
-    { $set: { ...data }, $addToSet: { result: { $each: result } } },
+    { mac, pid, timeStamp },
+    { $addToSet: { result: { $each: result } } },
     { upsert: true }
   ).catch((e) => console.log(e));
 
 
-  return data;
+  return result;
 };

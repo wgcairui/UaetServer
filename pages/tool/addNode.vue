@@ -111,26 +111,26 @@ export default vue.extend({
         !this.$data.statPort ||
         !this.$data.statMaxConnections
       ) {
-        return this.$bvModal.msgBoxOk("参数不合法!!");
-      }
-      this.$apollo
-        .mutate({
-          mutation: gql`
-            mutation setOrgetNode($arg: String) {
-              setNode(arg: $arg) {
-                ok
-                msg
+        this.$bvModal.msgBoxOk("参数不合法!!");
+      } else
+        this.$apollo
+          .mutate({
+            mutation: gql`
+              mutation setOrgetNode($arg: String) {
+                setNode(arg: $arg) {
+                  ok
+                  msg
+                }
               }
+            `,
+            variables: {
+              arg: JSON.stringify(this.$data.$data.accont)
             }
-          `,
-          variables: {
-            arg: JSON.stringify(this.$data.$data.accont)
-          }
-        })
-        .then((res) => {
-          this.$apollo.queries.Nodes.refresh();
-          this.$bvModal.msgBoxOk("添加节点成功");
-        });
+          })
+          .then((res) => {
+            this.$apollo.queries.Nodes.refresh();
+            this.$bvModal.msgBoxOk("添加节点成功");
+          });
     },
     deleteNode(item: NodeClient) {
       this.$apollo

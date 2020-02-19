@@ -3,7 +3,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import MyHead from "../../components/MyHead";
+import MyHead from "../../components/MyHead.vue";
 export default Vue.extend({
   components: { MyHead }
 });

@@ -12,9 +12,8 @@ export default async (ctx: ParameterizedContext) => {
     case "UartData":
       {
         const { data }: { data: queryResult[] } = body;
-        console.log(data);
-        
         data.forEach(async (el) => ProtocolPares(el));
+        ctx.body = {code:200}
       }
       break;
     // 透传运行数据上传接口

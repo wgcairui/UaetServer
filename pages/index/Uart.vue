@@ -75,7 +75,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import gql from "graphql-tag";
-import separated from "@/components/separated";
+import separated from "../../components/separated.vue";
 export default Vue.extend({
   components: {
     separated
@@ -90,7 +90,7 @@ export default Vue.extend({
   },
   methods: {
     a() {
-      this.BindDevice.UTs.reduce();
+      // this.BindDevice.UTs.reduce();
     }
   },
   apollo: {

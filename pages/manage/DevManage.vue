@@ -146,15 +146,15 @@ export default vue.extend({
   computed: {
     uartTable: {
       get() {
-        return this.uart.length > 0 && Object.keys(this.uart[0]).length > 0;
+        return this.$data.uart.length > 0 && Object.keys(this.$data.uart[0]).length > 0;
       },
       set() {}
     },
     EcTable: {
       get() {
         return (
-          this.ECterminal.length > 0 &&
-          Object.keys(this.ECterminal[0]).length > 0
+          this.$data.ECterminal.length > 0 &&
+          Object.keys(this.$data.ECterminal[0]).length > 0
         );
       },
       set() {}

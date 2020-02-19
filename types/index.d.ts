@@ -23,8 +23,8 @@ declare module "vue/types/vue" {
     $auth: Auth;
     $bvModal: BvModal;
     $bvToast: BvToast;
-    $router: VueRouter
-    $route: Route
+   /*  $router: VueRouter
+    $route: Route */
   }
 }
 // type DataDef<Data, Props, V> = Data | ((this: Readonly<Props> & V) => Data);

@@ -7,10 +7,7 @@
           <separated title="添加设备协议"></separated>
           <b-form class="p-3">
             <b-form-group label="协议类型：" v-bind="forGroup">
-              <b-form-select
-                v-model="accont.Type"
-                :options="[485, 232]"
-              ></b-form-select>
+              <b-form-select v-model="accont.Type" :options="[485, 232]"></b-form-select>
             </b-form-group>
             <b-form-group label="协议设备类型：" v-bind="forGroup">
               <b-form-select
@@ -25,10 +22,7 @@
               ></b-form-select>
             </b-form-group>
             <b-form-group label="协议名称：" v-bind="forGroup">
-              <b-form-input
-                v-model="accont.Protocol"
-                :state="accont.Protocol !== ''"
-              ></b-form-input>
+              <b-form-input v-model="accont.Protocol" :state="accont.Protocol !== ''"></b-form-input>
             </b-form-group>
           </b-form>
         </b-col>
@@ -45,13 +39,7 @@
             :fields="instructItemsFields"
           >
             <template v-slot:cell(formResize)="row">
-              <b-button
-                type="link"
-                size="sm"
-                @click="row.toggleDetails"
-                variant="dark"
-                >查看</b-button
-              >
+              <b-button type="link" size="sm" @click="row.toggleDetails" variant="dark">查看</b-button>
             </template>
             <template v-slot:row-details="row">
               <b-card>
@@ -70,12 +58,8 @@
             </template>
             <template v-slot:cell(oprate)="data">
               <b-button-group>
-                <b-button variant="info" size="sm" @click="modify(data)"
-                  >修改</b-button
-                >
-                <b-button variant="danger" size="sm" @click="rm(data)"
-                  >删除</b-button
-                >
+                <b-button variant="info" size="sm" @click="modify(data)">修改</b-button>
+                <b-button variant="danger" size="sm" @click="rm(data)">删除</b-button>
               </b-button-group>
             </template>
           </b-table-lite>
@@ -84,9 +68,8 @@
             v-if="instructItems.length > 0"
             block
             variant="success"
-            class=" mb-3 "
-            >上传协议</b-button
-          >
+            class="mb-3"
+          >上传协议</b-button>
         </b-col>
       </b-row>
 
@@ -96,15 +79,8 @@
           <b-card>
             <b-card-body>
               <b-form>
-                <b-form-group
-                  label="指令字符："
-                  v-bind="forGroup"
-                  :disabled="!instruct.addModel"
-                >
-                  <b-form-input
-                    v-model="instruct.name"
-                    placeholder="QGS或者010300000002b5c0"
-                  ></b-form-input>
+                <b-form-group label="指令字符：" v-bind="forGroup" :disabled="!instruct.addModel">
+                  <b-form-input v-model="instruct.name" placeholder="QGS或者010300000002b5c0"></b-form-input>
                 </b-form-group>
                 <b-form-group label="结果集:" v-bind="forGroup">
                   <b-form-select
@@ -117,31 +93,30 @@
                     <b-form-checkbox
                       v-model="instruct.shift"
                       class="py-2 mr-3"
-                      >{{ instruct.shiftNum }}</b-form-checkbox
-                    >
+                    >{{ instruct.shiftNum }}</b-form-checkbox>
                     <b-form-input
                       type="range"
                       max="5"
                       min="0"
                       v-model="instruct.shiftNum"
                       v-if="instruct.shift"
-                      >2</b-form-input
-                    >
+                    >2</b-form-input>
                   </b-input-group>
                 </b-form-group>
                 <b-form-group label="字符去尾处理:" v-bind="forGroup">
                   <b-input-group>
-                    <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">{{
+                    <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">
+                      {{
                       instruct.popNum
-                    }}</b-form-checkbox>
+                      }}
+                    </b-form-checkbox>
                     <b-form-input
                       type="range"
                       max="10"
                       min="0"
                       v-model="instruct.popNum"
                       v-if="instruct.pop"
-                      >2</b-form-input
-                    >
+                    >2</b-form-input>
                   </b-input-group>
                 </b-form-group>
                 <b-form-group label="解析规则:" v-bind="forGroup">
@@ -167,8 +142,7 @@
                   @click="addInstruct"
                   block
                   :variant="instruct.addModel ? 'success' : 'info'"
-                  >{{ instruct.addModel ? "添加指令" : "修改指令" }}</b-button
-                >
+                >{{ instruct.addModel ? "添加指令" : "修改指令" }}</b-button>
               </b-form>
             </b-card-body>
           </b-card>
@@ -215,7 +189,11 @@ import MyHead from "../../components/MyHead.vue";
 import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
 import { parseJsonToJson } from "../../plugins/tools";
-import { protocolInstructFormrize, protocol, protocolInstruct } from "../../server/bin/interface";
+import {
+  protocolInstructFormrize,
+  protocol,
+  protocolInstruct
+} from "../../server/bin/interface";
 export default vue.extend({
   components: {
     separated,
@@ -269,9 +247,9 @@ export default vue.extend({
     // 解析规则分解为Json，{name:"aa",regx:"1-5",bl:"1",unit:"%"}
     formResize() {
       if (this.$data.instruct.resize == "") return [];
-      const resize:string = this.$data.instruct.resize
+      const resize: string = this.$data.instruct.resize;
 
-      let result:protocolInstructFormrize[] = resize
+      let result: protocolInstructFormrize[] = resize
         .split("/")
         .filter((el) => el !== "")
         .map((el) => el.split("+"))
@@ -293,14 +271,17 @@ export default vue.extend({
       if (newVal.endsWith("/")) this.$data.instruct.resize += "\n";
     },
     // 监测协议是否重复，重复之后填充input
-    apolloProtocol: function(newVal:protocol) {
+    apolloProtocol: function(newVal: protocol) {
       if (newVal) {
         newVal.instruct.forEach((el) => {
           this.$data.instructItems.push(el);
         });
         this.$data.accont.ProtocolType = newVal.ProtocolType || "ups";
         this.$data.accont.Type = newVal.Type;
-        this.$data.instruct = Object.assign(this.$data.instruct, newVal.instruct[0]);
+        this.$data.instruct = Object.assign(
+          this.$data.instruct,
+          newVal.instruct[0]
+        );
       } else {
         this.$data.instructItems = [];
       }
@@ -361,53 +342,57 @@ export default vue.extend({
   methods: {
     // 添加协议
     addInstruct() {
-      const formResize:protocolInstructFormrize[] = this.$data.formResize
+      const formResize: protocolInstructFormrize[] = this.$data.formResize;
       const regxBool = formResize.some(
         (el) =>
           el.name !== "" &&
-          typeof(el.regx) == "string" &&
+          typeof el.regx == "string" &&
           el.regx.split("-").length == 2 &&
           el.regx.split("-").some((e) => Number(e)) &&
           Number(el.bl)
       );
-      if (!regxBool) return this.$bvModal.msgBoxOk("参数效验错误");
-      let result:protocolInstruct = JSON.parse(
+      if (!regxBool) {
+        this.$bvModal.msgBoxOk("参数效验错误");
+        return;
+      }
+      const result: protocolInstruct = JSON.parse(
         JSON.stringify(
-          Object.assign(this.$data.instruct, { formResize: this.$data.formResize })
+          Object.assign(this.$data.instruct, {
+            formResize: this.$data.formResize
+          })
         )
       );
-      const instructItems:protocolInstruct[] = this.$data.instructItems
+      const instructItems: protocolInstruct[] = this.$data.instructItems;
       if (this.$data.instruct.addModel) {
-        
-        if (instructItems.some((val) => val.name == this.$data.instruct.name))
-          return this.$bvModal.msgBoxOk("指令名称重复");
+        if (instructItems.some((val) => val.name == this.$data.instruct.name)) {
+          this.$bvModal.msgBoxOk("指令名称重复");
+          return;
+        }
+
         this.$data.instructItems.push(result);
       } else
         instructItems.forEach((el, index) => {
           if (el.name == result.name) {
-            instructItems[index] = Object.assign(
-              instructItems[index],
-              result
-            );
+            instructItems[index] = Object.assign(instructItems[index], result);
             return;
           }
         });
 
       this.$data.instruct.addModel = true;
     },
-    modify(data:any) {
+    modify(data: any) {
       this.$data.instruct = Object.assign(this.$data.instruct, data.item, {
         addModel: false
       });
     },
-    rm(data:any) {
+    rm(data: any) {
       this.$bvModal
         .msgBoxConfirm(`确定要删除指令:${data.item.name}吗??`)
         .then(() => {
-          const instructItems:protocolInstruct[] = this.$data.instructItems
+          const instructItems: protocolInstruct[] = this.$data.instructItems;
           instructItems.forEach((el, index) => {
             if (el.name == data.item.name) {
-             instructItems.splice(index, 1);
+              instructItems.splice(index, 1);
               return;
             }
           });
@@ -420,9 +405,9 @@ export default vue.extend({
         el.formResize = el.formResize.map((el2) => parseJsonToJson(el2));
         return parseJsonToJson(el);
       }); */
-      let accont = this.$data.accont
-      const instructItems:protocolInstruct[] = this.$data.instructItems
-      let instruct = instructItems
+      let accont = this.$data.accont;
+      const instructItems: protocolInstruct[] = this.$data.instructItems;
+      let instruct = instructItems;
 
       this.$apollo
         .mutate({
@@ -445,7 +430,7 @@ export default vue.extend({
           );
         });
     },
-    deleteProtocol(item:any) {
+    deleteProtocol(item: any) {
       this.$apollo
         .mutate({
           mutation: gql`
@@ -468,5 +453,5 @@ export default vue.extend({
       title: "add Protocol"
     };
   }
-})
+});
 </script>

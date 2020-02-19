@@ -29,14 +29,39 @@ const SchemaNodeRunInfo = new Schema({
   ]
 });
 
-// 终端设备上传数据
-const SchemaTerminalClientResult = new Schema({
+// 终端设备上传数据=>原始数据
+const SchemaTerminalClientResults = new Schema({
   stat: String,
   buffer: new Schema({
     _id: { type: Boolean, default: false },
     type: String,
     data: [Number]
   }),
+  pid: { type: Number, min: 0, max: 255, default: 0 },
+  time: Date,
+  timeStamp: Number,
+  mac: String,
+  type: Number,
+  protocol: String,
+  content: String
+});
+// 终端设备上传数据=>解析数据集合
+const SchemaTerminalClientResult = new Schema({
+  result: [
+    new Schema({
+      _id: { type: Boolean, default: false },
+      name: String,
+      value: String,
+      unit: String
+    })
+  ],
+  timeStamp: Number,
+  pid: Number,
+  mac: String,
+
+});
+// 终端设备上传数据=>解析数据单例
+const SchemaTerminalClientResultSingle = new Schema({
   result: [
     new Schema({
       _id: { type: Boolean, default: false },
@@ -48,12 +73,17 @@ const SchemaTerminalClientResult = new Schema({
   pid: { type: Number, min: 0, max: 255, default: 0 },
   time: Date,
   mac: String,
-  type: Number,
-  protocol: String,
   content: String
 });
-
 const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
+
+
+
+const TerminalClientResults = mongoose.model(
+  "NodeTerminalClientResults",
+  SchemaTerminalClientResults,
+  "NodeTerminalClientResults"
+);
 
 const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
@@ -61,12 +91,12 @@ const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult"
 );
 
-const TerminalClientResults = mongoose.model(
-  "NodeTerminalClientResults",
-  SchemaTerminalClientResult,
-  "NodeTerminalClientResults"
+const TerminalClientResultSingle = mongoose.model(
+  "NodeTerminalClientResultSingle",
+  SchemaTerminalClientResultSingle,
+  "NodeTerminalClientResultSingle"
 );
 
 const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
-export { NodeClient, TerminalClientResult, TerminalClientResults, NodeRunInfo };
+export { NodeClient, TerminalClientResult, TerminalClientResults, TerminalClientResultSingle, NodeRunInfo };
