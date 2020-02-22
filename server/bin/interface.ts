@@ -78,6 +78,12 @@ export interface queryObject {
   timeStamp: number
   content: string
 }
+/* result-Argement */
+export interface queryResultArgument {
+  name: string;
+  value: number;
+  unit: string | null;
+}
 /* result */
 export interface queryResult extends queryObject {
   buffer: {
@@ -85,11 +91,7 @@ export interface queryResult extends queryObject {
     type: string;
   };
   stat: string;
-  result?: {
-    name: string;
-    value: number;
-    unit: string | null;
-  }[];
+  result?: queryResultArgument[];
   time?: string;
 }
 

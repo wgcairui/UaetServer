@@ -20,23 +20,21 @@ const SchemaNodeRunInfo = new Schema({
   Connections: Number,
   SocketMaps: [
     new Schema({
-      _id: { type: Boolean, default: false },
       mac: String,
       port: Number,
       ip: String,
       jw: String
-    })
+    }, { _id: false })
   ]
 });
 
 // 终端设备上传数据=>原始数据
 const SchemaTerminalClientResults = new Schema({
   stat: String,
-  buffer: new Schema({
-    _id: { type: Boolean, default: false },
+  buffer: {
     type: String,
     data: [Number]
-  }),
+  },
   pid: { type: Number, min: 0, max: 255, default: 0 },
   time: Date,
   timeStamp: Number,
@@ -49,11 +47,10 @@ const SchemaTerminalClientResults = new Schema({
 const SchemaTerminalClientResult = new Schema({
   result: [
     new Schema({
-      _id: { type: Boolean, default: false },
       name: String,
       value: String,
       unit: String
-    })
+    }, { _id: false })
   ],
   timeStamp: Number,
   pid: Number,
@@ -64,11 +61,10 @@ const SchemaTerminalClientResult = new Schema({
 const SchemaTerminalClientResultSingle = new Schema({
   result: [
     new Schema({
-      _id: { type: Boolean, default: false },
       name: String,
       value: String,
       unit: String
-    })
+    }, { _id: false })
   ],
   pid: { type: Number, min: 0, max: 255, default: 0 },
   time: Date,

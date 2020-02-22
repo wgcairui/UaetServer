@@ -5,7 +5,7 @@
         <b-col cols="12">
           <b-card>
             <tree
-              :data="Terminal"
+              :data="Terminals"
               node-text="name"
               layoutType="horizontal"
               class="tree"
@@ -41,15 +41,22 @@ export default Vue.extend({
     treeSelect({ data }: { data: selectTree }) {
       let { mountDev, name, children } = data;
       if (children) return;
-      console.log(mountDev);
+      console.log(this);
+      let query = { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
 
       switch (mountDev) {
         case "温湿度":
           this.$router.push({
-            name: "Dev-th",
-            query: { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
+            name: "UT-th",
+            query
           });
           break;
+          case "ari-空调测试":
+            this.$router.push({
+              name:"UT-air",
+              query
+            })
+            break
       }
     }
   },

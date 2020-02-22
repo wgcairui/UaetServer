@@ -1,5 +1,4 @@
 import { queryResult } from "../bin/interface";
-import ProtocolPares from "../bin/ProtocolPares";
 import Axios from "axios";
 
 
@@ -7,7 +6,7 @@ const testData: queryResult[] = [{
 
     content: "0104001c001ab007",
     mac: "866262045427977",
-    pid: 0,
+    pid: 1,
     timeStamp: 1582091384490,
     buffer: {
         data: [
@@ -80,7 +79,7 @@ const testData: queryResult[] = [{
 {
     "content": "0104002f004241f2",
     "mac": "866262045427977",
-    "pid": 0,
+    "pid": 1,
     timeStamp: 1582091384490,
     "buffer": {
         "data": [
@@ -233,7 +232,7 @@ const testData: queryResult[] = [{
 {
     "content": "01040029000c21c7",
     "mac": "866262045427977",
-    "pid": 0,
+    "pid": 1,
     timeStamp: 1582091384490,
     "buffer": {
         "data": [
@@ -278,7 +277,7 @@ const testData: queryResult[] = [{
 {
     "content": "01040001001be1c1",
     "mac": "866262045427977",
-    "pid": 216,
+    "pid": 1,
     timeStamp: 1582091384490,
     "buffer": {
         "data": [
@@ -350,231 +349,13 @@ const testData: queryResult[] = [{
     "time": "2020-01-15T09:28:14.937Z",
     "type": 485
 },
-{
-    "content": "01040001001be1c1",
-    "mac": "866262045427977",
-    "pid": 0,
-    timeStamp: 1582091384490,
-    "buffer": {
-        "data": [
-            1,
-            4,
-            52,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            226,
-            103
-        ],
-        "type": "Buffer"
-    },
-    "protocol": "卡乐控制器",
-
-    "stat": "success",
-    "time": "2020-01-15T09:04:39.753Z",
-    "type": 485
-},
-{
-    "content": "01040029000c21c7",
-    "mac": "866262045427977",
-    "pid": 216,
-    timeStamp: 1582091384490,
-    "buffer": {
-        "data": [
-            1,
-            4,
-            54,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            0,
-            0,
-            255,
-            231,
-            255,
-            198,
-            255,
-            198,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            9,
-            181
-        ],
-        "type": "Buffer"
-    },
-    "protocol": "卡乐控制器",
-
-    "stat": "success",
-    "time": "2020-01-15T09:04:38.238Z",
-    "type": 485
-},
-{
-    "content": "0104001c001ab007",
-    "mac": "866262045427977",
-    "pid": 216,
-    timeStamp: 1582091384490,
-    "buffer": {
-        "data": [
-            1,
-            4,
-            54,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            216,
-            241,
-            0,
-            0,
-            255,
-            231,
-            255,
-            198,
-            255,
-            198,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            9,
-            181
-        ],
-        "type": "Buffer"
-    },
-    "protocol": "卡乐控制器",
-    "stat": "success",
-    "time": "2020-01-15T09:02:23.623Z",
-    "type": 485
-}]
 
 
+]
 
-Axios.post("http://127.0.0.1:9010/Api/Node/UartData", { data: testData }).then(e => console.log(e)
+console.log(testData.length);
+
+
+Axios.post("http://116.62.48.175:9010/Api/Node/UartData", { data: testData }).then(e => console.log(e.data)
 ).catch(e => console.log(e)
 )

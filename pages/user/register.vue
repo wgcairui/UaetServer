@@ -109,13 +109,13 @@ export default Vue.extend({
     register() {
       let { name, user, passwd, mail, company } = this.$data.accont;
       if (
-        !this.$data.userStat ||
-        !this.$data.passwdStat ||
-        !this.$data.passwd2Stat ||
-        !this.$data.mailStat
-      )
+        !this.userStat ||
+        !this.passwdStat ||
+        !this.passwd2Stat ||
+        !this.mailStat
+      ) {
         this.$bvModal.msgBoxOk("输入的参数格式错误");
-      else
+      } else {
         this.$apollo
           .mutate({
             mutation: gql`
@@ -140,6 +140,7 @@ export default Vue.extend({
           .catch((e) => {
             this.$bvModal.msgBoxOk("提交错误，请检查网络是否连接");
           });
+      }
     }
   }
 });

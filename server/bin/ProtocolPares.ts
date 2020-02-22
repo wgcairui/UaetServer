@@ -4,12 +4,14 @@ import Tool from "../bin/tool";
 import { TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose/node";
 import { protocolInstruct, queryResult } from "./interface";
 
-export default (data: queryResult) => {
+export default async (data: queryResult) => {
   // 保存查询结果的原始数据
-  new TerminalClientResults(data).save().catch(e => console.log(e))
+  await new TerminalClientResults(data).save().catch(e => console.log(e))
   //
   let result: { name: string; value: number; unit: string | null; }[] = []
   const { buffer, protocol, content, type, stat, timeStamp, mac, pid, time } = data;
+  console.log(content);
+
   if (stat === "timeOut") return data;
   const instruct =
     <protocolInstruct>Event.Query.CacheProtocol.get(protocol)?.instruct.find((el) => content.includes(el.name))
@@ -56,12 +58,15 @@ export default (data: queryResult) => {
   // 透传结果集保存到数据集，最新数据
 
   //保存数据到结果单例
-  TerminalClientResultSingle.updateOne({ mac, pid, content }, { $set: { result, time } }, { upsert: true }).catch((e) => console.log(e));
+  await TerminalClientResultSingle.updateOne({ mac, pid, content }, { $set: { result, time } }, { upsert: true })
+    .then(el => console.log("TerminalClientResultSingle")
+    ).catch((e) => console.log(e));
   //保存数据到结果集合
-  TerminalClientResult.updateOne(
+  await TerminalClientResult.updateOne(
     { mac, pid, timeStamp },
     { $addToSet: { result: { $each: result } } },
     { upsert: true }
+  ).then(el => console.log("TerminalClientResult")
   ).catch((e) => console.log(e));
 
 

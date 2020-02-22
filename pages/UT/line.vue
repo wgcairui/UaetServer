@@ -10,11 +10,7 @@
       <b-row>
         <b-col cols="12">
           <b-form>
-            <b-form-group
-              label="选择时间:"
-              label-for="TimePicker"
-              v-bind="label"
-            >
+            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
               <VueCtkDateTimePicker
                 id="TimePicker"
                 v-model="demo.value"
@@ -44,7 +40,6 @@ import VeLine from "v-charts/lib/line.common";
 import VueCtkDateTimePicker from "vue-ctk-date-time-picker";
 import "vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css";
 import gql from "graphql-tag";
-import { TerminalResultArrayToArrayJson } from "@/plugins/tools";
 export default {
   components: {
     MyHead,
@@ -102,31 +97,27 @@ export default {
     },
     line() {
       let chartData = JSON.parse(JSON.stringify(this.chartData));
-      if (!this.Data) return chartData;
-      chartData.rows = TerminalResultArrayToArrayJson(
-        this.Data,
-        this.query.name
-      );
-      chartData.columns = ["time", this.query.name];
+      if (this.Data) {
+        let colletion = this.query.name;
+        chartData.rows = this.parseResult(this.Data, colletion);
+        chartData.columns = ["time", colletion];
+      }
       return chartData;
     },
     HisLine() {
       let chartData = JSON.parse(JSON.stringify(this.chartData));
-      if (!this.HisData) return chartData;
-      //console.log();
-      
-      if (this.HisData.length > 10000) {
-        this.$bvModal.msgBoxOk("数据长度超过10000条，将截断超出数据");
-        this.HisData = this.HisData.slice(
-          this.HisData.length - 10000,
-          this.HisData.length
-        )
+      if (this.HisData) {
+        if (this.HisData.length > 10000) {
+          this.$bvModal.msgBoxOk("数据长度超过10000条，将截断超出数据");
+          this.HisData = this.HisData.slice(
+            this.HisData.length - 10000,
+            this.HisData.length
+          );
+        }
+        let colletion = this.query.name;
+        chartData.rows = this.parseResult(this.HisData, colletion).reverse();
+        chartData.columns = ["time", colletion];
       }
-      chartData.rows = TerminalResultArrayToArrayJson(
-        this.HisData,
-        this.query.name
-      ).reverse();
-      chartData.columns = ["time", this.query.name];
       return chartData;
     }
   },
@@ -166,6 +157,25 @@ export default {
     }
   },
   methods: {
+    // 格式化时间
+    parseTime(time) {
+      const T = new Date(time);
+      return `${T.getMonth() +
+        1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
+    },
+    parseResult(data, colletion) {
+      let rows = [];
+      data.forEach(({ result, time }) => {
+        for (let i of result) {
+          if (i.name == colletion) {
+            rows.push({ [colletion]: i.value, time: this.parseTime(time) });
+            continue;
+          }
+        }
+      });
+      return rows;
+    },
+    // 查询历史数据
     queryHisResultData() {
       let { start, end } = this.demo.value;
       if (start === "" || end === "")

@@ -144,20 +144,16 @@ export default vue.extend({
     };
   },
   computed: {
-    uartTable: {
-      get() {
-        return this.$data.uart.length > 0 && Object.keys(this.$data.uart[0]).length > 0;
-      },
-      set() {}
+    uartTable() {
+      return (
+        this.$data.uart.length > 0 && Object.keys(this.$data.uart[0]).length > 0
+      );
     },
-    EcTable: {
-      get() {
-        return (
-          this.$data.ECterminal.length > 0 &&
-          Object.keys(this.$data.ECterminal[0]).length > 0
-        );
-      },
-      set() {}
+    EcTable() {
+      return (
+        this.$data.ECterminal.length > 0 &&
+        Object.keys(this.$data.ECterminal[0]).length > 0
+      );
     }
   },
   apollo: {

@@ -44,20 +44,12 @@ import Vue from "vue";
 import separated from "../../components/separated.vue";
 import MyHead from "../../components/MyHead.vue";
 import { queryResult } from "../../server/bin/interface";
-import { gql } from "apollo-server-koa";
+import gql from "graphql-tag";
+import { TerminalResultArrayToJson } from "../../plugins/tools";
 export default Vue.extend({
   components: { MyHead, separated },
   data() {
     return {
-      th: {
-        DateTime: new Date(),
-        name: "温湿度",
-        data: {
-          temperature: 0,
-          humidity: 0
-        },
-        result: []
-      },
       UartTerminalData: null,
       field: [
         { key: "name", label: "变量" },
@@ -67,25 +59,25 @@ export default Vue.extend({
     };
   },
   computed: {
-    dataType(): string {
-      return this.$route.query.type;
-    },
     data() {
-      if (!this.$data.UartTerminalData) return this.$data.th;
-      switch (this.$data.dataType) {
-        case "ut":
-          let { result, time } = this.$data.UartTerminalData;
-          this.$data.th.DateTime = time;
-          let th = TerminalResultArrayToJson(result);
-          this.th.data.temperature = th["温度"];
-          this.th.data.humidity = th["湿度"];
-          this.th.result = result;
-          return this.$data.th;
-          break;
-        default:
-          return this.$data.th;
-          break;
+      let TH = {
+        DateTime: new Date(),
+        name: "温湿度",
+        data: {
+          temperature: 0,
+          humidity: 0
+        },
+        result: []
+      };
+      if (this.$data.UartTerminalData) {
+        let { result, time } = this.$data.UartTerminalData;
+        let th = TerminalResultArrayToJson(result);
+        TH.DateTime = time;
+        TH.data.temperature = th.get("温度");
+        TH.data.humidity = th.get("湿度");
+        TH.result = result;
       }
+      return TH;
     }
   },
   apollo: {
@@ -111,7 +103,7 @@ export default Vue.extend({
         };
       },
       pollInterval: 5000,
-      fetchPolicy: "cache-and-network"
+      fetchPolicy: "network-only"
     }
     /* query() {
         switch (this.$data.dataType) {

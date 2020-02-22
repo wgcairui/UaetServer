@@ -4,6 +4,8 @@
 import { ApolloServer, gql } from "apollo-server-koa";
 import { GraphQLJSON, GraphQLJSONObject } from "graphql-type-json";
 import { ParameterizedContext } from "koa";
+import { TerminalClientResultSingle } from "../mongoose/node";
+import { queryResult, queryResultArgument } from "../bin/interface";
 
 const { BcryptDo } = require("../bin/bcrypt");
 const { JwtVerify } = require("../bin/Secret");
@@ -273,12 +275,21 @@ const resolvers = {
     },
     // 获取透传设备数据-单条
     async UartTerminalData(root: any, { DevMac, pid }: any) {
-      return await TerminalClientResult.findOne({ mac: DevMac, pid });
+      const data: queryResult[] = await TerminalClientResultSingle.find({ mac: DevMac, pid }).lean();
+      if (data.length < 2) return data[0]
+      let result: queryResultArgument[][] = []
+      data.forEach(el =>
+        result.push(el.result as queryResultArgument[])
+      )
+      let rs = data[0]
+      rs.result = result.flat()
+      return rs
+
     },
     // 获取透传设备数据-多条
     async UartTerminalDatas(root: any, { DevMac, pid, num }: any) {
-      return await TerminalClientResults.find({ mac: DevMac, pid })
-        .sort("-_id")
+      return await TerminalClientResult.find({ mac: DevMac, pid })
+        .sort("timeStamp")
         .limit(num);
     },
     // 获取透传设备数据-时间片段
@@ -286,7 +297,7 @@ const resolvers = {
       root: any,
       { DevMac, pid, start, end }: any
     ) {
-      return await TerminalClientResults.find({ mac: DevMac, pid })
+      return await TerminalClientResult.find({ mac: DevMac, pid })
         .where("time")
         .lte(new Date(end))
         .gte(new Date(start))
