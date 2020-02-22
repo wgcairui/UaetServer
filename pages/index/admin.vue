@@ -1,11 +1,11 @@
 <template>
   <b-container>
     <b-row>
-      <b-col cols="12" md="6" v-for="(link, key) in navItem" :key="key">
+      <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="6">
         <b-link :to="link.to" class="text-decoration-none">
           <b-card class="my-3">
             <b-card-body>
-              <i class="iconfont ico">{{link.ico}}</i>
+              <i class="iconfont ico">{{ link.ico }}</i>
               <span class="text-dark">{{ link.text }}</span>
             </b-card-body>
           </b-card>
@@ -15,17 +15,17 @@
   </b-container>
 </template>
 <script lang="ts">
-import Vue from "vue";
+import Vue from "vue"
 export default Vue.extend({
   data() {
     return {
       navItem: [
-        { to: { name: "admin-NodeInfo" }, text: "节点状态", ico: "\uebd8" },
-        { to: { name: "admin-TerminalInfo" }, text: "终端状态", ico: "\ueb63" }
+        { to: { name: "admin-NodeInfo" }, text: "节点状态", ico: "\uEBD8" },
+        { to: { name: "admin-TerminalInfo" }, text: "终端状态", ico: "\uEB63" }
       ]
-    };
+    }
   }
-});
+})
 </script>
 <style scope>
 .ico {

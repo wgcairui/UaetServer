@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 module.exports = {
   root: true,
   env: {
@@ -6,18 +5,25 @@ module.exports = {
     node: true
   },
   parserOptions: {
-    parser: "babel-eslint"
+    parser: 'babel-eslint'
   },
   extends: [
     "@nuxtjs",
-    "prettier",
-    "prettier/vue",
-    "plugin:prettier/recommended",
-    "plugin:nuxt/recommended"
+    'eslint:recommended',
+    // https://github.com/vuejs/eslint-plugin-vue#priority-a-essential-error-prevention
+    // consider switching to `plugin:vue/strongly-recommended` or `plugin:vue/recommended` for stricter rules.
+    'plugin:vue/recommended',
+    'plugin:prettier/recommended'
   ],
-  plugins: ["prettier"],
-  // add your custom rules here
+  // 校验 .vue 文件
+  plugins: [
+    'vue'
+  ],
+  // 自定义规则
   rules: {
-    "nuxt/no-cjs-in-config": "off"
+    'semi': [2, 'never'],
+    'no-console': 'off',
+    'vue/max-attributes-per-line': 'off',
+    'prettier/prettier': ['error', { 'semi': false }]
   }
-};
+}

@@ -1,20 +1,26 @@
 <template>
   <div>
-    <my-head title="添加节点"></my-head>
+    <my-head title="添加节点" />
     <b-form class="p-3">
       <b-form-group label="节点名称:" v-bind="forGroup">
-        <b-form-input trim v-model="accont.Name"></b-form-input>
+        <b-form-input v-model="accont.Name" trim />
       </b-form-group>
       <b-form-group label="节点IP:" v-bind="forGroup">
-        <b-form-input trim v-model="accont.IP" :state="statIP"></b-form-input>
+        <b-form-input v-model="accont.IP" trim :state="statIP" />
       </b-form-group>
       <b-form-group label="节点端口:" v-bind="forGroup">
-        <b-form-input trim v-model="accont.Port" :state="statPort"></b-form-input>
+        <b-form-input v-model="accont.Port" trim :state="statPort" />
       </b-form-group>
       <b-form-group label="连接数限制:" v-bind="forGroup">
-        <b-form-input trim v-model="accont.MaxConnections" :state="statMaxConnections"></b-form-input>
+        <b-form-input
+          v-model="accont.MaxConnections"
+          trim
+          :state="statMaxConnections"
+        />
       </b-form-group>
-      <b-button block @click="submit">提交</b-button>
+      <b-button block @click="submit">
+        提交
+      </b-button>
     </b-form>
     <b-table-lite
       :items="Nodes"
@@ -22,16 +28,18 @@
       responsive
     >
       <template v-slot:cell(oprate)="row">
-        <b-button @click="deleteNode(row.item)">delete</b-button>
+        <b-button @click="deleteNode(row.item)">
+          delete
+        </b-button>
       </template>
     </b-table-lite>
   </div>
 </template>
 <script lang="ts">
-import vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import gql from "graphql-tag";
-import { NodeClient } from "../../server/bin/interface";
+import vue from "vue"
+import gql from "graphql-tag"
+import MyHead from "../../components/MyHead.vue"
+import { NodeClient } from "../../server/bin/interface"
 
 export default vue.extend({
   components: {
@@ -48,26 +56,26 @@ export default vue.extend({
       },
       apolloIP: null,
       Nodes: []
-    };
+    }
   },
   computed: {
     statIP() {
-      return this.$data.accont.IP.split(".").length > 3;
+      return this.$data.accont.IP.split(".").length > 3
     },
     statPort() {
-      return this.$data.accont.Port > 3000;
+      return this.$data.accont.Port > 3000
     },
     statMaxConnections() {
-      return this.$data.accont.MaxConnections < 2001;
+      return this.$data.accont.MaxConnections < 2001
     }
   },
   watch: {
-    apolloIP: function(newVal) {
+    apolloIP(newVal) {
       if (newVal) {
-        this.$data.accont.Name = newVal.Name;
-        this.$data.accont.Port = newVal.Port;
-        this.$data.accont.MaxConnections = newVal.MaxConnections;
-        this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" });
+        this.$data.accont.Name = newVal.Name
+        this.$data.accont.Port = newVal.Port
+        this.$data.accont.MaxConnections = newVal.MaxConnections
+        this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" })
       }
     }
   },
@@ -86,11 +94,11 @@ export default vue.extend({
       variables() {
         return {
           IP: this.$data.accont.IP
-        };
+        }
       },
-      update: (data) => data.Node,
+      update: data => data.Node,
       skip() {
-        return this.$data.accont.IP.split(".").length < 4;
+        return this.$data.accont.IP.split(".").length < 4
       }
     },
     Nodes: gql`
@@ -111,7 +119,7 @@ export default vue.extend({
         !this.$data.statPort ||
         !this.$data.statMaxConnections
       ) {
-        this.$bvModal.msgBoxOk("参数不合法!!");
+        this.$bvModal.msgBoxOk("参数不合法!!")
       } else
         this.$apollo
           .mutate({
@@ -127,10 +135,10 @@ export default vue.extend({
               arg: JSON.stringify(this.$data.$data.accont)
             }
           })
-          .then((res) => {
-            this.$apollo.queries.Nodes.refresh();
-            this.$bvModal.msgBoxOk("添加节点成功");
-          });
+          .then(res => {
+            this.$apollo.queries.Nodes.refresh()
+            this.$bvModal.msgBoxOk("添加节点成功")
+          })
     },
     deleteNode(item: NodeClient) {
       this.$apollo
@@ -147,8 +155,8 @@ export default vue.extend({
             IP: item.IP
           }
         })
-        .then(() => this.$apollo.queries.Nodes.refresh());
+        .then(() => this.$apollo.queries.Nodes.refresh())
     }
   }
-});
+})
 </script>

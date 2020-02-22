@@ -1,25 +1,23 @@
 <template>
   <div>
-    <my-head title="节点运行状态"></my-head>
+    <my-head title="节点运行状态" />
 
     <b-card>
       <b-table-lite :items="NodeInfo" :fields="NodeInfoFields" responsive>
         <template v-slot:cell(loadavg)="row">
-          <i>{{
-            row.value.map((el) => parseFloat(el.toFixed(2))).join("/ ")
-          }}</i>
+          <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
         </template>
         <template v-slot:cell(updateTime)="row">
-          {{time(row.value)}}
+          {{ time(row.value) }}
         </template>
       </b-table-lite>
     </b-card>
   </div>
 </template>
 <script>
-import MyHead from "@/components/MyHead";
-import gql from "graphql-tag";
-import {paresTime} from '@/plugins/tools'
+import MyHead from "@/components/MyHead"
+import gql from "graphql-tag"
+import { paresTime } from "@/plugins/tools"
 export default {
   components: {
     MyHead
@@ -37,11 +35,11 @@ export default {
         { key: "Connections", label: "终端数" },
         { key: "updateTime", label: "更新时间" }
       ]
-    };
+    }
   },
   methods: {
     time(time) {
-     return paresTime(time)
+      return paresTime(time)
     }
   },
   apollo: {
@@ -67,5 +65,5 @@ export default {
       }
     `
   }
-};
+}
 </script>

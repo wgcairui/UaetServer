@@ -2,23 +2,23 @@
 <template>
   <div class=" d-flex flex-row justify-content-center">
     <div
-      class=" d-flex flex-column align-items-center"
       v-for="(v, key) in devs[devType]"
       :key="key"
+      class=" d-flex flex-column align-items-center"
     >
       <ve-gauge
         :data="chartDatas(v)"
         :settings="chartSettings(v)"
         height="290px"
         width="290px"
-      ></ve-gauge>
+      />
       <b>{{ lang.get(v) }}</b>
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters } from "vuex"
 export default {
   name: "ChartGuage",
   data() {
@@ -45,7 +45,7 @@ export default {
           "input_frequency_l3"  */
         ]
       }
-    };
+    }
   },
   computed: {
     ...mapGetters(["lang", "unit"])
@@ -53,7 +53,7 @@ export default {
   props: { items: Object, devType: String },
   methods: {
     chartDatas(key) {
-      let data = {
+      const data = {
         columns: ["type", "value"],
         rows: [
           {
@@ -63,22 +63,22 @@ export default {
               : this.items[key]
           }
         ]
-      };
-      return data;
+      }
+      return data
     },
     chartSettings(key) {
-      let sets = {
+      const sets = {
         labelMap: {
           [this.unit.get(key)]: this.lang.get(this.unit.get(key))
         },
         dataName: {
           [this.unit.get(key)]: this.unit.get(key)
         }
-      };
-      return sets;
+      }
+      return sets
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped></style>

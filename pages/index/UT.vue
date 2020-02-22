@@ -7,12 +7,12 @@
             <tree
               :data="Terminals"
               node-text="name"
-              layoutType="horizontal"
+              layout-type="horizontal"
               class="tree"
               :radius="6"
               @clickedNode="treeSelect"
               @clickedText="treeSelect"
-            ></tree>
+            />
           </b-card>
         </b-col>
       </b-row>
@@ -20,46 +20,17 @@
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import gql from "graphql-tag";
-import { tree } from "vued3tree";
-import { Terminal } from "../../server/bin/interface";
+import Vue from "vue"
+import gql from "graphql-tag"
+import { tree } from "vued3tree"
+import { Terminal } from "../../server/bin/interface"
 interface selectTree {
-  mountDev: string;
-  name: string;
-  children: any;
+  mountDev: string
+  name: string
+  children: any
 }
 export default Vue.extend({
   components: { tree },
-  data() {
-    return {
-      Terminal: null
-    };
-  },
-
-  methods: {
-    treeSelect({ data }: { data: selectTree }) {
-      let { mountDev, name, children } = data;
-      if (children) return;
-      console.log(this);
-      let query = { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
-
-      switch (mountDev) {
-        case "温湿度":
-          this.$router.push({
-            name: "UT-th",
-            query
-          });
-          break;
-          case "ari-空调测试":
-            this.$router.push({
-              name:"UT-air",
-              query
-            })
-            break
-      }
-    }
-  },
   async asyncData({ route, query, app }) {
     let client = app.apolloProvider.defaultClient;
     let { data } = await client.query({
@@ -88,8 +59,37 @@ export default Vue.extend({
     );
     let Terminals = Object.assign(Terminal, { children });
     return { Terminals };
+  },
+  data() {
+    return {
+      Terminal: null
+    };
+  },
+
+  methods: {
+    treeSelect({ data }: { data: selectTree }) {
+      let { mountDev, name, children } = data;
+      if (children) return;
+      console.log(this);
+      let query = { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
+
+      switch (mountDev) {
+        case "温湿度":
+          this.$router.push({
+            name: "UT-th",
+            query
+          });
+          break;
+          case "ari-空调测试":
+            this.$router.push({
+              name:"UT-air",
+              query
+            })
+            break
+      }
+    }
   }
-});
+})
 </script>
 <style>
 .tree {

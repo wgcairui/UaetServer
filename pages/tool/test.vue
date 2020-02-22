@@ -11,7 +11,9 @@
             <b-form-group label="format:">
               <b-form-text>{{ format }}</b-form-text>
             </b-form-group>
-            <b-button @click="start">start</b-button>
+            <b-button @click="start">
+              start
+            </b-button>
           </b-form>
         </b-col>
       </b-row>
@@ -19,7 +21,7 @@
         <b-col cols="12">
           <b-card :title="error">
             <div id="interactive" class="viewport scanner">
-                <video autoplay="true" preload="auto"></video>
+              <video autoplay="true" preload="auto" />
             </div>
           </b-card>
         </b-col>
@@ -29,8 +31,8 @@
 </template>
 
 <script>
-import MyHead from "@/components/MyHead";
-import Quagga from "@ericblade/quagga2";
+import MyHead from "@/components/MyHead"
+import Quagga from "@ericblade/quagga2"
 export default {
   components: { MyHead },
   data() {
@@ -39,23 +41,26 @@ export default {
       code: "",
       format: "",
       error: ""
-    };
+    }
+  },
+  destroyed() {
+    Quagga.stop()
   },
   methods: {
     start() {
-      this.init();
+      this.init()
       this.code = ""
       this.format = ""
-      console.log("start");
+      console.log("start")
     },
     onDetected(data) {
-      console.log("onDetected");
-      let { code, format } = data.codeResult;
-      console.log({ code, format });
-      this.format = format;
-      this.code = code;
-      Quagga.offDetected();
-      Quagga.stop();
+      console.log("onDetected")
+      const { code, format } = data.codeResult
+      console.log({ code, format })
+      this.format = format
+      this.code = code
+      Quagga.offDetected()
+      Quagga.stop()
     },
     init() {
       Quagga.init(
@@ -69,8 +74,8 @@ export default {
           },
           decoder: {
             readers: [
-              "code_128_reader",
-             /*  "ean_reader",
+              "code_128_reader"
+              /*  "ean_reader",
               "ean_8_reader",
               "code_39_reader",
               "code_39_vin_reader",
@@ -111,16 +116,13 @@ export default {
           // 定义搜索网格的密度
           patchSize: "medium" // x-small, small, medium, large, x-large
         },
-        (err) => {
-          if (err) return (this.error = err.message);
-          Quagga.onDetected(this.onDetected);
-          Quagga.start();
+        err => {
+          if (err) return (this.error = err.message)
+          Quagga.onDetected(this.onDetected)
+          Quagga.start()
         }
-      );
+      )
     }
-  },
-  destroyed() {
-    Quagga.stop();
   }
-};
+}
 </script>

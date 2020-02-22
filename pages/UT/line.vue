@@ -1,16 +1,20 @@
 <template>
   <div>
-    <my-head title="图表"></my-head>
+    <my-head title="图表" />
     <b-container>
       <b-row>
         <b-col>
-          <ve-line :data="line"></ve-line>
+          <ve-line :data="line" />
         </b-col>
       </b-row>
       <b-row>
         <b-col cols="12">
           <b-form>
-            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
+            <b-form-group
+              label="选择时间:"
+              label-for="TimePicker"
+              v-bind="label"
+            >
               <VueCtkDateTimePicker
                 id="TimePicker"
                 v-model="demo.value"
@@ -20,26 +24,28 @@
                 :color="demo.options.color"
                 :locale="demo.options.locale"
                 :custom-shortcuts="demo.customShortcuts"
-              ></VueCtkDateTimePicker>
+              />
             </b-form-group>
-            <b-button @click="queryHisResultData">查询历史</b-button>
+            <b-button @click="queryHisResultData">
+              查询历史
+            </b-button>
           </b-form>
         </b-col>
       </b-row>
       <b-row>
         <b-col cols="12">
-          <ve-line :data="HisLine"></ve-line>
+          <ve-line :data="HisLine" />
         </b-col>
       </b-row>
     </b-container>
   </div>
 </template>
 <script>
-import MyHead from "@/components/MyHead";
-import VeLine from "v-charts/lib/line.common";
-import VueCtkDateTimePicker from "vue-ctk-date-time-picker";
-import "vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css";
-import gql from "graphql-tag";
+import MyHead from "@/components/MyHead"
+import VeLine from "v-charts/lib/line.common"
+import VueCtkDateTimePicker from "vue-ctk-date-time-picker"
+import "vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css"
+import gql from "graphql-tag"
 export default {
   components: {
     MyHead,
@@ -89,36 +95,36 @@ export default {
       },
       // HisData
       HisData: null
-    };
+    }
   },
   computed: {
     query() {
-      return this.$route.query;
+      return this.$route.query
     },
     line() {
-      let chartData = JSON.parse(JSON.stringify(this.chartData));
+      const chartData = JSON.parse(JSON.stringify(this.chartData))
       if (this.Data) {
-        let colletion = this.query.name;
-        chartData.rows = this.parseResult(this.Data, colletion);
-        chartData.columns = ["time", colletion];
+        const colletion = this.query.name
+        chartData.rows = this.parseResult(this.Data, colletion)
+        chartData.columns = ["time", colletion]
       }
-      return chartData;
+      return chartData
     },
     HisLine() {
-      let chartData = JSON.parse(JSON.stringify(this.chartData));
+      const chartData = JSON.parse(JSON.stringify(this.chartData))
       if (this.HisData) {
         if (this.HisData.length > 10000) {
-          this.$bvModal.msgBoxOk("数据长度超过10000条，将截断超出数据");
+          this.$bvModal.msgBoxOk("数据长度超过10000条，将截断超出数据")
           this.HisData = this.HisData.slice(
             this.HisData.length - 10000,
             this.HisData.length
-          );
+          )
         }
-        let colletion = this.query.name;
-        chartData.rows = this.parseResult(this.HisData, colletion).reverse();
-        chartData.columns = ["time", colletion];
+        const colletion = this.query.name
+        chartData.rows = this.parseResult(this.HisData, colletion).reverse()
+        chartData.columns = ["time", colletion]
       }
-      return chartData;
+      return chartData
     }
   },
   apollo: {
@@ -136,8 +142,8 @@ export default {
                   time
                 }
               }
-            `;
-            break;
+            `
+            break
         }
       },
       variables() {
@@ -147,11 +153,11 @@ export default {
               pid: Number.parseInt(this.$route.query.pid),
               DevMac: this.$route.query.DevMac,
               num: 100
-            };
-            break;
+            }
+            break
         }
       },
-      update: (data) => data.UartTerminalDatas,
+      update: data => data.UartTerminalDatas,
       fetchPolicy: "network-first",
       pollInterval: 10 * 1000
     }
@@ -159,27 +165,27 @@ export default {
   methods: {
     // 格式化时间
     parseTime(time) {
-      const T = new Date(time);
+      const T = new Date(time)
       return `${T.getMonth() +
-        1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
+        1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`
     },
     parseResult(data, colletion) {
-      let rows = [];
+      const rows = []
       data.forEach(({ result, time }) => {
-        for (let i of result) {
+        for (const i of result) {
           if (i.name == colletion) {
-            rows.push({ [colletion]: i.value, time: this.parseTime(time) });
-            continue;
+            rows.push({ [colletion]: i.value, time: this.parseTime(time) })
+            continue
           }
         }
-      });
-      return rows;
+      })
+      return rows
     },
     // 查询历史数据
     queryHisResultData() {
-      let { start, end } = this.demo.value;
+      const { start, end } = this.demo.value
       if (start === "" || end === "")
-        return this.$bvModal.msgBoxOk("请选择时间范围");
+        return this.$bvModal.msgBoxOk("请选择时间范围")
       this.$apollo
         .query({
           query: gql`
@@ -210,8 +216,8 @@ export default {
             end: end + " 23:59:59"
           }
         })
-        .then(({ data }) => (this.HisData = data.UartTerminalFragmentDatas));
+        .then(({ data }) => (this.HisData = data.UartTerminalFragmentDatas))
     }
   }
-};
+}
 </script>

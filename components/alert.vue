@@ -19,14 +19,13 @@
 
 <script>
 export default {
-  name: "cAlert",
+  name: "CAlert",
+  components: {},
   data() {
-    return {};
+    return {}
   },
-  methods: {},
-  components: {}
-};
+  methods: {}
+}
 </script>
 
-<style lang='scss' scoped >
-</style>
+<style lang="scss" scoped></style>

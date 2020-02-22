@@ -1,6 +1,6 @@
 <template>
   <div class="w-100">
-    <my-head title="用户信息"></my-head>
+    <my-head title="用户信息" />
     <b-container>
       <b-row>
         <separated title="详情">
@@ -8,19 +8,19 @@
             <i class="iconfont">&#xeb71;</i>修改信息
           </b-button>
         </separated>
-        <b-table-lite stacked :items="user" :fields="userField"></b-table-lite>
+        <b-table-lite stacked :items="user" :fields="userField" />
       </b-row>
       <b-row>
-        <separated title="告警配置"></separated>
+        <separated title="告警配置" />
       </b-row>
     </b-container>
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
-import gql from "graphql-tag";
+import Vue from "vue"
+import gql from "graphql-tag"
+import MyHead from "../../components/MyHead.vue"
+import separated from "../../components/separated.vue"
 export default Vue.extend({
   components: {
     MyHead,
@@ -37,7 +37,7 @@ export default Vue.extend({
         { key: "company", label: "组织:" },
         { key: "tel", label: "联系电话:" }
       ]
-    };
+    }
   },
   apollo: {
     user: {
@@ -54,13 +54,13 @@ export default Vue.extend({
         }
       `,
       variables() {
-        return { user: this.$auth.user };
+        return { user: this.$auth.user }
       },
-      update: (data) => [data.User]
+      update: data => [data.User]
     }
   },
   mounted() {
-    console.log(this.$auth.user);
+    console.log(this.$auth.user)
   }
-});
+})
 </script>

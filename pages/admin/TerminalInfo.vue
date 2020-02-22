@@ -1,15 +1,15 @@
 <template>
   <div>
-    <my-head title="透传终端运行状态"></my-head>
+    <my-head title="透传终端运行状态" />
     <b-card>
-      <b-table-lite responsive :items="Terminals"></b-table-lite>
+      <b-table-lite responsive :items="Terminals" />
     </b-card>
   </div>
 </template>
 
 <script>
-import MyHead from "../../components/MyHead";
-import gql from "graphql-tag";
+import gql from "graphql-tag"
+import MyHead from "../../components/MyHead"
 export default {
   components: {
     MyHead
@@ -17,7 +17,7 @@ export default {
   data() {
     return {
       Terminals: []
-    };
+    }
   },
   apollo: {
     Terminals: {
@@ -32,5 +32,5 @@ export default {
       `
     }
   }
-};
+}
 </script>

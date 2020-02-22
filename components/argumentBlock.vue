@@ -1,4 +1,4 @@
-/* eslint-disable */
+
 <template>
   <span>
     <b class="mx-1">{{ lang.get(keys) || keys }}:</b>
@@ -8,9 +8,9 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters } from "vuex"
 export default {
-  name: "argumentBlock",
+  name: "ArgumentBlock",
   props: {
     val: null,
     keys: String
@@ -18,15 +18,15 @@ export default {
   computed: {
     ...mapGetters(["lang", "unit"]),
     value() {
-      let val = this.val;
-      if (typeof val == "boolean") {
-        return val ? "正常" : "异常";
+      const val = this.val
+      if (typeof val === "boolean") {
+        return val ? "正常" : "异常"
       } else {
-        return val;
+        return val
       }
     }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped></style>

@@ -1,42 +1,55 @@
 <template>
   <div>
-    <my-head title="添加设备"></my-head>
-    <separated title="添加设备"></separated>
+    <my-head title="添加设备" />
+    <separated title="添加设备" />
     <b-form class="p-2">
       <b-form-group label="设备型号:" v-bind="forGroup">
-        <b-form-input trim v-model="accont.DevModel"></b-form-input>
+        <b-form-input v-model="accont.DevModel" trim />
       </b-form-group>
       <b-form-group label="设备类型:" v-bind="forGroup">
         <b-form-select
           v-model="accont.Type"
-          :options="[{value:'ups',text:'UPS'}, {value:'air',text:'空调'}, {value:'em',text:'电量仪'}, {value:'th',text:'温湿度'}]"
-        ></b-form-select>
+          :options="[
+            { value: 'ups', text: 'UPS' },
+            { value: 'air', text: '空调' },
+            { value: 'em', text: '电量仪' },
+            { value: 'th', text: '温湿度' }
+          ]"
+        />
       </b-form-group>
       <b-form-group label="设备协议(可多选):" v-bind="forGroup">
-        <b-form-select multiple v-model="accont.Protocols" :options="filterProtocols"></b-form-select>
+        <b-form-select
+          v-model="accont.Protocols"
+          multiple
+          :options="filterProtocols"
+        />
       </b-form-group>
       <b-form-group label="已选协议:" v-bind="forGroup">
-        <b-form-input plaintext v-model="selectProtocols"></b-form-input>
+        <b-form-input v-model="selectProtocols" plaintext />
       </b-form-group>
-      <b-button block @click="addDevType">submit</b-button>
+      <b-button block @click="addDevType">
+        submit
+      </b-button>
     </b-form>
-    <separated title="所有设备型号"></separated>
+    <separated title="所有设备型号" />
     <b-table-lite :items="DevTypes" responsive :fields="DevTypesFields">
       <template v-slot:cell(Protocols)="row">
-        <p>{{ row.value.map((el) => el.Protocol) }}</p>
+        <p>{{ row.value.map(el => el.Protocol) }}</p>
       </template>
       <template v-slot:cell(oprate)="row">
-        <b-button @click="deleteDevModel(row.item)">delete</b-button>
+        <b-button @click="deleteDevModel(row.item)">
+          delete
+        </b-button>
       </template>
     </b-table-lite>
   </div>
 </template>
 <script lang="ts">
-import vue from "vue";
-import separated from "../../components/separated.vue";
-import MyHead from "../../components/MyHead.vue";
-import gql from "graphql-tag";
-import { protocol, DevsType } from "../../server/bin/interface";
+import vue from "vue"
+import gql from "graphql-tag"
+import separated from "../../components/separated.vue"
+import MyHead from "../../components/MyHead.vue"
+import { protocol, DevsType } from "../../server/bin/interface"
 
 export default vue.extend({
   components: {
@@ -61,25 +74,24 @@ export default vue.extend({
       statDevType: null,
       Protocols: [],
       DevTypes: []
-    };
+    }
   },
   computed: {
     selectProtocols() {
-    
-      const Protocols:protocol[] = this.$data.accont.Protocols;
-      return Protocols.map((el) => el.Protocol).toString();
+      const Protocols: protocol[] = this.$data.accont.Protocols
+      return Protocols.map(el => el.Protocol).toString()
     },
     filterProtocols() {
-      const Protocols:protocol[] = this.$data.Protocols;
+      const Protocols: protocol[] = this.$data.Protocols
       return Protocols.filter(
-        (el) => el.ProtocolType === this.$data.accont.Type
-      ).map((el) => ({ text: el.Protocol, value: el }));
+        el => el.ProtocolType === this.$data.accont.Type
+      ).map(el => ({ text: el.Protocol, value: el }))
     }
   },
   watch: {
-    statDevType: function(newVal) {
+    statDevType(newVal) {
       if (newVal) {
-        this.$data.accont = Object.assign(this.$data.accont, newVal);
+        this.$data.accont = Object.assign(this.$data.accont, newVal)
       }
     }
   },
@@ -113,7 +125,7 @@ export default vue.extend({
       variables() {
         return {
           DevModel: this.$data.accont.DevModel
-        };
+        }
       }
     },
     DevTypes: gql`
@@ -145,16 +157,16 @@ export default vue.extend({
             arg: this.$data.accont
           }
         })
-        .then((res) => {
-          this.$bvModal.msgBoxOk(res.data.addDevType ? "提交成功" : "提交失败");
-          this.$apollo.queries.DevTypes.refresh();
-        });
+        .then(res => {
+          this.$bvModal.msgBoxOk(res.data.addDevType ? "提交成功" : "提交失败")
+          this.$apollo.queries.DevTypes.refresh()
+        })
     },
-    deleteDevModel(item:DevsType) {
+    deleteDevModel(item: DevsType) {
       this.$bvModal
         .msgBoxConfirm(`确定删除型号"${item.DevModel}"？？？`)
-        .then((value) => {
-          if (!value) return;
+        .then(value => {
+          if (!value) return
           this.$apollo
             .mutate({
               mutation: gql`
@@ -169,13 +181,13 @@ export default vue.extend({
                 DevModel: item.DevModel
               }
             })
-            .then((res) => {
+            .then(res => {
               if (res.data.deleteDevModel)
-                this.$apollo.queries.DevTypes.refresh();
-              else this.$bvModal.msgBoxOk("流程出错");
-            });
-        });
+                this.$apollo.queries.DevTypes.refresh()
+              else this.$bvModal.msgBoxOk("流程出错")
+            })
+        })
     }
   }
-});
+})
 </script>

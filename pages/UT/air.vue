@@ -12,12 +12,12 @@
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import MyHead from "../../components/MyHead.vue";
+import Vue from "vue"
+import MyHead from "../../components/MyHead.vue"
 export default Vue.extend({
   components: { MyHead },
   data() {
-    return {};
+    return {}
   }
-});
+})
 </script>

@@ -5,20 +5,20 @@
         <separated title="透传设备" />
 
         <b-col
+          v-for="(link, key) in BindDevice.UTs"
+          :key="key"
           cols="12"
           md="6"
           class=" mt-4"
-          v-for="(link, key) in BindDevice.UTs"
-          :key="key"
         >
           <b-link
             :to="{ name: 'index-UT', query: { DevMac: link.DevMac } }"
             class=" text-decoration-none text-dark"
           >
             <b-card>
-              <b-card-title
-                ><i class=" iconfont">&#xec4a;</i>{{ link.name }}</b-card-title
-              >
+              <b-card-title>
+                <i class=" iconfont">&#xec4a;</i>{{ link.name }}
+              </b-card-title>
               <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
               <b-card-body>
                 <i class=" iconfont">&#xec24;</i>
@@ -36,20 +36,20 @@
       <b-row id="ECs">
         <separated title="环控设备" />
         <b-col
+          v-for="(link, key) in BindDevice.ECs"
+          :key="key"
           cols="12"
           md="6"
           class=" mt-4"
-          v-for="(link, key) in BindDevice.ECs"
-          :key="key"
         >
           <b-link
             :to="{ name: 'index-EC', query: { ECid: link.ECid } }"
             class=" text-decoration-none text-dark"
           >
             <b-card>
-              <b-card-title
-                ><i class=" iconfont">&#xebd8;</i>{{ link.name }}</b-card-title
-              >
+              <b-card-title>
+                <i class=" iconfont">&#xebd8;</i>{{ link.name }}
+              </b-card-title>
               <b-card-sub-title>&nbsp;{{ link.ECid }}</b-card-sub-title>
               <b-card-body>
                 <i class=" iconfont">&#xeb63;</i>
@@ -73,9 +73,9 @@
   </div>
 </template>
 <script lang="ts">
-import Vue from 'vue'
-import gql from "graphql-tag";
-import separated from "../../components/separated.vue";
+import Vue from "vue"
+import gql from "graphql-tag"
+import separated from "../../components/separated.vue"
 export default Vue.extend({
   components: {
     separated
@@ -86,7 +86,7 @@ export default Vue.extend({
         UTs: [],
         ECs: []
       }
-    };
+    }
   },
   methods: {
     a() {
@@ -115,7 +115,7 @@ export default Vue.extend({
           }
         }
       `,
-      update: (data) => data.BindDevice || { UTs: [], ECs: [] }
+      update: data => data.BindDevice || { UTs: [], ECs: [] }
     }
   }
 })

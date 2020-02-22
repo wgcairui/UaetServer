@@ -1,13 +1,11 @@
 <template>
   <div>
-    <my-head title="设备管理"></my-head>
+    <my-head title="设备管理" />
     <b-container>
       <b-row class="border-bottom mb-5">
         <separated title="透传设备">
           <b-button variant="success" size="sm" @click="uartAdd = !uartAdd">
-            {{
-            !uartAdd ? "add" : "hide"
-            }}
+            {{ !uartAdd ? "add" : "hide" }}
           </b-button>
         </separated>
         <b-collapse v-model="uartAdd" class="w-100">
@@ -15,7 +13,7 @@
             <b-form>
               <b-form-group label="设备Mac:" v-bind="label">
                 <b-input-group>
-                  <b-form-input v-model="DevMac" trim></b-form-input>
+                  <b-form-input v-model="DevMac" trim />
                   <b-input-group-append>
                     <b-button>检索</b-button>
                   </b-input-group-append>
@@ -26,18 +24,24 @@
               <b-table-lite stacked :items="uart" :fields="uartField">
                 <template v-slot:cell(mountDevs)="row">
                   <i v-if="row.value !== ''">
-                    {{
-                    row.value.map((el) => el.mountDev)
-                    }}
+                    {{ row.value.map(el => el.mountDev) }}
                   </i>
                 </template>
                 <template v-slot:cell(oprate)="row">
                   <b-button
+                    v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
                     size="sm"
                     disabled
-                    v-if="BindDevice.UTs.some((el) => el.DevMac === DevMac)"
-                  >已绑定</b-button>
-                  <b-button v-else size="sm" @click="addUserTerminal('UT', DevMac)">绑定设备</b-button>
+                  >
+                    已绑定
+                  </b-button>
+                  <b-button
+                    v-else
+                    size="sm"
+                    @click="addUserTerminal('UT', DevMac)"
+                  >
+                    绑定设备
+                  </b-button>
                 </template>
               </b-table-lite>
             </b-collapse>
@@ -46,22 +50,20 @@
         <b-table-lite :items="BindDevice.UTs" :fields="uartField">
           <template v-slot:cell(mountDevs)="row">
             <i v-if="row.value !== ''">
-              {{
-              row.value.map((el) => el.mountDev)
-              }}
+              {{ row.value.map(el => el.mountDev) }}
             </i>
           </template>
           <template v-slot:cell(oprate)="row">
-            <b-button size="sm" @click="addUserTerminal('UT', DevMac)">删除</b-button>
+            <b-button size="sm" @click="addUserTerminal('UT', DevMac)">
+              删除
+            </b-button>
           </template>
         </b-table-lite>
       </b-row>
       <b-row>
         <separated title="环控设备">
           <b-button variant="success" size="sm" @click="ecAdd = !ecAdd">
-            {{
-            !ecAdd ? "add" : "hide"
-            }}
+            {{ !ecAdd ? "add" : "hide" }}
           </b-button>
         </separated>
         <b-collapse v-model="ecAdd" class="w-100">
@@ -69,7 +71,7 @@
             <b-form>
               <b-form-group label="环控ID:" v-bind="label">
                 <b-input-group>
-                  <b-form-input v-model="ECid" trim></b-form-input>
+                  <b-form-input v-model="ECid" trim />
                   <b-input-group-append>
                     <b-button>检索</b-button>
                   </b-input-group-append>
@@ -80,11 +82,19 @@
               <b-table-lite stacked :items="ECterminal" :fields="EcField">
                 <template v-slot:cell(oprate)="row">
                   <b-button
+                    v-if="BindDevice.ECs.some(el => el.ECid === ECid)"
                     size="sm"
                     disabled
-                    v-if="BindDevice.ECs.some((el) => el.ECid === ECid)"
-                  >已绑定</b-button>
-                  <b-button v-else size="sm" @click="addUserTerminal('EC', ECid)">绑定设备</b-button>
+                  >
+                    已绑定
+                  </b-button>
+                  <b-button
+                    v-else
+                    size="sm"
+                    @click="addUserTerminal('EC', ECid)"
+                  >
+                    绑定设备
+                  </b-button>
                 </template>
               </b-table-lite>
             </b-collapse>
@@ -92,7 +102,9 @@
         </b-collapse>
         <b-table-lite :items="BindDevice.ECs" :fields="EcField">
           <template v-slot:cell(oprate)="row">
-            <b-button size="sm" @click="addUserTerminal('EC', DevMac)">删除</b-button>
+            <b-button size="sm" @click="addUserTerminal('EC', DevMac)">
+              删除
+            </b-button>
           </template>
         </b-table-lite>
       </b-row>
@@ -100,10 +112,10 @@
   </div>
 </template>
 <script lang="ts">
-import vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
-import gql from "graphql-tag";
+import vue from "vue"
+import gql from "graphql-tag"
+import MyHead from "../../components/MyHead.vue"
+import separated from "../../components/separated.vue"
 export default vue.extend({
   components: {
     MyHead,
@@ -141,19 +153,19 @@ export default vue.extend({
         UTs: [],
         ECs: []
       }
-    };
+    }
   },
   computed: {
     uartTable() {
       return (
         this.$data.uart.length > 0 && Object.keys(this.$data.uart[0]).length > 0
-      );
+      )
     },
     EcTable() {
       return (
         this.$data.ECterminal.length > 0 &&
         Object.keys(this.$data.ECterminal[0]).length > 0
-      );
+      )
     }
   },
   apollo: {
@@ -172,11 +184,11 @@ export default vue.extend({
       variables() {
         return {
           DevMac: this.$data.DevMac
-        };
+        }
       },
-      update: (data) => [data.Terminal || {}],
+      update: data => [data.Terminal || {}],
       skip() {
-        return this.$data.DevMac.length < 5;
+        return this.$data.DevMac.length < 5
       }
     },
     ECterminal: {
@@ -190,11 +202,11 @@ export default vue.extend({
         }
       `,
       variables() {
-        return { ECid: this.$data.ECid };
+        return { ECid: this.$data.ECid }
       },
-      update: (data) => [data.ECterminal || {}],
+      update: data => [data.ECterminal || {}],
       skip() {
-        return this.$data.ECid.length < 5;
+        return this.$data.ECid.length < 5
       }
     },
 
@@ -217,7 +229,7 @@ export default vue.extend({
           }
         }
       `,
-      update: (data) => data.BindDevice || { UTs: [], ECs: [] }
+      update: data => data.BindDevice || { UTs: [], ECs: [] }
     }
   },
   methods: {
@@ -240,17 +252,17 @@ export default vue.extend({
           this.DevMac = "";
           this.$apollo.queries.BindDevice.refresh();
         }); */
-        .then((res) => {
+        .then(res => {
           if (res.data.addUserTerminal.ok !== 1)
-            this.$bvModal.msgBoxOk("写入数据库出错");
+            this.$bvModal.msgBoxOk("写入数据库出错")
           else {
-            this.$data.DevMac = "";
-            this.$apollo.queries.BindDevice.refresh();
+            this.$data.DevMac = ""
+            this.$apollo.queries.BindDevice.refresh()
           }
-        });
+        })
     }
   }
-});
+})
 </script>
 
 <style scoped></style>

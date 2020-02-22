@@ -3,18 +3,21 @@
     <b-container fluid class="flex-grow-1 d-flex flex-column">
       <b-row no-gutters class="py-2">
         <b-col cols="4" class="text-center p-0">
-          <switch-quantity title="烟感"></switch-quantity>
+          <switch-quantity title="烟感" />
         </b-col>
         <b-col cols="4" class="text-center p-0">
-          <switch-quantity title="漏水"></switch-quantity>
+          <switch-quantity title="漏水" />
         </b-col>
         <b-col cols="4" class="text-center p-0">
-          <switch-quantity title="门禁"></switch-quantity>
+          <switch-quantity title="门禁" />
         </b-col>
       </b-row>
-      <b-row no-gutters class="flex-grow-1 alarm-content py-3 mh-100 overflow-hidden">
+      <b-row
+        no-gutters
+        class="flex-grow-1 alarm-content py-3 mh-100 overflow-hidden"
+      >
         <b-col class="overflow-auto mh-100">
-          <b-list-group id="alarm-list"></b-list-group>
+          <b-list-group id="alarm-list" />
         </b-col>
       </b-row>
       <b-row no-gutters class="border-top statu-padding">
@@ -89,8 +92,8 @@
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import switchQuantity from "../../components/switchQuantity.vue";
+import Vue from "vue"
+import switchQuantity from "../../components/switchQuantity.vue"
 
 export default Vue.extend({
   components: {
@@ -99,9 +102,9 @@ export default Vue.extend({
   data() {
     return {
       ECid: this.$route.query.ECid
-    };
+    }
   }
-});
+})
 </script>
 
 <style scoped>

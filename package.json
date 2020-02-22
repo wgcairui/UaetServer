@@ -9,11 +9,13 @@
     "build": "nuxt-ts build",
     "start": "nuxt-ts build;cross-env NODE_ENV=production; ts-node --project server/serverTsconfig.json server/index.ts",
     "generate": "nuxt-ts generate",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
+    "lintfix": "eslint --fix --ext .js,.vue --ignore-path .gitignore ."
   },
   "lint-staged": {
     "*.{js,vue}": "eslint"
   },
+  "precommit": "npm run lint",
   "husky": {
     "hooks": {}
   },
@@ -71,11 +73,17 @@
     "@types/mongoose": "^5.5.43",
     "@types/nuxtjs__auth": "^4.8.3",
     "@types/socket.io": "^2.1.4",
-    "babel-eslint": "^10.0.1",
-    "eslint": "^6.1.0",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.8.0",
     "eslint-config-prettier": "^4.1.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-html": "^6.0.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-node": "^11.0.0",
     "eslint-plugin-nuxt": ">=0.4.2",
     "eslint-plugin-prettier": "^3.0.1",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "husky": "^2.6.0",
     "lint-staged": "^8.2.1",
     "nodemon": "^1.18.9",

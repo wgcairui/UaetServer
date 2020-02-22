@@ -20,5 +20,4 @@ body,
 #__layout {
   height: 100%;
 }
-
 </style>
