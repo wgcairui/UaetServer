@@ -3,11 +3,25 @@
     <my-head title="图表" />
     <b-container>
       <b-row>
-        <b-col>
-          <ve-line :data="line" />
+        <b-col cols="12">
+          <separated title="选择参数"></separated>
+          <b-form>
+            <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
+              <b-form-select v-model="select.value" :options="select.option"></b-form-select>
+            </b-form-group>
+            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
+              <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
+            </b-form-group>
+          </b-form>
         </b-col>
       </b-row>
       <b-row>
+        <b-col>
+          <separated title="折线图"></separated>
+          <ve-line :data="line" />
+        </b-col>
+      </b-row>
+      <!-- <b-row>
         <b-col cols="12">
           <b-form>
             <b-form-group
@@ -15,20 +29,8 @@
               label-for="TimePicker"
               v-bind="label"
             >
-              <VueCtkDateTimePicker
-                id="TimePicker"
-                v-model="demo.value"
-                :range="demo.options.range"
-                :format="demo.options.format"
-                :formatted="demo.options.formatted"
-                :color="demo.options.color"
-                :locale="demo.options.locale"
-                :custom-shortcuts="demo.customShortcuts"
-              />
+              <b-form-datepicker v-model="datetime"></b-form-datepicker>
             </b-form-group>
-            <b-button @click="queryHisResultData">
-              查询历史
-            </b-button>
           </b-form>
         </b-col>
       </b-row>
@@ -36,21 +38,20 @@
         <b-col cols="12">
           <ve-line :data="HisLine" />
         </b-col>
-      </b-row>
+      </b-row>-->
     </b-container>
   </div>
 </template>
 <script>
-import MyHead from "@/components/MyHead"
-import VeLine from "v-charts/lib/line.common"
-import VueCtkDateTimePicker from "vue-ctk-date-time-picker"
-import "vue-ctk-date-time-picker/dist/vue-ctk-date-time-picker.css"
-import gql from "graphql-tag"
+import MyHead from "@/components/MyHead";
+import separated from "../../components/separated";
+import VeLine from "v-charts/lib/line.common";
+import gql from "graphql-tag";
 export default {
   components: {
     MyHead,
     VeLine,
-    VueCtkDateTimePicker
+    separated
   },
   data() {
     return {
@@ -59,7 +60,20 @@ export default {
         labelColsSm: "2",
         labelAlignSm: "right"
       },
-      chartData: {
+      select: {
+        value: this.$route.query.name,
+        option: []
+      },
+      Data: null,
+      datetime: ""
+    };
+  },
+  computed: {
+    query() {
+      return this.$route.query;
+    },
+    line() {
+      const chartData = {
         columns: ["date", "PV"],
         rows: [
           { date: "01-01", PV: 1231 },
@@ -69,62 +83,19 @@ export default {
           { date: "01-05", PV: 3123 },
           { date: "01-06", PV: 7123 }
         ]
-      },
-      Data: null,
-
-      demo: {
-        value: {
-          start: "",
-          end: ""
-        },
-        options: {
-          locale: "zh-CN",
-          range: true,
-          formatted: "ll",
-          format: "YYYY-MM-DD",
-          color: "green"
-        },
-        customShortcuts: [
-          { key: "thisWeek", label: "本周", value: "isoWeek" },
-          { key: "lastWeek", label: "上周", value: "-isoWeek" },
-          { key: "last7Days", label: "7天内", value: 7 },
-          { key: "last30Days", label: "30天内", value: 30 },
-          { key: "thisMonth", label: "本月", value: "month" },
-          { key: "lastMonth", label: "上月", value: "-month" }
-        ]
-      },
-      // HisData
-      HisData: null
+      };
+      if (this.Data) {
+        const colletion = this.select.value;
+        chartData.rows = this.parseResult(this.Data, colletion);
+        chartData.columns = ["time", colletion];
+      }
+      return chartData;
     }
   },
-  computed: {
-    query() {
-      return this.$route.query
-    },
-    line() {
-      const chartData = JSON.parse(JSON.stringify(this.chartData))
-      if (this.Data) {
-        const colletion = this.query.name
-        chartData.rows = this.parseResult(this.Data, colletion)
-        chartData.columns = ["time", colletion]
-      }
-      return chartData
-    },
-    HisLine() {
-      const chartData = JSON.parse(JSON.stringify(this.chartData))
-      if (this.HisData) {
-        if (this.HisData.length > 10000) {
-          this.$bvModal.msgBoxOk("数据长度超过10000条，将截断超出数据")
-          this.HisData = this.HisData.slice(
-            this.HisData.length - 10000,
-            this.HisData.length
-          )
-        }
-        const colletion = this.query.name
-        chartData.rows = this.parseResult(this.HisData, colletion).reverse()
-        chartData.columns = ["time", colletion]
-      }
-      return chartData
+  watch: {
+    datetime: function(newVal) {
+      if (newVal === "") this.$apollo.queries.Data.pollInterval = 10 * 1000;
+      else this.$apollo.queries.Data.pollInterval = 0;
     }
   },
   apollo: {
@@ -133,8 +104,16 @@ export default {
         switch (this.query.type) {
           case "ut":
             return gql`
-              query getUartTerminalData($DevMac: String, $pid: Int, $num: Int) {
-                UartTerminalDatas(DevMac: $DevMac, pid: $pid, num: $num) {
+              query getUartTerminalData(
+                $DevMac: String
+                $pid: Int
+                $datatime: String
+              ) {
+                UartTerminalDatas(
+                  DevMac: $DevMac
+                  pid: $pid
+                  datatime: $datatime
+                ) {
                   result {
                     name
                     value
@@ -142,8 +121,8 @@ export default {
                   time
                 }
               }
-            `
-            break
+            `;
+            break;
         }
       },
       variables() {
@@ -152,40 +131,48 @@ export default {
             return {
               pid: Number.parseInt(this.$route.query.pid),
               DevMac: this.$route.query.DevMac,
-              num: 100
-            }
-            break
+              datatime: this.datetime
+            };
+            break;
         }
       },
       update: data => data.UartTerminalDatas,
-      fetchPolicy: "network-first",
+      fetchPolicy: "no-cache",
       pollInterval: 10 * 1000
     }
   },
   methods: {
     // 格式化时间
     parseTime(time) {
-      const T = new Date(time)
+      const T = new Date(time);
       return `${T.getMonth() +
-        1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`
+        1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
     },
     parseResult(data, colletion) {
-      const rows = []
+      const rows = [];
+      if (this.select.option.length === 0) {
+        data.forEach(({ result, time }) => {
+          for (const i of result) {
+            this.select.option.push(i.name);
+          }
+        });
+      }
       data.forEach(({ result, time }) => {
         for (const i of result) {
           if (i.name == colletion) {
-            rows.push({ [colletion]: i.value, time: this.parseTime(time) })
-            continue
+            rows.push({ [colletion]: i.value, time: this.parseTime(time) });
+            continue;
           }
         }
-      })
-      return rows
-    },
+      });
+      return rows;
+    }
+
     // 查询历史数据
-    queryHisResultData() {
-      const { start, end } = this.demo.value
+    /* queryHisResultData() {
+      const { start, end } = this.demo.value;
       if (start === "" || end === "")
-        return this.$bvModal.msgBoxOk("请选择时间范围")
+        return this.$bvModal.msgBoxOk("请选择时间范围");
       this.$apollo
         .query({
           query: gql`
@@ -216,8 +203,8 @@ export default {
             end: end + " 23:59:59"
           }
         })
-        .then(({ data }) => (this.HisData = data.UartTerminalFragmentDatas))
-    }
+        .then(({ data }) => (this.HisData = data.UartTerminalFragmentDatas)); 
+    }*/
   }
-}
+};
 </script>

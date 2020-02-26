@@ -1,6 +1,6 @@
 <template>
   <div>
-    <my-head title="test" />
+    <!-- <my-head title="test" />
     <b-container>
       <b-row>
         <b-col cols="12">
@@ -26,11 +26,11 @@
           </b-card>
         </b-col>
       </b-row>
-    </b-container>
+    </b-container> -->
   </div>
 </template>
 
-<script>
+<script>/* 
 import MyHead from "@/components/MyHead"
 import Quagga from "@ericblade/quagga2"
 export default {
@@ -84,7 +84,7 @@ export default {
               "upc_e_reader",
               "i2of5_reader",
               "2of5_reader",
-              "code_93_reader" */
+              "code_93_reader" *//*
             ]
           },
           // 定义了输入图像的物理尺寸和其他属性
@@ -124,5 +124,5 @@ export default {
       )
     }
   }
-}
+} */
 </script>

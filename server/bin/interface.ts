@@ -81,7 +81,7 @@ export interface queryObject {
 /* result-Argement */
 export interface queryResultArgument {
   name: string;
-  value: number;
+  value: any;
   unit: string | null;
 }
 /* result */

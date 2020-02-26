@@ -4,11 +4,6 @@ module.exports = {
     host: process.env.NODE_ENV === "production" ? "116.62.48.175" : "0.0.0.0",
     port: 9010
   },
-  vue: {
-    config: {
-      silent: true
-    }
-  },
   /*
    ** Headers of the page
    */
@@ -216,5 +211,10 @@ module.exports = {
   },
   router: {
     middleware: ["auth"]
+  },
+  typescript: {
+    typeCheck: {
+      eslint: true
+    }
   }
 }

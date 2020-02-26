@@ -28,7 +28,7 @@
             <template v-slot:cell(oprate)="row">
               <b-button
                 :to="{
-                  name: 'Dev-line',
+                  name: 'UT-line',
                   query: { ...$route.query, name: row.item.name }
                 }"
               >趋势</b-button>

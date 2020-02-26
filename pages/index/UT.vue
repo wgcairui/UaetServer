@@ -70,7 +70,6 @@ export default Vue.extend({
     treeSelect({ data }: { data: selectTree }) {
       let { mountDev, name, children } = data;
       if (children) return;
-      console.log(this);
       let query = { ...data, DevMac: this.$route.query.DevMac, type: "ut" }
 
       switch (mountDev) {

@@ -169,7 +169,7 @@ const typeDefs = gql`
     userGroup: String
     #获取透传设备数据
     UartTerminalData(DevMac: String, pid: Int): UartTerminalData
-    UartTerminalDatas(DevMac: String, pid: Int, num: Int): [UartTerminalData]
+    UartTerminalDatas(DevMac: String, pid: Int, datatime: String): [UartTerminalData]
     UartTerminalFragmentDatas(
       DevMac: String
       pid: Int
@@ -287,10 +287,20 @@ const resolvers = {
 
     },
     // 获取透传设备数据-多条
-    async UartTerminalDatas(root: any, { DevMac, pid, num }: any) {
-      return await TerminalClientResult.find({ mac: DevMac, pid })
-        .sort("timeStamp")
-        .limit(num);
+    async UartTerminalDatas(root: any, { DevMac, pid, datatime }: any) {
+      let a = null
+      if (datatime === "") {
+        a = await TerminalClientResult.find({ mac: DevMac, pid })
+          .sort("timeStamp")
+          .limit(100);
+      } else {
+        a = await TerminalClientResult.find({ mac: DevMac, pid })
+          .where("time")
+          .lte(new Date(datatime))
+          .gte(new Date(datatime + " 23:59:59"))
+          .exec();
+      }
+      return a
     },
     // 获取透传设备数据-时间片段
     async UartTerminalFragmentDatas(
