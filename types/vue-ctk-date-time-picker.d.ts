@@ -1,2 +1,0 @@
-declare const VueCtkDateTimePicker: any
-export default VueCtkDateTimePicker

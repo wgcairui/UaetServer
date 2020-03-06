@@ -1,20 +1,22 @@
 import EventEmitter from "events";
 import config from "../config";
 import Query from "../bin/Query";
-import { NodeClient } from "../mongoose/node";
 import { DefaultContext } from "koa";
 import { Socket } from "socket.io";
-import { NodeClient as nodeClient } from "../bin/interface";
-class Event extends EventEmitter.EventEmitter {
+export interface socketData {
+  IP: string;
+  socket: Socket;
+  data: any;
+}
+export class Event extends EventEmitter.EventEmitter {
   env: {
     addNodeClient: string;
     disNodeClient: string;
     connectNodeClient: string;
   };
   Query: Query;
-  nodeIPSocketIDMaps: Map<string, string>;
-  nodeRegisterInfo: Map<string, nodeClient>;
-  QueryNode: Map<any, any>;
+  // ip,timeInterl
+  QueryNode: Map<string, NodeJS.Timeout>;
   constructor() {
     super();
     // 事件常量
@@ -23,71 +25,43 @@ class Event extends EventEmitter.EventEmitter {
       disNodeClient: "disNodeClient",
       connectNodeClient: "connectNodeClient"
     };
-    //
+    // 
     this.Query = new Query();
-    // 节点IP->socketID
-    this.nodeIPSocketIDMaps = new Map();
-    // 节点登记信息
-    this.nodeRegisterInfo = new Map();
-    // 主查询hash
     this.QueryNode = new Map();
+    //
     this.start();
   }
-
+  // start Query,加载数据缓存
+  // 开始监听事件
+  // 触发addNodeClient
   async start() {
-    //
+    // 等待缓存加载
     await this.Query.start();
     // 挂载监听
-    // 初始化数据填充
-    this.on(this.env.addNodeClient, this.addNodeClient)
-      .on(this.env.connectNodeClient, this._connectNodeClient)
+    this.on(this.env.connectNodeClient, this._connectNodeClient)
       .on(this.env.disNodeClient, this._disNodeClient)
-      .emit(this.env.addNodeClient);
   }
+  // 挂载监听到koa ctx
   attach(app: DefaultContext) {
     app.context.$Event = this;
   }
-  _connectNodeClient({
-    IP,
-    socket,
-    data
-  }: {
-    IP: string;
-    socket: Socket;
-    data: any;
-  }) {
-    this.nodeIPSocketIDMaps.set(IP, socket.id);
-    const registerInfo = this.nodeRegisterInfo.get(IP);
-
-    socket.emit("registerSuccess", registerInfo);
+  // socket监听有新的Node节点连接启动完成触发
+  _connectNodeClient(data: socketData) {
+    const { IP, socket } = data    
+    // 创建查询指令定时器,缓存定时器
     this.QueryNode.set(
       IP,
       setInterval(() => {
-        this.Query.SendQuery({ IP, socket });
+        this.Query.SendQuery(IP, socket);
       }, config.runArg.Query.Inteltime)
     );
   }
-  _disNodeClient({ IP }: { IP: string }) {
-    // this.nodeIPSocketIDMaps.set(IP,null);
-    clearInterval(this.QueryNode.get(IP));
-    // this.QueryNode.delete(IP);
-  }
-
-  async addNodeClient(ip: string) {
-    const node: nodeClient[] = await NodeClient.find().lean();
-    if (this.nodeIPSocketIDMaps.size === 0) {
-      node.forEach((el) => {
-        this.nodeIPSocketIDMaps.set(el.IP, "");
-        this.nodeRegisterInfo.set(el.IP, el);
-      });
-      return;
-    }
-    node
-      .filter((el) => el.IP === ip)
-      .forEach((el) => {
-        this.nodeIPSocketIDMaps.set(el.IP, "");
-        this.nodeRegisterInfo.set(el.IP, el);
-      });
+  // 监听节点断开事件
+  _disNodeClient({ IP }: socketData) {
+    // 清除查询指令定时器
+    clearInterval(<NodeJS.Timeout>this.QueryNode.get(IP));
+    //清除缓存
+    this.QueryNode.delete(IP);
   }
 }
 

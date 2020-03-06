@@ -112,10 +112,10 @@
   </div>
 </template>
 <script lang="ts">
-import vue from "vue"
-import gql from "graphql-tag"
-import MyHead from "../../components/MyHead.vue"
-import separated from "../../components/separated.vue"
+import vue from "vue";
+import gql from "graphql-tag";
+import MyHead from "../../components/MyHead.vue";
+import separated from "../../components/separated.vue";
 export default vue.extend({
   components: {
     MyHead,
@@ -153,19 +153,26 @@ export default vue.extend({
         UTs: [],
         ECs: []
       }
-    }
+    };
   },
   computed: {
-    uartTable() {
-      return (
-        this.$data.uart.length > 0 && Object.keys(this.$data.uart[0]).length > 0
-      )
+    uartTable: {
+      get: function() {
+        return (
+          this.$data.uart.length > 0 &&
+          Object.keys(this.$data.uart[0]).length > 0
+        );
+      },
+      set: function() {}
     },
-    EcTable() {
-      return (
-        this.$data.ECterminal.length > 0 &&
-        Object.keys(this.$data.ECterminal[0]).length > 0
-      )
+    EcTable: {
+      get: function() {
+        return (
+          this.$data.ECterminal.length > 0 &&
+          Object.keys(this.$data.ECterminal[0]).length > 0
+        );
+      },
+      set: function() {}
     }
   },
   apollo: {
@@ -184,11 +191,11 @@ export default vue.extend({
       variables() {
         return {
           DevMac: this.$data.DevMac
-        }
+        };
       },
       update: data => [data.Terminal || {}],
       skip() {
-        return this.$data.DevMac.length < 5
+        return this.$data.DevMac.length < 5;
       }
     },
     ECterminal: {
@@ -202,11 +209,11 @@ export default vue.extend({
         }
       `,
       variables() {
-        return { ECid: this.$data.ECid }
+        return { ECid: this.$data.ECid };
       },
       update: data => [data.ECterminal || {}],
       skip() {
-        return this.$data.ECid.length < 5
+        return this.$data.ECid.length < 5;
       }
     },
 
@@ -246,23 +253,18 @@ export default vue.extend({
           `,
           variables: { type, id }
         })
-        /* .then(({ data }) => {
-          if (data.addUserTerminal.ok !== 1)
-            return this.$bvModal.msgBoxOk("写入数据库出错");
-          this.DevMac = "";
-          this.$apollo.queries.BindDevice.refresh();
-        }); */
+
         .then(res => {
           if (res.data.addUserTerminal.ok !== 1)
-            this.$bvModal.msgBoxOk("写入数据库出错")
+            this.$bvModal.msgBoxOk("写入数据库出错");
           else {
-            this.$data.DevMac = ""
-            this.$apollo.queries.BindDevice.refresh()
+            this.$data.DevMac = "";
+            this.$apollo.queries.BindDevice.refresh();
           }
-        })
+        });
     }
   }
-})
+});
 </script>
 
 <style scoped></style>

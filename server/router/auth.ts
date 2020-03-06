@@ -1,11 +1,11 @@
 import { ParameterizedContext } from "koa";
 
 /* eslint-disable no-console */
-import { JwtSign } from "../bin/Secret";
+import { JwtSign, JwtVerify } from "../bin/Secret";
 import { BcryptCompare } from "../bin/bcrypt";
 
 import { Users } from "../mongoose/user";
-export default async (ctx:ParameterizedContext) => {
+export default async (ctx: ParameterizedContext) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
   switch (type) {
@@ -22,8 +22,18 @@ export default async (ctx:ParameterizedContext) => {
       if (u && pwStat) ctx.body = { token: JwtSign({ payload: { ...u } }) };
 
       break;
+    case "userGroup":
+      {
+        const token = ctx.cookies.get("auth._token.local");
+        // 没有token则检查body，注册和重置页面的请求则通过
+        if (token && token === "false") ctx.assert("", 400, "no token");
+        // 解构token
+        const user = JwtVerify((<string>token).replace("bearer%20", ""));
+        ctx.body = { userGroup: user.userGroup };
+      }
+      break;
     case "logout":
-      ctx.body = await new Promise((resolve) => {
+      ctx.body = await new Promise(resolve => {
         resolve({ state: "logout success" });
       });
       break;

@@ -6,39 +6,35 @@
         <b-col cols="12">
           <separated title="选择参数"></separated>
           <b-form>
-            <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
-              <b-form-select v-model="select.value" :options="select.option"></b-form-select>
+            <b-form-group
+              label="Colletion:"
+              label-for="colletion"
+              v-bind="label"
+            >
+              <b-form-select
+                v-model="select.value"
+                :options="select.option"
+              ></b-form-select>
             </b-form-group>
-            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
-              <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
+            <b-form-group
+              label="选择时间:"
+              label-for="TimePicker"
+              v-bind="label"
+            >
+              <b-form-datepicker
+                id="TimePicker"
+                v-model="datetime"
+              ></b-form-datepicker>
             </b-form-group>
           </b-form>
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <separated title="折线图"></separated>
-          <ve-line :data="line" />
+          <separated title="折线图">{{ line.dates }}</separated>
+          <ve-line :data="line.chartData" />
         </b-col>
       </b-row>
-      <!-- <b-row>
-        <b-col cols="12">
-          <b-form>
-            <b-form-group
-              label="选择时间:"
-              label-for="TimePicker"
-              v-bind="label"
-            >
-              <b-form-datepicker v-model="datetime"></b-form-datepicker>
-            </b-form-group>
-          </b-form>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col cols="12">
-          <ve-line :data="HisLine" />
-        </b-col>
-      </b-row>-->
     </b-container>
   </div>
 </template>
@@ -73,7 +69,7 @@ export default {
       return this.$route.query;
     },
     line() {
-      const chartData = {
+      let chartData = {
         columns: ["date", "PV"],
         rows: [
           { date: "01-01", PV: 1231 },
@@ -84,18 +80,21 @@ export default {
           { date: "01-06", PV: 7123 }
         ]
       };
+      let dates = "";
       if (this.Data) {
         const colletion = this.select.value;
-        chartData.rows = this.parseResult(this.Data, colletion);
+        const { rows, date } = this.parseResult(this.Data, colletion);
+        dates = `${date.start}--${date.end}`;
+        chartData.rows = rows;
         chartData.columns = ["time", colletion];
       }
-      return chartData;
+      return { chartData, dates };
     }
   },
   watch: {
     datetime: function(newVal) {
-      if (newVal === "") this.$apollo.queries.Data.pollInterval = 10 * 1000;
-      else this.$apollo.queries.Data.pollInterval = 0;
+      if (newVal === "") this.$apollo.queries.Data.startPolling(10 * 1000);
+      else this.$apollo.queries.Data.stopPolling();
     }
   },
   apollo: {
@@ -118,7 +117,7 @@ export default {
                     name
                     value
                   }
-                  time
+                  timeStamp
                 }
               }
             `;
@@ -144,7 +143,7 @@ export default {
   methods: {
     // 格式化时间
     parseTime(time) {
-      const T = new Date(time);
+      const T = new Date(parseInt(time));
       return `${T.getMonth() +
         1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
     },
@@ -157,54 +156,23 @@ export default {
           }
         });
       }
-      data.forEach(({ result, time }) => {
+      data.forEach(({ result, timeStamp }) => {
         for (const i of result) {
           if (i.name == colletion) {
-            rows.push({ [colletion]: i.value, time: this.parseTime(time) });
+            rows.push({
+              [colletion]: i.value,
+              time: this.parseTime(timeStamp)
+            });
             continue;
           }
         }
       });
-      return rows;
+      const date = {
+        start: rows[0].time || "",
+        end: rows[rows.length - 1].time || ""
+      };
+      return { rows, date };
     }
-
-    // 查询历史数据
-    /* queryHisResultData() {
-      const { start, end } = this.demo.value;
-      if (start === "" || end === "")
-        return this.$bvModal.msgBoxOk("请选择时间范围");
-      this.$apollo
-        .query({
-          query: gql`
-            query getUartTerminalFragmentDatas(
-              $DevMac: String
-              $pid: Int
-              $start: String
-              $end: String
-            ) {
-              UartTerminalFragmentDatas(
-                DevMac: $DevMac
-                pid: $pid
-                start: $start
-                end: $end
-              ) {
-                result {
-                  name
-                  value
-                }
-                time
-              }
-            }
-          `,
-          variables: {
-            pid: Number.parseInt(this.query.pid),
-            DevMac: this.$route.query.DevMac,
-            start,
-            end: end + " 23:59:59"
-          }
-        })
-        .then(({ data }) => (this.HisData = data.UartTerminalFragmentDatas)); 
-    }*/
   }
 };
 </script>

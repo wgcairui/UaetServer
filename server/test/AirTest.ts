@@ -353,10 +353,10 @@ function AriTestData(): queryResult[] {
     },
     // TH
     {
-      "pid" : 0,
-      "stat" : "success",
-      "buffer" : {
-        "data" : [
+      pid : 0,
+      stat : "success",
+      buffer : {
+        data : [
           0,
           3,
           4,
@@ -367,14 +367,14 @@ function AriTestData(): queryResult[] {
           44,
           33
         ],
-        "type" : "Buffer"
+        type : "Buffer"
       },
       timeStamp,
       time,
-      "mac" : "866262045427977",
-      "type" : 485,
-      "protocol" : "温湿度1",
-      "content" : "000300000002c5da",
+      mac : "866262045427977",
+      type : 485,
+      protocol : "温湿度1",
+      content : "000300000002c5da",
       
     }
     

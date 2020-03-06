@@ -24,7 +24,7 @@ import router from "./router/index";
 // Event
 import Event from "./event/index";
 
-const app:Koa<Koa.DefaultState, Koa.DefaultContext> = new Koa();
+const app: Koa<Koa.DefaultState, Koa.DefaultContext> = new Koa();
 
 // app.use(sslify());
 // new Socket
@@ -46,6 +46,7 @@ async function start() {
   const config = require("../nuxt.config.js");
 
   config.dev = app.env !== "production";
+
   // Instantiate nuxt.js
   const nuxt = new Nuxt(config);
 
@@ -55,12 +56,13 @@ async function start() {
   } = nuxt.options.server;
 
   // Build in development
-  await nuxt.ready()
+  await nuxt.ready();
+
   if (config.dev) {
     const builder = new Builder(nuxt);
     await builder.build();
-  } 
-  app.use((ctx) => {
+  }
+  app.use(ctx => {
     ctx.status = 200;
     ctx.respond = false; // Bypass Koa's built-in response handling
     ctx.request.ctx = ctx; // This might be useful later on, e.g. in nuxtServerInit or with nuxt-stash

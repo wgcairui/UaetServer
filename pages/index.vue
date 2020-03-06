@@ -69,15 +69,46 @@
 </template>
 
 <script lang="ts">
-import gql from "graphql-tag"
-import vue from "vue"
+import gql from "graphql-tag";
+import vue from "vue";
+import { DollarApollo } from "vue-apollo/types/vue-apollo";
 export default vue.extend({
   data() {
     return {
       isUser: true
-    }
+    };
   },
-  created() {
+  /*async asyncData({ app }) {
+    const client = app.apolloProvider.defaultClient;
+    const { data } = await client.query({
+      query: gql`
+        {
+          userGroup
+        }
+      `,
+      fetchPolicy: "network-only"
+    });
+    const userGroup: string = data.userGroup;
+    return { userGroup };
+  },
+  mounted(){
+     switch (this.$data.userGroup) {
+        case "admin":
+          this.isUser = false;
+          this.$router.push({ name: "index-tool" });
+          break;
+        case "root":
+          this.isUser = false;
+          this.$router.push({ name: "index-admin" });
+          break;
+        default:
+          this.isUser = true;
+          this.$router.push({ name: "index-Uart" });
+          break;
+      } 
+  } */
+
+  /* created() {
     this.$apollo
       .query({
         query: gql`
@@ -85,26 +116,46 @@ export default vue.extend({
             userGroup
           }
         `,
-        fetchPolicy: "no-cache"
+        fetchPolicy: "network-only"
       })
       .then(({ data }) => {
         switch (data.userGroup) {
           case "admin":
-            this.isUser = false
-            this.$router.push({ name: "index-tool" })
-            break
+            this.isUser = false;
+            this.$router.push({ name: "index-tool" });
+            break;
           case "root":
-            this.isUser = false
-            this.$router.push({ name: "index-admin" })
-            break
+            this.isUser = false;
+            this.$router.push({ name: "index-admin" });
+            break;
           default:
-            this.isUser = true
-            this.$router.push({ name: "index-Uart" })
-            break
+            this.isUser = true;
+            this.$router.push({ name: "index-Uart" });
+            break;
         }
-      })
+      });
+  } */
+  created() {
+    (this as any).$axios.post("/api/auth/userGroup").then((el: any) => {
+      // console.log(el);
+      
+      switch (el.data.userGroup) {
+        case "admin":
+          this.isUser = false;
+          this.$router.push({ name: "index-tool" });
+          break;
+        case "root":
+          this.isUser = false;
+          this.$router.push({ name: "index-admin" });
+          break;
+        default:
+          this.isUser = true;
+          this.$router.push({ name: "index-Uart" });
+          break;
+      }
+    });
   }
-})
+});
 </script>
 <style scoped>
 .navbar-dark,

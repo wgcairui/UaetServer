@@ -14,12 +14,23 @@ import {
   queryObject
 } from "../bin/interface";
 
+export interface sendQuery {
+  IP: string;
+  Name?: string;
+  socket: SocketIO.Socket;
+}
 export default class Query {
+  // 协议缓存
   CacheProtocol: Map<string, protocol>;
+  // 设备类型缓存
   CacheDevsType: Map<string, devsType>;
+  // 透传终端缓存
   CacheTerminal: Map<string, terminal>;
-  CacheNodeTerminal: Map<string, terminal[]>;
+  // Node节点=》终端缓存 
+  CacheNodeTerminal: Map<string, Map<string, terminal>>;
+  // Node节点缓存
   CacheNode: Map<string, nodeClient>;
+
   constructor() {
     // 缓存
     this.CacheProtocol = new Map();
@@ -28,27 +39,45 @@ export default class Query {
     this.CacheNodeTerminal = new Map();
     this.CacheNode = new Map();
   }
+  //
   async start(): Promise<void> {
     await this.RefreshCacheDevType();
     await this.RefreshCacheProtocol();
     await this.RefreshCacheTerminal();
     await this.RefreshCacheNode();
   }
+  //
   async RefreshCacheProtocol() {
-    await DeviceProtocol.find().lean().then((res: protocol[]) => {
-      console.log(`加载协议缓存......`);
-      res.forEach((el) => this.CacheProtocol.set(el.Protocol, el));
-    });
+    const res: protocol[] = await DeviceProtocol.find().lean()
+    console.log(`加载协议缓存......`);
+    this.CacheProtocol = new Map(res.map(el => [el.Protocol, el]))
   }
+  //
   async RefreshCacheDevType() {
-    await DevsType.find().lean().then((res: devsType[]) => {
-      console.log(`加载设备型号缓存......`);
-      res.forEach((el) => this.CacheDevsType.set(el.DevModel, el));
-    });
+    const res: devsType[] = await DevsType.find().lean()
+    console.log(`加载设备型号缓存......`);
+    this.CacheDevsType = new Map(res.map(el => [el.DevModel, el]))
   }
+  //
+  async RefreshCacheNode() {
+    const res: nodeClient[] = await NodeClient.find().lean()
+    console.log(`加载节点缓存......`);
+    this.CacheNode = new Map(res.map(el => [el.IP, el]))
+    this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
+  }
+  //
   async RefreshCacheTerminal() {
-    await Terminal.find().lean().then((res: terminal[]) => {
-      console.log(`加载4g终端缓存......`);
+    const res: terminal[] = await Terminal.find().lean()
+    console.log(`加载4g终端缓存......`)
+    console.log(this.CacheNodeTerminal);
+    res.forEach(el => {
+      this.CacheTerminal.set(el.DevMac, el)
+      this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
+    })
+    console.log(this.CacheNodeTerminal);
+
+    /* .then((res: terminal[]) => {
+      ;
       res.forEach((el) => {
         this.CacheTerminal.set(el.DevMac, el);
         if (this.CacheNodeTerminal.has(el.mountNode)) {
@@ -56,33 +85,46 @@ export default class Query {
           terminals.push(el);
         } else this.CacheNodeTerminal.set(el.mountNode, [el]);
       });
-    });
-  }
-  async RefreshCacheNode() {
-    await NodeClient.find().lean().then((res: nodeClient[]) => {
-      console.log(`加载节点缓存......`);
-      res.forEach((el) => this.CacheNode.set(el.IP, el));
-    });
+    }); */
   }
 
-  SendQuery({
-    IP,
-    Name,
-    socket
-  }: {
-    IP: string;
-    Name?: string;
-    socket: SocketIO.Socket;
-  }) {
-    if (!IP || (!Name && !socket)) return
-    Name = Name || (<nodeClient>this.CacheNode.get(IP)).Name;
+
+
+  SendQuery(IP: string, socket: SocketIO.Socket) {
+    // 获取节点名称
+    const name = <string>this.CacheNode.get(IP)?.Name;
     // console.log(`检索 ${Name} 登记的设备，依次发生查询指令`);
-
-    const clients = <terminal[]>this.CacheNodeTerminal.get(Name);
-    for (const { DevMac, mountDevs } of clients) {
+    // 获取节点下所有的终端
+    const clients = <Map<string, terminal>>this.CacheNodeTerminal.get(name);
+    // 遍历所有终端
+    clients.forEach((Terminal, key) => {
+      // 遍历每个终端挂载设备
+      Terminal.mountDevs.forEach(TerminalMountDevs => {
+        // 每个设备一个时间戳,确保所有指令使用同一条
+        const timeStamp = Date.now()
+        // 获取设备协议
+        const Protocol = <protocol>this.CacheProtocol.get(TerminalMountDevs.protocol)
+        Protocol.instruct.forEach(ProtocolInstruct => {
+          // 构建查询指令
+          const content = tool.Crc16modbus(TerminalMountDevs.pid, ProtocolInstruct.name)
+          // 构建查询对象
+          const query: queryObject = {
+            mac: Terminal.DevMac,
+            type: TerminalMountDevs.Type,
+            protocol: TerminalMountDevs.protocol,
+            pid: TerminalMountDevs.pid,
+            timeStamp,
+            content
+          }
+          // 
+          socket.emit("query", query);
+        })
+      })
+    })
+    /* for (const ({ DevMac, mountDevs }) of clients) {
       for (const { pid, protocol } of mountDevs) {
         const { Type, instruct } = <protocol>this.CacheProtocol.get(protocol);
-        const timeStamp = Date.now()
+        const 
         for (const { name } of instruct) {
           let query: queryObject = {
             mac: DevMac,
@@ -92,9 +134,9 @@ export default class Query {
             timeStamp,
             content: tool.Crc16modbus(pid, name)
           }
-          socket.emit("query", query);
+          
         }
-      }
-    }
+      } 
+    } */
   }
 }

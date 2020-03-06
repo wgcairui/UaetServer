@@ -1,4 +1,4 @@
-const { mongoose, Schema } = require("./index");
+import { mongoose, Schema } from "./index";
 
 const SchemaEC = new Schema({
   ECid: String,

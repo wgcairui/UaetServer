@@ -1,7 +1,8 @@
 module.exports = {
   mode: "spa",
+  // mode: "universal",
   server: {
-    host: process.env.NODE_ENV === "production" ? "116.62.48.175" : "0.0.0.0",
+    host: process.env.NODE_ENV === "production" ? "0.0.0.0" : "0.0.0.0",
     port: 9010
   },
   /*
@@ -31,7 +32,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: "~/plugins/tree.js", ssr: false }],
+  plugins: [],
   /*
    ** Nuxt.js dev-modules
    */
