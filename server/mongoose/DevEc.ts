@@ -12,7 +12,7 @@ const Schema_Dev_all = new Schema({
   devType: String,
   devid: String,
   data: { type: "Mixed" },
-  DateTime: { type: Date, default: new Date() }
+  DateTime: { type: Date, default: new Date().toLocaleString() }
 });
 
 const Schema_Dev_Alarm = new Schema({

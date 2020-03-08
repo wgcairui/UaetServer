@@ -36,10 +36,10 @@
   </div>
 </template>
 <script lang="ts">
-import vue from "vue"
-import gql from "graphql-tag"
-import MyHead from "../../components/MyHead.vue"
-import { NodeClient } from "../../server/bin/interface"
+import vue from "vue";
+import gql from "graphql-tag";
+import MyHead from "../../components/MyHead.vue";
+import { NodeClient } from "../../server/bin/interface";
 
 export default vue.extend({
   components: {
@@ -56,26 +56,26 @@ export default vue.extend({
       },
       apolloIP: null,
       Nodes: []
-    }
+    };
   },
   computed: {
     statIP() {
-      return this.$data.accont.IP.split(".").length > 3
+      return this.$data.accont.IP.split(".").length > 3;
     },
     statPort() {
-      return this.$data.accont.Port > 3000
+      return this.$data.accont.Port > 3000;
     },
     statMaxConnections() {
-      return this.$data.accont.MaxConnections < 2001
+      return this.$data.accont.MaxConnections < 2001;
     }
   },
   watch: {
     apolloIP(newVal) {
       if (newVal) {
-        this.$data.accont.Name = newVal.Name
-        this.$data.accont.Port = newVal.Port
-        this.$data.accont.MaxConnections = newVal.MaxConnections
-        this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" })
+        this.$data.accont.Name = newVal.Name;
+        this.$data.accont.Port = newVal.Port;
+        this.$data.accont.MaxConnections = newVal.MaxConnections;
+        this.$bvToast.toast("节点已存在", { toaster: "b-toaster-top-full" });
       }
     }
   },
@@ -94,11 +94,11 @@ export default vue.extend({
       variables() {
         return {
           IP: this.$data.accont.IP
-        }
+        };
       },
       update: data => data.Node,
       skip() {
-        return this.$data.accont.IP.split(".").length < 4
+        return this.$data.accont.IP.split(".").length < 4;
       }
     },
     Nodes: gql`
@@ -114,31 +114,29 @@ export default vue.extend({
   },
   methods: {
     submit() {
-      if (
-        !this.$data.statIP ||
-        !this.$data.statPort ||
-        !this.$data.statMaxConnections
-      ) {
-        this.$bvModal.msgBoxOk("参数不合法!!")
-      } else
-        this.$apollo
-          .mutate({
-            mutation: gql`
-              mutation setOrgetNode($arg: String) {
-                setNode(arg: $arg) {
-                  ok
-                  msg
-                }
+      if (!this.statIP || !this.statPort || !this.statMaxConnections) {
+        this.$bvModal.msgBoxOk("参数不合法!!");
+        return;
+      }
+      const accont = this.accont
+      this.$apollo
+        .mutate({
+          mutation: gql`
+            mutation setOrgetNode($arg: String) {
+              setNode(arg: $arg) {
+                ok
+                msg
               }
-            `,
-            variables: {
-              arg: JSON.stringify(this.$data.$data.accont)
             }
-          })
-          .then(res => {
-            this.$apollo.queries.Nodes.refresh()
-            this.$bvModal.msgBoxOk("添加节点成功")
-          })
+          `,
+          variables: {
+            arg: JSON.stringify(accont)
+          }
+        })
+        .then(res => {
+          this.$apollo.queries.Nodes.refresh();
+          this.$bvModal.msgBoxOk("添加节点成功",{buttonSize:'sm'});
+        });
     },
     deleteNode(item: NodeClient) {
       this.$apollo
@@ -155,8 +153,8 @@ export default vue.extend({
             IP: item.IP
           }
         })
-        .then(() => this.$apollo.queries.Nodes.refresh())
+        .then(() => this.$apollo.queries.Nodes.refresh());
     }
   }
-})
+});
 </script>

@@ -14,11 +14,12 @@
     </b-card>
   </div>
 </template>
-<script>
-import MyHead from "@/components/MyHead"
-import gql from "graphql-tag"
-import { paresTime } from "@/plugins/tools"
-export default {
+<script lang="ts">
+import Vue from "vue";
+import MyHead from "../../components/MyHead.vue";
+import gql from "graphql-tag";
+import { paresTime } from "../../plugins/tools";
+export default Vue.extend({
   components: {
     MyHead
   },
@@ -35,11 +36,11 @@ export default {
         { key: "Connections", label: "终端数" },
         { key: "updateTime", label: "更新时间" }
       ]
-    }
+    };
   },
   methods: {
-    time(time) {
-      return paresTime(time)
+    time(time: string) {
+      return paresTime(time);
     }
   },
   apollo: {
@@ -65,5 +66,5 @@ export default {
       }
     `
   }
-}
+});
 </script>

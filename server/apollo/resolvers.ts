@@ -19,13 +19,14 @@ import { DevConstant } from "../mongoose/DeviceParameterConstant";
 const resolvers: IResolvers = {
     Query: {
         // 节点状态
-        async Node(root, { IP, Name }) {
+        async Node(root, { IP, Name }, ctx: ApolloCtx) {
+
             return await NodeClient.findOne({
                 $or: [{ IP: IP || "" }, { Name: Name || "" }]
             });
         },
-        async Nodes() {
-            return await NodeClient.find();
+        async Nodes(root, arg, ctx: ApolloCtx) {
+            return ctx.$Event.Cache.CacheNode.values();
         },
         // 协议
         async Protocol(root, { Protocol }) {
@@ -136,78 +137,54 @@ const resolvers: IResolvers = {
 
     Mutation: {
         // 设置节点
-        async setNode(
-            root,
-            { arg },
-            ctx: { $Event: { Query: { RefreshCacheNode: () => void } } }
-        ) {
+        async setNode(root, { arg }, ctx: ApolloCtx) {
             const { Name, IP, Port, MaxConnections } = JSON.parse(arg);
             const result = await NodeClient.updateOne(
                 { IP },
                 { $set: { Name, Port, MaxConnections } },
                 { upsert: true }
             );
-            await ctx.$Event.Query.RefreshCacheNode();
+            await ctx.$Event.Cache.RefreshCacheNode();
             return result;
         },
         // 删除节点
-        async deleteNode(
-            root,
-            { IP },
-            ctx: { $Event: { Query: { RefreshCacheNode: () => void } } }
-        ) {
+        async deleteNode(root, { IP }, ctx: ApolloCtx) {
             const result = await NodeClient.deleteOne({ IP });
-            await ctx.$Event.Query.RefreshCacheNode();
+            await ctx.$Event.Cache.RefreshCacheNode();
             return result;
         },
         // 设置协议
-        async setProtocol(
-            root,
-            { arg },
-            ctx: { $Event: { Query: { RefreshCacheProtocol: () => void } } }
-        ) {
+        async setProtocol(root, { arg }, ctx: ApolloCtx) {
             const { Type, ProtocolType, Protocol, instruct } = arg;
             const result = await DeviceProtocol.updateOne(
                 { Type, Protocol },
                 { $set: { ProtocolType, instruct } },
                 { upsert: true }
             );
-            await ctx.$Event.Query.RefreshCacheProtocol();
+            await ctx.$Event.Cache.RefreshCacheProtocol();
             return result;
         },
         // 删除协议
-        async deleteProtocol(
-            root,
-            { Protocol },
-            ctx: { $Event: { Query: { RefreshCacheProtocol: () => void } } }
-        ) {
+        async deleteProtocol(root, { Protocol }, ctx: ApolloCtx) {
             const result = await DeviceProtocol.deleteOne({ Protocol });
-            await ctx.$Event.Query.RefreshCacheProtocol();
+            await ctx.$Event.Cache.RefreshCacheProtocol();
             return result;
         },
         // 添加设备类型
-        async addDevType(
-            root,
-            { arg },
-            ctx: { $Event: { Query: { RefreshCacheDevType: () => void } } }
-        ) {
+        async addDevType(root, { arg }, ctx: ApolloCtx) {
             const { Type, DevModel, Protocols } = arg;
             const result = await DevsType.updateOne(
                 { Type, DevModel },
                 { $set: { Protocols } },
                 { upsert: true }
             );
-            await ctx.$Event.Query.RefreshCacheDevType();
+            await ctx.$Event.Cache.RefreshCacheDevType();
             return result;
         },
         // 添加设备类型
-        async deleteDevModel(
-            root,
-            { DevModel },
-            ctx: { $Event: { Query: { RefreshCacheDevType: () => void } } }
-        ) {
+        async deleteDevModel(root, { DevModel }, ctx: ApolloCtx) {
             const result = await DevsType.deleteOne({ DevModel });
-            await ctx.$Event.Query.RefreshCacheDevType();
+            await ctx.$Event.Cache.RefreshCacheDevType();
             return result;
         },
         // 添加登记设备
@@ -224,36 +201,24 @@ const resolvers: IResolvers = {
             }
         },
         // 添加终端信息
-        async addTerminal(
-            root,
-            { arg },
-            ctx: { $Event: { Query: { RefreshCacheTerminal: () => void } } }
-        ) {
+        async addTerminal(root, { arg }, ctx: ApolloCtx) {
             const { DevMac, name, mountNode, mountDevs } = arg;
             const result = await Terminal.updateOne(
                 { DevMac, name, mountNode },
                 { $set: { mountDevs } },
                 { upsert: true }
             );
-            await ctx.$Event.Query.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal();
             return result;
         },
         // 删除终端信息
-        async deleteTerminal(
-            root,
-            { DevMac },
-            ctx: { $Event: { Query: { RefreshCacheTerminal: () => void } } }
-        ) {
+        async deleteTerminal(root, { DevMac }, ctx: ApolloCtx) {
             const result = await Terminal.deleteOne({ DevMac });
-            await ctx.$Event.Query.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal();
             return result;
         },
         // 添加终端挂载信息
-        async addTerminalMountDev(
-            root,
-            { arg },
-            ctx: ApolloCtx
-        ) {
+        async addTerminalMountDev(root, { arg }, ctx: ApolloCtx) {
             const { DevMac, Type, mountDev, protocol, pid } = arg;
             const result = await Terminal.updateOne(
                 { DevMac },
@@ -268,19 +233,19 @@ const resolvers: IResolvers = {
                     }
                 }
             );
-            await ctx.$Event.Query.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal();
             return result;
         },
         // 删除终端挂载设备
         async delTerminalMountDev(root, { DevMac, mountDev, pid }, ctx: ApolloCtx) {
             const result = await Terminal.updateOne({ DevMac }, { $pull: { mountDevs: { mountDev, pid } } })
-            await ctx.$Event.Query.RefreshCacheTerminal()
+            await ctx.$Event.Cache.RefreshCacheTerminal()
             return result
         },
         // 修改终端挂载设备
         async modifyTerminalMountDev(root, { DevMac, pid, arg }, ctx: ApolloCtx) {
             const result = await Terminal.updateOne({ DevMac, 'mountDevs.pid': pid }, { $set: { "mountDevs.$": arg } })
-            await ctx.$Event.Query.RefreshCacheTerminal()
+            await ctx.$Event.Cache.RefreshCacheTerminal()
             return result
         },
         // 添加用户

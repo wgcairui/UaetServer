@@ -94,11 +94,18 @@ export interface BindDevice {
 // Node节点硬件top
 export interface SocketRegisterInfo {
   hostname: string;
-  totalmem: number;
-  freemem: number;
+  totalmem: string;
+  freemem: string;
   loadavg: number[];
   type: string;
-  uptime: number;
+  uptime: string;
+  userInfo: {
+    uid: number,
+    gid: number,
+    username: string,
+    homedir: string,
+    shell: string
+  }
 }
 // 对节点发出的协议查询指令
 export interface queryObject {
@@ -126,6 +133,11 @@ export interface queryResult extends queryObject {
   time?: string;
 }
 
+// UartData数据
+export interface uartData extends NodeClient {
+  data: queryResult[]
+}
+
 // 透传 api 数据 
 export interface socketNetInfo {
   ip: string;
@@ -134,7 +146,7 @@ export interface socketNetInfo {
   jw: string;
 }
 // 节点websocket透传信息
-export interface allSocketInfo {
+export interface WebSocketInfo {
   NodeName: string;
   Connections: number | Error;
   SocketMaps: socketNetInfo[];

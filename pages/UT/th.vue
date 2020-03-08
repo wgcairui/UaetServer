@@ -61,7 +61,7 @@ export default Vue.extend({
   computed: {
     data() {
       let TH = {
-        DateTime: new Date(),
+        DateTime: new Date().toLocaleString(),
         name: "温湿度",
         data: {
           temperature: 0,

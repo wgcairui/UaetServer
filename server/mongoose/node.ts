@@ -7,9 +7,19 @@ const SchemaNodeClient = new Schema({
   Port: Number,
   MaxConnections: Number
 });
+// 节点websocket设备
+const SchemaWebSocketTerminal = new Schema(
+  {
+    mac: String,
+    port: Number,
+    ip: String,
+    jw: String,
+    mountNode:String
+  }
+)
 // 节点状态流
 const SchemaNodeRunInfo = new Schema({
-  updateTime: { type: Date, default: new Date() },
+  updateTime: { type: Date, default: new Date().toLocaleString() },
   hostname: String,
   totalmem: String,
   freemem: String,
@@ -18,17 +28,7 @@ const SchemaNodeRunInfo = new Schema({
   uptime: String,
   NodeName: String,
   Connections: Number,
-  SocketMaps: [
-    new Schema(
-      {
-        mac: String,
-        port: Number,
-        ip: String,
-        jw: String
-      },
-      { _id: false }
-    )
-  ]
+  SocketMaps: [SchemaWebSocketTerminal]
 });
 
 // 终端设备上传数据=>原始数据
@@ -82,32 +82,26 @@ const SchemaTerminalClientResultSingle = new Schema({
   mac: { type: String, index: true },
   content: { type: String, index: true }
 });
-const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
+export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
 
-const TerminalClientResults = mongoose.model(
+export const TerminalClientResults = mongoose.model(
   "NodeTerminalClientResults",
   SchemaTerminalClientResults,
   "NodeTerminalClientResults"
 );
 
-const TerminalClientResult = mongoose.model(
+export const TerminalClientResult = mongoose.model(
   "NodeTerminalClientResult",
   SchemaTerminalClientResult,
   "NodeTerminalClientResult"
 );
 
-const TerminalClientResultSingle = mongoose.model(
+export const TerminalClientResultSingle = mongoose.model(
   "NodeTerminalClientResultSingle",
   SchemaTerminalClientResultSingle,
   "NodeTerminalClientResultSingle"
 );
 
-const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
+export const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
-export {
-  NodeClient,
-  TerminalClientResult,
-  TerminalClientResults,
-  TerminalClientResultSingle,
-  NodeRunInfo
-};
+export const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)

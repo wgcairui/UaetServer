@@ -1,10 +1,8 @@
-import { ParameterizedContext } from "koa";
-
-/* eslint-disable no-console */
 import { JwtSign, JwtVerify } from "../bin/Secret";
 import { BcryptCompare } from "../bin/bcrypt";
-
 import { Users } from "../mongoose/user";
+import { KoaCtx } from "../bin/interface";
+import { ParameterizedContext } from "koa";
 export default async (ctx: ParameterizedContext) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
@@ -12,12 +10,12 @@ export default async (ctx: ParameterizedContext) => {
     case "login":
       const { user, passwd } = body;
       const u = await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
-
+      // 是否有u
       ctx.assert(u, 400, "userNan");
-
+      // 密码效验
       const pwStat = await BcryptCompare(passwd, u.passwd);
-      console.log(pwStat);
       ctx.assert(pwStat, 400, "passwdError");
+
       // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
       if (u && pwStat) ctx.body = { token: JwtSign({ payload: { ...u } }) };
 

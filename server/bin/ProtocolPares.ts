@@ -26,7 +26,7 @@ export default async (data: queryResult) => {
   } = data;
   if (stat === "timeOut") return data;
   const instruct = <protocolInstruct>(
-    Event.Query.CacheProtocol.get(protocol)?.instruct.find(el =>
+    Event.Cache.CacheProtocol.get(protocol)?.instruct.find(el =>
       content.includes(el.name)
     )
   );

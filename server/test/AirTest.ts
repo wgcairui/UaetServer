@@ -3,7 +3,7 @@ import Axios from "axios";
 
 function AriTestData(): queryResult[] {
   const timeStamp = Date.now();
-  const time = new Date().toString();
+  const time = new Date().toLocaleString();
   return [
     {
       content: "0104001c001ab007",

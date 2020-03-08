@@ -32,7 +32,7 @@ const Schema_Dev_ups = new Schema({
   bypass_mode: Boolean,
   Battery_voltage_state: Boolean,
   grid_state: Boolean,
-  DateTime: { type: Date, default: new Date() },
+  DateTime: { type: Date, default: new Date().toLocaleString() },
   "Battery group number": String,
   "Battery standard voltage per unit": String,
   "Battery capacity": Number,
@@ -80,7 +80,7 @@ const Schema_Dev_ac = new Schema({
   Starting_temperature_setting: Number,
   temperature_difference: Number,
   air_supply_temperature: Number,
-  DateTime: { type: Date, default: new Date() }
+  DateTime: { type: Date, default: new Date().toLocaleString() }
 });
 const Schema_Dev_power = new Schema({
   generateTime: String,
@@ -103,7 +103,7 @@ const Schema_Dev_power = new Schema({
   input_frequency_l1: [Number],
   input_frequency_l2: [Number],
   input_frequency_l3: [Number],
-  DateTime: { type: Date, default: new Date() },
+  DateTime: { type: Date, default: new Date().toLocaleString() },
   EffectiveVoltage: Number,
   ActivePower: Number,
   EffectiveCurrent: Number
@@ -119,7 +119,7 @@ const Schema_Dev_io = new Schema({
   smoke: Boolean,
   access_contral: Boolean,
   leak: Boolean,
-  DateTime: { type: Date, default: new Date() }
+  DateTime: { type: Date, default: new Date().toLocaleString() }
 });
 const Schema_Dev_th = new Schema({
   generateTime: String,
@@ -128,7 +128,7 @@ const Schema_Dev_th = new Schema({
   brand: String,
   temperature: Number,
   humidity: Number,
-  DateTime: { type: Date, default: new Date() }
+  DateTime: { type: Date, default: new Date().toLocaleString() }
 });
 
 export {

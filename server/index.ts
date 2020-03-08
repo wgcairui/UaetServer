@@ -16,7 +16,8 @@ import cors from "@koa/cors";
 // nuxt
 const { Nuxt, Builder } = require("nuxt");
 // socket
-import Socket from "./socket/socket.node";
+// import Socket from "./socket/socket.node";
+import IO from "./socket/uart";
 // Apollo
 import ApolloServer from "./apollo/apollo";
 // Router
@@ -28,8 +29,8 @@ const app: Koa<Koa.DefaultState, Koa.DefaultContext> = new Koa();
 
 // app.use(sslify());
 // new Socket
-const ioNode = new Socket({ namespace: "Node" });
-ioNode.attach(app);
+// const ioNode = new Socket({ namespace: "Node" });
+// ioNode.attach(app);
 Event.attach(app);
 
 // new apollo
@@ -40,7 +41,7 @@ app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());
 
-async function start() {
+async function attachNuxt(app: Koa<Koa.DefaultState, Koa.DefaultContext>) {
   // Import and Set Nuxt.js options
   // eslint-disable-next-line import/order
   const config = require("../nuxt.config.js");
@@ -68,26 +69,40 @@ async function start() {
     ctx.request.ctx = ctx; // This might be useful later on, e.g. in nuxtServerInit or with nuxt-stash
     nuxt.render(ctx.req, ctx.res);
   });
+  return { host, port }
+}
 
-  http.createServer(app.callback()).listen(port, host, undefined, () => {
-    consola.ready({
-      message: `HTTP Server listening on http://${host}:${port}`,
-      badge: true
-    });
-  });
+attachNuxt(app).then(result => {
+  const { port, host } = result
+  /* 
+  const io = require('socket.io')(server);
+  io.on('connection', () => {});
+  server.listen(3000); */
+
   // SSL options
   const options = {
     key: fs.readFileSync(path.join(__dirname, "./ssl/localhost/server.key")),
     cert: fs.readFileSync(path.join(__dirname, "./ssl/localhost/server.crt"))
   };
-  https
-    .createServer(options, app.callback())
-    .listen(port - 1, host, undefined, () => {
-      consola.ready({
-        message: `HTTPS Server listening on https://${host}:${port - 1}`,
-        badge: true
-      });
+  // http
+  const Http = http.createServer(app.callback())
+  // https
+  const Https = https.createServer(options, app.callback())
+  // 
+  const NodeSocket = new IO(Http, { path: "/Node" })
+  NodeSocket.start()
+  // http监听
+  Http.listen(port, host, undefined, () => {
+    consola.ready({
+      message: `HTTP Server listening on http://${host}:${port}`,
+      badge: true
     });
-}
-
-start();
+  });
+  // https监听
+  Https.listen(port - 1, host, undefined, () => {
+    consola.ready({
+      message: `HTTPS Server listening on https://${host}:${port - 1}`,
+      badge: true
+    });
+  });
+})

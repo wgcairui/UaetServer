@@ -62,7 +62,7 @@ export default vue.extend({
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       accont: {
         Type: "ups",
-        DevModel: "",
+        DevModel: "海信3KW列间空调",
         Protocols: []
       },
       DevTypesFields: [
