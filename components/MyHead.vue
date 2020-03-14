@@ -10,14 +10,29 @@
         ><b-button
           variant="link"
           class="m-0 p-0 text-decoration-none"
-        @click="backto"
+          @click="backto"
           ><i class="iconfont text-light">&#xe641;</i></b-button
         ></span
       >
       <span class=" text-light mx-2">|</span>
       <span class="text-center text-light">{{ title }}</span>
       <slot />
-      <span v-if="User" class="ml-auto text-light"><i class="iconfont">&#xeb6f;</i>{{ User }}</span>
+      <div class="ml-auto ">
+        <span>
+          <b-spinner
+            :variant="$socket.connected ? 'light' : 'dark'"
+            v-b-tooltip.hover
+            small
+            type="grow"
+            :title="
+              $socket.connected ? 'WebSocket连接正常' : 'WebSocket连接断开'
+            "
+          ></b-spinner
+        ></span>
+        <span v-if="User" class="ml-auto text-light"
+          ><i class="iconfont">&#xeb6f;</i>{{ User }}</span
+        >
+      </div>
     </b-col>
   </b-row>
 </template>
@@ -33,15 +48,15 @@ export default {
   },
   computed: {
     User() {
-      return this.$auth.user // this.$store.state.user || "";
+      return this.$auth.user; // this.$store.state.user || "";
     }
   },
   methods: {
     backto() {
-      this.$router.go(-1)
+      this.$router.go(-1);
     }
   }
-}
+};
 </script>
 
 <style scoped>

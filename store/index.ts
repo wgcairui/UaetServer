@@ -1,16 +1,37 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
 
-const unitCache: Map<string, Map<string, string>> = new Map()
-
-export const state = () => ({
-  unitCache,
-  temp: ""
-})
 
 export type RootState = ReturnType<typeof state>
 
+type InfoType = "User" | "EC" | "UT" | "SYS"
+
+export interface WebInfo {
+  time?: string
+  msg: string
+  code?: number
+  type: InfoType
+}
+
+// 设备协议单位解析缓存
+let unitCache: Map<string, Map<string, string>> = new Map()
+// Info
+let Info: WebInfo = {
+  time: new Date().toLocaleString(),
+  msg: "default message",
+  type: "SYS"
+}
+let Infos: WebInfo[] = []
+//Infos.push(Info)
+
+export const state = () => ({
+  unitCache,
+  Info,
+  Infos
+})
+/* 
+
+*/
 export const getters: GetterTree<RootState, RootState> = {
-  name: state => state.temp,
   // 
   getUnit: state => (val: string, unitString: string) => {
     // 检查unit是否含有“{”
@@ -41,13 +62,48 @@ export const getters: GetterTree<RootState, RootState> = {
     return result
   }
 }
+/* 
 
+*/
 export const mutations: MutationTree<RootState> = {
-  CHANGE_NAME: (state, newName: string) => (state.temp = newName),
-}
+  //CHANGE_NAME: (state, newName: string) => (state.temp = newName),
+  // socket vuex 绑定事件
+  addInfo(state, payload: WebInfo) {
+    state.Info = {
+      time: new Date().toLocaleString(),
+      msg: payload.msg,
+      type: payload.type,
+      code: 1
+    }
+    state.Infos.push(state.Info)
+  }
 
+}
+/* 
+
+*/
 export const actions: ActionTree<RootState, RootState> = {
-  fetchThings({ commit }) {
-    commit('CHANGE_NAME', 'New name')
+  //fetchThings({ commit }) { commit('CHANGE_NAME', 'New name') },
+  // socket绑定事件
+  // sock登录效验success
+  socket_valdationSuccess(ctx, play) {
+    //console.log(play);
   },
+  // 其他客户端登录
+  socket_login({ commit }, payload) {
+    const msg = `新的设备登录,登录IP@${payload.IP},socket:@${payload.ID}`
+    const info: WebInfo = {
+      msg,
+      type: "User"
+    }
+    commit("addInfo", info)
+  },
+  socket_logout({ commit }, payload) {
+    const msg = `在线设备离线,IP@${payload.IP},socket:@${payload.ID}`
+    const info: WebInfo = {
+      msg,
+      type: "User"
+    }
+    commit("addInfo", info)
+  }
 }

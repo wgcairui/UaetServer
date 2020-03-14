@@ -8,7 +8,10 @@ const SchemaRegisterTerminal = new Schema({
 const SchemaTerminal = new Schema({
   DevMac: { type: String, required: true },
   name: { type: String, required: true },
-  Jw: String,
+  ip: String,
+  port: Number,
+  jw: String,
+  uptime: String,
   mountNode: { type: String, required: true },
   mountDevs: [
     new Schema(

@@ -17,7 +17,8 @@ import cors from "@koa/cors";
 const { Nuxt, Builder } = require("nuxt");
 // socket
 // import Socket from "./socket/socket.node";
-import IO from "./socket/uart";
+import NodeIO from "./socket/uart";
+import WebIO from "./socket/webClient"
 // Apollo
 import ApolloServer from "./apollo/apollo";
 // Router
@@ -88,9 +89,14 @@ attachNuxt(app).then(result => {
   const Http = http.createServer(app.callback())
   // https
   const Https = https.createServer(options, app.callback())
-  // 
-  const NodeSocket = new IO(Http, { path: "/Node" })
+  // Node_Socket节点挂载
+  const NodeSocket = new NodeIO(Http, { path: "/Node" })
   NodeSocket.start()
+  consola.success(`Socket Server(namespace:/Node) attach port ${port}`)
+  //WebClient_SocketServer挂载
+  const WebClientSocket = new WebIO(Http, { path: "/WebClient" })
+  WebClientSocket.start()
+  consola.success(`Socket Server(namespace:/WebClient) attach port on ${port}`)
   // http监听
   Http.listen(port, host, undefined, () => {
     consola.ready({

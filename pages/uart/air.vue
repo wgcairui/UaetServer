@@ -80,7 +80,7 @@
                       variant="info"
                       class="block px-1 py-0 pt-1"
                       :to="{
-                        name: 'UT-line',
+                        name: 'uart-line',
                         query: { ...$route.query, name: row.item.name }
                       }"
                       >趋势</b-button
@@ -126,7 +126,6 @@ import {
   ProtocolConstantThreshold,
   DevConstant_Air
 } from "../../server/bin/interface";
-import { getters } from "../../store";
 export default Vue.extend({
   components: { MyHead, separated },
   data() {

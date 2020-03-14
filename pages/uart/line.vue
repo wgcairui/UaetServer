@@ -50,12 +50,15 @@ export default {
     separated
   },
   data() {
+    const query = this.$route.query;
+    const label = {
+      labelCols: "12",
+      labelColsSm: "2",
+      labelAlignSm: "right"
+    };
     return {
-      label: {
-        labelCols: "12",
-        labelColsSm: "2",
-        labelAlignSm: "right"
-      },
+      query,
+      label,
       select: {
         value: this.$route.query.name,
         option: []
@@ -65,9 +68,6 @@ export default {
     };
   },
   computed: {
-    query() {
-      return this.$route.query;
-    },
     line() {
       let chartData = {
         columns: ["date", "PV"],
@@ -99,43 +99,33 @@ export default {
   },
   apollo: {
     Data: {
-      query() {
-        switch (this.query.type) {
-          case "ut":
-            return gql`
-              query getUartTerminalData(
-                $DevMac: String
-                $pid: Int
-                $datatime: String
-              ) {
-                UartTerminalDatas(
-                  DevMac: $DevMac
-                  pid: $pid
-                  datatime: $datatime
-                ) {
-                  result {
-                    name
-                    value
-                  }
-                  timeStamp
-                }
-              }
-            `;
-            break;
+      query: gql`
+        query getUartTerminalData(
+          $DevMac: String
+          $pid: Int
+          $datatime: String
+        ) {
+          Data: UartTerminalDatas(
+            DevMac: $DevMac
+            pid: $pid
+            datatime: $datatime
+          ) {
+            result {
+              name
+              value
+            }
+            timeStamp
+          }
         }
-      },
+      `,
       variables() {
-        switch (this.query.type) {
-          case "ut":
-            return {
-              pid: Number.parseInt(this.$route.query.pid),
-              DevMac: this.$route.query.DevMac,
-              datatime: this.datetime
-            };
-            break;
-        }
+        const { pid, DevMac } = this.$data.query;
+        return {
+          pid: parseInt(pid),
+          DevMac,
+          datatime: this.datetime
+        };
       },
-      update: data => data.UartTerminalDatas,
       fetchPolicy: "no-cache",
       pollInterval: 10 * 1000
     }

@@ -4,6 +4,7 @@ import { NodeRunInfo, WebSocketTerminal } from "../mongoose/node";
 import ProtocolPares from "../bin/ProtocolPares";
 import { ParameterizedContext } from "koa";
 import { nodeInfo, uartData, WebSocketInfo } from "../bin/interface";
+import { Terminal } from "../mongoose/Terminal";
 export default async (ctx: ParameterizedContext) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
@@ -28,9 +29,10 @@ export default async (ctx: ParameterizedContext) => {
         const WebSocketInfos: WebSocketInfo = body.WebSocketInfos
         // 设备port jw
         WebSocketInfos.SocketMaps.forEach(el => {
-          WebSocketTerminal
-            .updateOne({ mac: el.mac }, { $set: { ...el } }, { upsert: true })
-            .catch(e => console.log(e))
+          const { port, ip, jw } = el
+          Terminal
+            .updateOne({ DevMac: el.mac }, { $set: { ip, port, jw } }, { upsert: true })
+            .catch((e:Error) => console.log(e))
         })
         //写入运行信息
 

@@ -1,7 +1,7 @@
 import { JwtSign, JwtVerify } from "../bin/Secret";
 import { BcryptCompare } from "../bin/bcrypt";
 import { Users } from "../mongoose/user";
-import { KoaCtx } from "../bin/interface";
+import { KoaCtx, UserInfo } from "../bin/interface";
 import { ParameterizedContext } from "koa";
 export default async (ctx: ParameterizedContext) => {
   const type = ctx.params.type;
@@ -17,7 +17,7 @@ export default async (ctx: ParameterizedContext) => {
       ctx.assert(pwStat, 400, "passwdError");
 
       // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
-      if (u && pwStat) ctx.body = { token: JwtSign({ payload: { ...u } }) };
+      if (u && pwStat) ctx.body = { token: await JwtSign({ payload: { ...u } }) };
 
       break;
     case "userGroup":
@@ -26,7 +26,7 @@ export default async (ctx: ParameterizedContext) => {
         // 没有token则检查body，注册和重置页面的请求则通过
         if (token && token === "false") ctx.assert("", 400, "no token");
         // 解构token
-        const user = JwtVerify((<string>token).replace("bearer%20", ""));
+        const user: UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
         ctx.body = { userGroup: user.userGroup };
       }
       break;

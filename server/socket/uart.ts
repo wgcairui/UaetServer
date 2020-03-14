@@ -12,7 +12,7 @@ export interface socketArgument {
 
 }
 
-export default class MySocketIO {
+export default class NodeSocketIO {
     io: IO.Server;
     Event: event;
     constructor(server: Server, opt: ServerOptions) {
@@ -62,15 +62,15 @@ export default class MySocketIO {
             Node.socket.emit("registerSuccess", Info);
             // 
             const { hostname, totalmem, freemem, loadavg, type, uptime } = data;
-            console.log(`节点注册：${Info.Name}==${Node.IP}`);
-            console.log(`注册时间:${new Date().toLocaleString()}`);
-            console.log(`id<${Node.ID}>已连接`);
-            console.log(`节点名称：<${hostname}>`);
-            console.log(`内存总量：<${parseFloat(totalmem).toFixed(0)}>`);
-            console.log(`已使用:<${parseFloat(freemem).toFixed(0)}>`);
-            console.log(`平均负载(/1/5/15min)：<${loadavg.map(el => el.toFixed(2) + '%')}>`);
-            console.log(`已运行时间:<${uptime}>`);
-            console.log(`系统类型:<${type}>`);
+            console.log(`节点注册：${Info.Name}==${Node.IP}\n
+                        注册时间:${new Date().toLocaleString()}\n
+                        id<${Node.ID}>已连接\n
+                        节点名称：<${hostname}>\n
+                        内存总量：<${parseFloat(totalmem).toFixed(0)}>\n
+                        已使用:<${parseFloat(freemem).toFixed(0)}>\n
+                        平均负载(/1/5/15min)：<${loadavg.map(el => el.toFixed(2) + '%')}>\n
+                        已运行时间:<${uptime}>\n
+                        系统类型:<${type}>`);
         }
     }
     // 节点注册成功,发送定时查询数据

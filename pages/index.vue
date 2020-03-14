@@ -25,6 +25,7 @@
                   <i class="iconfont">&#xebd8;</i>设备管理
                 </span>
               </b-nav-item>
+
               <b-nav-dropdown right>
                 <template v-slot:button-content>
                   <span> <i class="iconfont">&#xec0f;</i>langua </span>
@@ -36,6 +37,19 @@
                   <i class="iconfont">&#xebe0;</i>En
                 </b-dropdown-item>
               </b-nav-dropdown>
+              <b-nav-item>
+                <b-spinner
+                  :variant="$socket.connected ? 'light' : 'dark'"
+                  v-b-tooltip.hover
+                  small
+                  type="grow"
+                  :title="
+                    $socket.connected
+                      ? 'WebSocket连接正常'
+                      : 'WebSocket连接断开'
+                  "
+                ></b-spinner>
+              </b-nav-item>
               <b-nav-dropdown right>
                 <template v-slot:button-content>
                   <span>
@@ -50,7 +64,7 @@
                   <i class="iconfont">&#xebe3;</i>修改密码
                 </b-dropdown-item>
                 <b-dropdown-divider />
-                <b-dropdown-item @click="$auth.logout('local')">
+                <b-dropdown-item @click="logout">
                   <i class="iconfont">&#xe641;</i>退出登录
                 </b-dropdown-item>
               </b-nav-dropdown>
@@ -72,73 +86,33 @@
 import gql from "graphql-tag";
 import vue from "vue";
 import { DollarApollo } from "vue-apollo/types/vue-apollo";
+import { WebInfo } from "../store";
 export default vue.extend({
   data() {
     return {
       isUser: true
     };
   },
-  /*async asyncData({ app }) {
-    const client = app.apolloProvider.defaultClient;
-    const { data } = await client.query({
-      query: gql`
-        {
-          userGroup
-        }
-      `,
-      fetchPolicy: "network-only"
-    });
-    const userGroup: string = data.userGroup;
-    return { userGroup };
+  computed: {
+    Info() {
+      return this.$store.state.Info;
+    }
   },
-  mounted(){
-     switch (this.$data.userGroup) {
-        case "admin":
-          this.isUser = false;
-          this.$router.push({ name: "index-tool" });
-          break;
-        case "root":
-          this.isUser = false;
-          this.$router.push({ name: "index-admin" });
-          break;
-        default:
-          this.isUser = true;
-          this.$router.push({ name: "index-Uart" });
-          break;
-      } 
-  } */
-
-  /* created() {
-    this.$apollo
-      .query({
-        query: gql`
-          {
-            userGroup
-          }
-        `,
-        fetchPolicy: "network-only"
-      })
-      .then(({ data }) => {
-        switch (data.userGroup) {
-          case "admin":
-            this.isUser = false;
-            this.$router.push({ name: "index-tool" });
-            break;
-          case "root":
-            this.isUser = false;
-            this.$router.push({ name: "index-admin" });
-            break;
-          default:
-            this.isUser = true;
-            this.$router.push({ name: "index-Uart" });
-            break;
-        }
-      });
-  } */
+  watch: {
+    Info(newValue: WebInfo, oldValue) {
+      this.$bvToast.toast(newValue.msg, { title: newValue.type });
+    }
+  },
+  methods: {
+    logout() {
+      this.$socket.client.close();
+      this.$auth.logout();
+    }
+  },
   created() {
+    
+    // 判断登录类型
     (this as any).$axios.post("/api/auth/userGroup").then((el: any) => {
-      // console.log(el);
-      
       switch (el.data.userGroup) {
         case "admin":
           this.isUser = false;
@@ -150,7 +124,7 @@ export default vue.extend({
           break;
         default:
           this.isUser = true;
-          this.$router.push({ name: "index-Uart" });
+          this.$router.push({ name: "index-uart" });
           break;
       }
     });

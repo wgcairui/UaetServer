@@ -1,6 +1,5 @@
 /* jshint esversion:8 */
 import jsonwebtoken from "jsonwebtoken";
-import { UserInfo } from "./interface";
 export const secret: string = "UartServer";
 export const tokenExpiresTime: number = 1000 * 60 * 60 * 24;
 
@@ -10,15 +9,19 @@ export const tokenExpiresTime: number = 1000 * 60 * 60 * 24;
  * @param {*} { payload, option }
  * @returns
  */
-export const JwtSign = ({
-  payload,
-  option = {}
-}: {
-  payload: UserInfo;
-  option?: jsonwebtoken.SignOptions;
-}) => {
-  const opt = Object.assign({ expiresIn: tokenExpiresTime }, option || {});
-  return jsonwebtoken.sign(payload, secret, opt);
+
+interface Sign {
+  payload: string | object | Buffer, options?: jsonwebtoken.SignOptions
+}
+export const JwtSign = (sign: Sign) => {
+  const result: Promise<string> = new Promise((resolve, reject) => {
+    const opt = Object.assign({ expiresIn: tokenExpiresTime }, sign.options || {});
+    jsonwebtoken.sign(sign.payload, secret, opt, (err, encodeURI) => {
+      if (err) reject(err)
+      resolve(encodeURI)
+    })
+  })
+  return result
 };
 
 /**
@@ -28,6 +31,12 @@ export const JwtSign = ({
  * @returns
  */
 
-export const JwtVerify = (token: string): UserInfo => {
-  return <object>jsonwebtoken.verify(token, secret);
+export const JwtVerify = (token: string) => {
+  const result: Promise<string | object | Buffer | any> = new Promise((resolve, reject) => {
+    jsonwebtoken.verify(token, secret, (err, payload) => {
+      if (err) reject(err)
+      resolve(payload)
+    })
+  })
+  return result
 };

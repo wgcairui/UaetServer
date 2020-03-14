@@ -61,6 +61,10 @@ const typeDefs: DocumentNode = gql`
   type Terminal {
     DevMac: String
     name: String
+    ip:String
+    port:Int
+    jw:String
+    uptime:String
     mountNode: String
     mountDevs: [MountDev]
   }

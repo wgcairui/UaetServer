@@ -12,7 +12,7 @@
           class=" mt-4"
         >
           <b-link
-            :to="{ name: 'index-UT', query: { DevMac: link.DevMac } }"
+            :to="{ name: 'uart-main', query: { DevMac: link.DevMac } }"
             class=" text-decoration-none text-dark"
           >
             <b-card>
@@ -23,10 +23,7 @@
               <b-card-body>
                 <i class=" iconfont">&#xec24;</i>
                 <span>{{
-                  link.mountDevs.reduce(
-                    (res, cur) => res + cur.mountDev + cur.pid + ",",
-                    ""
-                  )
+                  link.mountDevs.map(el => el.mountDev + el.pid).join(",")
                 }}</span>
               </b-card-body>
             </b-card>
@@ -73,9 +70,9 @@
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue"
-import gql from "graphql-tag"
-import separated from "../../components/separated.vue"
+import Vue from "vue";
+import gql from "graphql-tag";
+import separated from "../../components/separated.vue";
 export default Vue.extend({
   components: {
     separated
@@ -86,7 +83,7 @@ export default Vue.extend({
         UTs: [],
         ECs: []
       }
-    }
+    };
   },
   methods: {
     a() {
@@ -118,5 +115,5 @@ export default Vue.extend({
       update: data => data.BindDevice || { UTs: [], ECs: [] }
     }
   }
-})
+});
 </script>

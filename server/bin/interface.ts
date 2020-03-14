@@ -74,7 +74,10 @@ export interface TerminalMountDevs {
 // 终端
 export interface Terminal extends RegisterTerminal {
   name: string;
-  Jw: string;
+  ip?: string
+  prto?: number
+  jw?: string;
+  uptime?: string
   mountDevs: TerminalMountDevs[];
 }
 // Node节点

@@ -2,12 +2,12 @@ import { ApolloServer } from "apollo-server-koa";
 import { JwtVerify } from "../bin/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
-import { KoaCtx } from "../bin/interface";
+import { KoaCtx, UserInfo } from "../bin/interface";
 
 export default new ApolloServer({
   typeDefs: typeDefs,
   resolvers: resolvers,
-  context: ({ ctx }: { ctx: KoaCtx }) => {
+  context: async ({ ctx }: { ctx: KoaCtx }) => {
     // 获取Token
     const token = ctx.cookies.get("auth._token.local");
     // 没有token则检查body，注册和重置页面的请求则通过
@@ -20,7 +20,7 @@ export default new ApolloServer({
       else throw new Error("query error");
     }
     // 解构token
-    const user = JwtVerify((<string>token).replace("bearer%20", ""));
+    const user:UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
     //
     if (!user || !user.user) throw new Error("you must be logged in");
     return { ...user, loggedIn: true, $Event: ctx.$Event };

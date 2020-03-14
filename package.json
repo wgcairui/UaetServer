@@ -5,9 +5,9 @@
   "author": "wgcairui",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon -e ts --exec ts-node --project server/serverTsconfig.json server/index.ts --watch server",
+    "dev": "cross-env NODE_ENV=development nodemon -e ts --exec ts-node --project ./server/serverTsconfig.json ./server/index.ts --watch server",
     "build": "nuxt-ts build",
-    "start": "cross-env NODE_ENV=production ts-node --project server/serverTsconfig.json server/index.ts",
+    "start": "cross-env NODE_ENV=production ts-node --project ./server/serverTsconfig.json ./server/index.ts",
     "generate": "nuxt-ts generate",
     "lint": "eslint --ext .ts,.js,.vue .",
     "lintfix": "eslint --fix --ext .ts,.js,.vue --ignore-path .gitignore ."
@@ -52,9 +52,11 @@
     "nuxt": "^2.11.0",
     "nuxt-i18n": "^6.5.0",
     "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.0",
     "v-charts": "^1.19.0",
     "vue": "^2.6.11",
     "vue-server-renderer": "^2.6.11",
+    "vue-socket.io-extended": "^4.0.1",
     "vue-template-compiler": "^2.6.11",
     "vued3tree": "^5.1.0"
   },
