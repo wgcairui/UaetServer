@@ -9,15 +9,15 @@ export default async (ctx: ParameterizedContext) => {
   switch (type) {
     case "login":
       const { user, passwd } = body;
-      const u = await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
+      const u = <UserInfo>await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
       // 是否有u
       ctx.assert(u, 400, "userNan");
       // 密码效验
-      const pwStat = await BcryptCompare(passwd, u.passwd);
+      const pwStat = await BcryptCompare(passwd, u.passwd as string);
       ctx.assert(pwStat, 400, "passwdError");
 
       // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
-      if (u && pwStat) ctx.body = { token: await JwtSign({ payload: { ...u } }) };
+      if (u && pwStat) ctx.body = { token: await JwtSign(u), user: u.user };
 
       break;
     case "userGroup":

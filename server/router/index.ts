@@ -12,8 +12,9 @@ rout.get("/api/auth/user", async (ctx) => {
     "bearer%20",
     ""
   );
-  const { user }: UserInfo = await JwtVerify(token);
-  ctx.body = user
+  const User: UserInfo = await JwtVerify(token);
+  
+  ctx.body = {user:User.user}
 });
 
 export default rout;

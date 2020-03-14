@@ -57,8 +57,8 @@
 </template>
 
 <script lang="ts">
-import vue from "vue"
-import MyHead from "../components/MyHead.vue"
+import vue from "vue";
+import MyHead from "../components/MyHead.vue";
 export default vue.extend({
   data() {
     return {
@@ -71,30 +71,40 @@ export default vue.extend({
         user: "admin",
         passwd: "123456"
       }
-    }
+    };
   },
   components: { MyHead },
   methods: {
-    login_submit() {
-      const { user, passwd } = this.$data.accont
-      this.$auth.loginWith("local", { data: { user, passwd } }).catch(error => {
-        if (!error.response || error.response.status !== 400)
-          this.$bvModal.msgBoxOk("登录遇到未知错误")
-        else console.log(error.response)
+    async login_submit() {
+      const { user, passwd } = this.$data.accont;
+      try {
+        const result = await this.$auth.loginWith("local", {
+          data: { user, passwd }
+        });
+        console.log({ result });
+      } catch (error) {
+        console.log({ error, keys: Object.keys(error) });
 
-        switch (error.response.data) {
-          case "userNan":
-            this.$bvModal.msgBoxOk("用户名错误")
-            break
-          case "passwdError":
-            this.accont.passwd = ""
-            this.$bvModal.msgBoxOk("用户密码错误")
-            break
+        if (!error.response || error.response.status !== 400) {
+          this.$bvModal.msgBoxOk("登录遇到未知错误");
+          return;
+        } else {
+          console.log(error.response);
+
+          switch (error.response.data) {
+            case "userNan":
+              this.$bvModal.msgBoxOk("用户名错误");
+              break;
+            case "passwdError":
+              this.accont.passwd = "";
+              this.$bvModal.msgBoxOk("用户密码错误");
+              break;
+          }
         }
-      })
+      }
     }
   }
-})
+});
 
 /* 
 export default {

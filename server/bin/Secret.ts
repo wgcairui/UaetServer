@@ -10,13 +10,10 @@ export const tokenExpiresTime: number = 1000 * 60 * 60 * 24;
  * @returns
  */
 
-interface Sign {
-  payload: string | object | Buffer, options?: jsonwebtoken.SignOptions
-}
-export const JwtSign = (sign: Sign) => {
+export const JwtSign = (payload: string | object | Buffer, options?: jsonwebtoken.SignOptions) => {
   const result: Promise<string> = new Promise((resolve, reject) => {
-    const opt = Object.assign({ expiresIn: tokenExpiresTime }, sign.options || {});
-    jsonwebtoken.sign(sign.payload, secret, opt, (err, encodeURI) => {
+    const opt = Object.assign({ expiresIn: tokenExpiresTime }, options || {});
+    jsonwebtoken.sign(payload, secret, opt, (err, encodeURI) => {
       if (err) reject(err)
       resolve(encodeURI)
     })
@@ -31,12 +28,12 @@ export const JwtSign = (sign: Sign) => {
  * @returns
  */
 
-export const JwtVerify = (token: string) => {
+ export const JwtVerify = (token: string) => {
   const result: Promise<string | object | Buffer | any> = new Promise((resolve, reject) => {
-    jsonwebtoken.verify(token, secret, (err, payload) => {
+    jsonwebtoken.verify(token, secret, (err, decode) => {
       if (err) reject(err)
-      resolve(payload)
+      resolve(decode)
     })
   })
   return result
-};
+}; 
