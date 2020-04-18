@@ -32,7 +32,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: "~/plugins/vue-socket.io-extended.js", ssr: false }],
+  // plugins: [{ src: "~/plugins/vue-socket.io-extended.js", ssr: false }],
   /*
    ** Nuxt.js dev-modules
    */

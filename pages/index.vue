@@ -38,7 +38,7 @@
                 </b-dropdown-item>
               </b-nav-dropdown>
               <b-nav-item>
-                <b-spinner
+               <!--  <b-spinner
                   :variant="$socket.connected ? 'light' : 'dark'"
                   v-b-tooltip.hover
                   small
@@ -48,7 +48,7 @@
                       ? 'WebSocket连接正常'
                       : 'WebSocket连接断开'
                   "
-                ></b-spinner>
+                ></b-spinner> -->
               </b-nav-item>
               <b-nav-dropdown right>
                 <template v-slot:button-content>
@@ -105,7 +105,7 @@ export default vue.extend({
   },
   methods: {
     logout() {
-      this.$socket.client.close();
+      // this.$socket.client.close();
       this.$auth.logout();
     }
   },
