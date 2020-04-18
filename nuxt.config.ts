@@ -1,4 +1,5 @@
-module.exports = {
+import { Configuration } from "@nuxt/types"
+const Config = {
   mode: "spa",
   // mode: "universal",
   server: {
@@ -32,7 +33,7 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  // plugins: [{ src: "~/plugins/vue-socket.io-extended.js", ssr: false }],
+  plugins: [{ src: "~/plugins/vue-socket.io-extended.ts", ssr: false }],
   /*
    ** Nuxt.js dev-modules
    */
@@ -129,65 +130,29 @@ module.exports = {
   },
   // Give apollo module options
   apollo: {
-    tokenName: "Uart", // optional, default: apollo-token
+    tokenName: "Uart",
     cookieAttributes: {
-      /**
-       * Define when the cookie will be removed. Value can be a Number
-       * which will be interpreted as days from time of creation or a
-       * Date instance. If omitted, the cookie becomes a session cookie.
-       */
-      expires: 7, // optional, default: 7 (days)
-
-      /**
-       * Define the path where the cookie is available. Defaults to "/"
-       */
-      path: "/", // optional
-      /**
-       * Define the domain where the cookie is available. Defaults to
-       * the domain of the page where the cookie was created.
-       */
-      domain: "example.com", // optional
-
-      /**
-       * A Boolean indicating if the cookie transmission requires a
-       * secure protocol (https). Defaults to false.
-       */
+      expires: 7,
+      path: "/",
+      domain: "example.com",
       secure: false
     },
-    includeNodeModules: true, // optional, default: false (this includes graphql-tag for node_modules folder)
-    authenticationType: "Basic", // optional, default: "Bearer"
-    // (Optional) Default "apollo" definition
+    includeNodeModules: true,
+    authenticationType: "Basic",
     defaultOptions: {
-      // See "apollo" definition
-      // For example: default query options
       $query: {
         loadingKey: "loading",
         fetchPolicy: "cache-and-network"
       }
     },
-    // required
     clientConfigs: {
       default: {
-        // required
         httpEndpoint: "http://127.0.0.1:9010",
-        // optional
-        // override HTTP endpoint in browser only
         browserHttpEndpoint: "/graphql",
-        // optional
-        // See https://www.apollographql.com/docs/link/links/http.html#options
         httpLinkOptions: {
           credentials: "same-origin"
         },
-        // You can use `wss` for secure connection (recommended in production)
-        // Use `null` to disable subscriptions
-        // wsEndpoint: "ws://127.0.0.1:9010", // optional
-        // LocalStorage token
-        tokenName: "apollo-token" // optional
-        // Enable Automatic Query persisting with Apollo Engine
-        // persisting: false, // Optional
-        // Use websockets for everything (no HTTP)
-        // You need to pass a `wsEndpoint` for this to work
-        // websocketsOnly: false // Optional
+        tokenName: "apollo-token"
       }
     }
   },
@@ -201,7 +166,7 @@ module.exports = {
     extend(config, ctx) {
       // Run ESLint on save
       if (ctx.isDev && ctx.isClient) {
-        config.module.rules.push({
+        (config as any).module.rules.push({
           enforce: "pre",
           test: /\.(js|vue)$/,
           loader: "eslint-loader",
@@ -211,11 +176,13 @@ module.exports = {
     }
   },
   router: {
-    middleware: ["auth"]
+    middleware: ["auth",'checkSocketIO']
   },
   typescript: {
     typeCheck: {
       eslint: true
     }
   }
-}
+} as Configuration
+
+export default Config

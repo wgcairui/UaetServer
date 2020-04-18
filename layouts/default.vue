@@ -18,6 +18,6 @@ html {
 body,
 #__nuxt,
 #__layout {
-  height: 100%;
+  height: 100vh;
 }
 </style>

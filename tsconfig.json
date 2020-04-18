@@ -33,7 +33,7 @@
       "@nuxt/types",
       "@types/nuxtjs__auth",
       "vue/types",
-      "./types/koa-socket-2"
+      "vue-socket.io-extended"
     ]
   },
   "exclude": [

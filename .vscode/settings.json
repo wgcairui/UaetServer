@@ -4,5 +4,6 @@
     "javascript.implicitProjectConfig.experimentalDecorators": true,
     "typescript.autoClosingTags": false,
     "javascript.autoClosingTags": false,
-    "typescript.tsserver.maxTsServerMemory": 1024
+    "typescript.tsserver.maxTsServerMemory": 2048,
+    "i18n-ally.localesPaths": "locales"
 }

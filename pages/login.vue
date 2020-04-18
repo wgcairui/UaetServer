@@ -105,29 +105,6 @@ export default vue.extend({
     }
   }
 });
-
-/* 
-export default {
-  components: {
-    MyHead
-  },
-  data() {
-    return {
-      label: {
-        labelCols: "12",
-        labelColsSm: "2",
-        labelAlignSm: "right"
-      },
-      accont: {
-        user: "admin",
-        passwd: "123456"
-      }
-    };
-  },
-  methods: {
-    
-  }
-};  */
 </script>
 <style scoped>
 @media screen and (min-width: 568px) {

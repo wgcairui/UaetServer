@@ -18,7 +18,7 @@
       <span class="text-center text-light">{{ title }}</span>
       <slot />
       <div class="ml-auto ">
-        <!-- <span>
+        <span>
           <b-spinner
             :variant="$socket.connected ? 'light' : 'dark'"
             v-b-tooltip.hover
@@ -28,7 +28,7 @@
               $socket.connected ? 'WebSocket连接正常' : 'WebSocket连接断开'
             "
           ></b-spinner
-        ></span> -->
+        ></span>
         <span v-if="User" class="ml-auto text-light"
           ><i class="iconfont">&#xeb6f;</i>{{ User }}</span
         >

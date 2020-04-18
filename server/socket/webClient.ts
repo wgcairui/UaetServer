@@ -1,10 +1,9 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { SocketRegisterInfo, NodeClient, Terminal, protocol, queryObject, UserInfo } from "../bin/interface";
-import config from "../config";
-import tool from "../bin/tool";
+import { UserInfo } from "../bin/interface";
 import { JwtVerify } from "../bin/Secret";
+import { parseToken } from "../bin/util";
 
 interface socketArgument {
     IP: string
@@ -29,14 +28,16 @@ export default class webClientSocketIO {
         // middleware
         // 每个socket连接会有query.token,检查token是否合法
         this.io.use((socket, next) => {
-            const token = (socket.handshake.query.token as string).split(" ")[1].trim()
+            console.log(socket);
+            
+            const token = parseToken(socket.handshake.query.token)
             JwtVerify(token)
                 .then(() => next())
-                .catch((err) => next(new Error(err)))
+                .catch((err) => next(new Error('socket no find token')))
         });
         // 监听所有连接事件
         this.io.on("connect", async socket => {
-            const token = (socket.handshake.query.token as string).split(" ")[1].trim()
+            const token = parseToken(socket.handshake.query.token)
             const { user }: UserInfo = await JwtVerify(token)
             const id = socket.id
             const ip = socket.conn.remoteAddress

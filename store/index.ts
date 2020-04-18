@@ -1,5 +1,5 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
-
+import {Context} from "@nuxt/types"
 
 export type RootState = ReturnType<typeof state>
 
@@ -12,25 +12,17 @@ export interface WebInfo {
   type: InfoType
 }
 
-// 设备协议单位解析缓存
-let unitCache: Map<string, Map<string, string>> = new Map()
-// Info
-let Info: WebInfo = {
-  time: new Date().toLocaleString(),
-  msg: "default message",
-  type: "SYS"
-}
-let Infos: WebInfo[] = []
-//Infos.push(Info)
-
 export const state = () => ({
-  unitCache,
-  Info,
-  Infos
+  // 设备协议单位解析缓存
+  unitCache:new Map() as Map<string, Map<string, string>>,
+  Info:{
+    time: new Date().toLocaleString(),
+    msg: "default message",
+    type: "SYS"
+  } as WebInfo,
+  Infos:[] as WebInfo[]
 })
-/* 
 
-*/
 export const getters: GetterTree<RootState, RootState> = {
   // 
   getUnit: state => (val: string, unitString: string) => {
@@ -96,9 +88,11 @@ export const actions: ActionTree<RootState, RootState> = {
       msg,
       type: "User"
     }
+    console.log({tt:this});
+    
     commit("addInfo", info)
   },
-  socket_logout({ commit }, payload) {
+  socket_logout({ commit}, payload) {
     const msg = `在线设备离线,IP@${payload.IP},socket:@${payload.ID}`
     const info: WebInfo = {
       msg,
