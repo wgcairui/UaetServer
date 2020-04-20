@@ -66,8 +66,12 @@ export const mutations: MutationTree<RootState> = {
       msg: payload.msg,
       type: payload.type,
       code: 1
-    }
+    };
+    (this as any)._vm.$bvToast.toast(payload.msg, { title: payload.type })
     state.Infos.push(state.Info)
+    console.log(state);
+    const DB = indexedDB.open("UartServer",1)
+    
   }
 
 }
@@ -75,11 +79,8 @@ export const mutations: MutationTree<RootState> = {
 
 */
 export const actions: ActionTree<RootState, RootState> = {
-  //fetchThings({ commit }) { commit('CHANGE_NAME', 'New name') },
-  // socket绑定事件
-  // sock登录效验success
   socket_valdationSuccess(ctx, play) {
-    //console.log(play);
+    // console.log(play);
   },
   // 其他客户端登录
   socket_login({ commit }, payload) {
@@ -88,8 +89,6 @@ export const actions: ActionTree<RootState, RootState> = {
       msg,
       type: "User"
     }
-    console.log({tt:this});
-    
     commit("addInfo", info)
   },
   socket_logout({ commit}, payload) {

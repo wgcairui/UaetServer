@@ -27,13 +27,14 @@ export default class webClientSocketIO {
     start() {
         // middleware
         // 每个socket连接会有query.token,检查token是否合法
-        this.io.use((socket, next) => {
-            console.log(socket);
-            
+        this.io.use((socket, next) => {            
             const token = parseToken(socket.handshake.query.token)
             JwtVerify(token)
                 .then(() => next())
-                .catch((err) => next(new Error('socket no find token')))
+                .catch((err) => {
+                    socket.disconnect()
+                    next(new Error('socket no find token'))                    
+                })
         });
         // 监听所有连接事件
         this.io.on("connect", async socket => {
@@ -49,6 +50,7 @@ export default class webClientSocketIO {
     }
     // 缓存socket
     private _connect(Node: socketArgument) {
+        // this.io.to(Node.User).emit('data')
         // 缓存id
         this.CacheSocketidUser.set(Node.ID, Node.User)
         // 加入房间
@@ -59,17 +61,18 @@ export default class webClientSocketIO {
             const socketIds = <Set<string>>this.CacheUserSocketids.get(Node.User)
             socketIds.add(Node.ID)
             // room 发送登录信息
-            this.io.to(Node.User).emit("login", { ID: Node.ID, IP: Node.IP })
+            Node.socket.to(Node.User).emit("login", { ID: Node.ID, IP: Node.IP })
             console.log(`user:${Node.User}@设备多端登录, 已登录id${Array.from(socketIds).join("---")}`);
         } else {
             this.CacheUserSocketids.set(Node.User, new Set([Node.ID]))
             console.log(`user:${Node.User}@单点登录,登录ID：%${Node.ID}`);
         }
         // 发送效验成功事件        
-        this.io.to(Node.User).emit("valdationSuccess", { user: Node.User })
+        Node.socket.to(Node.User).emit("valdationSuccess", { user: Node.User })
     }
     // 断开socket，清除缓存
     private _disconnect(Node: socketArgument) {
+        Node.socket.disconnect()
         this.CacheSocketidUser.delete(Node.ID)
         // 离开房间user
         Node.socket.leave(Node.User)
@@ -82,7 +85,7 @@ export default class webClientSocketIO {
         } else {
             userSocketids.delete(Node.ID)
             // room 发送离线信息
-            this.io.to(Node.User).emit("logout", { ID: Node.ID, IP: Node.IP })
+            Node.socket.to(Node.User).emit("logout", { ID: Node.ID, IP: Node.IP })
             console.log(`用户@${Node.User} 多端登录已1离线，在线数:${size - 1}`);
         }
     }

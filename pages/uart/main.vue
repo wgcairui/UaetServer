@@ -7,22 +7,22 @@
           <separated title="透传终端信息"></separated>
           <b-jumbotron>
             <b-form>
-              <b-form-group label="设备ID:" v-bind="label">
+              <b-form-group label="模块ID:" v-bind="label">
                 <b-form-text class="terminal text-dark">{{
                   DevMac
                 }}</b-form-text>
               </b-form-group>
-              <b-form-group label="设备IP:" v-bind="label">
+              <b-form-group label="模块IP:" v-bind="label">
                 <b-form-text class="terminal text-dark">{{
                   Terminals.ip
                 }}</b-form-text>
               </b-form-group>
-              <b-form-group label="透传端口:" v-bind="label">
+              <b-form-group label="模块端口:" v-bind="label">
                 <b-form-text class="terminal text-dark">{{
                   Terminals.port
                 }}</b-form-text>
               </b-form-group>
-              <b-form-group label="透传地址:" v-bind="label">
+              <b-form-group label="模块地理地址:" v-bind="label">
                 <b-form-text class="terminal text-dark">
                   <b-link
                     href="http://www.gpsspg.com/maps.htm"
@@ -62,8 +62,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import { tree } from "vued3tree";
 import { Terminal } from "../../server/bin/interface";
 interface selectTree {
@@ -73,7 +71,7 @@ interface selectTree {
   pid: number;
 }
 export default Vue.extend({
-  components: { tree, MyHead, separated },
+  components: { tree},
   data() {
     const label = {
       labelCols: "12",
@@ -119,8 +117,10 @@ export default Vue.extend({
     let children = Terminal.mountDevs.map(el =>
       Object.assign(el, { name: el.mountDev + el.pid })
     );
+    Terminal.jw = (Terminal.jw as string).split(',').reverse().join(',')
     let Terminals = Object.assign(Terminal, { children });
     return { Terminals, DevMac };
+
   },
 
   methods: {

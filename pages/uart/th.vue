@@ -41,13 +41,10 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import separated from "../../components/separated.vue";
-import MyHead from "../../components/MyHead.vue";
 import { queryResult } from "../../server/bin/interface";
 import gql from "graphql-tag";
 import { TerminalResultArrayToJson } from "../../plugins/tools";
 export default Vue.extend({
-  components: { MyHead, separated },
   data() {
     return {
       UartTerminalData: null,

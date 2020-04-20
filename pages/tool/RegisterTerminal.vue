@@ -80,18 +80,12 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
 import {
   RegisterTerminal,
   ApolloMongoResult
 } from "../../server/bin/interface";
 export default Vue.extend({
-  components: {
-    MyHead,
-    separated
-  },
   data() {
     return {
       accont: {

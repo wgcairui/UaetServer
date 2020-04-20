@@ -1,16 +1,11 @@
 <template>
   <b-container fluid class="p-0 h-100 d-flex flex-column">
-    <b-navbar
-      toggleable="lg"
-      type="dark"
-      variant="info"
-      class="align-items-start"
-    >
-      <b-navbar-brand> <i class="iconfont">&#xebd0;</i>Ladis </b-navbar-brand>
+    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start">
+      <b-navbar-brand>
+        <i class="iconfont">&#xebd0;</i>Ladis
+      </b-navbar-brand>
       <div class="navber-m-2 ml-auto">
-        <div
-          class="navber-m-3 float-right d-inline-flex flex-column head-right"
-        >
+        <div class="navber-m-3 float-right d-inline-flex flex-column head-right">
           <b-navbar-toggle target="nav-collapse" class="float-right head-btn" />
           <b-collapse id="nav-collapse" is-nav class="float-rigth mr-1">
             <!-- Right aligned nav items -->
@@ -28,7 +23,9 @@
 
               <b-nav-dropdown right>
                 <template v-slot:button-content>
-                  <span> <i class="iconfont">&#xec0f;</i>langua </span>
+                  <span>
+                    <i class="iconfont">&#xec0f;</i>langua
+                  </span>
                 </template>
                 <b-dropdown-item>
                   <i class="iconfont">&#xebe2;</i>中文
@@ -38,18 +35,9 @@
                 </b-dropdown-item>
               </b-nav-dropdown>
               <b-nav-item>
-               <b-spinner
-                  :variant="$socket.connected ? 'light' : 'dark'"
-                  v-b-tooltip.hover
-                  small
-                  type="grow"
-                  :title="
-                    $socket.connected
-                      ? 'WebSocket连接正常'
-                      : 'WebSocket连接断开'
-                  "
-                ></b-spinner>
+                <socket-state/>
               </b-nav-item>
+              
               <b-nav-dropdown right>
                 <template v-slot:button-content>
                   <span>
@@ -88,7 +76,7 @@ import vue from "vue";
 import { DollarApollo } from "vue-apollo/types/vue-apollo";
 import { WebInfo } from "../store";
 export default vue.extend({
-  scrollToTop:true,
+  scrollToTop: true,
   data() {
     return {
       isUser: true
@@ -99,21 +87,18 @@ export default vue.extend({
       return this.$store.state.Info as WebInfo;
     }
   },
-  watch: {
+  /* watch: {
     Info(newValue: WebInfo, oldValue) {
       this.$bvToast.toast(newValue.msg, { title: newValue.type });
     }
-  },
+  }, */
   methods: {
     logout() {
-      console.log(this.$socket);
-      
-      this.$socket.client.close();
+      this.$socket.disconnect()
       this.$auth.logout();
     }
   },
   created() {
-    
     // 判断登录类型
     (this as any).$axios.post("/api/auth/userGroup").then((el: any) => {
       switch (el.data.userGroup) {

@@ -52,7 +52,7 @@ export default class NodeSocketIO {
         if (!Event.Cache.CacheNode.has(Node.IP)) {
             Node.socket.disconnect()
             console.log(`有未登记节点连接，节点注册信息`);
-            console.log(data);
+            // console.log(data);
         } else {
             // 缓存socket
             this.Event.Cache.CacheSocket.set(Node.IP, Node.socket)
@@ -62,7 +62,7 @@ export default class NodeSocketIO {
             Node.socket.emit("registerSuccess", Info);
             // 
             const { hostname, totalmem, freemem, loadavg, type, uptime } = data;
-            console.log(`节点注册：${Info.Name}==${Node.IP}\n
+            /* console.log(`节点注册：${Info.Name}==${Node.IP}\n
                         注册时间:${new Date().toLocaleString()}\n
                         id<${Node.ID}>已连接\n
                         节点名称：<${hostname}>\n
@@ -70,14 +70,14 @@ export default class NodeSocketIO {
                         已使用:<${parseFloat(freemem).toFixed(0)}>\n
                         平均负载(/1/5/15min)：<${loadavg.map(el => el.toFixed(2) + '%')}>\n
                         已运行时间:<${uptime}>\n
-                        系统类型:<${type}>`);
+                        系统类型:<${type}>`); */
         }
     }
     // 节点注册成功,发送定时查询数据
-    private ready(Node: socketArgument) {
+    private ready(Node: socketArgument) {        
         // 获取节点名称
         const name = <string>this.Event.Cache.CacheNode.get(Node.IP)?.Name;
-
+        // console.log({name,Node});
         // 创建查询指令定时器,缓存定时器
         const QueryInterval = setInterval(() => {
             this.SendQuery(name, Node);
@@ -105,7 +105,7 @@ export default class NodeSocketIO {
         const clients = <Map<string, Terminal>>this.Event.Cache.CacheNodeTerminal.get(name)
         // 遍历所有终端
         clients.forEach((Terminal, key) => {
-            console.log(key);
+            // console.log(key);
             // 如果在线设备缓存内没有此设备，跳过查询
             if (!this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.has(key)) return
             // 遍历每个终端挂载设备
@@ -114,19 +114,20 @@ export default class NodeSocketIO {
                 const timeStamp = Date.now()
                 // 获取设备协议
                 const Protocol = <protocol>this.Event.Cache.CacheProtocol.get(TerminalMountDevs.protocol)
+                // console.log({Terminal,TerminalMountDevs,Protocol});
                 Protocol.instruct.forEach(ProtocolInstruct => {
                     // 构建查询指令
                     const content = tool.Crc16modbus(TerminalMountDevs.pid, ProtocolInstruct.name)
                     // 构建查询对象
                     const query: queryObject = {
                         mac: Terminal.DevMac,
-                        type: TerminalMountDevs.Type,
+                        type: Protocol.Type,
                         protocol: TerminalMountDevs.protocol,
                         pid: TerminalMountDevs.pid,
                         timeStamp,
                         content
                     }
-                    console.log(query);
+                    // console.log(query);
                     Node.socket.emit("query", query);
                 })
             })

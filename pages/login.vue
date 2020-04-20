@@ -58,7 +58,6 @@
 
 <script lang="ts">
 import vue from "vue";
-import MyHead from "../components/MyHead.vue";
 export default vue.extend({
   data() {
     return {
@@ -68,12 +67,11 @@ export default vue.extend({
         labelAlignSm: "right"
       },
       accont: {
-        user: "admin",
-        passwd: "123456"
+        user: "",
+        passwd: ""
       }
     };
   },
-  components: { MyHead },
   methods: {
     async login_submit() {
       const { user, passwd } = this.$data.accont;

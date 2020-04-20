@@ -114,8 +114,6 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
 import { UartTerminalData } from "./query";
 import {
@@ -127,7 +125,6 @@ import {
   DevConstant_Air
 } from "../../server/bin/interface";
 export default Vue.extend({
-  components: { MyHead, separated },
   data() {
     const { mountDev, pid, protocol, DevMac } = this.$route.query;
     const statSet = new Set([

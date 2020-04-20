@@ -114,13 +114,7 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 export default vue.extend({
-  components: {
-    MyHead,
-    separated
-  },
   data() {
     return {
       label: {

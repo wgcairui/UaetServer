@@ -140,8 +140,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import {
   DevsType,
   Terminal,
@@ -154,10 +152,6 @@ type OprateMode =
   | "addTerminalMountDev"
   | "registerTerminalMountDev";
 export default vue.extend({
-  components: {
-    MyHead,
-    separated
-  },
   data() {
     const routeDevMac = this.$route.query.DevMac;
     const TerminalsFields = [

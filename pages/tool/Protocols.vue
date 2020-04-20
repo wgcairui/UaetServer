@@ -120,14 +120,8 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import { protocol, protocolInstruct } from "../../server/bin/interface";
 export default Vue.extend({
-  components: {
-    MyHead,
-    separated
-  },
   data() {
     let Protocols: protocol[] = [];
     return {

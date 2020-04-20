@@ -14,13 +14,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../../components/MyHead.vue";
-import separated from "../../../components/separated.vue";
 export default Vue.extend({
-  components: {
-    MyHead,
-    separated
-  }
 });
 </script>
 

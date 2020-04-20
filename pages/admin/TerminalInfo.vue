@@ -9,11 +9,7 @@
 
 <script>
 import gql from "graphql-tag"
-import MyHead from "../../components/MyHead"
 export default {
-  components: {
-    MyHead
-  },
   data() {
     return {
       Terminals: []

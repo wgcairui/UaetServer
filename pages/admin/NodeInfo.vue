@@ -16,13 +16,9 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import MyHead from "../../components/MyHead.vue";
 import gql from "graphql-tag";
 import { paresTime } from "../../plugins/tools";
 export default Vue.extend({
-  components: {
-    MyHead
-  },
   data() {
     return {
       NodeInfo: [],

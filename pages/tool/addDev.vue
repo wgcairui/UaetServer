@@ -47,16 +47,9 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import separated from "../../components/separated.vue";
-import MyHead from "../../components/MyHead.vue";
 import { protocol, DevsType } from "../../server/bin/interface";
 
 export default vue.extend({
-  components: {
-    separated,
-    MyHead
-  },
-
   data() {
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },

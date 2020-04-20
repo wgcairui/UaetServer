@@ -38,13 +38,9 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import MyHead from "../../components/MyHead.vue";
 import { NodeClient } from "../../server/bin/interface";
 
 export default vue.extend({
-  components: {
-    MyHead
-  },
   data() {
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },

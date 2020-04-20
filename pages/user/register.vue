@@ -59,12 +59,8 @@
 <script lang="ts">
 import Vue from "vue"
 import gql from "graphql-tag"
-import MyHead from "../../components/MyHead.vue"
 export default Vue.extend({
   auth: false,
-  components: {
-    MyHead
-  },
   data() {
     return {
       label: {

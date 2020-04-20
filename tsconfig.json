@@ -31,9 +31,7 @@
     "types": [
       "@types/node",
       "@nuxt/types",
-      "@types/nuxtjs__auth",
       "vue/types",
-      "vue-socket.io-extended"
     ]
   },
   "exclude": [

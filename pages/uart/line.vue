@@ -6,25 +6,11 @@
         <b-col cols="12">
           <separated title="选择参数"></separated>
           <b-form>
-            <b-form-group
-              label="Colletion:"
-              label-for="colletion"
-              v-bind="label"
-            >
-              <b-form-select
-                v-model="select.value"
-                :options="select.option"
-              ></b-form-select>
+            <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
+              <b-form-select v-model="select.value" :options="select.option"></b-form-select>
             </b-form-group>
-            <b-form-group
-              label="选择时间:"
-              label-for="TimePicker"
-              v-bind="label"
-            >
-              <b-form-datepicker
-                id="TimePicker"
-                v-model="datetime"
-              ></b-form-datepicker>
+            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
+              <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
             </b-form-group>
           </b-form>
         </b-col>
@@ -39,16 +25,10 @@
   </div>
 </template>
 <script>
-import MyHead from "@/components/MyHead";
-import separated from "../../components/separated";
 import VeLine from "v-charts/lib/line.common";
 import gql from "graphql-tag";
 export default {
-  components: {
-    MyHead,
-    VeLine,
-    separated
-  },
+  components: { VeLine },
   data() {
     const query = this.$route.query;
     const label = {

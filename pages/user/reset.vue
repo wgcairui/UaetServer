@@ -5,11 +5,7 @@
 </template>
 
 <script>
-import MyHead from "../../components/MyHead"
 export default {
   auth: false,
-  components: {
-    MyHead
-  }
 }
 </script>

@@ -1,10 +1,6 @@
 /* eslint-disable no-console */
 import http from "http";
-import https from "https";
-import fs from "fs";
-import path from "path";
 import Koa from "koa";
-import sslify from "koa-sslify";
 // Middleware
 import consola from "consola";
 import body from "koa-body";
@@ -26,8 +22,6 @@ import Event from "./event/index";
 import config from "../nuxt.config";
 
 const app = new Koa();
-// ssl
-// app.use(sslify());
 // attach
 // const ioNode = new Socket({ namespace: "Node" });
 // ioNode.attach(app);
@@ -35,7 +29,7 @@ Event.attach(app);
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });
 // use
-app.use(koaLogger());
+// app.use(koaLogger());
 app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());

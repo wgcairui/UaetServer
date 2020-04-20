@@ -1,10 +1,11 @@
 import { Configuration } from "@nuxt/types"
+const isProd = process.env.NODE_ENV === "production"
 const Config = {
   mode: "spa",
   // mode: "universal",
   server: {
-    host: process.env.NODE_ENV === "production" ? "0.0.0.0" : "0.0.0.0",
-    port: 9010
+    host: isProd ? "0.0.0.0" : "0.0.0.0",
+    port: isProd ? 9010 : 3000
   },
   /*
    ** Headers of the page
@@ -33,7 +34,10 @@ const Config = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: "~/plugins/vue-socket.io-extended.ts", ssr: false }],
+  plugins: [
+    { src: "~/plugins/vue-socket.io-extended.ts", ssr: false },
+    "~/plugins/compontent.ts"
+  ],
   /*
    ** Nuxt.js dev-modules
    */
@@ -176,7 +180,7 @@ const Config = {
     }
   },
   router: {
-    middleware: ["auth",'checkSocketIO']
+    middleware: ["auth", 'checkSocketIO']
   },
   typescript: {
     typeCheck: {

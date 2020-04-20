@@ -179,8 +179,6 @@
 
 <script lang="ts">
 import vue from "vue";
-import MyHead from "../../components/MyHead.vue";
-import separated from "../../components/separated.vue";
 import gql from "graphql-tag";
 import { parseJsonToJson } from "../../plugins/tools";
 import deepmerge from "deepmerge";
@@ -191,10 +189,6 @@ import {
 } from "../../server/bin/interface";
 
 export default vue.extend({
-  components: {
-    separated,
-    MyHead
-  },
   data() {
     const routeProtocol = this.$route.query.Protocol;
     return {
