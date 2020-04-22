@@ -10,8 +10,8 @@
           <b-collapse id="nav-collapse" is-nav class="float-rigth mr-1">
             <!-- Right aligned nav items -->
             <b-navbar-nav class="ml-auto text-nowrap">
-              <b-nav-item v-if="isUser" :to="{ name: 'manage-AlarmManage' }">
-                <span class="text-light text-wrap">
+              <b-nav-item v-if="isUser">
+                <span class="text-light text-wrap" v-b-toggle.alarms>
                   <i class="iconfont">&#xeb68;</i>告警管理
                 </span>
               </b-nav-item>
@@ -35,9 +35,9 @@
                 </b-dropdown-item>
               </b-nav-dropdown>
               <b-nav-item>
-                <socket-state/>
+                <socket-state />
               </b-nav-item>
-              
+
               <b-nav-dropdown right>
                 <template v-slot:button-content>
                   <span>
@@ -61,7 +61,22 @@
         </div>
       </div>
     </b-navbar>
-
+    <b-sidebar id="alarms" title="Alarm" right bg-variant="dark" text-variant="light">
+      <b-button
+        variant="link"
+        class="bg-dark text-light text-decoration-none text-center"
+        block
+        :to="{name:'manage-AlarmManage'}"
+      >查看所有告警信息</b-button>
+      <b-list-group>
+        <b-list-group-item
+          v-for="info in Infos"
+          :key="info.time"
+          class="bg-dark text-light"
+          :to="{name:'manage-AlarmManage',params:info}"
+        >{{info.msg}}</b-list-group-item>
+      </b-list-group>
+    </b-sidebar>
     <b-row no-gutters class="flex-grow-1 main-page">
       <transition>
         <nuxt />
@@ -74,7 +89,7 @@
 import gql from "graphql-tag";
 import vue from "vue";
 import { DollarApollo } from "vue-apollo/types/vue-apollo";
-import { WebInfo } from "../store";
+import { WebInfo } from "../store/DB";
 export default vue.extend({
   scrollToTop: true,
   data() {
@@ -83,18 +98,13 @@ export default vue.extend({
     };
   },
   computed: {
-    Info() {
-      return this.$store.state.Info as WebInfo;
+    Infos() {
+      return this.$store.state.Infos as WebInfo[] || [];
     }
   },
-  /* watch: {
-    Info(newValue: WebInfo, oldValue) {
-      this.$bvToast.toast(newValue.msg, { title: newValue.type });
-    }
-  }, */
   methods: {
     logout() {
-      this.$socket.disconnect()
+      this.$socket.disconnect();
       this.$auth.logout();
     }
   },

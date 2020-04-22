@@ -10,11 +10,13 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
+
+import _ from "lodash"
 
 const resolvers: IResolvers = {
     Query: {
@@ -102,35 +104,81 @@ const resolvers: IResolvers = {
             return ctx.userGroup;
         },
         // 获取透传设备数据-单条
-        async UartTerminalData(root, { DevMac, pid }) {
-            const data: queryResult[] = await TerminalClientResultSingle.find({
+        async UartTerminalData(root, { DevMac, pid }, ctx: ApolloCtx) {
+            const data = await TerminalClientResultSingle.findOne({
                 mac: DevMac,
                 pid
-            }).lean();
-            if (data.length < 2) return data[0];
+            }).lean<queryResult>() as queryResult
+            // 获取mac协议
+            const protocol = ctx.$Event.Cache.CacheTerminal.get(DevMac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
+            // 获取配置显示常量参数
+            const DevConstant = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
+            // 刷选
+            data.result = data.result?.filter(el => DevConstant.includes(el.name))
+            return data
+            /* 
             let result: queryResultArgument[][] = [];
             data.forEach(el => result.push(el.result as queryResultArgument[]));
             let rs = data[0];
             rs.result = result.flat();
-            return rs;
+            return rs; */
         },
         // 获取透传设备数据-多条
-        async UartTerminalDatas(root, { DevMac, pid, datatime }) {
-            let a = null;
+        async UartTerminalDatas(root, { DevMac, name, pid, datatime }) {
+            let result: queryResultSave[]
+            // 如果没有日期参数,默认检索最新的100条数据
             if (datatime === "") {
-                a = await TerminalClientResult.find({ mac: DevMac, pid })
-                    .sort("timeStamp")
-                    .limit(100);
+                result = await TerminalClientResult.find({ mac: DevMac, pid })
+                    .sort("-timeStamp")
+                    .limit(100).lean() as any
+
             } else {
                 const start = new Date(datatime);
                 const end = new Date(datatime + " 23:59:59");
-                a = await TerminalClientResult.find({ mac: DevMac, pid })
+                result = await TerminalClientResult.find({ mac: DevMac, pid })
                     .where("timeStamp")
                     .gte(start.getTime())
                     .lte(end.getTime())
-                    .exec();
+                    .lean()
             }
-            return a;
+            // 把结果拆分为块
+            const len = Number.parseInt((result.length / 10).toFixed(0))
+            //console.log({len,length:result.length});
+            const resultChunk = _.chunk(result, len < 10 ? 10 : len)
+            // 遍历切块,刷选出指定字段的结果集,
+            return resultChunk.map(el => {
+                // 刷选切块,如果值相同则抛弃
+                let def: queryResultSave = el[0]
+                def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
+                return el.reduce((pre, cur) => {
+                    const last = pre.pop()
+                    cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
+                    if (last?.result[0].value !== cur.result[0].value) pre.push(cur)
+                    return pre
+                }, [def])
+            }).flat()
+            /* 
+            // 选出第一个值
+                let def:queryResultSave = el[0]
+                def.result = [def.result.find(el2=>el2.name === name) as queryResultArgument]
+                // 初始化结果
+                const filters = [] as queryResultSave[]
+                for(let cur of el){
+                    cur.result = [cur.result.find(el2=>el2.name === name) as queryResultArgument]
+                    if(def.result[0].value !== cur.result[0].value){
+                        filters.push(cur)
+                    }
+                }
+                return filters
+            */
+        },
+        // 获取设备在线状态
+        getDevState(root, { mac, node }, ctx: ApolloCtx) {
+            if (!mac || !node) return false
+            const nodeIP = ctx.$Event.Cache.CacheNodeName.get(node)?.IP as string
+            const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
+            // console.log({mac,macMap});
+            return macMap?.has(mac)
         }
         //
     },
@@ -293,18 +341,21 @@ const resolvers: IResolvers = {
                 | DevConstant_Air
                 | DevConstant_Ups
                 | DevConstant_EM
-                | DevConstant_TH;
-            }
+                | DevConstant_TH
+                | string[]
+
+            }, ctx: ApolloCtx
         ) {
             let Up
             switch (type) {
                 case "Constant":
                     Up = { Constant: arg }
                     break
-                case "ShowTag":
-                    Up = { Threshold: arg }
                 case "Threshold":
-                    Up = { ShowTag: arg }
+                    Up = { Threshold: arg }
+                    break
+                case "ShowTag":
+                    Up = { ShowTag: _.compact(arg as string[]) }
                     break
             }
             const result = await DevConstant.updateOne(
@@ -312,6 +363,7 @@ const resolvers: IResolvers = {
                 { $set: Up },
                 { upsert: true }
             )
+            ctx.$Event.Cache.RefreshCacheConstant()
             return result;
         },
 

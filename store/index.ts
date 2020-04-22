@@ -1,57 +1,52 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
-import {Context} from "@nuxt/types"
+import { Context } from "@nuxt/types"
+import { WebInfo, getInstance } from "./DB"
+import { queryResultArgument } from '../server/bin/interface'
 
+// 获取state返回值类型
 export type RootState = ReturnType<typeof state>
 
-type InfoType = "User" | "EC" | "UT" | "SYS"
-
-export interface WebInfo {
-  time?: string
-  msg: string
-  code?: number
-  type: InfoType
-}
 
 export const state = () => ({
   // 设备协议单位解析缓存
-  unitCache:new Map() as Map<string, Map<string, string>>,
-  Info:{
+  unitCache: new Map() as Map<string, Map<string, string>>,
+  Info: {
     time: new Date().toLocaleString(),
     msg: "default message",
     type: "SYS"
   } as WebInfo,
-  Infos:[] as WebInfo[]
+  Infos: [] as WebInfo[]
 })
 
 export const getters: GetterTree<RootState, RootState> = {
   // 
-  getUnit: state => (val: string, unitString: string) => {
+  getUnit: state => (query:queryResultArgument) => {
+    const value:queryResultArgument = Object.assign({issimulate:false},query)
     // 检查unit是否含有“{”
-    let result = { value: "", unit: true }
-    if (!unitString.includes("{")) {
-      result.value = val + unitString
+    if (!value.unit?.includes("{")) {
+      value.issimulate = true
+      return value
     } else {
       // 检查单位-》结果缓存,如果没有则新建缓存
-      if (!state.unitCache.has(unitString)) {
+      if (!state.unitCache.has(value.unit)) {
         // Map缓存单位字符串-》单位json
-        let args: Map<string, string> = new Map()
+        const args: Map<string, string> = new Map()
         // "{0:关闭,1:开启}"清除字符串'{,},'space,以','分割
-        const unitArray = unitString.replace(/\{/, "").replace(/\}/, "").trim().split(",")
+        const unitArray = value.unit.replace(/(\{|\}| )/g, "").split(",")
         // 缓存到arg Map
         unitArray.forEach(el => {
           const [key, value] = el.split(":")
           args.set(key, value)
         })
         //
-        state.unitCache.set(unitString, args)
+        state.unitCache.set(value.unit, args)
       }
       // 读取缓存
-      const unitCache = <string>state.unitCache.get(unitString)?.get(String(val))
-      result.unit = false
+      const unitCache = <string>state.unitCache.get(value.unit)?.get(value.value)
       // 没有相应缓存则返回原始值val:0,unit:{1:open,2:close}
-      result.value = unitCache || val + unitString
-    }
-    return result
+        value.value = unitCache || value.value+value.unit
+        return value     
+    }    
   }
 }
 /* 
@@ -70,8 +65,8 @@ export const mutations: MutationTree<RootState> = {
     (this as any)._vm.$bvToast.toast(payload.msg, { title: payload.type })
     state.Infos.push(state.Info)
     console.log(state);
-    const DB = indexedDB.open("UartServer",1)
-    
+    getInstance().insert<WebInfo>({tableName:'Infos',data:state.Info})
+
   }
 
 }
@@ -91,7 +86,7 @@ export const actions: ActionTree<RootState, RootState> = {
     }
     commit("addInfo", info)
   },
-  socket_logout({ commit}, payload) {
+  socket_logout({ commit }, payload) {
     const msg = `在线设备离线,IP@${payload.IP},socket:@${payload.ID}`
     const info: WebInfo = {
       msg,

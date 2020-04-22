@@ -1,34 +1,33 @@
 <template>
-  <div>
-    <my-head title="图表" />
-    <b-container>
-      <b-row>
-        <b-col cols="12">
-          <separated title="选择参数"></separated>
-          <b-form>
-            <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
-              <b-form-select v-model="select.value" :options="select.option"></b-form-select>
-            </b-form-group>
-            <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
-              <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
-            </b-form-group>
-          </b-form>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col>
-          <separated title="折线图">{{ line.dates }}</separated>
+  <my-page title="图表">
+    <b-row>
+      <b-col cols="12">
+        <separated title="选择参数"></separated>
+        <b-form>
+          <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
+            <b-form-select v-model="select.value" :options="ShowTag"></b-form-select>
+          </b-form-group>
+          <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
+            <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
+          </b-form-group>
+        </b-form>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col>
+        <separated title="折线图">{{ line.dates }}</separated>
+        <b-overlay :show="$apollo.loading">
           <ve-line :data="line.chartData" />
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+        </b-overlay>
+      </b-col>
+    </b-row>
+  </my-page>
 </template>
-<script>
-import VeLine from "v-charts/lib/line.common";
+<script lang="ts">
+import Vue from "vue";
 import gql from "graphql-tag";
-export default {
-  components: { VeLine },
+import { queryResultSave } from "../../server/bin/interface";
+export default Vue.extend({
   data() {
     const query = this.$route.query;
     const label = {
@@ -40,41 +39,30 @@ export default {
       query,
       label,
       select: {
-        value: this.$route.query.name,
-        option: []
+        value: this.$route.query.name
       },
-      Data: null,
-      datetime: ""
+      Data: [] as queryResultSave[],
+      datetime: "",
+      ShowTag: []
     };
   },
   computed: {
     line() {
-      let chartData = {
-        columns: ["date", "PV"],
-        rows: [
-          { date: "01-01", PV: 1231 },
-          { date: "01-02", PV: 1223 },
-          { date: "01-03", PV: 2123 },
-          { date: "01-04", PV: 4123 },
-          { date: "01-05", PV: 3123 },
-          { date: "01-06", PV: 7123 }
-        ]
+      const name = this.$data.select.value as string;
+      const Data = this.Data;
+      const chartData = {
+        columns: ["time", name],
+        rows: [] as { [x: string]: any }[]
       };
       let dates = "";
-      if (this.Data) {
-        const colletion = this.select.value;
-        const { rows, date } = this.parseResult(this.Data, colletion);
-        dates = `${date.start}--${date.end}`;
-        chartData.rows = rows;
-        chartData.columns = ["time", colletion];
+      if (Data?.length > 0) {
+        const start = this.parseTime(Data[0].timeStamp as any);
+        const endData = Data.pop();
+        const end = this.parseTime(endData?.timeStamp as any);
+        dates = `${start}--${end}`;
+        chartData.rows = this.parseResult(this.Data);
       }
       return { chartData, dates };
-    }
-  },
-  watch: {
-    datetime: function(newVal) {
-      if (newVal === "") this.$apollo.queries.Data.startPolling(10 * 1000);
-      else this.$apollo.queries.Data.stopPolling();
     }
   },
   apollo: {
@@ -82,11 +70,13 @@ export default {
       query: gql`
         query getUartTerminalData(
           $DevMac: String
+          $name: String
           $pid: Int
           $datatime: String
         ) {
           Data: UartTerminalDatas(
             DevMac: $DevMac
+            name: $name
             pid: $pid
             datatime: $datatime
           ) {
@@ -102,47 +92,44 @@ export default {
         const { pid, DevMac } = this.$data.query;
         return {
           pid: parseInt(pid),
+          name: this.$data.select.value,
           DevMac,
-          datatime: this.datetime
+          datatime: this.$data.datetime
         };
       },
-      fetchPolicy: "no-cache",
+      fetchPolicy: "network-only",
       pollInterval: 10 * 1000
+    },
+    ShowTag: {
+      query: gql`
+        query getDevConstant($Protocol: String) {
+          ShowTag: getDevConstant(Protocol: $Protocol) {
+            ShowTag
+          }
+        }
+      `,
+      variables() {
+        return { Protocol: this.$data.query.protocol };
+      },
+      update: data => data.ShowTag.ShowTag
     }
   },
   methods: {
     // 格式化时间
-    parseTime(time) {
+    parseTime(time: string) {
       const T = new Date(parseInt(time));
       return `${T.getMonth() +
         1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
     },
-    parseResult(data, colletion) {
-      const rows = [];
-      if (this.select.option.length === 0) {
-        data.forEach(({ result, time }) => {
-          for (const i of result) {
-            this.select.option.push(i.name);
-          }
-        });
-      }
-      data.forEach(({ result, timeStamp }) => {
-        for (const i of result) {
-          if (i.name == colletion) {
-            rows.push({
-              [colletion]: i.value,
-              time: this.parseTime(timeStamp)
-            });
-            continue;
-          }
-        }
+    parseResult(data: queryResultSave[]) {
+      return data.map(el => {
+        const { name, value } = el.result[0];
+        return {
+          time: this.parseTime(el.timeStamp as any),
+          [name]: value
+        };
       });
-      const date = {
-        start: rows[0].time || "",
-        end: rows[rows.length - 1].time || ""
-      };
-      return { rows, date };
     }
   }
-};
+});
 </script>

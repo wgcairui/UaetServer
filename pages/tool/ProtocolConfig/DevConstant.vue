@@ -212,10 +212,11 @@ export default Vue.extend({
   },
   watch: {
     DevConstant: function(newVal) {
-      if (newVal) {
+      if (newVal && newVal.Constant) {
         const Constant = newVal.Constant;
         const ProtocolType: string = this.$data.ProtocolType;
         let Dev = this.$data[ProtocolType];
+        console.log({Dev,newVal});
         const keys = Object.keys(Dev);
         keys.forEach(el => (Dev[el] = Constant[el]));
       }

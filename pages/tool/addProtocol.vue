@@ -240,7 +240,7 @@ export default vue.extend({
       // resize = "系统1吸气温度+1-2+0.1+℃/送风温度+3-2+0.1+℃"
       const resize: string = this.$data.instruct.resize;
       // 分割字符串并刷选出有内容的 ["系统1吸气温度+1-2+0.1+℃","送风温度+3-2+0.1+℃"]
-      let split = resize.split("/").filter(el => el !== "");
+      let split = resize.replace(/(\n)/g,'').split("/").filter(el => el !== "");
       // 继续分割数组，为单个单位 [[[系统1吸气温度],[1-2],[0.1],[℃]"],[[送风温度],[3-2],[0.1],[℃]]]
       let resize1 = split.map(el => el.split("+"));
       // 构建数组对象 [{name:"aa",regx:"1-5",bl:"1",unit:"%"}]

@@ -10,9 +10,11 @@ import {
   protocol,
   DevsType as devsType,
   Terminal as terminal,
-  NodeClient as nodeClient
+  NodeClient as nodeClient,
+  ProtocolConstantThreshold
 } from "../bin/interface";
 import { Socket } from "socket.io";
+import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 export interface sendQuery {
   IP: string;
@@ -28,14 +30,18 @@ export default class Cache {
   CacheTerminal: Map<string, terminal>;
   // Node节点=》终端缓存 
   CacheNodeTerminal: Map<string, Map<string, terminal>>;
-  // Node节点缓存
+  // Node节点缓存ip=>nodeclient
   CacheNode: Map<string, nodeClient>;
+  // Node节点缓存name=>nodeclient
+  CacheNodeName: Map<string, nodeClient>;
   // 缓存所有Socket连接,IP=>socket
   CacheSocket: Map<string, Socket>
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备
   CacheNodeTerminalOnline: Map<string, Set<string>>
+  // 缓存协议的常量设置,protocol=>Constant
+  CacheConstant:Map<string,ProtocolConstantThreshold>
   constructor() {
     // 缓存
     this.CacheProtocol = new Map();
@@ -43,9 +49,11 @@ export default class Cache {
     this.CacheTerminal = new Map();
     this.CacheNodeTerminal = new Map();
     this.CacheNode = new Map();
+    this.CacheNodeName = new Map()
     this.CacheSocket = new Map()
     this.CacheQueryNode = new Map()
     this.CacheNodeTerminalOnline = new Map()
+    this.CacheConstant = new Map()
   }
   //
   async start(): Promise<void> {
@@ -53,8 +61,10 @@ export default class Cache {
     await this.RefreshCacheProtocol();
     await this.RefreshCacheNode();
     await this.RefreshCacheTerminal();
+    await this.RefreshCacheConstant()
   }
-  //
+  
+  // 
   async RefreshCacheProtocol() {
     const res: protocol[] = await DeviceProtocol.find().lean()
     console.log(`加载协议缓存......`);
@@ -71,6 +81,7 @@ export default class Cache {
     const res: nodeClient[] = await NodeClient.find().lean()
     console.log(`加载节点缓存......`);
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
+    this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
     this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
     this.CacheNodeTerminalOnline = new Map(res.map(el => [el.IP, new Set()]))
   }
@@ -82,5 +93,11 @@ export default class Cache {
       this.CacheTerminal.set(el.DevMac, el)
       this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
     })
+  }
+  //
+  async RefreshCacheConstant(){
+    const res = await DevConstant.find().lean<ProtocolConstantThreshold>()
+    console.log(`加载协议常量缓存......`);
+    this.CacheConstant = new Map(res.map(el=>[el.Protocol,el]))
   }
 }

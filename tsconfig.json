@@ -32,6 +32,7 @@
       "@types/node",
       "@nuxt/types",
       "vue/types",
+      "bootstrap-vue"
     ]
   },
   "exclude": [

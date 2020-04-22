@@ -124,6 +124,7 @@ export interface queryResultArgument {
   name: string;
   value: any;
   unit: string | null;
+  issimulate?:boolean
 }
 //协议查询结果
 export interface queryResult extends queryObject {
@@ -231,6 +232,12 @@ export interface ProtocolConstantThreshold {
   Threshold: Threshold[]
   ShowTag: string[]
 }
-
+// 协议解析结果集
+export interface queryResultSave{
+  mac: string
+  pid: number
+  timeStamp: number
+  result:queryResultArgument[]
+}
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
 

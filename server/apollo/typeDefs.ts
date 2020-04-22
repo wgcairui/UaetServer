@@ -190,11 +190,14 @@ const typeDefs: DocumentNode = gql`
     UartTerminalData(DevMac: String, pid: Int): UartTerminalData
     UartTerminalDatas(
       DevMac: String
+      name:String
       pid: Int
       datatime: String
     ): [UartTerminalData],
     # 获取协议常量
     getDevConstant(Protocol:String):DevConstant
+    # 获取设备在线状态
+    getDevState(mac:String,node:String):Boolean
   }
 
   #mutation

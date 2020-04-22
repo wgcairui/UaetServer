@@ -30,13 +30,13 @@ const Config = {
   /*
    ** Global CSS
    */
-  css: ["~/assets/iconfont.css"],
+  css: ["~/assets/iconfont.css","~/assets/main.css"],
   /*
    ** Plugins to load before mounting the App
    */
   plugins: [
     { src: "~/plugins/vue-socket.io-extended.ts", ssr: false },
-    "~/plugins/compontent.ts"
+    "~/plugins/compontent.js"
   ],
   /*
    ** Nuxt.js dev-modules
