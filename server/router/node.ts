@@ -15,6 +15,7 @@ export default async (ctx: ParameterizedContext) => {
       {
         const UartData: uartData = body
         UartData.data.forEach(async el => {
+          //console.log(el);          
           await ProtocolPares(el)
         })
         ctx.body = { code: 200 }

@@ -6,66 +6,54 @@ import {
   TerminalClientResults,
   TerminalClientResultSingle
 } from "../mongoose/node";
-import { protocolInstruct, queryResult } from "./interface";
+import { protocolInstruct, queryResult, queryResultArgument } from "./interface";
 
-export default async (data: queryResult) => {
+export default async (R: queryResult) => {
   // 保存查询结果的原始数据
-  await new TerminalClientResults(data).save().catch(e => console.log(e));
+  new TerminalClientResults(R).save().catch(e => console.log(e));
   //
-  let result: { name: string; value: number; unit: string | null }[] = [];
-  const {
-    buffer,
-    protocol,
-    content,
-    type,
-    stat,
-    timeStamp,
-    mac,
-    pid,
-    time
-  } = data;
-  if (stat === "timeOut") return data;
-  const instruct = <protocolInstruct>(
-    Event.Cache.CacheProtocol.get(protocol)?.instruct.find(el =>
-      content.includes(el.name)
-    )
-  );
-
-  switch (type) {
+  const IntructResult = R.contents
+  const instructs = Event.Cache.CacheProtocol.get(R.protocol)?.instruct as protocolInstruct[]
+  const instructMap = new Map(instructs.map(el => [el.name, el]))
+  let result: queryResultArgument[] = []
+  //console.log(instructMap);
+  switch (R.type) {
     case 232:
       break;
 
     case 485:
       {
-        const buf = Buffer.from(buffer.data.slice(3, 3 + buffer.data[2]));
-        const { formResize, resultType } = instruct;
-        //遍历解析协议，转换结果里面的值
-        result = formResize.map(el => {
-          //单个数据的限定首尾
-          const [start, len] = el.regx?.split("-") as string[];
-          let valBuf = buf.slice(
-            parseInt(start) - 1,
-            parseInt(start) - 1 + parseInt(len)
-          );
+        result = IntructResult.map(el => {
+          const buf = Buffer.from(el.buffer.data.slice(3, 3 + el.buffer.data[2]));
+          const { formResize, resultType } = instructMap.get(el.content.slice(2, 12)) as protocolInstruct;
+          //遍历解析协议，转换结果里面的值
+          return formResize.map(el => {
+            //单个数据的限定首尾
+            const [start, len] = el.regx?.split("-") as string[];
+            let valBuf = buf.slice(
+              parseInt(start) - 1,
+              parseInt(start) - 1 + parseInt(len)
+            );
 
-          let value: number = 0;
-          let bl = el.bl;
-          try {
-            switch (resultType) {
-              case "hex":
-              case "short":
-                value = parseFloat((valBuf.readInt16BE(0) * bl).toFixed(1));
+            let value: number = 0;
+            let bl = el.bl;
+            try {
+              switch (resultType) {
+                case "hex":
+                case "short":
+                  value = parseFloat((valBuf.readInt16BE(0) * bl).toFixed(1));
 
-                break;
-              case "float":
-                value = Tool.HexToSingle(valBuf);
-                break;
+                  break;
+                case "float":
+                  value = Tool.HexToSingle(valBuf);
+                  break;
+              }
+            } catch (error) {
+              console.log(error.message);
             }
-          } catch (error) {
-            console.log(error.message);
-          }
-          return { name: el.name, value, unit: el.unit };
-        });
+            return { name: el.name, value, unit: el.unit };
+          });
+        }).flat()
       }
       break;
   }
@@ -74,20 +62,17 @@ export default async (data: queryResult) => {
 
   //保存数据到结果单例
   await TerminalClientResultSingle.updateOne(
-    { mac, pid, content },
-    { $set: { result, time } },
+    { mac: R.mac, pid: R.pid },
+    { $set: { result, time: R.time } },
     { upsert: true }
   )
     // .then(el => console.log("TerminalClientResultSingle"))
     .catch(e => console.log(e));
   //保存数据到结果集合
-  await TerminalClientResult.updateOne(
-    { mac, pid, timeStamp },
-    { $addToSet: { result: { $each: result } } },
-    { upsert: true }
-  )
+  await new TerminalClientResult({
+    mac: R.mac, pid: R.pid, result, timeStamp: R.timeStamp
+  }).save()
     // .then(el => console.log("TerminalClientResult"))
     .catch(e => console.log(e));
-
-  return result;
+  //return result;
 };

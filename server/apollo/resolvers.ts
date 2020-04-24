@@ -109,6 +109,7 @@ const resolvers: IResolvers = {
                 mac: DevMac,
                 pid
             }).lean<queryResult>() as queryResult
+
             // 获取mac协议
             const protocol = ctx.$Event.Cache.CacheTerminal.get(DevMac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
             // 获取配置显示常量参数
@@ -116,12 +117,6 @@ const resolvers: IResolvers = {
             // 刷选
             data.result = data.result?.filter(el => DevConstant.includes(el.name))
             return data
-            /* 
-            let result: queryResultArgument[][] = [];
-            data.forEach(el => result.push(el.result as queryResultArgument[]));
-            let rs = data[0];
-            rs.result = result.flat();
-            return rs; */
         },
         // 获取透传设备数据-多条
         async UartTerminalDatas(root, { DevMac, name, pid, datatime }) {
@@ -129,7 +124,7 @@ const resolvers: IResolvers = {
             // 如果没有日期参数,默认检索最新的100条数据
             if (datatime === "") {
                 result = await TerminalClientResult.find({ mac: DevMac, pid })
-                    .sort("-timeStamp")
+                    .sort("timeStamp")
                     .limit(100).lean() as any
 
             } else {

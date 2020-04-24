@@ -1,7 +1,7 @@
 export default {
   runArg: {
     Query: {
-      Inteltime: 2000
+      Inteltime: 1000
     }
   }
 };

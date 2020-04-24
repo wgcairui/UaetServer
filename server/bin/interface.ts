@@ -117,7 +117,7 @@ export interface queryObject {
   protocol: string;
   pid: number;
   timeStamp: number;
-  content: string;
+  content: string| string[];
 }
 // 协议查询结果解析存储结构
 export interface queryResultArgument {
@@ -128,13 +128,21 @@ export interface queryResultArgument {
 }
 //协议查询结果
 export interface queryResult extends queryObject {
+  contents:IntructQueryResult[]
+  result?: queryResultArgument[];
+  time?: string;
+}
+export interface IntructQueryResult{
+  content:string
   buffer: {
     data: number[];
     type: string;
   };
-  stat: string;
-  result?: queryResultArgument[];
-  time?: string;
+}
+//
+export interface timelog {
+  content: string,
+  num: number
 }
 
 // UartData数据

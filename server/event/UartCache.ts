@@ -37,9 +37,11 @@ export default class Cache {
   // 缓存所有Socket连接,IP=>socket
   CacheSocket: Map<string, Socket>
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
-  CacheQueryNode: Map<string, NodeJS.Timeout>;
+  //CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备
   CacheNodeTerminalOnline: Map<string, Set<string>>
+  // 缓存节点查询终端设备超时的指令
+  CacheTerminalQueryIntructTimeout:Map<string,Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
   CacheConstant:Map<string,ProtocolConstantThreshold>
   constructor() {
@@ -51,9 +53,10 @@ export default class Cache {
     this.CacheNode = new Map();
     this.CacheNodeName = new Map()
     this.CacheSocket = new Map()
-    this.CacheQueryNode = new Map()
+    //this.CacheQueryNode = new Map()
     this.CacheNodeTerminalOnline = new Map()
     this.CacheConstant = new Map()
+    this.CacheTerminalQueryIntructTimeout = new Map()
   }
   //
   async start(): Promise<void> {

@@ -14,7 +14,7 @@ const SchemaWebSocketTerminal = new Schema(
     port: Number,
     ip: String,
     jw: String,
-    mountNode:String
+    mountNode: String
   }
 )
 // 节点状态流
@@ -33,21 +33,26 @@ const SchemaNodeRunInfo = new Schema({
 
 // 终端设备上传数据=>原始数据
 const SchemaTerminalClientResults = new Schema({
-  stat: String,
-  buffer: new Schema(
-    {
-      type: String,
-      data: [Number]
-    },
-    { _id: false }
-  ),
   pid: { type: Number, min: 0, max: 255, default: 0 },
   time: Date,
   timeStamp: Number,
   mac: String,
   type: Number,
   protocol: String,
-  content: String
+  contents: [
+    new Schema(
+      {
+        content: String,
+        buffer: new Schema(
+          {
+            type: String,
+            data: [Number]
+          },
+          { _id: false }
+        ),
+      }
+    )
+  ]
 });
 // 终端设备上传数据=>解析数据集合
 const SchemaTerminalClientResult = new Schema({
@@ -80,8 +85,7 @@ const SchemaTerminalClientResultSingle = new Schema({
   pid: { type: Number, index: true },
   time: Date,
   mac: { type: String, index: true },
-  content: { type: String, index: true }
-});
+}, { timestamps: true });
 export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
 
 export const TerminalClientResults = mongoose.model(
