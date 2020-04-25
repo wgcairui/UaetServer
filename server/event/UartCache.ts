@@ -89,13 +89,24 @@ export default class Cache {
     this.CacheNodeTerminalOnline = new Map(res.map(el => [el.IP, new Set()]))
   }
   //
-  async RefreshCacheTerminal() {
+  async RefreshCacheTerminal(DevMac?:string) {
     const res: terminal[] = await Terminal.find().lean()
     console.log(`加载4g终端缓存......`)
     res.forEach(el => {
       this.CacheTerminal.set(el.DevMac, el)
       this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
     })
+    // 如果有Mac参数,更新超时指令查询
+    if(DevMac){
+      const Terminal = this.CacheTerminal.get(DevMac) as terminal
+      if(this.CacheTerminalQueryIntructTimeout.has(Terminal.mountNode)){
+        const CacheTerminalQueryIntructTimeout = this.CacheTerminalQueryIntructTimeout.get(Terminal.mountNode)
+        CacheTerminalQueryIntructTimeout?.forEach(el=>{
+          const Reg = new RegExp(`^${DevMac}`)
+          if(Reg.test(el)) CacheTerminalQueryIntructTimeout.delete(el)
+        })
+      }
+    }
   }
   //
   async RefreshCacheConstant(){

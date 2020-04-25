@@ -56,11 +56,12 @@ export default Vue.extend({
       };
       let dates = "";
       if (Data?.length > 0) {
-        const start = this.parseTime(Data[0].timeStamp as any);
-        const endData = Data.pop();
+        const ReverData = Data.reverse()
+        const start = this.parseTime(ReverData[0].timeStamp as any);
+        const endData = ReverData.pop();
         const end = this.parseTime(endData?.timeStamp as any);
         dates = `${start}--${end}`;
-        chartData.rows = this.parseResult(this.Data);
+        chartData.rows = this.parseResult(ReverData);
       }
       return { chartData, dates };
     }

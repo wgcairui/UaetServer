@@ -124,14 +124,14 @@ const resolvers: IResolvers = {
             // 如果没有日期参数,默认检索最新的100条数据
             if (datatime === "") {
                 result = await TerminalClientResult.find({ mac: DevMac, pid })
-                    .sort("timeStamp")
+                    .sort("-timeStamp")
                     .limit(100).lean() as any
 
             } else {
                 const start = new Date(datatime);
                 const end = new Date(datatime + " 23:59:59");
                 result = await TerminalClientResult.find({ mac: DevMac, pid })
-                    .where("timeStamp")
+                    .where("-timeStamp")
                     .gte(start.getTime())
                     .lte(end.getTime())
                     .lean()
@@ -251,18 +251,20 @@ const resolvers: IResolvers = {
                 { $set: { mountDevs } },
                 { upsert: true }
             );
-            await ctx.$Event.Cache.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
         // 删除终端信息
         async deleteTerminal(root, { DevMac }, ctx: ApolloCtx) {
             const result = await Terminal.deleteOne({ DevMac });
-            await ctx.$Event.Cache.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
         // 添加终端挂载信息
         async addTerminalMountDev(root, { arg }, ctx: ApolloCtx) {
-            const { DevMac, Type, mountDev, protocol, pid } = arg;
+            console.log(arg);
+            
+            const { DevMac, Type, mountNode, mountDev, protocol, pid } = arg;
             const result = await Terminal.updateOne(
                 { DevMac },
                 {
@@ -276,19 +278,19 @@ const resolvers: IResolvers = {
                     }
                 }
             );
-            await ctx.$Event.Cache.RefreshCacheTerminal();
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
         // 删除终端挂载设备
         async delTerminalMountDev(root, { DevMac, mountDev, pid }, ctx: ApolloCtx) {
             const result = await Terminal.updateOne({ DevMac }, { $pull: { mountDevs: { mountDev, pid } } })
-            await ctx.$Event.Cache.RefreshCacheTerminal()
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
             return result
         },
         // 修改终端挂载设备
         async modifyTerminalMountDev(root, { DevMac, pid, arg }, ctx: ApolloCtx) {
             const result = await Terminal.updateOne({ DevMac, 'mountDevs.pid': pid }, { $set: { "mountDevs.$": arg } })
-            await ctx.$Event.Cache.RefreshCacheTerminal()
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
             return result
         },
         // 添加用户
