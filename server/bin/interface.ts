@@ -255,6 +255,7 @@ export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
 export interface instructQuery{
   DevMac: string
   pid:number
+  events:string
   content:string
   result?:Buffer
 }

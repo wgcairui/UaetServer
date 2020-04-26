@@ -368,13 +368,16 @@ const resolvers: IResolvers = {
             // 拼接为数组
             const instructArr = [6,0,add,...value]
             //  构造查询指令
-            
+            // 携带事件名称，触发指令查询
             const Query:instructQuery={
                 DevMac:query.mountDev,
                 pid:query.pid,
+                events:Date.now()+query.mountDev,
                 content:Buffer.from(instructArr).toString('hex')
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
+            console.log({result});
+            
             return result
         }
     },

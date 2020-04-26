@@ -36,6 +36,10 @@ const EVENT_SOCKET = {
     alarm: 'alarm', // 节点告警事件
 }
 
+const EVENT_SERVER = {
+    'instructQuery':'instructQuery', // 操作设备状态指令
+}
+
 type NodeName = string
 type TerminalPid = string
 
@@ -229,8 +233,12 @@ export class NodeSocketIO {
             Query.content = tool.Crc16modbus(Query.pid,Query.content)
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
-            // 请求对象
-            Socket.emit('instructQuery',Query)
+            // 创建一次性监听，监听来自Node节点指令查询操作结果
+            Socket.once(Query.events,resolve).emit(EVENT_SERVER.instructQuery,Query)
+            // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
+            setTimeout(() => {
+                resolve({ok:0,msg:'Node节点无响应，请检查设备状态信息是否变更'})
+            }, 20000);
         })
     }
 }
