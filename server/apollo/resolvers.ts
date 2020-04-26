@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
@@ -131,9 +131,10 @@ const resolvers: IResolvers = {
                 const start = new Date(datatime);
                 const end = new Date(datatime + " 23:59:59");
                 result = await TerminalClientResult.find({ mac: DevMac, pid })
-                    .where("-timeStamp")
+                    .where("timeStamp")
                     .gte(start.getTime())
                     .lte(end.getTime())
+                    .sort("-timeStamp")
                     .lean()
             }
             // 把结果拆分为块
@@ -146,26 +147,13 @@ const resolvers: IResolvers = {
                 let def: queryResultSave = el[0]
                 def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
                 return el.reduce((pre, cur) => {
-                    const last = pre.pop()
+                    // 获取最后一个值
+                    const last = _.last(pre) as queryResultSave
                     cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
-                    if (last?.result[0].value !== cur.result[0].value) pre.push(cur)
+                    if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
                     return pre
                 }, [def])
             }).flat()
-            /* 
-            // 选出第一个值
-                let def:queryResultSave = el[0]
-                def.result = [def.result.find(el2=>el2.name === name) as queryResultArgument]
-                // 初始化结果
-                const filters = [] as queryResultSave[]
-                for(let cur of el){
-                    cur.result = [cur.result.find(el2=>el2.name === name) as queryResultArgument]
-                    if(def.result[0].value !== cur.result[0].value){
-                        filters.push(cur)
-                    }
-                }
-                return filters
-            */
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx: ApolloCtx) {
@@ -263,7 +251,7 @@ const resolvers: IResolvers = {
         // 添加终端挂载信息
         async addTerminalMountDev(root, { arg }, ctx: ApolloCtx) {
             console.log(arg);
-            
+
             const { DevMac, Type, mountNode, mountDev, protocol, pid } = arg;
             const result = await Terminal.updateOne(
                 { DevMac },
@@ -363,8 +351,27 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheConstant()
             return result;
         },
+        // 发送设备协议指令
+        async SendProcotolInstruct(root, { arg, value },ctx:ApolloCtx) {
+            const item = arg.item as queryResultArgument
+            const query = arg.query as TerminalMountDevs
+            // 获取协议指令
+            const instructs = ctx.$Event.Cache.CacheProtocol.get(query.protocol)?.instruct as protocolInstruct[]
+            // 获取条协议指令开始位置
+            const instruct = instructs.find(el=>{el.formResize.find(el2=>el2.name === item.name)}) as protocolInstruct
+            // 查询指=指令
+            const instructstart = parseInt(instruct.name.slice(4,6))
+            // 获取参数在字符的位置
+            const instructlen = parseInt(instruct.formResize.find(el=>el.name === item.name)?.regx?.split('-')[0] as string)+1/2
+            // 参数在寄存器实际的位置
+            const add = instructstart+instructlen
+            // 拼接为数组
+            const instructArr = [0,add,...value]
+            // 
+            return
+        }
+    },
 
-    }
 };
 
 export default resolvers 

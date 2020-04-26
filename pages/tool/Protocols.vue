@@ -45,6 +45,17 @@
                 <b-button
                   variant="info"
                   :to="{
+                    name: 'tool-ProtocolConfig-OprateInstruct',
+                    query: {
+                      ProtocolType: data.item.ProtocolType,
+                      Protocol: data.item.Protocol
+                    }
+                  }"
+                  >操作指令</b-button
+                >
+                <b-button
+                  variant="info"
+                  :to="{
                     name: 'tool-ProtocolConfig-DevConstant',
                     query: {
                       ProtocolType: data.item.ProtocolType,

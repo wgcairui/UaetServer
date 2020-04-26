@@ -55,7 +55,12 @@
     <b-row>
       <b-col>
         <separated title="模拟量">
-          <b-button size="sm" variant="info" class="m-2" :to="{name:'uart-setup',query:$route.query}">配置</b-button>
+          <b-button
+            size="sm"
+            variant="info"
+            class="m-2"
+            :to="{name:'uart-setup',query:$route.query}"
+          >配置</b-button>
         </separated>
         <b-overlay :show="$apollo.loading">
           <b-tabs justified>
@@ -94,6 +99,7 @@
         </b-overlay>
       </b-col>
     </b-row>
+    <oprate-modal :oprate="oprate" :oprateArg='oprateArg'></oprate-modal>
   </my-page>
 </template>
 <script lang="ts">
@@ -167,7 +173,10 @@ export default Vue.extend({
         { key: "name", label: "变量" },
         { key: "value", label: "值" },
         { key: "oprate", label: "操作" }
-      ] as BvTableFieldArray
+      ] as BvTableFieldArray,
+      //
+      oprate: false,
+      oprateArg: null
     };
   },
   computed: {
@@ -259,8 +268,7 @@ export default Vue.extend({
         addHumidityStop
       } = this.$data;
       // 赋值状态
-
-      AirStat.Speed.value = AirStat.Speed?.value ? speedRun : speedStop;
+      AirStat.Speed.value = AirStat.Speed.value ? speedRun : speedStop;
       AirStat.HeatModel.value = AirStat.HeatModel.value ? hotRun : hotStop;
       AirStat.ColdModel.value = AirStat.ColdModel.value ? coolRun : coolStop;
       AirStat.Dehumidification.value = AirStat.Dehumidification.value
@@ -271,14 +279,6 @@ export default Vue.extend({
         : addHumidityStop;
       return { stat, AirStat };
     }
-    /* Core() {
-      const Stat = (this as any).Stat;
-      let core = [];
-      for (let i in Stat) {
-        if (this.$data.statSet.has(i)) core.push(Stat[i]);
-      }
-      return core;
-    } */
   },
   apollo: {
     airData: {
@@ -338,6 +338,8 @@ export default Vue.extend({
     // 发送设备状态量指令
     DevBind(item: queryResultArgument) {
       const { mountDev, pid, protocol, DevMac } = this.query;
+      this.oprate = !this.oprate;
+      this.$data.oprateArg = { item, query: this.query };
     },
     // 隐藏设备显示参数
     DisabledArgument(item: queryResultArgument) {},

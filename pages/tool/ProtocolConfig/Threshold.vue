@@ -1,60 +1,45 @@
 <template>
-  <div>
-    <my-head title="协议参数阀值配置"></my-head>
-    <b-container>
-      <b-row>
-        <b-col>
-          <separated title="add threshold"></separated>
-          <b-card>
-            <b-form>
-              <b-form-group v-bind="forGroup" label="属性:">
-                <b-form-select
-                  v-model="Threshold.name"
-                  :options="items"
-                ></b-form-select>
-              </b-form-group>
-              <b-form-group v-bind="forGroup" label="min:">
-                <b-form-input
-                  type="number"
-                  v-model="Threshold.min"
-                ></b-form-input>
-              </b-form-group>
-              <b-form-group v-bind="forGroup" label="max:">
-                <b-form-input
-                  type="number"
-                  v-model="Threshold.max"
-                ></b-form-input>
-              </b-form-group>
-              <b-button
-                block
-                variant="info"
-                @click="addThreshold(Threshold, addModal)"
-                >{{ addModal ? "Add" : "Modify" }}</b-button
-              >
-            </b-form>
-          </b-card>
-        </b-col>
-      </b-row>
-      <b-row v-if="Thresholds.length > 0">
-        <b-col>
-          <separated title="all threshold"></separated>
-          <b-card>
-            <b-table-lite :items="Thresholds" :fields="ThresholdsFields">
-              <template v-slot:cell(oprate)="data">
-                <b-button-group>
-                  <b-button variant="info" @click="modifyThreshold(data.item)"
-                    >修改</b-button
-                  >
-                  <b-button @click="deleteThreshold(data)">删除</b-button>
-                </b-button-group>
-              </template>
-            </b-table-lite>
-            <b-button @click="pushThreshold(Thresholds)" block>PUSH</b-button>
-          </b-card>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+  <my-page title="协议参数阀值配置">
+    <b-row>
+      <b-col>
+        <separated title="add threshold"></separated>
+        <b-card>
+          <b-form>
+            <b-form-group v-bind="forGroup" label="属性:">
+              <b-form-select v-model="Threshold.name" :options="items"></b-form-select>
+            </b-form-group>
+            <b-form-group v-bind="forGroup" label="min:">
+              <b-form-input type="number" v-model="Threshold.min"></b-form-input>
+            </b-form-group>
+            <b-form-group v-bind="forGroup" label="max:">
+              <b-form-input type="number" v-model="Threshold.max"></b-form-input>
+            </b-form-group>
+            <b-button
+              block
+              variant="info"
+              @click="addThreshold(Threshold, addModal)"
+            >{{ addModal ? "Add" : "Modify" }}</b-button>
+          </b-form>
+        </b-card>
+      </b-col>
+    </b-row>
+    <b-row v-if="Thresholds.length > 0">
+      <b-col>
+        <separated title="all threshold"></separated>
+        <b-card>
+          <b-table-lite :items="Thresholds" :fields="ThresholdsFields">
+            <template v-slot:cell(oprate)="data">
+              <b-button-group>
+                <b-button variant="info" @click="modifyThreshold(data.item)">修改</b-button>
+                <b-button @click="deleteThreshold(data)">删除</b-button>
+              </b-button-group>
+            </template>
+          </b-table-lite>
+          <b-button @click="pushThreshold(Thresholds)" block>PUSH</b-button>
+        </b-card>
+      </b-col>
+    </b-row>
+  </my-page>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* jshint esversion:8 */
 import mongoose, { Schema } from "mongoose";
 const DB_URL: string = "mongodb://localhost:27017/UartServer"; /** * 连接 */
 

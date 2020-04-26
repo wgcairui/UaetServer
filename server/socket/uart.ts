@@ -108,7 +108,7 @@ export default class NodeSocketIO {
                     console.log(data);
                 })
                 // 设备挂载节点查询超时
-                .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult ) => {
+                .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult) => {
                     const intruct = this.compoundTntruct(Query)
                     const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     // 如果节点已存在超时指令记录则添加,
@@ -119,7 +119,7 @@ export default class NodeSocketIO {
                     }
                 })
                 // 设备挂载节点查询超时恢复,
-                .on(EVENT_TCP.terminalMountDevTimeOutRestore, (Query: queryResult ) => {
+                .on(EVENT_TCP.terminalMountDevTimeOutRestore, (Query: queryResult) => {
                     const intruct = this.compoundTntruct(Query)
                     const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     Timeout.get(Node.IP)?.delete(intruct)
@@ -128,7 +128,7 @@ export default class NodeSocketIO {
         })
     }
     // 初始化缓存
-    private _InitCache(Node:socketArgument) {
+    private _InitCache(Node: socketArgument) {
         // 获取节点挂载的设备s
         const Terminals = this.Event.Cache.CacheNodeTerminal.get(Node.Name) as Map<string, Terminal>
         // 构建Map
@@ -137,7 +137,7 @@ export default class NodeSocketIO {
         Terminals.forEach(Terminal => {
             Terminal.mountDevs.forEach(mountDevs => {
                 const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-                    ({ NodeName:Node.Name, NodeIP:Node.IP, TerminalMac: Terminal.DevMac, Interval: 1000 }, mountDevs) as Required<TerminalMountDevsEX>
+                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 1000 }, mountDevs) as Required<TerminalMountDevsEX>
                 TerminalMountDev.set(Terminal.DevMac + mountDevs.pid, mount)
             })
         })
@@ -175,14 +175,19 @@ export default class NodeSocketIO {
         const CacheQueryIntruct = this.CacheQueryIntruct
         // 迭代设备协议获取多条查询数据
         const content = Protocol.instruct.map(ProtocolInstruct => {
-            // 缓存查询指令
-            const IntructName = Query.pid + ProtocolInstruct.name
-            if (CacheQueryIntruct.has(IntructName)) {
-                return CacheQueryIntruct.get(IntructName) as string
+            // 如果指令是utf8类型,直接使用指令,否则添加地址码和校验码
+            if (ProtocolInstruct.resultType == 'utf8') {
+                return ProtocolInstruct.name
             } else {
-                const content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
-                CacheQueryIntruct.set(IntructName, content)
-                return CacheQueryIntruct.get(IntructName) as string
+                // 缓存查询指令
+                const IntructName = Query.pid + ProtocolInstruct.name
+                if (CacheQueryIntruct.has(IntructName)) {
+                    return CacheQueryIntruct.get(IntructName) as string
+                } else {
+                    const content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                    CacheQueryIntruct.set(IntructName, content)
+                    return CacheQueryIntruct.get(IntructName) as string
+                }
             }
         })
         const query: queryObject = {
@@ -200,7 +205,7 @@ export default class NodeSocketIO {
         }
     }
     private compoundTntruct(query: queryResult | queryObject) {
-        console.log({query});
+        console.log({ query });
         return query.mac + query.pid
     }
 }
