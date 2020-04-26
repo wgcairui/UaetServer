@@ -15,15 +15,15 @@
               </h4>
               <div class="ml-auto">
                 <b-link class="m-1 text-info" :to="{ name: 'user-register' }">
-                  注册
+                  {{$t('zhu-ce')}}
                 </b-link>
                 <b-link class="m-1 ml-2 text-info" :to="{ name: 'user-reset' }">
-                  重置
+                  {{$t('zhong-zhi')}}
                 </b-link>
               </div>
             </div>
             <b-form class="mx-3 mt-auto">
-              <b-form-group label="账号:" label-for="user" v-bind="label">
+              <b-form-group :label="$t("zhang-hao")" label-for="user" v-bind="label">
                 <b-form-input
                   id="user"
                   v-model.trim="accont.user"
@@ -45,7 +45,7 @@
                 class="mt-4"
                 @click="login_submit"
               >
-                登录
+                {{$t('deng-lu')}}
                 <span />
               </b-button>
             </b-form>

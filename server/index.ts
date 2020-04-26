@@ -63,7 +63,7 @@ attachNuxt(app).then(result => {
   const Http = http.createServer(app.callback())
   // Node_Socket节点挂载
   const NodeSocket = new NodeIO(Http, { path: "/Node" })
-  NodeSocket.start()
+  NodeSocket.start(app)
   consola.success(`Socket Server(namespace:/Node) attach port ${port}`)
   //WebClient_SocketServer挂载
   const WebClientSocket = new WebIO(Http, { path: "/WebClient" })

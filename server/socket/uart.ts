@@ -1,9 +1,10 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs } from "../bin/interface";
+import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, instructQuery, ApolloMongoResult } from "../bin/interface";
 
 import tool from "../bin/tool";
+import { DefaultContext } from "koa";
 
 export interface socketArgument {
     ID: string
@@ -38,7 +39,7 @@ const EVENT_SOCKET = {
 type NodeName = string
 type TerminalPid = string
 
-export default class NodeSocketIO {
+export class NodeSocketIO {
     private io: IO.Server;
     private Event: event;
     // Cache
@@ -51,7 +52,8 @@ export default class NodeSocketIO {
         this.Cache = new Map()
         this.CacheQueryIntruct = new Map()
     }
-    start() {
+    start(app: DefaultContext) {
+        app.context.$SocketUart = this;
         this._OnEvent()
         this._Interval()
     }
@@ -204,8 +206,33 @@ export default class NodeSocketIO {
             NodeSocket.emit(EVENT_SOCKET.query, query);
         }
     }
+    // 
     private compoundTntruct(query: queryResult | queryObject) {
         console.log({ query });
         return query.mac + query.pid
     }
+    // 发送程序变更指令，公开
+    public InstructQuery(Query:instructQuery){
+        console.log(Query);
+        return new Promise<Partial<ApolloMongoResult>>((resolve)=>{
+            // 在在线设备中查找
+            let NodeIP = ''
+            for(let [IP,DevSet] of this.Event.Cache.CacheNodeTerminalOnline){
+                if(DevSet.has(Query.DevMac)){
+                    NodeIP = IP
+                    break
+                }
+            }
+            // 不在线则跳出
+            if(!NodeIP) resolve({ok:0,msg:'设备不在线'})
+            // 构建指令
+            Query.content = tool.Crc16modbus(Query.pid,Query.content)
+            // 取出socket
+            const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
+            // 请求对象
+            Socket.emit('instructQuery',Query)
+        })
+    }
 }
+
+export default NodeSocketIO

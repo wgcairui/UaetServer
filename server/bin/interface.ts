@@ -1,5 +1,6 @@
 import { ParameterizedContext } from "koa";
 import { Event } from "../event/index"
+import NodeSocketIO from "server/socket/uart";
 /* protocol */
 export type communicationType = 232 | 485;
 export type protocolType = "ups" | "air" | "em" | "th";
@@ -15,12 +16,14 @@ export interface ApolloMongoResult {
 // koa ctx
 export interface KoaCtx extends ParameterizedContext {
   $Event: Event
+  $SocketUart:NodeSocketIO
 }
 
 // apollo ctx
 export interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
+  $SocketUart:NodeSocketIO
 }
 
 // 协议指令解析格式化
@@ -249,3 +252,9 @@ export interface queryResultSave{
 }
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
 
+export interface instructQuery{
+  DevMac: string
+  pid:number
+  content:string
+  result?:Buffer
+}

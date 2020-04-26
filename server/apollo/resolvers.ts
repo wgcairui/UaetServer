@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
@@ -366,9 +366,16 @@ const resolvers: IResolvers = {
             // 参数在寄存器实际的位置
             const add = instructstart+instructlen
             // 拼接为数组
-            const instructArr = [0,add,...value]
-            // 
-            return
+            const instructArr = [6,0,add,...value]
+            //  构造查询指令
+            
+            const Query:instructQuery={
+                DevMac:query.mountDev,
+                pid:query.pid,
+                content:Buffer.from(instructArr).toString('hex')
+            }
+            const result = await ctx.$SocketUart.InstructQuery(Query)
+            return result
         }
     },
 
