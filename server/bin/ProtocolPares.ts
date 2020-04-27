@@ -32,13 +32,14 @@ export default async (R: queryResult) => {
           // 把buffer转换为utf8字符串并掐头去尾
           const parseStr = Buffer.from(data)
             .toString('utf8', instructs.shift ? instructs.shiftNum : 0, instructs.pop ? data.length - instructs.popNum : data.length)
-            .split(' ')
+            .split(' ')            
           return instructs.formResize.map(el2 => {
             const [start, len] = (el2.regx?.split("-") as string[]).map(el => parseInt(el));
-            return { name: el2.name, value: parseStr[start], unit: el2.unit } as queryResultArgument
+            return { name: el2.name, value: parseStr[start-1]?.replace(/(#)/g,''), unit: el2.unit } as queryResultArgument
           })
         }).flat()
       }
+      // console.log(result);      
       break;
 
     case 485:
@@ -57,25 +58,33 @@ export default async (R: queryResult) => {
             //if (bufSize + 5 === el.buffer.data.length) return
             const buf = Buffer.from(el.buffer.data.slice(2, bufSize + 3));
             // 迭代指令解析规则,解析结果集返回
-            return instructs.formResize.map(el => {
+            return instructs.formResize.map(el2 => {
               // 申明结果
               let value = 0
               // 每个数据的结果地址
-              const [start, len] = (el.regx?.split("-") as string[]).map(el => parseInt(el));
+              const [start, len] = (el2.regx?.split("-") as string[]).map(el2 => parseInt(el2));
+              if (start + len > buf.byteLength) {
+                /* console.log({
+                  const: el.content,
+                  msg: JSON.stringify(el2) + 'buf长度超出',
+                  buf
+                }); */
+                return { name: el2.name, value, unit: "bufLow" };
+              }
               switch (instructs.resultType) {
                 // 处理整形
                 case "hex":
                 case "short":
-                  value = buf.readIntBE(start, len) * el.bl//parseFloat((valBuf.readInt16BE(0) * el.bl).toFixed(1));
+                  value = buf.readIntBE(start, len) * el2.bl//parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
                   break;
                 // 处理单精度浮点数
                 case "float":
-                  value = Tool.BufferToFlot(buf, start)
+                  value = Tool.HexToSingle(buf.slice(start, start + len))//Tool.BufferToFlot(buf, start)
                   break;
               }
               //
-              //console.log({ name: el.name, value, unit: el.unit });
-              return { name: el.name, value, unit: el.unit };
+              // console.log({ name: el2.name, value, unit: el2.unit });
+              return { name: el2.name, value, unit: el2.unit };
             })
 
           }).flat()

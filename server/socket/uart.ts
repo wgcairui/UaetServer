@@ -217,7 +217,6 @@ export class NodeSocketIO {
     }
     // 发送程序变更指令，公开
     public InstructQuery(Query:instructQuery){
-        console.log(Query);
         return new Promise<Partial<ApolloMongoResult>>((resolve)=>{
             // 在在线设备中查找
             let NodeIP = ''

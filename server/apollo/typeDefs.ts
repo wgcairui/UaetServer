@@ -235,7 +235,7 @@ const typeDefs: DocumentNode = gql`
     #添加设备协议常量配置
     addDevConstent(Protocol: String, ProtocolType: String,type:String arg: JSON): result
     # 发送设备操作指令
-    SendProcotolInstruct(arg:JSON,value:[String]):result
+    SendProcotolInstruct(arg:JSON,value:[Int]):result
   }
 
   # Subscription

@@ -5,7 +5,9 @@ import separated from "../components/separated.vue"
 import MyHead from "../components/MyHead.vue"
 import MyPage from "../components/MyPage.vue"
 import OprateModal from "../components/OprateModal.vue"
+import DevTable from "../components/DevTable.vue"
 
+Vue.component("dev-table", DevTable)
 Vue.component("oprate-modal", OprateModal)
 Vue.component("my-page", MyPage)
 Vue.component("socket-state", SocketState)

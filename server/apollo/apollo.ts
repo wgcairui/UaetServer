@@ -20,9 +20,9 @@ export default new ApolloServer({
       else throw new Error("query error");
     }
     // 解构token
-    const user:UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
+    const user: UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
     //
     if (!user || !user.user) throw new Error("you must be logged in");
-    return { ...user, loggedIn: true, $Event: ctx.$Event };
+    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart };
   }
 });

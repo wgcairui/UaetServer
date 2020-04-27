@@ -303,8 +303,8 @@ export default Vue.extend({
           DevMac
         };
       },
-      pollInterval: 10000,
-      fetchPolicy: "network-only"
+      pollInterval: 5000,
+      fetchPolicy: "no-cache"
     },
     DevConstant: {
       query: gql`

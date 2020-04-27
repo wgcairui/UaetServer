@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
@@ -115,7 +115,7 @@ const resolvers: IResolvers = {
             // 获取配置显示常量参数
             const DevConstant = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
             // 刷选
-            data.result = data.result?.filter(el => DevConstant.includes(el.name))
+            data.result = DevConstant?(data.result?.filter(el => DevConstant?.includes(el.name))):data.result
             return data
         },
         // 获取透传设备数据-多条
@@ -352,32 +352,29 @@ const resolvers: IResolvers = {
             return result;
         },
         // 发送设备协议指令
-        async SendProcotolInstruct(root, { arg, value },ctx:ApolloCtx) {
-            const item = arg.item as queryResultArgument
-            const query = arg.query as TerminalMountDevs
+        async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
             // 获取协议指令
-            const instructs = ctx.$Event.Cache.CacheProtocol.get(query.protocol)?.instruct as protocolInstruct[]
+            const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
             // 获取条协议指令开始位置
-            const instruct = instructs.find(el=>{el.formResize.find(el2=>el2.name === item.name)}) as protocolInstruct
+            const instruct = protocol.instruct.find(el => el.resize.split('\n').some(el2 => el2.includes(arg.name) && el2.includes(arg.unit as string))) as protocolInstruct
+
             // 查询指=指令
-            const instructstart = parseInt(instruct.name.slice(4,6))
+            const instructstart = parseInt(instruct.name.slice(4, 6))
             // 获取参数在字符的位置
-            const instructlen = parseInt(instruct.formResize.find(el=>el.name === item.name)?.regx?.split('-')[0] as string)+1/2
+            const instructlen = parseInt(instruct.formResize.find(el => el.name === arg.name)?.regx?.split('-')[0] as string)
             // 参数在寄存器实际的位置
-            const add = instructstart+instructlen
+            const add = instructstart + instructlen === 1 ? instructlen : (instructlen + 1) / 2
             // 拼接为数组
-            const instructArr = [6,0,add,...value]
-            //  构造查询指令
+            const instructArr = [5, 0, add, ...value]
             // 携带事件名称，触发指令查询
-            const Query:instructQuery={
-                DevMac:query.mountDev,
-                pid:query.pid,
-                events:Date.now()+query.mountDev,
-                content:Buffer.from(instructArr).toString('hex')
+            const Query: instructQuery = {
+                DevMac: arg.DevMac,
+                pid: arg.pid,
+                type:protocol.Type,
+                events: 'oprate'+Date.now() + arg.DevMac,
+                content: Buffer.from(instructArr).toString('hex')
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
-            console.log({result});
-            
             return result
         }
     },

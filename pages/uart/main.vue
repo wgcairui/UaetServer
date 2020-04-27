@@ -160,6 +160,12 @@ export default Vue.extend({
         case "空调":
           this.$router.push({ name: "uart-air", query });
           break;
+        case "电量仪":
+          this.$router.push({ name: "uart-em", query });
+          break;
+        case "UPS":
+          this.$router.push({ name: "uart-ups", query });
+          break;
       }
     }
   }
@@ -181,8 +187,8 @@ export default Vue.extend({
   word-wrap: break-word;
 }
 .custom-control-input:checked ~ .custom-control-label::before {
-    color: #fff;
-    border-color: #28a745;
-    background-color: #28a745;
+  color: #fff;
+  border-color: #28a745;
+  background-color: #28a745;
 }
 </style>

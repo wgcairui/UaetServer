@@ -16,14 +16,14 @@ export interface ApolloMongoResult {
 // koa ctx
 export interface KoaCtx extends ParameterizedContext {
   $Event: Event
-  $SocketUart:NodeSocketIO
+  $SocketUart: NodeSocketIO
 }
 
 // apollo ctx
 export interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
-  $SocketUart:NodeSocketIO
+  $SocketUart: NodeSocketIO
 }
 
 // 协议指令解析格式化
@@ -120,23 +120,23 @@ export interface queryObject {
   protocol: string;
   pid: number;
   timeStamp: number;
-  content: string| string[];
+  content: string | string[];
 }
 // 协议查询结果解析存储结构
 export interface queryResultArgument {
   name: string;
   value: any;
   unit: string | null;
-  issimulate?:boolean
+  issimulate?: boolean
 }
 //协议查询结果
 export interface queryResult extends queryObject {
-  contents:IntructQueryResult[]
+  contents: IntructQueryResult[]
   result?: queryResultArgument[];
   time?: string;
 }
-export interface IntructQueryResult{
-  content:string
+export interface IntructQueryResult {
+  content: string
   buffer: {
     data: number[];
     type: string;
@@ -244,18 +244,26 @@ export interface ProtocolConstantThreshold {
   ShowTag: string[]
 }
 // 协议解析结果集
-export interface queryResultSave{
+export interface queryResultSave {
   mac: string
   pid: number
   timeStamp: number
-  result:queryResultArgument[]
+  result: queryResultArgument[]
 }
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
-
-export interface instructQuery{
+// 操作指令查询对象
+export interface instructQueryArg extends queryResultArgument {
   DevMac: string
-  pid:number
-  events:string
-  content:string
-  result?:Buffer
+  pid: number,
+  mountDev: string
+  protocol: string
+}
+// 操作指令请求对象
+export interface instructQuery {
+  DevMac: string
+  pid: number
+  type:number
+  events: string
+  content: string
+  result?: Buffer
 }
