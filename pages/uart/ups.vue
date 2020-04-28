@@ -1,21 +1,22 @@
 <template>
   <my-page title="UPS">
     <b-row class="m-0">
+      <separated :title="query.DevMac">
+        <b>{{EmData ? new Date(EmData.time).toLocaleString():''}}</b>
+      </separated>
       <b-col cols="12" md="8" class="m-0 p-0 my-2">
-        <b-card>
+        <b-card :sub-title="betty_model.name">
           <b-card-body>
-            <b-img :src="betty_model" class="mw-100"></b-img>
+            <b-img :src="betty_model.src" class="mw-100"></b-img>
           </b-card-body>
         </b-card>
       </b-col>
       <b-col cols="12" md="4" class="m-0 p-0 my-2">
-        <b-button-group class="px-3 pb-1">
-          <b-button @click="oprate('StartUps')">OPEN</b-button>
-          <b-button @click="oprate('ShutdownUps')">CLOSE</b-button>
-          <b-button>xx</b-button>
-        </b-button-group>
-
-        <b-card>
+        <b-card class="m-2">
+          <b-card-title>
+            电池状态
+            <b-button class="float-right" size="sm" variant="info">操作</b-button>
+          </b-card-title>
           <!-- <argumentBlocktwo
             v-for="([keys, val], key) in filter_core"
             :keys="keys"
@@ -59,25 +60,35 @@ export default Vue.extend({
     };
   },
   computed: {
-    parseargument(): { [x: string]: any } {
-      const EmData = this.EmData as queryResultSave;
-      if (EmData.result) {
-        return Object.assign({},...EmData.result.map(el => ({ [el.name]: el.value })))
-      } else {
-        return {};
-      }
-    },
     betty_model() {
       const map = {
-        L: require("../../assets/image/ups3.gif"),
-        B: require("../../assets/image/ups1.gif"),
-        Y: require("../../assets/image/ups2.gif"),
-        P: require("../../assets/image/ups.gif"),
-        S: require("../../assets/image/ups.gif")
+        L: {
+          name: "在线模式",
+          src: require("../../assets/image/ups3.gif")
+        },
+        B: {
+          name: "电池模式",
+          src: require("../../assets/image/ups1.gif")
+        },
+        Y: {
+          name: "旁路模式",
+          src: require("../../assets/image/ups2.gif")
+        },
+        P: {
+          name: "通电模式",
+          src: require("../../assets/image/ups.gif")
+        },
+        S: {
+          name: "待机模式",
+          src: require("../../assets/image/ups.gif")
+        }
       };
-      const stat = (this as any).parseargument['工作模式']
-      return stat ? (map as any)[stat]:map.P
-      //return map[this.device["Ups Mode"].trim()];
+      let stat = map.P
+      const EmData = this.EmData
+      if(EmData?.parse && EmData.parse["工作模式"]){
+          stat = (map as any)[EmData.parse["工作模式"]]
+      }    
+      return stat
     }
   },
   apollo: {
@@ -90,6 +101,7 @@ export default Vue.extend({
               value
               unit
             }
+            parse
             pid
             time
             mac
@@ -103,8 +115,7 @@ export default Vue.extend({
           DevMac
         };
       },
-      pollInterval: 5000,
-      fetchPolicy: "no-cache"
+      pollInterval: 5000
     },
     DevConstant: {
       query: gql`
@@ -123,9 +134,6 @@ export default Vue.extend({
         };
       }
     }
-  },
-  methods: {
-    oprate(oprate: string) {}
   }
 });
 </script>

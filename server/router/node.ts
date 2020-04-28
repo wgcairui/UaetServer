@@ -1,10 +1,10 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-console */
-import { NodeRunInfo, WebSocketTerminal } from "../mongoose/node";
-import ProtocolPares from "../bin/ProtocolPares";
+import { NodeRunInfo } from "../mongoose/node";
 import { ParameterizedContext } from "koa";
 import { nodeInfo, uartData, WebSocketInfo } from "../bin/interface";
 import { Terminal } from "../mongoose/Terminal";
+import UartDataParsingSave from "../bin/UartDataParsingSave";
 export default async (ctx: ParameterizedContext) => {
   const type = ctx.params.type;
   const body = ctx.request.body;
@@ -13,11 +13,8 @@ export default async (ctx: ParameterizedContext) => {
     // 透传设备数据上传接口
     case "UartData":
       {
-        const UartData: uartData = body
-        UartData.data.forEach(async el => {
-          //console.log(el);          
-          await ProtocolPares(el)
-        })
+        const UartData: uartData = body;
+        UartDataParsingSave(UartData.data)
         ctx.body = { code: 200 }
       }
       break;
@@ -33,7 +30,7 @@ export default async (ctx: ParameterizedContext) => {
           const { port, ip, jw } = el
           Terminal
             .updateOne({ DevMac: el.mac }, { $set: { ip, port, jw } }, { upsert: true })
-            .catch((e:Error) => console.log(e))
+            .catch((e: Error) => console.log(e))
         })
         //写入运行信息
 

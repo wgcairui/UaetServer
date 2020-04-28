@@ -132,6 +132,7 @@ export interface queryResultArgument {
 //协议查询结果
 export interface queryResult extends queryObject {
   contents: IntructQueryResult[]
+  parse?: { [x: string]: number | string }
   result?: queryResultArgument[];
   time?: string;
 }
@@ -249,6 +250,7 @@ export interface queryResultSave {
   pid: number
   timeStamp: number
   result: queryResultArgument[]
+  parse: { [x: string]: number | string }
 }
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
 // 操作指令查询对象
@@ -262,7 +264,7 @@ export interface instructQueryArg extends queryResultArgument {
 export interface instructQuery {
   DevMac: string
   pid: number
-  type:number
+  type: number
   events: string
   content: string
   result?: Buffer

@@ -1,0 +1,44 @@
+import { queryResult, protocol, queryResultArgument } from "./interface";
+import Event from "../event/index";
+import ProtocolPares from "./ProtocolPares";
+import { TerminalClientResults, TerminalClientResultSingle, TerminalClientResult } from "../mongoose/node";
+
+export default async (queryResultArray: queryResult[]) => {
+    const UartData = queryResultArray.reverse()
+    // 保存原始数据
+    TerminalClientResults.insertMany(UartData);
+    //
+    const ParseData = await Promise.all(UartData.map(el => ProtocolPares(el)));
+    // 保存解析后的数据
+    TerminalClientResult.insertMany(ParseData);
+    // 保存单例数据库
+    // 创建缓存,保存每条数据的Set
+    const MacID: Set<string> = new Set()
+    ParseData.forEach(data => {
+        const ID = data.mac + data.pid
+        // 如果数据重复,抛弃旧数据
+        if (MacID.has(ID)) return
+        MacID.add(ID)
+        // 把结果转换为对象
+        const P = data.result?.map(el => ({ [el.name]: el.value as string | number })) as { [x: string]: number | string }[]
+        data.parse = Object.assign({}, ...P)
+        //保存对象
+        TerminalClientResultSingle.updateOne(
+            { mac: data.mac, pid: data.pid },
+            data,
+            { upsert: true }
+        ).exec()
+        // 把数据发给检查器,检查数据是否有故障
+    })
+
+
+    // 透传结果集保存到数据集，最新数据
+
+    /* //保存数据到结果单例
+    await TerminalClientResultSingle.updateOne(
+      { mac: R.mac, pid: R.pid },
+      { $set: { result, time: R.time } },
+      { upsert: true }
+    ) */
+
+}

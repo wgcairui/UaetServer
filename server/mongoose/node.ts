@@ -34,7 +34,7 @@ const SchemaNodeRunInfo = new Schema({
 // 终端设备上传数据=>原始数据
 const SchemaTerminalClientResults = new Schema({
   pid: { type: Number, min: 0, max: 255, default: 0 },
-  time: Date,
+  time: String,
   timeStamp: Number,
   mac: String,
   type: Number,
@@ -82,8 +82,9 @@ const SchemaTerminalClientResultSingle = new Schema({
       { _id: false }
     )
   ],
+  parse:Object,
   pid: { type: Number, index: true },
-  time: Date,
+  time: String,
   mac: { type: String, index: true },
 }, { timestamps: true });
 export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);

@@ -85,7 +85,7 @@ export default Vue.extend({
       const quantity: queryResultArgument[] = [];
       // 模拟量
       const simulate: queryResultArgument[] = [];
-      if (this.Data.result) {
+      if (this.Data?.result) {
         const Data = this.Data as queryResultSave;
         // 空调设备数据
         const result: queryResultArgument[] = Data.result;

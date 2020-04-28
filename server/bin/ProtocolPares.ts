@@ -1,30 +1,22 @@
 /* eslint-disable no-console */
 import Event from "../event/index";
 import Tool from "../bin/tool";
-import {
-  TerminalClientResult,
-  TerminalClientResults,
-  TerminalClientResultSingle
-} from "../mongoose/node";
-import { protocolInstruct, queryResult, queryResultArgument } from "./interface";
+import { protocolInstruct, queryResult, queryResultArgument, protocol } from "./interface";
 
 export default async (R: queryResult) => {
-  // 保存查询结果的原始数据
-  new TerminalClientResults(R).save().catch(e => console.log(e));
   // 结果集数组
   const IntructResult = R.contents
   // 协议数组
-  const Instructs = Event.Cache.CacheProtocol.get(R.protocol)?.instruct as protocolInstruct[]
+  const Protocol = Event.Cache.CacheProtocol.get(R.protocol) as protocol
   // 缓存协议方法
-  const InstructMap = new Map(Instructs.map(el => [el.name, el]))
+  const InstructMap = new Map(Protocol.instruct.map(el => [el.name, el]))
   // 解析结果
-  let result: queryResultArgument[] = []
   //console.log(instructMap);
   switch (R.type) {
     // 232一般适用于UPS设备
     case 232:
       {
-        result = IntructResult.map(el => {
+        R.result = IntructResult.map(el => {
           let data = el.buffer.data
           let len = data.length
           // 解析规则
@@ -32,10 +24,10 @@ export default async (R: queryResult) => {
           // 把buffer转换为utf8字符串并掐头去尾
           const parseStr = Buffer.from(data)
             .toString('utf8', instructs.shift ? instructs.shiftNum : 0, instructs.pop ? data.length - instructs.popNum : data.length)
-            .split(' ')            
+            .split(' ')
           return instructs.formResize.map(el2 => {
             const [start, len] = (el2.regx?.split("-") as string[]).map(el => parseInt(el));
-            return { name: el2.name, value: parseStr[start-1]?.replace(/(#)/g,''), unit: el2.unit } as queryResultArgument
+            return { name: el2.name, value: parseStr[start - 1]?.replace(/(#)/g, ''), unit: el2.unit } as queryResultArgument
           })
         }).flat()
       }
@@ -46,7 +38,7 @@ export default async (R: queryResult) => {
       {
         // 迭代结果集
         // 比较查询和结果的功能码是否一致
-        result = IntructResult.filter(el => el.buffer.data[1] === parseInt(el.content.slice(2, 4)))
+        R.result = IntructResult.filter(el => el.buffer.data[1] === parseInt(el.content.slice(2, 4)))
           .map(el => {
             // 取出请求指令部分,后期做成缓存
             const instruct = el.content.slice(2, 12)
@@ -91,22 +83,5 @@ export default async (R: queryResult) => {
       }
       break;
   }
-
-  // 透传结果集保存到数据集，最新数据
-
-  //保存数据到结果单例
-  await TerminalClientResultSingle.updateOne(
-    { mac: R.mac, pid: R.pid },
-    { $set: { result, time: R.timeStamp } },
-    { upsert: true }
-  )
-    // .then(el => console.log("TerminalClientResultSingle"))
-    .catch(e => console.log(e));
-  //保存数据到结果集合
-  await new TerminalClientResult({
-    mac: R.mac, pid: R.pid, result, timeStamp: R.timeStamp
-  }).save()
-    // .then(el => console.log("TerminalClientResult"))
-    .catch(e => console.log(e));
-  return result;
+  return R;
 };

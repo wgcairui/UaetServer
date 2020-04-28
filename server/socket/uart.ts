@@ -80,7 +80,7 @@ export class NodeSocketIO {
             Node.socket
                 // 节点离线
                 .on("disconnect", () => {
-                    console.log(`节点：${Node.Name}断开连接，清除定时操作`);
+                    console.log(`${new Date().toLocaleTimeString()}## 节点：${Node.Name}断开连接，清除定时操作`);
                     this.Cache.delete(Node.Name)
                 })
                 // Node节点注册事件

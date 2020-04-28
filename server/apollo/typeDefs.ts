@@ -123,7 +123,6 @@ const typeDefs: DocumentNode = gql`
   # 透传设备数据
   type UartTerminalData {
     stat: String
-    result: [terminalData]
     pid: Int
     time: Date
     timeStamp: String
@@ -131,6 +130,8 @@ const typeDefs: DocumentNode = gql`
     type: Int
     protocol: String
     content: String
+    result: [terminalData]
+    parse:JSON
   }
   # 设备常量
   type Constant{
