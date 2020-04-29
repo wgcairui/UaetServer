@@ -20,7 +20,7 @@ export default async (queryResultArray: queryResult[]) => {
         if (MacID.has(ID)) return
         MacID.add(ID)
         // 把结果转换为对象
-        const P = data.result?.map(el => ({ [el.name]: el.value as string | number })) as { [x: string]: number | string }[]
+        const P = data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[]
         data.parse = Object.assign({}, ...P)
         //保存对象
         TerminalClientResultSingle.updateOne(
@@ -30,15 +30,4 @@ export default async (queryResultArray: queryResult[]) => {
         ).exec()
         // 把数据发给检查器,检查数据是否有故障
     })
-
-
-    // 透传结果集保存到数据集，最新数据
-
-    /* //保存数据到结果单例
-    await TerminalClientResultSingle.updateOne(
-      { mac: R.mac, pid: R.pid },
-      { $set: { result, time: R.time } },
-      { upsert: true }
-    ) */
-
 }

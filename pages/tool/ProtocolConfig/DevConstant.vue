@@ -1,146 +1,93 @@
 <template>
-  <div>
-    <my-head title="协议常量配置"></my-head>
-    <b-container>
-      <b-row>
-        <b-col>
-          <separated
-            :title="'配置设备类型:' + ProtocolType + ',Protocol:' + Protocol"
-          ></separated>
-          <!-- air -->
-          <b-form v-if="ProtocolType == 'air'">
-            <b-form-group label="热通道温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.HeatChannelTemperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="热通道湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.HeatChannelHumidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="冷通道温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.ColdChannelTemperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="冷通道湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.ColdChannelHumidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="制冷温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.RefrigerationTemperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="制冷湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.RefrigerationHumidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="风速:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.Speed"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="制热模式:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.HeatModel"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="制冷模式:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.ColdModel"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="除湿:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.Dehumidification"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="加湿:" v-bind="forGroup">
-              <b-form-select
-                v-model="air.Humidification"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-button variant="info" block @click="addDevConstent('air')"
-              >提交</b-button
-            >
-          </b-form>
+  <my-page title="协议常量配置">
+    <b-row>
+      <b-col>
+        <separated :title="'配置设备类型:' + ProtocolType + ',Protocol:' + Protocol"></separated>
+        <!-- air -->
+        <b-form v-if="ProtocolType == 'air'">
+          <my-form label="热通道温度:">
+            <b-form-select v-model="air.HeatChannelTemperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="热通道湿度:">
+            <b-form-select v-model="air.HeatChannelHumidity" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="冷通道温度:">
+            <b-form-select v-model="air.ColdChannelTemperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="冷通道湿度:">
+            <b-form-select v-model="air.ColdChannelHumidity" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="制冷温度:">
+            <b-form-select v-model="air.RefrigerationTemperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="制冷湿度:">
+            <b-form-select v-model="air.RefrigerationHumidity" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="风速:">
+            <b-form-select v-model="air.Speed" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="制热模式:">
+            <b-form-select v-model="air.HeatModel" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="制冷模式:">
+            <b-form-select v-model="air.ColdModel" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="除湿:">
+            <b-form-select v-model="air.Dehumidification" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="加湿:">
+            <b-form-select v-model="air.Humidification" :options="items"></b-form-select>
+          </my-form>
+          <b-button variant="info" block @click="addDevConstent('air')">提交</b-button>
+        </b-form>
 
-          <!-- TH -->
-          <b-form v-if="ProtocolType == 'th'">
-            <b-form-group label="温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Temperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Humidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
+        <!-- TH -->
+        <b-form v-if="ProtocolType == 'th'">
+          <my-form label="温度:">
+            <b-form-select v-model="th.Temperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="湿度:">
+            <b-form-select v-model="th.Humidity" :options="items"></b-form-select>
+          </my-form>
 
-            <b-button variant="info" block @click="addDevConstent('th')"
-              >提交</b-button
-            >
-          </b-form>
-          <!-- TH -->
-          <b-form v-if="ProtocolType == 'ups'">
-            <b-form-group label="温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Temperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Humidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
+          <b-button variant="info" block @click="addDevConstent('th')">提交</b-button>
+        </b-form>
+        <!-- UPS -->
+        <b-form v-if="ProtocolType == 'ups'">
+          <my-form label="UPS型号:">
+            <b-form-select v-model="ups.UPSModels" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="电池温度:">
+            <b-form-select v-model="ups.BatteryTemperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="剩余容量:">
+            <b-form-select v-model="ups.ResidualCapacity" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="电池电压:">
+            <b-form-select v-model="ups.BatteryVoltage" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="输出频率:">
+            <b-form-select v-model="ups.OutputFrequency" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="输出负载">
+            <b-form-select v-model="ups.OutputLoad" :options="items"></b-form-select>
+          </my-form>
+          <b-button variant="info" block @click="addDevConstent('ups')">提交</b-button>
+        </b-form>
+        <!-- EM -->
+        <!-- <b-form v-if="ProtocolType == 'em'">
+          <my-form label="电池温度:">
+            <b-form-select v-model="th.Temperature" :options="items"></b-form-select>
+          </my-form>
+          <my-form label="湿度:">
+            <b-form-select v-model="th.Humidity" :options="items"></b-form-select>
+          </my-form>
 
-            <b-button variant="info" block @click="addDevConstent('ups')"
-              >提交</b-button
-            >
-          </b-form>
-          <!-- TH -->
-          <b-form v-if="ProtocolType == 'em'">
-            <b-form-group label="温度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Temperature"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-            <b-form-group label="湿度:" v-bind="forGroup">
-              <b-form-select
-                v-model="th.Humidity"
-                :options="items"
-              ></b-form-select>
-            </b-form-group>
-
-            <b-button variant="info" block @click="addDevConstent('em')"
-              >提交</b-button
-            >
-          </b-form>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+          <b-button variant="info" block @click="addDevConstent('em')">提交</b-button>
+        </b-form>-->
+      </b-col>
+    </b-row>
+  </my-page>
 </template>
 
 <script lang="ts">
@@ -157,9 +104,7 @@ import {
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;
-
     return {
-      forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       ProtocolType,
       Protocol,
       ProtocolSingle: null,
@@ -184,7 +129,14 @@ export default Vue.extend({
         // 加湿
         Humidification: ""
       },
-      ups: {},
+      ups: {
+        UPSModels: "",
+        BatteryTemperature: "",
+        ResidualCapacity: "",
+        BatteryVoltage: "",
+        OutputFrequency: "",
+        OutputLoad: ""
+      },
       em: {},
       th: {
         Temperature: "",
@@ -216,7 +168,7 @@ export default Vue.extend({
         const Constant = newVal.Constant;
         const ProtocolType: string = this.$data.ProtocolType;
         let Dev = this.$data[ProtocolType];
-        console.log({Dev,newVal});
+        console.log({ Dev, newVal });
         const keys = Object.keys(Dev);
         keys.forEach(el => (Dev[el] = Constant[el]));
       }
@@ -242,6 +194,7 @@ export default Vue.extend({
         query getDevConstant($Protocol: String) {
           DevConstant: getDevConstant(Protocol: $Protocol) {
             Constant {
+              # air
               HeatChannelTemperature
               HeatChannelHumidity
               ColdChannelTemperature
@@ -253,8 +206,16 @@ export default Vue.extend({
               ColdModel
               Dehumidification
               Humidification
+              # air && th
               Temperature
               Humidity
+              # ups
+              UPSModels
+              BatteryTemperature
+              ResidualCapacity
+              BatteryVoltage
+              OutputFrequency
+              OutputLoad
             }
           }
         }

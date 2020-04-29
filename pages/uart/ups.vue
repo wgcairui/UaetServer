@@ -12,17 +12,23 @@
         </b-card>
       </b-col>
       <b-col cols="12" md="4" class="m-0 p-0 my-2">
-        <b-card class="m-2">
+        <b-card class="mx-2 h-100">
           <b-card-title>
             电池状态
-            <b-button class="float-right" size="sm" variant="info">操作</b-button>
+            <b-button class="float-right" size="sm" variant="info" v-b-modal.OprateInstructMode>操作</b-button>
           </b-card-title>
-          <!-- <argumentBlocktwo
-            v-for="([keys, val], key) in filter_core"
-            :keys="keys"
-            :val="val"
-            :key="key"
-          ></argumentBlocktwo>-->
+          <b-card-body>
+            <div
+              class="border p-2 shadow-sm rounded-lg my-2"
+              v-for="val in betty_stat"
+              :key="val.name"
+            >
+              <h5 class="m-0">
+                {{val.name}}
+                <b-badge variant="info" pill class="float-right">{{val.value+(val.unit||'')}}</b-badge>
+              </h5>
+            </div>
+          </b-card-body>
         </b-card>
       </b-col>
     </b-row>
@@ -31,6 +37,17 @@
       <b-col></b-col>
     </b-row>
     <dev-table :query="query" :tableData="EmData"></dev-table>
+    <b-modal
+      size="lg"
+      title="指令操作"
+      id="OprateInstructMode"
+      ok-only
+      button-size="sm"
+      ok-title="关闭"
+      ok-variant="default"
+    >
+      <my-oprate :query="query"></my-oprate>
+    </b-modal>
   </my-page>
 </template>
 <script lang="ts">
@@ -60,35 +77,46 @@ export default Vue.extend({
     };
   },
   computed: {
+    // ups工作模式
     betty_model() {
       const map = {
-        L: {
-          name: "在线模式",
-          src: require("../../assets/image/ups3.gif")
-        },
-        B: {
-          name: "电池模式",
-          src: require("../../assets/image/ups1.gif")
-        },
-        Y: {
-          name: "旁路模式",
-          src: require("../../assets/image/ups2.gif")
-        },
-        P: {
-          name: "通电模式",
-          src: require("../../assets/image/ups.gif")
-        },
-        S: {
-          name: "待机模式",
-          src: require("../../assets/image/ups.gif")
-        }
+        在线模式: require("../../assets/image/ups3.gif"),
+        旁路模式: require("../../assets/image/ups2.gif"),
+        通电模式: require("../../assets/image/ups.gif"),
+        待机模式: require("../../assets/image/ups.gif"),
+        电池模式: require("../../assets/image/ups1.gif"),
+        电池测试模式: require("../../assets/image/ups.gif"),
+        故障模式: require("../../assets/image/ups.gif"),
+        ECO节能模式: require("../../assets/image/ups.gif"),
+        恒频模式: require("../../assets/image/ups.gif"),
+        关机模式: require("../../assets/image/ups.gif")
       };
-      let stat = map.P
-      const EmData = this.EmData
-      if(EmData?.parse && EmData.parse["工作模式"]){
-          stat = (map as any)[EmData.parse["工作模式"]]
-      }    
-      return stat
+      const stat = {
+        name: "待机模式",
+        src: map["待机模式"]
+      };
+      const EmData = this.EmData;
+      if (EmData?.parse && EmData.parse["工作模式"]) {
+        const result = EmData.result.find(
+          el => el.name === "工作模式"
+        ) as queryResultArgument;
+        const pas = this.$store.getters.getUnit(result) as queryResultArgument;
+        stat.name = pas.value;
+        stat.src = (map as any)[pas.value];
+        // console.log({stat,pas});
+      }
+      return stat;
+    },
+    // 侧边栏UPS状态
+    betty_stat() {
+      let result = [] as queryResultArgument[];
+      const DevConstant = this.DevConstant;
+      const EmData = this.EmData;
+      if (DevConstant && DevConstant.Constant && EmData && EmData.result) {
+        const keys = Object.values(DevConstant.Constant);
+        result = EmData.result.filter(el => keys.includes(el.name));
+      }
+      return result;
     }
   },
   apollo: {
@@ -115,7 +143,7 @@ export default Vue.extend({
           DevMac
         };
       },
-      pollInterval: 5000
+      pollInterval: 2000
     },
     DevConstant: {
       query: gql`
@@ -123,7 +151,12 @@ export default Vue.extend({
           DevConstant: getDevConstant(Protocol: $Protocol) {
             ProtocolType
             Constant {
-              HeatChannelTemperature
+              UPSModels
+              BatteryTemperature
+              ResidualCapacity
+              BatteryVoltage
+              OutputFrequency
+              OutputLoad
             }
           }
         }

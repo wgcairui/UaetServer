@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
@@ -115,7 +115,7 @@ const resolvers: IResolvers = {
             // 获取配置显示常量参数
             const DevConstant = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
             // 刷选
-            data.result = DevConstant?(data.result?.filter(el => DevConstant?.includes(el.name))):data.result
+            data.result = DevConstant ? (data.result?.filter(el => DevConstant?.includes(el.name))) : data.result
             return data
         },
         // 获取透传设备数据-多条
@@ -328,6 +328,7 @@ const resolvers: IResolvers = {
                 | DevConstant_EM
                 | DevConstant_TH
                 | string[]
+                | OprateInstruct
 
             }, ctx: ApolloCtx
         ) {
@@ -341,6 +342,9 @@ const resolvers: IResolvers = {
                     break
                 case "ShowTag":
                     Up = { ShowTag: _.compact(arg as string[]) }
+                    break
+                case "Oprate":
+                    Up = { OprateInstruct: arg }
                     break
             }
             const result = await DevConstant.updateOne(
@@ -370,11 +374,28 @@ const resolvers: IResolvers = {
             const Query: instructQuery = {
                 DevMac: arg.DevMac,
                 pid: arg.pid,
-                type:protocol.Type,
-                events: 'oprate'+Date.now() + arg.DevMac,
+                type: protocol.Type,
+                events: 'oprate' + Date.now() + arg.DevMac,
                 content: Buffer.from(instructArr).toString('hex')
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
+            return result
+        },
+        //  固定发送设备操作指令
+        async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
+            // 获取协议指令
+            const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
+            // 携带事件名称，触发指令查询
+            const Query: instructQuery = {
+                DevMac: query.DevMac,
+                pid: query.pid,
+                type: protocol.Type,
+                events: 'oprate' + Date.now() + query.DevMac,
+                content: item.value
+            }
+            const result = await ctx.$SocketUart.InstructQuery(Query)
+            console.log({Query,query,result});
+            
             return result
         }
     },

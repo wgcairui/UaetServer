@@ -37,7 +37,7 @@ const EVENT_SOCKET = {
 }
 
 const EVENT_SERVER = {
-    'instructQuery':'instructQuery', // 操作设备状态指令
+    'instructQuery': 'instructQuery', // 操作设备状态指令
 }
 
 type NodeName = string
@@ -216,27 +216,27 @@ export class NodeSocketIO {
         return query.mac + query.pid
     }
     // 发送程序变更指令，公开
-    public InstructQuery(Query:instructQuery){
-        return new Promise<Partial<ApolloMongoResult>>((resolve)=>{
+    public InstructQuery(Query: instructQuery) {
+        return new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 在在线设备中查找
             let NodeIP = ''
-            for(let [IP,DevSet] of this.Event.Cache.CacheNodeTerminalOnline){
-                if(DevSet.has(Query.DevMac)){
+            for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
+                if (DevSet.has(Query.DevMac)) {
                     NodeIP = IP
                     break
                 }
             }
             // 不在线则跳出
-            if(!NodeIP) resolve({ok:0,msg:'设备不在线'})
+            if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
             // 构建指令
-            Query.content = tool.Crc16modbus(Query.pid,Query.content)
+            Query.content = Query.type === 485 ? tool.Crc16modbus(Query.pid, Query.content) : Query.content
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
             // 创建一次性监听，监听来自Node节点指令查询操作结果
-            Socket.once(Query.events,resolve).emit(EVENT_SERVER.instructQuery,Query)
+            Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
             setTimeout(() => {
-                resolve({ok:0,msg:'Node节点无响应，请检查设备状态信息是否变更'})
+                resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
             }, 20000);
         })
     }

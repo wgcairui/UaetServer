@@ -1,7 +1,7 @@
 <template>
   <div class="h-100 w-100">
     <my-head :title="title" />
-    <b-container>
+    <b-container class="mb-5">
         <slot/>
     </b-container>
   </div>

@@ -6,7 +6,11 @@ import MyHead from "../components/MyHead.vue"
 import MyPage from "../components/MyPage.vue"
 import OprateModal from "../components/OprateModal.vue"
 import DevTable from "../components/DevTable.vue"
+import MyForm from "../components/MyForm.vue"
+import MyOprate from "../components/MyOprate.vue"
 
+Vue.component("my-oprate", MyOprate)
+Vue.component("my-form", MyForm)
 Vue.component("dev-table", DevTable)
 Vue.component("oprate-modal", OprateModal)
 Vue.component("my-page", MyPage)

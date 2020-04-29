@@ -24,7 +24,15 @@ const Constant = new Schema(
 
     //th
     Temperature: String,
-    Humidity: String
+    Humidity: String,
+    // ups
+    UPSModels: String,
+    BatteryTemperature: String,
+    ResidualCapacity: String,
+    BatteryVoltage: String,
+    OutputFrequency: String,
+    OutputLoad: String
+    // EM
   },
   { _id: false }
 );
@@ -35,12 +43,19 @@ const Threshold = new Schema({
   max: Number
 }, { _id: false })
 
+const OprateInstruct = new Schema({
+  name: String,
+  value: String,
+  readme: String
+}, { _id: false })
+
 const Schema_DevConstant = new Schema({
   Protocol: String,
   ProtocolType: String,
   Constant: Constant,
   Threshold: [Threshold],
-  ShowTag: [String]
+  ShowTag: [String],
+  OprateInstruct: [OprateInstruct]
 });
 
 export const DevConstant = mongoose.model(

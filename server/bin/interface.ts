@@ -224,7 +224,14 @@ export interface DevConstant_Air {
 }
 // EM
 export interface DevConstant_EM { }
-export interface DevConstant_Ups { }
+export interface DevConstant_Ups {
+  UPSModels: string
+  BatteryTemperature: string
+  ResidualCapacity: string
+  BatteryVoltage: string
+  OutputFrequency: string
+  OutputLoad: string
+}
 export interface DevConstant_TH {
   Temperature: string;
   Humidity: string;
@@ -236,6 +243,12 @@ export interface Threshold {
   min: number
   max: number
 }
+// 协议操作指令
+export interface OprateInstruct{
+  name:string
+  value:string
+  readme:string
+}
 // 协议参数-常量参数阀值
 export interface ProtocolConstantThreshold {
   Protocol: string,
@@ -243,6 +256,7 @@ export interface ProtocolConstantThreshold {
   Constant: DevConstant
   Threshold: Threshold[]
   ShowTag: string[]
+  OprateInstruct:OprateInstruct[]
 }
 // 协议解析结果集
 export interface queryResultSave {
@@ -250,9 +264,9 @@ export interface queryResultSave {
   pid: number
   timeStamp: number
   result: queryResultArgument[]
-  parse: { [x: string]: number | string }
+  parse: { [x: string]: queryResultArgument }
 }
-export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"
+export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"|"Oprate"
 // 操作指令查询对象
 export interface instructQueryArg extends queryResultArgument {
   DevMac: string

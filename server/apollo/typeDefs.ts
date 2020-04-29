@@ -147,8 +147,22 @@ const typeDefs: DocumentNode = gql`
     ColdModel: String
     Dehumidification: String
     Humidification: String
+    # th and air
     Temperature: String
     Humidity: String
+    # ups
+    UPSModels: String
+    BatteryTemperature: String
+    ResidualCapacity: String
+    BatteryVoltage: String
+    OutputFrequency: String
+    OutputLoad: String
+  }
+  #
+ type OprateInstruct{
+    name:String
+    value:String
+    readme:String
   }
   # 每个协议的设备常量和阀值，显示参数
   type DevConstant{
@@ -157,7 +171,9 @@ const typeDefs: DocumentNode = gql`
     Constant:Constant
     Threshold:JSON
     ShowTag:[String]
+    OprateInstruct:[OprateInstruct]
   }
+
   #Query
   type Query {
     #tool
@@ -235,8 +251,10 @@ const typeDefs: DocumentNode = gql`
     addUserTerminal(type: String, id: String): result
     #添加设备协议常量配置
     addDevConstent(Protocol: String, ProtocolType: String,type:String arg: JSON): result
-    # 发送设备操作指令
+    # 自定义发送设备操作指令
     SendProcotolInstruct(arg:JSON,value:[Int]):result
+    # 固定发送设备操作指令
+    SendProcotolInstructSet(query:JSON,item:JSON):result
   }
 
   # Subscription
