@@ -1,5 +1,5 @@
 <template>
-  <my-page title="空调">
+  <!-- <my-page title="空调">
     <b-row>
       <b-col cols="12">
         <separated title="状态量"></separated>
@@ -8,7 +8,6 @@
         </div>
       </b-col>
     </b-row>
-    <!-- 温湿度状态 -->
     <b-row>
       <b-col cols="12" md="5">
         <b-row class="border-bottom py-3">
@@ -39,7 +38,6 @@
           </b-col>
         </b-row>
       </b-col>
-      <!-- 风速,之热等状态图 -->
       <b-col cols="12" md="7">
         <b-row class="m-0">
           <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="key">
@@ -51,7 +49,6 @@
         </b-row>
       </b-col>
     </b-row>
-    <!-- 表格 -->
     <b-row>
       <b-col>
         <separated title="模拟量">
@@ -100,7 +97,59 @@
       </b-col>
     </b-row>
     <oprate-modal :oprate="oprate" :oprateArg='oprateArg'></oprate-modal>
-  </my-page>
+  </my-page>-->
+  <my-dev-page title="Em电量仪" :query="query" v-on:data="onData" v-on:constant="onConstant">
+    <template>
+      <b-row>
+        <b-col cols="12">
+          <div class="bg-dark p-3">
+            <b-img-lazy src="~/assets/image/ac3.png" fluid />
+          </div>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col cols="12" md="5">
+          <b-row class="border-bottom py-3">
+            <b-col cols="12" md="12" class="text-center pb-3 d-flex flex-row">
+              <div>
+                <span class="temperature d-block">
+                  <i class="iconfont text-success temperatureColor">&#xe604;</i>
+                  {{ Stat.stat.HeatChannelTemperature.value }}&#8451;
+                </span>
+              </div>
+              <div class="border rounded-lg ml-auto">
+                <p class="bg-info text-light p-1 m-0">设定制冷温度</p>
+                <b>{{ Stat.stat.RefrigerationTemperature.value }}&#8451;</b>
+              </div>
+            </b-col>
+            <b-col cols="12" md="12" class="text-center pb-3 d-flex flex-row">
+              <div>
+                <span class="temperature d-block">
+                  <i class="iconfont text-primary humidityColor">&#xe604;</i>
+                  {{ Stat.stat.HeatChannelHumidity.value }}
+                  %
+                </span>
+              </div>
+              <div class="border rounded-lg ml-auto">
+                <p class="bg-info text-light p-1 m-0">设定制冷湿度</p>
+                <b>{{ Stat.stat.RefrigerationHumidity.value }}%</b>
+              </div>
+            </b-col>
+          </b-row>
+        </b-col>
+        <b-col cols="12" md="7">
+          <b-row class="m-0">
+            <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="key">
+              <div class="border rounded-lg d-flex flex-column align-items-center">
+                <i class="bg-info d-inline w-100 p-1 text-center text-light">{{ val.name }}</i>
+                <b-img fluid :src="val.value" alt="Card image" class="p-1"></b-img>
+              </div>
+            </b-col>
+          </b-row>
+        </b-col>
+      </b-row>
+    </template>
+  </my-dev-page>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -136,7 +185,6 @@ type airTypeObj = {
 };
 export default Vue.extend({
   data() {
-    const { mountDev, pid, protocol, DevMac } = this.$route.query;
     const statSet = new Set([
       "Speed",
       "HeatModel",
@@ -145,12 +193,12 @@ export default Vue.extend({
       "Humidification"
     ]);
     return {
-      query: {
-        mountDev,
-        pid,
-        protocol,
-        DevMac
-      },
+      query: this.$route.query,
+      airData: {} as queryResultSave,
+      DevConstant: {} as Pick<
+        ProtocolConstantThreshold,
+        "ProtocolType" | "Constant"
+      >,
       statSet,
       // 状态gif动图
       speedStop: require("~/assets/image/icons/fen_gray.gif"),
@@ -162,44 +210,19 @@ export default Vue.extend({
       humidityStop: require("~/assets/image/icons/chushi_gray.png"),
       humidityRun: require("~/assets/image/icons/chushi.gif"),
       addHumidityStop: require("~/assets/image/icons/jiashi_gray.png"),
-      addHumidityRun: require("~/assets/image/icons/jiashi.gif"),
-      //
-      airData: {} as queryResultSave,
-      DevConstant: {} as Pick<
-        ProtocolConstantThreshold,
-        "ProtocolType" | "Constant"
-      >,
-      fields: [
-        { key: "name", label: "变量" },
-        { key: "value", label: "值" },
-        { key: "oprate", label: "操作" }
-      ] as BvTableFieldArray,
-      //
-      oprate: false,
-      oprateArg: null
+      addHumidityRun: require("~/assets/image/icons/jiashi.gif")
     };
   },
-  computed: {
-    // table
-    line() {
-      // 状态量
-      const quantity: queryResultArgument[] = [];
-      // 模拟量
-      const simulate: queryResultArgument[] = [];
-      if (this.airData?.result) {
-        // 空调设备数据
-        const result: queryResultArgument[] = this.airData.result;
-        result.forEach(el => {
-          const valGetter: queryResultArgument = this.$store.getters.getUnit(
-            el
-          );
-          valGetter.issimulate
-            ? simulate.push(valGetter)
-            : quantity.push(valGetter);
-        });
-      }
-      return { simulate, quantity };
+  methods: {
+    onData(data: queryResultSave) {
+      this.airData = data;
     },
+    onConstant(data: ProtocolConstantThreshold) {
+      // console.log(data);
+      this.DevConstant = data;
+    }
+  },
+  computed: {
     Stat() {
       // 默认参数
       const stat: airHMObj = {
@@ -279,72 +302,6 @@ export default Vue.extend({
         : addHumidityStop;
       return { stat, AirStat };
     }
-  },
-  apollo: {
-    airData: {
-      query: gql`
-        query getUartTerminalData($DevMac: String, $pid: Int) {
-          airData: UartTerminalData(DevMac: $DevMac, pid: $pid) {
-            result {
-              name
-              value
-              unit
-            }
-            pid
-            time
-            mac
-          }
-        }
-      `,
-      variables() {
-        const { pid, DevMac } = this.$data.query;
-        return {
-          pid: parseInt(pid),
-          DevMac
-        };
-      },
-      pollInterval: 5000,
-      fetchPolicy: "no-cache"
-    },
-    DevConstant: {
-      query: gql`
-        query getDevConstant($Protocol: String) {
-          DevConstant: getDevConstant(Protocol: $Protocol) {
-            ProtocolType
-            Constant {
-              HeatChannelTemperature
-              HeatChannelHumidity
-              ColdChannelTemperature
-              ColdChannelHumidity
-              RefrigerationTemperature
-              RefrigerationHumidity
-              Speed
-              HeatModel
-              ColdModel
-              Dehumidification
-              Humidification
-            }
-          }
-        }
-      `,
-      variables() {
-        return {
-          Protocol: this.$data.query.protocol
-        };
-      }
-    }
-  },
-  methods: {
-    // 发送设备状态量指令
-    DevBind(item: queryResultArgument) {
-      const { mountDev, pid, protocol, DevMac } = this.query;
-      this.oprate = !this.oprate;
-      this.$data.oprateArg = { item, query: this.query };
-    },
-    // 隐藏设备显示参数
-    DisabledArgument(item: queryResultArgument) {},
-    // 查看设备参数报警
-    AlarmArgument(item: queryResultArgument) {}
   }
 });
 </script>

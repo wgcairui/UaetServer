@@ -1,13 +1,22 @@
 <template>
-  <my-page :title="'设备常量配置-'+DevMac">
+  <my-page :title="`设备常量配置-${DevMac}-${pid}-${mountDev}`">
     <b-row>
       <b-col>
         <separated title="add Sim"></separated>
-        <b-table :items="items">
-          <template v-slot:cell(show)="row">
-            <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
-          </template>
-        </b-table>
+        <b-tabs justified>
+          <!-- ShowTag -->
+          <b-tab title="ShowTag">
+            <b-table :items="items" :fields="fieldsSHowTag">
+              <template v-slot:cell(show)="row">
+                <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
+              </template>
+            </b-table>
+          </b-tab>
+          <!-- Threshold -->
+          <b-tab title="Threshold"></b-tab>
+          <!-- Constant -->
+          <b-tab title="Constant"></b-tab>
+        </b-tabs>
       </b-col>
     </b-row>
   </my-page>
@@ -20,6 +29,7 @@ import {
   queryResult,
   ProtocolConstantThreshold
 } from "../../../server/bin/interface";
+import { BvTableFieldArray } from "bootstrap-vue";
 interface tags {
   name: string;
   show: boolean;
@@ -32,44 +42,30 @@ export default Vue.extend({
       pid,
       protocol,
       DevMac,
+      // fields
+      fieldsSHowTag:[{key:'name',label:'名称'},{key:'show',label:'显示'}] as BvTableFieldArray,
       //
-      ProtocolSingle: {} as queryResult,
+      //ProtocolSingle: {} as queryResult,
       DevConstant: {} as Pick<
         ProtocolConstantThreshold,
-        "ProtocolType" | "ShowTag" | "Threshold"|"Constant"
+        "ProtocolType" | "ShowTag" | "Threshold" | "Constant"
       >
     };
   },
   computed: {
     items() {
-      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      //const ProtocolSingle: protocol = this.$data.ProtocolSingle;
       const DevConstant = this.DevConstant;
-      const result: tags[] = [];
-      if (ProtocolSingle?.instruct && DevConstant?.ShowTag) {
-        ProtocolSingle.instruct.forEach(el => {
-          el.formResize.forEach(ep => {
-            result.push({ name: ep.name, show: DevConstant.ShowTag.includes(ep.name) });
-          });
-        });
+      let result: tags[] = [];
+      if ( DevConstant?.ShowTag) {
+        result = DevConstant.ShowTag.map(el => ({name:el,show:true})
+        );
       }
       return result;
     }
   },
   apollo: {
-    ProtocolSingle: {
-      query: gql`
-        query getProtocol($Protocol: String) {
-          ProtocolSingle: Protocol(Protocol: $Protocol) {
-            instruct {
-              formResize
-            }
-          }
-        }
-      `,
-      variables() {
-        return { Protocol: this.$data.protocol };
-      }
-    },
+    
     DevConstant: {
       query: gql`
         query getDevConstant($Protocol: String) {
@@ -98,7 +94,10 @@ export default Vue.extend({
     }
   },
   methods: {
-    selects(item: any) {}
+    selects(item: any) {
+      console.log(item);
+      
+    }
   }
 });
 </script>

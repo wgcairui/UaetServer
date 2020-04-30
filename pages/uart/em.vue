@@ -1,5 +1,5 @@
 <template>
-  <my-page title="Em电量仪">
+  <!-- <my-page title="Em电量仪">
     <b-row class="w-100 my-2 px-2">
       <b-col cols="12">
         <span class="power-text d-block d-flex flex-column">
@@ -11,7 +11,7 @@
         </span>
       </b-col>
     </b-row>
-    <!-- <b-row class="clearfix w-100">
+    <b-row class="clearfix w-100">
       <b-col cols="12" md="3" v-for="(val, key) in core" :key="key">
         <div class=" border rounded-lg d-flex flex-column">
           <span class=" bg-info text-center d-block py-2 text-light">xx</span>
@@ -35,13 +35,28 @@
           </span>
         </div>
       </b-col>
-    </b-row> -->
+    </b-row>
     <b-row>
       <separated title="状态量"></separated>
       <b-col></b-col>
     </b-row>
     <dev-table :query="query" :tableData="EmData"></dev-table>
-  </my-page>
+  </my-page>-->
+  <my-dev-page title="Em电量仪" :query="query" v-on:data="onData" v-on:constant="onConstant">
+    <template>
+      <b-row class="w-100 my-2 px-2">
+        <b-col cols="12">
+          <span class="power-text d-block d-flex flex-column">
+            <div class="d-flex flex-row justify-content-end power-body">
+              <p class="text-danger">xxx</p>
+              <i class="text-success">KW.h</i>
+            </div>
+            <b class="text-dark mt-auto power-title">电表电量</b>
+          </span>
+        </b-col>
+      </b-row>
+    </template>
+  </my-dev-page>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -54,14 +69,8 @@ import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 export default Vue.extend({
   data() {
-    const { mountDev, pid, protocol, DevMac } = this.$route.query;
     return {
-      query: {
-        mountDev,
-        pid,
-        protocol,
-        DevMac
-      },
+      query: this.$route.query,
       EmData: {} as queryResultSave,
       DevConstant: {} as Pick<
         ProtocolConstantThreshold,
@@ -69,49 +78,13 @@ export default Vue.extend({
       >
     };
   },
-  computed: {},
-  apollo: {
-    EmData: {
-      query: gql`
-        query getUartTerminalData($DevMac: String, $pid: Int) {
-          EmData: UartTerminalData(DevMac: $DevMac, pid: $pid) {
-            result {
-              name
-              value
-              unit
-            }
-            pid
-            time
-            mac
-          }
-        }
-      `,
-      variables() {
-        const { pid, DevMac } = this.$data.query;
-        return {
-          pid: parseInt(pid),
-          DevMac
-        };
-      },
-      pollInterval: 5000,
-      fetchPolicy: "no-cache"
+  methods: {
+    onData(data: queryResultSave) {
+      this.EmData = data;
     },
-    DevConstant: {
-      query: gql`
-        query getDevConstant($Protocol: String) {
-          DevConstant: getDevConstant(Protocol: $Protocol) {
-            ProtocolType
-            Constant {
-              HeatChannelTemperature
-            }
-          }
-        }
-      `,
-      variables() {
-        return {
-          Protocol: this.$data.query.protocol
-        };
-      }
+    onConstant(data: ProtocolConstantThreshold) {
+      // console.log(data);
+      this.DevConstant = data;
     }
   }
 });

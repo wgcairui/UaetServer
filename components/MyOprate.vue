@@ -95,6 +95,11 @@ export default Vue.extend({
   },
   methods: {
     async SendOprateInstruct(item: OprateInstruct) {
+    if(item.value.includes("%")){
+        const value =  prompt(`请输入指令<${item.name}> 的值:`)
+        console.log(value);
+        
+    }
       const query = this.$data.querys;
       this.$data.loading = true;
       const result = await this.$apollo.mutate({

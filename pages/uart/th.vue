@@ -1,5 +1,5 @@
 <template>
-  <my-page title="温湿度">
+  <!-- <my-page title="温湿度">
     <b-row>
       <separated title="th">{{ data.DateTime }}</separated>
       <b-col cols="6">
@@ -39,80 +39,73 @@
         </b-table-lite>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page>-->
+  <my-dev-page title="TH" :query="query" v-on:data="onData" v-on:constant="onConstant">
+    <template>
+      <b-col cols="6">
+        <div class="ths">
+          <i class="iconfont text-success">&#xe604;</i>
+          <b>{{ data.data.temperature }}&#8451;</b>
+        </div>
+      </b-col>
+      <b-col cols="6">
+        <div class="ths">
+          <i class="iconfont text-primary">&#xe604;</i>
+          <b>{{ data.data.humidity }}%</b>
+        </div>
+      </b-col>
+    </template>
+  </my-dev-page>
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { queryResult, queryResultSave } from "../../server/bin/interface";
+import {
+  queryResult,
+  queryResultSave,
+  ProtocolConstantThreshold,
+  queryResultArgument
+} from "../../server/bin/interface";
 import gql from "graphql-tag";
 import { TerminalResultArrayToJson } from "../../plugins/tools";
 export default Vue.extend({
   data() {
     return {
-      UartTerminalData: null,
-      field: [
-        { key: "name", label: "变量" },
-        { key: "value", label: "值" },
-        { key: "oprate", label: "操作" }
-      ]
-    };
-  },
-  computed: {
-    data() {
-      let TH = {
+      query: this.$route.query,
+      EmData: {} as queryResultSave,
+      DevConstant: {} as Pick<
+        ProtocolConstantThreshold,
+        "ProtocolType" | "Constant"
+      >,
+      //
+      TH: {
         DateTime: new Date().toTimeString(),
         name: "温湿度",
         data: {
           temperature: 0,
           humidity: 0
         },
-        result: [] as any[]
-      };
-      if (this.$data.UartTerminalData) {
-        let thData = this.$data.UartTerminalData as queryResult
-        let th = TerminalResultArrayToJson(thData.result as any[]);
-        TH.DateTime = new Date(thData.time as string).toTimeString(),
-        TH.data.temperature = th.get("温度");
-        TH.data.humidity = th.get("湿度");
-        TH.result = thData.result as any[];
+        result: [] as queryResultArgument[]
       }
-      return TH;
-    }
-  },
-  apollo: {
-    UartTerminalData: {
-      query: gql`
-        query getUartTerminalData($DevMac: String, $pid: Int) {
-          UartTerminalData(DevMac: $DevMac, pid: $pid) {
-            result {
-              name
-              value
-              unit
-            }
-            pid
-            time
-            mac
-          }
-        }
-      `,
-      variables() {
-        return {
-          pid: Number.parseInt(this.$route.query.pid as string),
-          DevMac: this.$route.query.DevMac
-        };
-      },
-      pollInterval: 10000,
-      fetchPolicy: "no-cache"
-    }
-  },
-  head() {
-    return {
-      title: "温湿度"
     };
+  },
+  methods: {
+    onData(data: queryResultSave) {
+      this.EmData = data;
+      if (data.result) {
+        let th = TerminalResultArrayToJson(data.result as any[]);
+        (this.TH.DateTime = new Date(data.timeStamp).toTimeString()),
+          (this.TH.data.temperature = th.get("温度"));
+        this.TH.data.humidity = th.get("湿度");
+        this.TH.result = data.result;
+      }
+    },
+    onConstant(data: ProtocolConstantThreshold) {
+      // console.log(data);
+      this.DevConstant = data;
+    }
   }
 });
 </script>
-
 <style scoped>
 i,
 b {

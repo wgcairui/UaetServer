@@ -8,7 +8,9 @@ import OprateModal from "../components/OprateModal.vue"
 import DevTable from "../components/DevTable.vue"
 import MyForm from "../components/MyForm.vue"
 import MyOprate from "../components/MyOprate.vue"
+import MyDevPage from "../components/MyDevPage.vue"
 
+Vue.component("my-dev-page", MyDevPage)
 Vue.component("my-oprate", MyOprate)
 Vue.component("my-form", MyForm)
 Vue.component("dev-table", DevTable)
