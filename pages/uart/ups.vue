@@ -84,6 +84,8 @@ export default Vue.extend({
         const pas = this.$store.getters.getUnit(result) as queryResultArgument;
         this.betty_model.name = pas.value;
         this.betty_model.src = (this.map as any)[pas.value];
+        console.log({pas,b:this.betty_model});
+        
       }
     },
     onConstant(data:ProtocolConstantThreshold){
