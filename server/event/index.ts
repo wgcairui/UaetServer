@@ -8,6 +8,7 @@ export interface socketData {
   socket: Socket;
   data: any;
 }
+export type eventsName = 'UartTerminalOnline' | 'UartTerminalOff' | 'UartTerminalDataTransfinite'
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
   ClientCache: ClientCache
@@ -31,6 +32,14 @@ export class Event extends EventEmitter.EventEmitter {
     this.setMaxListeners(29)
       .on("event", () => { })
       .on("error", console.error)
+  }
+  // 创建自定义触发事件
+  Emit(event: eventsName, ...args: any[]) {
+    super.emit(event, args)
+  }
+  // 创建自定义触发事件
+  On(event: eventsName, listener: (...args: any[]) => void) {
+    return super.on(event, listener)
   }
 }
 

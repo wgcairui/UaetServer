@@ -1,7 +1,7 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { UserInfo } from "../bin/interface";
+import { UserInfo, uartAlarmObject } from "../bin/interface";
 import { JwtVerify } from "../bin/Secret";
 import { parseToken } from "../bin/util";
 
@@ -46,6 +46,12 @@ export default class webClientSocketIO {
             this._connect(Node)
             //为每个socket注册事件
             socket.on("disconnect", () => this._disconnect(Node))
+        })
+        // 监听Event事件
+        Event.On("UartTerminalDataTransfinite",(data)=>{
+            const Obj = data[0] as uartAlarmObject
+            const user = Event.Cache.CacheBindUart.get(Obj.mac) as string
+            this.io.to(user).emit("UartTerminalDataTransfinite",Obj.msg)
         })
     }
     // 缓存socket

@@ -74,7 +74,19 @@
                     }
                   }"
                   >阀值配置</b-button
-                ><b-button
+                >
+                <b-button
+                  variant="info"
+                  :to="{
+                    name: 'tool-ProtocolConfig-StatWacth',
+                    query: {
+                      ProtocolType: data.item.ProtocolType,
+                      Protocol: data.item.Protocol
+                    }
+                  }"
+                  >状态监控</b-button
+                >
+                <b-button
                   variant="info"
                   :to="{
                     name: 'tool-ProtocolConfig-ShowTag',
@@ -85,8 +97,9 @@
                   }"
                   >显示标签</b-button
                 >
+                
                 <b-button
-                  variant="dark"
+                  variant="info"
                   :to="{
                     name: 'tool-addProtocol',
                     query: {

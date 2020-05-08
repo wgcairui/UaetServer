@@ -17,7 +17,6 @@ const start =async ()=>{
             {
                 tableName: 'Infos',
                 indexs: [
-                    
                     { key: 'code' },
                     { key: 'msg' },
                     { key: 'type' },

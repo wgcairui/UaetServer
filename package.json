@@ -20,6 +20,7 @@
     "hooks": {}
   },
   "dependencies": {
+    "@alicloud/pop-core": "^1.7.9",
     "@ericblade/quagga2": "^0.0.18",
     "@koa/cors": "^3.0.0",
     "@nuxt/typescript-runtime": "^0.3.9",

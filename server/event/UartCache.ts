@@ -11,10 +11,12 @@ import {
   DevsType as devsType,
   Terminal as terminal,
   NodeClient as nodeClient,
-  ProtocolConstantThreshold
+  ProtocolConstantThreshold,
+  BindDevice
 } from "../bin/interface";
 import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
+import { UserBindDevice } from "../mongoose/user";
 
 export interface sendQuery {
   IP: string;
@@ -41,9 +43,15 @@ export default class Cache {
   // 缓存每个节点在线的设备
   CacheNodeTerminalOnline: Map<string, Set<string>>
   // 缓存节点查询终端设备超时的指令
-  CacheTerminalQueryIntructTimeout:Map<string,Set<string>>
+  CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
-  CacheConstant:Map<string,ProtocolConstantThreshold>
+  CacheConstant: Map<string, ProtocolConstantThreshold>
+  // 缓存绑定透传设备mac=>user
+  CacheBindUart: Map<string, string>
+  // 缓存绑定透传设备mac=>user
+  CacheBindEt: Map<string, string>
+  // 缓存告警参数次数 tag=>number
+  CacheAlarmNum: Map<string, number>
   constructor() {
     // 缓存
     this.CacheProtocol = new Map();
@@ -57,6 +65,9 @@ export default class Cache {
     this.CacheNodeTerminalOnline = new Map()
     this.CacheConstant = new Map()
     this.CacheTerminalQueryIntructTimeout = new Map()
+    this.CacheBindUart = new Map()
+    this.CacheBindEt = new Map()
+    this.CacheAlarmNum = new Map()
   }
   //
   async start(): Promise<void> {
@@ -64,9 +75,10 @@ export default class Cache {
     await this.RefreshCacheProtocol();
     await this.RefreshCacheNode();
     await this.RefreshCacheTerminal();
-    await this.RefreshCacheConstant()
+    await this.RefreshCacheConstant();
+    await this.RefreshCacheBind()
   }
-  
+
   // 
   async RefreshCacheProtocol() {
     const res: protocol[] = await DeviceProtocol.find().lean()
@@ -89,7 +101,7 @@ export default class Cache {
     this.CacheNodeTerminalOnline = new Map(res.map(el => [el.IP, new Set()]))
   }
   //
-  async RefreshCacheTerminal(DevMac?:string) {
+  async RefreshCacheTerminal(DevMac?: string) {
     const res: terminal[] = await Terminal.find().lean()
     console.log(`加载4g终端缓存......`)
     res.forEach(el => {
@@ -97,21 +109,31 @@ export default class Cache {
       this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
     })
     // 如果有Mac参数,更新超时指令查询
-    if(DevMac){
+    if (DevMac) {
       const Terminal = this.CacheTerminal.get(DevMac) as terminal
-      if(this.CacheTerminalQueryIntructTimeout.has(Terminal.mountNode)){
+      if (this.CacheTerminalQueryIntructTimeout.has(Terminal.mountNode)) {
         const CacheTerminalQueryIntructTimeout = this.CacheTerminalQueryIntructTimeout.get(Terminal.mountNode)
-        CacheTerminalQueryIntructTimeout?.forEach(el=>{
+        CacheTerminalQueryIntructTimeout?.forEach(el => {
           const Reg = new RegExp(`^${DevMac}`)
-          if(Reg.test(el)) CacheTerminalQueryIntructTimeout.delete(el)
+          if (Reg.test(el)) CacheTerminalQueryIntructTimeout.delete(el)
         })
       }
     }
   }
   //
-  async RefreshCacheConstant(){
+  async RefreshCacheConstant() {
     const res = await DevConstant.find().lean<ProtocolConstantThreshold>()
     console.log(`加载协议常量缓存......`);
-    this.CacheConstant = new Map(res.map(el=>[el.Protocol,el]))
+    this.CacheConstant = new Map(res.map(el => [el.Protocol, el]))
+  }
+  //
+  async RefreshCacheBind() {
+    const res = await UserBindDevice.find().lean<BindDevice>()
+    console.log(`加载绑定设备缓存......`);
+    res.forEach(el => {
+      el?.UTs.forEach(els => {
+        this.CacheBindUart.set(els as string, el.user)
+      })
+    })
   }
 }

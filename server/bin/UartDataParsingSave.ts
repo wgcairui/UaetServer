@@ -1,7 +1,7 @@
-import { queryResult, protocol, queryResultArgument } from "./interface";
-import Event from "../event/index";
+import { queryResult, queryResultArgument } from "./interface";
 import ProtocolPares from "./ProtocolPares";
 import { TerminalClientResults, TerminalClientResultSingle, TerminalClientResult } from "../mongoose/node";
+import CheckUart from "./CheckUart";
 
 export default async (queryResultArray: queryResult[]) => {
     const UartData = queryResultArray.reverse()
@@ -29,5 +29,6 @@ export default async (queryResultArray: queryResult[]) => {
             { upsert: true }
         ).exec()
         // 把数据发给检查器,检查数据是否有故障
+        CheckUart(data)
     })
 }

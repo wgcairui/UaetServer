@@ -20,8 +20,8 @@ export const state = () => ({
 
 export const getters: GetterTree<RootState, RootState> = {
   // 
-  getUnit: state => (query:queryResultArgument) => {
-    const value:queryResultArgument = Object.assign({issimulate:false},query)
+  getUnit: state => (query: queryResultArgument) => {
+    const value: queryResultArgument = Object.assign({ issimulate: false }, query)
     // 检查unit是否含有“{”
     if (!value.unit?.includes("{")) {
       value.issimulate = true
@@ -44,9 +44,9 @@ export const getters: GetterTree<RootState, RootState> = {
       // 读取缓存
       const unitCache = <string>state.unitCache.get(value.unit)?.get(value.value)
       // 没有相应缓存则返回原始值val:0,unit:{1:open,2:close}
-        value.value = unitCache || value.value+value.unit
-        return value     
-    }    
+      value.value = unitCache || value.value + value.unit
+      return value
+    }
   }
 }
 /* 
@@ -56,18 +56,22 @@ export const mutations: MutationTree<RootState> = {
   //CHANGE_NAME: (state, newName: string) => (state.temp = newName),
   // socket vuex 绑定事件
   addInfo(state, payload: WebInfo) {
-    state.Info = {
+    const info:WebInfo = {
       time: new Date().toLocaleString(),
       msg: payload.msg,
       type: payload.type,
       code: 1
     };
+    const deepInfo = JSON.parse(JSON.stringify(info))
+    //getInstance().insert<WebInfo>({ tableName: 'Infos', data: deepInfo })
+    //console.log(deepInfo);
+    
+    state.Info = info as any
     (this as any)._vm.$bvToast.toast(payload.msg, { title: payload.type })
     state.Infos.push(state.Info)
-    console.log(state);
-    getInstance().insert<WebInfo>({tableName:'Infos',data:state.Info})
-
-  }
+    // 超出条例清空数据
+    if(state.Infos.length > 500) state.Infos = []
+    }
 
 }
 /* 
@@ -91,6 +95,13 @@ export const actions: ActionTree<RootState, RootState> = {
     const info: WebInfo = {
       msg,
       type: "User"
+    }
+    commit("addInfo", info)
+  },
+  socket_UartTerminalDataTransfinite({ commit }, payload) {
+    const info: WebInfo = {
+      msg: payload,
+      type: 'UT'
     }
     commit("addInfo", info)
   }

@@ -41,7 +41,6 @@ export default Vue.extend({
         if (ProtocolSingle) {
           ProtocolSingle.instruct.forEach(el => {
             el.formResize.forEach(ep => {
-              ep.name = ep.name.replace(/(\n)/g,'')
               result.push({ name: ep.name, show: ShowTag.includes(ep.name) });
             });
           });

@@ -105,17 +105,22 @@ const resolvers: IResolvers = {
         },
         // 获取透传设备数据-单条
         async UartTerminalData(root, { DevMac, pid }, ctx: ApolloCtx) {
+            // 获取mac协议
+            const protocol = ctx.$Event.Cache.CacheTerminal.get(DevMac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
+            // 获取配置显示常量参数
+            const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
             const data = await TerminalClientResultSingle.findOne({
                 mac: DevMac,
                 pid
             }).lean<queryResult>() as queryResult
+            /* const data = await TerminalClientResultSingle.aggregate().match({ mac: DevMac, pid }).unwind('result').match({ 'result.name': { '$in': ShowTag } })
+                .group({
+                    _id: "$_id", result: { '$push': "$result" }
+                }).limit(1)
+            console.log(data); */
 
-            // 获取mac协议
-            const protocol = ctx.$Event.Cache.CacheTerminal.get(DevMac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
-            // 获取配置显示常量参数
-            const DevConstant = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
             // 刷选
-            data.result = DevConstant ? (data.result?.filter(el => DevConstant?.includes(el.name))) : data.result
+            data.result = ShowTag ? (data.result?.filter(el => ShowTag?.includes(el.name))) : data.result
             return data
         },
         // 获取透传设备数据-多条
@@ -123,14 +128,13 @@ const resolvers: IResolvers = {
             let result: queryResultSave[]
             // 如果没有日期参数,默认检索最新的100条数据
             if (datatime === "") {
-                result = await TerminalClientResult.find({ mac: DevMac, pid })
+                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
                     .sort("-timeStamp")
-                    .limit(100).lean() as any
-
+                    .limit(100).lean() as any;
             } else {
                 const start = new Date(datatime);
                 const end = new Date(datatime + " 23:59:59");
-                result = await TerminalClientResult.find({ mac: DevMac, pid })
+                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
                     .where("timeStamp")
                     .gte(start.getTime())
                     .lte(end.getTime())
@@ -145,11 +149,11 @@ const resolvers: IResolvers = {
             return resultChunk.map(el => {
                 // 刷选切块,如果值相同则抛弃
                 let def: queryResultSave = el[0]
-                def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
+                //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
                 return el.reduce((pre, cur) => {
                     // 获取最后一个值
                     const last = _.last(pre) as queryResultSave
-                    cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
+                    //cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
                     if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
                     return pre
                 }, [def])
@@ -166,6 +170,39 @@ const resolvers: IResolvers = {
         //
     },
 
+    /* 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    */
     Mutation: {
         // 设置节点
         async setNode(root, { arg }, ctx: ApolloCtx) {
@@ -394,8 +431,8 @@ const resolvers: IResolvers = {
                 content: item.value
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
-            console.log({Query,query,result});
-            
+            console.log({ Query, query, result });
+
             return result
         }
     },

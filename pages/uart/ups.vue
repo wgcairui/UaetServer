@@ -77,14 +77,14 @@ export default Vue.extend({
     onData(data: queryResultSave) {
       this.EmData = data;
       // 检查电池工作模式
-      if (data.parse["工作模式"]) {
+      if (data?.parse["工作模式"]) {
         const result = data.result.find(
           el => el.name === "工作模式"
         ) as queryResultArgument;
         const pas = this.$store.getters.getUnit(result) as queryResultArgument;
         this.betty_model.name = pas.value;
         this.betty_model.src = (this.map as any)[pas.value];
-        console.log({pas,b:this.betty_model});
+        // console.log({pas,b:this.betty_model});
         
       }
     },

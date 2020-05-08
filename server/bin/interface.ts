@@ -1,5 +1,5 @@
 import { ParameterizedContext } from "koa";
-import { Event } from "../event/index"
+import { Event, eventsName } from "../event/index"
 import NodeSocketIO from "server/socket/uart";
 /* protocol */
 export type communicationType = 232 | 485;
@@ -132,7 +132,7 @@ export interface queryResultArgument {
 //协议查询结果
 export interface queryResult extends queryObject {
   contents: IntructQueryResult[]
-  parse?: { [x: string]: number | string }
+  parse?: { [x: string]: queryResultArgument }
   result?: queryResultArgument[];
   time?: string;
 }
@@ -244,10 +244,10 @@ export interface Threshold {
   max: number
 }
 // 协议操作指令
-export interface OprateInstruct{
-  name:string
-  value:string
-  readme:string
+export interface OprateInstruct {
+  name: string
+  value: string
+  readme: string
 }
 // 协议参数-常量参数阀值
 export interface ProtocolConstantThreshold {
@@ -256,7 +256,7 @@ export interface ProtocolConstantThreshold {
   Constant: DevConstant
   Threshold: Threshold[]
   ShowTag: string[]
-  OprateInstruct:OprateInstruct[]
+  OprateInstruct: OprateInstruct[]
 }
 // 协议解析结果集
 export interface queryResultSave {
@@ -266,7 +266,7 @@ export interface queryResultSave {
   result: queryResultArgument[]
   parse: { [x: string]: queryResultArgument }
 }
-export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag"|"Oprate"
+export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate"
 // 操作指令查询对象
 export interface instructQueryArg extends queryResultArgument {
   DevMac: string
@@ -282,4 +282,14 @@ export interface instructQuery {
   events: string
   content: string
   result?: Buffer
+}
+
+// 透传设备告警对象
+export interface uartAlarmObject {
+  type: eventsName
+  mac: string
+  pid:number
+  protocol:string
+  timeStamp:number
+  msg: string
 }
