@@ -19,23 +19,17 @@
                         query: { ...$route.query, name: row.item.name }
                       }"
                 >趋势</b-button>
-                <b-button @click="AlarmArgument(row.item)" variant="info">Alarm</b-button>
+                <!-- <b-button @click="AlarmArgument(row.item)" variant="info">Alarm</b-button> -->
               </b-button-group>
             </template>
           </b-table>
         </b-tab>
         <b-tab title="状态量" lazy v-if="line.quantity.length>0">
           <b-table :items="line.quantity" :fields="fields">
-            <template v-slot:cell(oprate)="row2">
-              <b-button-group>
-                <b-button @click="DevBind(row2.item)" size="sm">指令</b-button>
-              </b-button-group>
-            </template>
           </b-table>
         </b-tab>
       </b-tabs>
     </b-overlay>
-    <oprate-modal :oprate="oprate" :oprateArg="oprateArg"></oprate-modal>
   </b-col>
 </template>
 <script lang="ts">

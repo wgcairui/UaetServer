@@ -1,6 +1,6 @@
 <template>
-  <div class="overflow-auto">
-    <b-row>
+  <div>
+    <b-row no-gutters>
       <!-- <b-col>
         <b-button
           v-for="val in OprateInstruct"
@@ -24,9 +24,9 @@
         </b-list-group>
       </b-col>
     </b-row>
-    <b-row>
+    <b-row no-gutters>
       <b-col>
-        <b-card title="自定义指令" class="my-2">
+        <b-card sub-title="自定义指令" class="my-2">
           <b-form>
             <my-form label="指令内容:">
               <b-form-input v-model="tempVal" placeholder="232协议直接输入字符串,485指令不要添加地址码和校验码"></b-form-input>

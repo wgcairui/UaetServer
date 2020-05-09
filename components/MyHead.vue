@@ -1,4 +1,3 @@
-/* eslint-disable */
 <template>
   <b-row no-gutters>
     <b-col
@@ -13,19 +12,21 @@
       </span>
       <span class="text-light mx-2">|</span>
       <span class="text-center text-light">{{ title }}</span>
-      <slot />
       <div class="ml-auto">
-        <socket-state></socket-state>
-        <span v-if="User" class="ml-auto text-light">
-          <i class="iconfont">&#xeb6f;</i>
-          {{ User }}
-        </span>
+        <slot>
+          <socket-state></socket-state>
+          <span v-if="User" class="ml-auto text-light">
+            <i class="iconfont">&#xeb6f;</i>
+            {{ User }}
+          </span>
+        </slot>
       </div>
     </b-col>
   </b-row>
 </template>
 <script lang="ts">
 import Vue from "vue";
+import { WebInfo } from "../store/DB";
 export default Vue.extend({
   name: "MyHead",
   props: {
@@ -51,5 +52,11 @@ export default Vue.extend({
 <style scoped>
 .loginTitle {
   height: 57px;
+}
+.navbar-dark,
+.navbar-nav,
+.nav-link,
+.dropdown-toggle span {
+  color: aliceblue !important;
 }
 </style>

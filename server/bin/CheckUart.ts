@@ -1,8 +1,16 @@
-import { queryResult, queryResultArgument, uartAlarmObject } from "./interface";
+import { queryResult, queryResultArgument, uartAlarmObject, userSetup } from "./interface";
 import Event from "../event/index";
 import { SendUartAlarm } from "./SMS"
 
 export default (query: queryResult) => {
+    // 获取mac绑定的用户
+    const User = Event.Cache.CacheBindUart.get(query.mac)
+    // 没有绑定用户则跳出检查
+    if(!User) return
+    // 获取用户个性化配置实例
+    const UserSetup = Event.Cache.CacheUserSetup.get(User) as userSetup
+    
+
     // 获取协议参数阀值缓存
     const Contant = Event.Cache.CacheConstant.get(query.protocol)
     if (Contant?.Threshold) {
@@ -35,6 +43,7 @@ export default (query: queryResult) => {
                         Event.Cache.CacheAlarmNum.set(tag, n + 1)
                         console.log(n);
                         if (n === 5 || n === 100) {
+                            
                             SendUartAlarm({ type: "透传设备告警", tel: '15337364316', name: "cairui", devname: data.mac, air: 'P01', event: el.name + '超限' })
                         }
                     }

@@ -2,10 +2,10 @@
   <my-page :title="`设备常量配置-${DevMac}-${pid}-${mountDev}`">
     <b-row>
       <b-col>
-        <separated title="add Sim"></separated>
+        <separated title="添加透传终端自定义配置"></separated>
         <b-tabs justified>
           <!-- ShowTag -->
-          <b-tab title="ShowTag">
+          <b-tab title="显示参数">
             <b-table :items="items" :fields="fieldsSHowTag">
               <template v-slot:cell(show)="row">
                 <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
@@ -13,9 +13,9 @@
             </b-table>
           </b-tab>
           <!-- Threshold -->
-          <b-tab title="Threshold"></b-tab>
-          <!-- Constant -->
-          <b-tab title="Constant"></b-tab>
+          <b-tab title="参数限值"></b-tab>
+          <!-- Constant 
+          <b-tab title="Constant"></b-tab>-->
         </b-tabs>
       </b-col>
     </b-row>
@@ -101,3 +101,8 @@ export default Vue.extend({
   }
 });
 </script>
+<style lang="scss" scoped>
+.nav-link a{
+  color: black;
+}
+</style>

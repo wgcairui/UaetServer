@@ -98,9 +98,9 @@
     </b-row>
     <oprate-modal :oprate="oprate" :oprateArg='oprateArg'></oprate-modal>
   </my-page>-->
-  <my-dev-page title="Em电量仪" :query="query" v-on:data="onData" v-on:constant="onConstant">
+  <my-dev-page title="Air空调" :query="query" v-on:data="onData" v-on:constant="onConstant">
     <template>
-      <b-row>
+      <b-row class=" w-100">
         <b-col cols="12">
           <div class="bg-dark p-3">
             <b-img-lazy src="~/assets/image/ac3.png" fluid />

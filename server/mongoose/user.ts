@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 /* jshint esversion:8 */
 import { mongoose, Schema } from "./index";
+import { Schema_DevConstant } from "./DeviceParameterConstant";
 
 const Schema_Users = new Schema({
   userId: String,
@@ -29,6 +30,14 @@ const SchemaUserBindDevice = new Schema({
   UTs: [String]
 });
 
+const SchemaUserAlarmSetup = new Schema({
+  user:String,
+  tels:[String],
+  mails:[String],
+  ProtocolSetup:[Schema_DevConstant]
+})
+
 const Users = mongoose.model("users", Schema_Users);
 const UserBindDevice = mongoose.model("UserBindDevice", SchemaUserBindDevice);
-export { Users, UserBindDevice };
+const UserAlarmSetup = mongoose.model("userAlarmSetup",SchemaUserAlarmSetup)
+export { Users, UserBindDevice,UserAlarmSetup };

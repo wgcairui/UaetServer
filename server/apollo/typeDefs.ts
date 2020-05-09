@@ -173,6 +173,13 @@ const typeDefs: DocumentNode = gql`
     ShowTag:[String]
     OprateInstruct:[OprateInstruct]
   }
+  # 用户自定义配置
+  type UserSetup{
+    user:String
+    tels:[String]
+    mails:[String]
+    ProtocolSetup:[DevConstant]
+  }
 
   #Query
   type Query {
@@ -215,6 +222,8 @@ const typeDefs: DocumentNode = gql`
     getDevConstant(Protocol:String):DevConstant
     # 获取设备在线状态
     getDevState(mac:String,node:String):Boolean
+    # 获取用户自定义配置
+    getUserSetup:UserSetup
   }
 
   #mutation
@@ -255,6 +264,10 @@ const typeDefs: DocumentNode = gql`
     SendProcotolInstruct(arg:JSON,value:[Int]):result
     # 固定发送设备操作指令
     SendProcotolInstructSet(query:JSON,item:JSON):result
+    # 设置用户自定义设置(联系方式)
+    setUserSetupContact(tels:[String],mails:[String]):result
+    # 设置用户自定义设置(协议配置)
+    setUserSetupProtocol(Protocol: String, ProtocolType: String,type:String arg: JSON):result
   }
 
   # Subscription

@@ -75,7 +75,7 @@ export default Vue.extend({
       variables() {
         return { Protocol: this.$data.Protocol };
       },
-      update: data => data.ShowTag.ShowTag
+      update: data => data.ShowTag?.ShowTag
     }
   },
   methods: {

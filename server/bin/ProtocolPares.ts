@@ -67,7 +67,8 @@ export default async (R: queryResult) => {
                 // 处理整形
                 case "hex":
                 case "short":
-                  value = buf.readIntBE(start, len) * el2.bl//parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
+                  // 转换为带一位小数点的浮点数
+                  value = parseFloat((buf.readIntBE(start, len) * el2.bl).toFixed(1))//parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
                   break;
                 // 处理单精度浮点数
                 case "float":

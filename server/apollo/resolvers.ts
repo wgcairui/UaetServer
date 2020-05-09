@@ -8,7 +8,7 @@ import { Terminal, RegisterTerminal } from "../mongoose/Terminal";
 
 import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
-import { Users, UserBindDevice } from "../mongoose/user";
+import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
 import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct } from "../bin/interface";
 
@@ -76,8 +76,9 @@ const resolvers: IResolvers = {
             return await NodeRunInfo.find(NodeName ? { NodeName } : {});
         },
         // 用户
-        async User(root, { user }, ctx) {
-            return await Users.findOne({ user });
+        async User(root, { user }, ctx: ApolloCtx) {
+            return ctx
+            //return await Users.findOne({ user });
         },
         async Users() {
             return await Users.find();
@@ -166,8 +167,11 @@ const resolvers: IResolvers = {
             const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
             // console.log({mac,macMap});
             return macMap?.has(mac)
+        },
+        // 获取用户自定义配置
+        async getUserSetup(root,arg,ctx:ApolloCtx){
+            return await UserAlarmSetup.findOne({user:ctx.user})
         }
-        //
     },
 
     /* 
@@ -432,9 +436,57 @@ const resolvers: IResolvers = {
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
             console.log({ Query, query, result });
-
             return result
-        }
+        },
+        // 设置用户自定义设置(联系方式)
+        async setUserSetupContact(root, { tels, mails }: { tels: string[], mails: string[] }, ctx: ApolloCtx) {
+            const result = await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { tels: tels || [ctx.tel], mails: mails || [ctx.mail] } }, { upsert: true })
+            ctx.$Event.Cache.RefreshCacheUserSetup()
+            return result
+        },
+        // 设置用户自定义设置(协议配置)
+        async setUserSetupProtocol(root, {
+            ProtocolType,
+            Protocol,
+            type,
+            arg
+        }: {
+            ProtocolType: string;
+            Protocol: string;
+            type: ConstantThresholdType
+            arg:
+            | DevConstant_Air
+            | DevConstant_Ups
+            | DevConstant_EM
+            | DevConstant_TH
+            | string[]
+            | OprateInstruct
+
+        }, ctx: ApolloCtx
+        ) {
+            let Up
+            switch (type) {
+                case "Constant":
+                    Up = { Constant: arg }
+                    break
+                case "Threshold":
+                    Up = { Threshold: arg }
+                    break
+                case "ShowTag":
+                    Up = { ShowTag: _.compact(arg as string[]) }
+                    break
+                case "Oprate":
+                    Up = { OprateInstruct: arg }
+                    break
+            }
+            /* const result = await DevConstant.updateOne(
+                { Protocol, ProtocolType },
+                { $set: Up },
+                { upsert: true }
+            ) */
+            //ctx.$Event.Cache.RefreshCacheConstant()
+            //return result;
+        },
     },
 
 };

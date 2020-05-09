@@ -258,6 +258,14 @@ export interface ProtocolConstantThreshold {
   ShowTag: string[]
   OprateInstruct: OprateInstruct[]
 }
+// 用户自定义配置
+export interface userSetup{
+  user:string
+  tels:string[]
+  mails:string
+  ProtocolSetup:ProtocolConstantThreshold[]
+  ProtocolSetupMap:Map<string,ProtocolConstantThreshold>
+}
 // 协议解析结果集
 export interface queryResultSave {
   mac: string

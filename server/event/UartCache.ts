@@ -12,11 +12,12 @@ import {
   Terminal as terminal,
   NodeClient as nodeClient,
   ProtocolConstantThreshold,
-  BindDevice
+  BindDevice,
+  userSetup
 } from "../bin/interface";
 import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
-import { UserBindDevice } from "../mongoose/user";
+import { UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
 export interface sendQuery {
   IP: string;
@@ -52,6 +53,8 @@ export default class Cache {
   CacheBindEt: Map<string, string>
   // 缓存告警参数次数 tag=>number
   CacheAlarmNum: Map<string, number>
+  // 缓存用户配置 user=>setup
+  CacheUserSetup:Map<string,userSetup>
   constructor() {
     // 缓存
     this.CacheProtocol = new Map();
@@ -68,6 +71,7 @@ export default class Cache {
     this.CacheBindUart = new Map()
     this.CacheBindEt = new Map()
     this.CacheAlarmNum = new Map()
+    this.CacheUserSetup = new Map()
   }
   //
   async start(): Promise<void> {
@@ -76,7 +80,8 @@ export default class Cache {
     await this.RefreshCacheNode();
     await this.RefreshCacheTerminal();
     await this.RefreshCacheConstant();
-    await this.RefreshCacheBind()
+    await this.RefreshCacheBind();
+    await this.RefreshCacheUserSetup()
   }
 
   // 
@@ -135,5 +140,18 @@ export default class Cache {
         this.CacheBindUart.set(els as string, el.user)
       })
     })
+  }
+  //
+  async RefreshCacheUserSetup(){
+    const res = await UserAlarmSetup.find().lean<userSetup>()
+    console.log(`加载用户个性化配置......`);
+    this.CacheUserSetup = new Map(res.map(el=>{
+      if(el.ProtocolSetup){
+        el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els=>[els.Protocol,els]))
+      }else{
+        el.ProtocolSetupMap = new Map()
+      }      
+      return [el.user,el]
+    }))
   }
 }

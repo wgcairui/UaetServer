@@ -49,7 +49,7 @@ const OprateInstruct = new Schema({
   readme: String
 }, { _id: false })
 
-const Schema_DevConstant = new Schema({
+export const Schema_DevConstant = new Schema({
   Protocol: String,
   ProtocolType: String,
   Constant: Constant,
@@ -57,7 +57,6 @@ const Schema_DevConstant = new Schema({
   ShowTag: [String],
   OprateInstruct: [OprateInstruct]
 });
-
 export const DevConstant = mongoose.model(
   "DevConstant",
   Schema_DevConstant,

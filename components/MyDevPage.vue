@@ -1,6 +1,9 @@
 <template>
   <my-page :title="title">
-      <!-- body-head -->
+    <template v-slot:nav>
+      <my-nav/>
+    </template>
+    <!-- body-head -->
     <b-row class="m-0">
       <separated :title="query.DevMac">
         <b>{{Data ? new Date(Data.time).toLocaleString():''}}</b>
@@ -85,6 +88,7 @@ export default Vue.extend({
           DevMac
         };
       },
+      // fetchPolicy: "network-only",
       pollInterval: 2000,
       result: function(data) {
         this.$emit("data", data.data.Data);
@@ -102,6 +106,21 @@ export default Vue.extend({
               BatteryVoltage
               OutputFrequency
               OutputLoad
+              #
+              Temperature
+              Humidity
+              #
+              HeatChannelTemperature
+              HeatChannelHumidity
+              ColdChannelTemperature
+              ColdChannelHumidity
+              RefrigerationTemperature
+              RefrigerationHumidity
+              Speed
+              HeatModel
+              ColdModel
+              Dehumidification
+              Humidification
             }
           }
         }
@@ -111,6 +130,7 @@ export default Vue.extend({
           Protocol: this.query.protocol
         };
       },
+      // fetchPolicy: "network-only",
       result: function(data) {
         this.$emit("constant", data.data.DevConstant);
       }

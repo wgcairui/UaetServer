@@ -1,10 +1,13 @@
-/* eslint-disable */
 <template>
-  <b-col cols="12" class=" border-bottom my-2 px-3 d-flex flex-row">
+  <b-col cols="12" class="border-bottom my-2 px-3 d-flex flex-row justify-content-center">
     <div>
-      <span v-show="back" @click="backto"><i class=" el-icon-back" /><span class=" text-dark mx-2">|</span></span><b>{{ title }}</b>
+      <span v-show="back" @click="backto">
+        <i class="el-icon-back" />
+        <span class="text-dark mx-2">|</span>
+      </span>
+      <b>{{ title }}</b>
     </div>
-    <div class=" ml-auto">
+    <div class="ml-auto">
       <slot />
     </div>
   </b-col>
@@ -26,10 +29,10 @@ export default {
 
   methods: {
     backto() {
-      this.$router.back()
+      this.$router.back();
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped></style>
