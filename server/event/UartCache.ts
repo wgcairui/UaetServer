@@ -25,11 +25,11 @@ export interface sendQuery {
   socket: SocketIO.Socket;
 }
 export default class Cache {
-  // 协议缓存
+  // 协议缓存protocol=>
   CacheProtocol: Map<string, protocol>;
-  // 设备类型缓存
+  // 设备类型缓存devmodal=>
   CacheDevsType: Map<string, devsType>;
-  // 透传终端缓存
+  // 透传终端缓存mac=>
   CacheTerminal: Map<string, terminal>;
   // Node节点=》终端缓存 
   CacheNodeTerminal: Map<string, Map<string, terminal>>;
@@ -148,6 +148,10 @@ export default class Cache {
     this.CacheUserSetup = new Map(res.map(el=>{
       if(el.ProtocolSetup){
         el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els=>[els.Protocol,els]))
+        el.ThresholdMap = new Map(el.ProtocolSetup.map(els=>{
+          const ThresholdMap = new Map(els.Threshold.map(ela=>[ela.name,ela]))
+          return [els.Protocol,ThresholdMap]
+        }))
       }else{
         el.ProtocolSetupMap = new Map()
       }      

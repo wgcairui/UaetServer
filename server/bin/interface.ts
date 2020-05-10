@@ -265,6 +265,7 @@ export interface userSetup{
   mails:string
   ProtocolSetup:ProtocolConstantThreshold[]
   ProtocolSetupMap:Map<string,ProtocolConstantThreshold>
+  ThresholdMap:Map<string,Map<string,Threshold>>
 }
 // 协议解析结果集
 export interface queryResultSave {
