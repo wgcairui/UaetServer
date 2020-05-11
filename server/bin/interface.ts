@@ -117,6 +117,7 @@ export interface SocketRegisterInfo {
 export interface queryObject {
   mac: string;
   type: number;
+  mountDev: string
   protocol: string;
   pid: number;
   timeStamp: number;
@@ -127,6 +128,7 @@ export interface queryResultArgument {
   name: string;
   value: any;
   unit: string | null;
+  parse?: any
   issimulate?: boolean
 }
 //协议查询结果
@@ -204,23 +206,23 @@ export interface KoaSocketOpts {
 // 空调
 export interface DevConstant_Air {
   //热通道温度
-  HeatChannelTemperature: any;
-  HeatChannelHumidity: any;
+  HeatChannelTemperature: string;
+  HeatChannelHumidity: string;
   //冷通道湿度
-  ColdChannelTemperature: any;
-  ColdChannelHumidity: any;
+  ColdChannelTemperature: string;
+  ColdChannelHumidity: string;
   //制冷温度
-  RefrigerationTemperature: any;
-  RefrigerationHumidity: any;
+  RefrigerationTemperature: string;
+  RefrigerationHumidity: string;
   // 风速
-  Speed: any;
+  Speed: string;
   //制热模式
-  HeatModel: any;
-  ColdModel: any;
+  HeatModel: string;
+  ColdModel: string;
   //除湿
-  Dehumidification: any;
+  Dehumidification: string;
   // 加湿
-  Humidification: any;
+  Humidification: string;
 }
 // EM
 export interface DevConstant_EM { }
@@ -259,13 +261,13 @@ export interface ProtocolConstantThreshold {
   OprateInstruct: OprateInstruct[]
 }
 // 用户自定义配置
-export interface userSetup{
-  user:string
-  tels:string[]
-  mails:string
-  ProtocolSetup:ProtocolConstantThreshold[]
-  ProtocolSetupMap:Map<string,ProtocolConstantThreshold>
-  ThresholdMap:Map<string,Map<string,Threshold>>
+export interface userSetup {
+  user: string
+  tels: string[]
+  mails: string[]
+  ProtocolSetup: ProtocolConstantThreshold[]
+  ProtocolSetupMap: Map<string, ProtocolConstantThreshold>
+  ThresholdMap: Map<string, Map<string, Threshold>>
 }
 // 协议解析结果集
 export interface queryResultSave {
@@ -297,8 +299,46 @@ export interface instructQuery {
 export interface uartAlarmObject {
   type: eventsName
   mac: string
-  pid:number
-  protocol:string
-  timeStamp:number
+  pid: number
+  protocol: string
+  timeStamp: number
   msg: string
+}
+
+// 单条发送短信
+type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警'
+export interface smsUartAlarm {
+  user: string
+  tel: string
+  name: string
+  devname: string
+  air?: string
+  event?: string
+  type: UartAlarmType
+}
+// LOG 日志
+// 短信发送
+export interface logSmsSend {
+  query: smsUartAlarm
+  sendParams: {
+    RegionId: string
+    PhoneNumbers: string
+    SignName: string
+    TemplateCode: string
+    TemplateParam: String
+  },
+  Success?: {
+    Message: string
+    RequestId: string
+    BizId: string
+    Code: string
+  },
+  Error?: any
+}
+// 操作请求
+export interface logUserRequst {
+  user: string,
+  userGroup: string,
+  type: string,
+  argument?: any
 }

@@ -1,106 +1,7 @@
 <template>
-  <!-- <my-page title="空调">
-    <b-row>
-      <b-col cols="12">
-        <separated title="状态量"></separated>
-        <div class="bg-dark p-3">
-          <b-img-lazy src="~/assets/image/ac3.png" fluid />
-        </div>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col cols="12" md="5">
-        <b-row class="border-bottom py-3">
-          <b-col cols="12" md="12" class="text-center pb-3 d-flex flex-row">
-            <div>
-              <span class="temperature d-block">
-                <i class="iconfont text-success temperatureColor">&#xe604;</i>
-                {{ Stat.stat.HeatChannelTemperature.value }}&#8451;
-              </span>
-            </div>
-            <div class="border rounded-lg ml-auto">
-              <p class="bg-info text-light p-1 m-0">设定制冷温度</p>
-              <b>{{ Stat.stat.RefrigerationTemperature.value }}&#8451;</b>
-            </div>
-          </b-col>
-          <b-col cols="12" md="12" class="text-center pb-3 d-flex flex-row">
-            <div>
-              <span class="temperature d-block">
-                <i class="iconfont text-primary humidityColor">&#xe604;</i>
-                {{ Stat.stat.HeatChannelHumidity.value }}
-                %
-              </span>
-            </div>
-            <div class="border rounded-lg ml-auto">
-              <p class="bg-info text-light p-1 m-0">设定制冷湿度</p>
-              <b>{{ Stat.stat.RefrigerationHumidity.value }}%</b>
-            </div>
-          </b-col>
-        </b-row>
-      </b-col>
-      <b-col cols="12" md="7">
-        <b-row class="m-0">
-          <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="key">
-            <div class="border rounded-lg d-flex flex-column align-items-center">
-              <i class="bg-info d-inline w-100 p-1 text-center text-light">{{ val.name }}</i>
-              <b-img fluid :src="val.value" alt="Card image" class="p-1"></b-img>
-            </div>
-          </b-col>
-        </b-row>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col>
-        <separated title="模拟量">
-          <b-button
-            size="sm"
-            variant="info"
-            class="m-2"
-            :to="{name:'uart-setup',query:$route.query}"
-          >配置</b-button>
-        </separated>
-        <b-overlay :show="$apollo.loading">
-          <b-tabs justified>
-            <b-tab title="模拟量">
-              <b-table :items="line.simulate" :fields="fields">
-                <template v-slot:cell(value)="row">
-                  <h5>
-                    <b-badge>{{row.value}}{{row.item.unit}}</b-badge>
-                  </h5>
-                </template>
-                <template v-slot:cell(oprate)="row">
-                  <b-button-group size="sm">
-                    <b-button
-                      variant="info"
-                      class="block px-1 py-0 pt-1"
-                      :to="{
-                        name: 'uart-line',
-                        query: { ...$route.query, name: row.item.name }
-                      }"
-                    >趋势</b-button>
-                    <b-button @click="AlarmArgument(row.item)" variant="info">Alarm</b-button>
-                  </b-button-group>
-                </template>
-              </b-table>
-            </b-tab>
-            <b-tab title="状态量" lazy>
-              <b-table :items="line.quantity" :fields="fields">
-                <template v-slot:cell(oprate)="row2">
-                  <b-button-group>
-                    <b-button @click="DevBind(row2.item)" size="sm">指令</b-button>
-                  </b-button-group>
-                </template>
-              </b-table>
-            </b-tab>
-          </b-tabs>
-        </b-overlay>
-      </b-col>
-    </b-row>
-    <oprate-modal :oprate="oprate" :oprateArg='oprateArg'></oprate-modal>
-  </my-page>-->
   <my-dev-page title="Air空调" :query="query" v-on:data="onData" v-on:constant="onConstant">
     <template>
-      <b-row class=" w-100">
+      <b-row class="w-100">
         <b-col cols="12">
           <div class="bg-dark p-3">
             <b-img-lazy src="~/assets/image/ac3.png" fluid />
@@ -114,7 +15,7 @@
               <div>
                 <span class="temperature d-block">
                   <i class="iconfont text-success temperatureColor">&#xe604;</i>
-                  {{ Stat.stat.HeatChannelTemperature.value }}&#8451;
+                  {{ Stat.stat.ColdChannelTemperature.value }}&#8451;
                 </span>
               </div>
               <div class="border rounded-lg ml-auto">
@@ -126,7 +27,7 @@
               <div>
                 <span class="temperature d-block">
                   <i class="iconfont text-primary humidityColor">&#xe604;</i>
-                  {{ Stat.stat.HeatChannelHumidity.value }}
+                  {{ Stat.stat.ColdChannelHumidity.value }}
                   %
                 </span>
               </div>
@@ -165,8 +66,8 @@ import {
 } from "../../server/bin/interface";
 import { BvTableFieldArray } from "bootstrap-vue";
 type airHM =
-  | "HeatChannelTemperature"
-  | "HeatChannelHumidity"
+  /*  | "HeatChannelTemperature"
+  | "HeatChannelHumidity" */
   | "ColdChannelTemperature"
   | "ColdChannelHumidity"
   | "RefrigerationTemperature"
@@ -226,57 +127,14 @@ export default Vue.extend({
     Stat() {
       // 默认参数
       const stat: airHMObj = {
-        HeatChannelTemperature: { property: "", name: "热通道温度", value: 0 },
-        HeatChannelHumidity: { property: "", name: "热通道湿度", value: 0 },
+        /* HeatChannelTemperature: { property: "", name: "热通道温度", value: 0 },
+        HeatChannelHumidity: { property: "", name: "热通道湿度", value: 0 }, */
         ColdChannelTemperature: { property: "", name: "冷通道温度", value: 0 },
         ColdChannelHumidity: { property: "", name: "冷通道温度", value: 0 },
         RefrigerationTemperature: { property: "", name: "设定温度", value: 0 },
         RefrigerationHumidity: { property: "", name: "设定湿度", value: 0 }
       };
-      const AirStat: airTypeObj = {
-        Speed: { property: "", name: "风速", value: 0 },
-        HeatModel: { property: "", name: "制热", value: 0 },
-        ColdModel: { property: "", name: "制冷", value: 0 },
-        Dehumidification: {
-          property: "",
-          name: "除湿",
-          value: 0
-        },
-        Humidification: {
-          property: "",
-          name: "加湿",
-          value: 0
-        }
-      };
-      // 空调数据和常量数据都pull之后生成数据
-      if (this.DevConstant?.Constant && this.airData?.result) {
-        // 状态常量
-        const Constant: DevConstant_Air = this.$data.DevConstant.Constant;
-        // 数据
-        const result: queryResultArgument[] = this.$data.airData.result;
-        //获取常量字段，用于刷选数据集
-        // console.log(this.$data.DevConstant);
-        const ConstantValues: Set<string> = new Set(Object.values(Constant));
-        // 过滤有常量的值
-        const resultFilter = result.filter(el => ConstantValues.has(el.name));
-        // 遍历result集，update默认结果
-        resultFilter.forEach(el => {
-          // 遍历状态常量,数据集的值等于状态常量值，赋值状态常量
-          // 可能会有多个数据常量使用同一数据集，所有每个遍历
-          for (let i in Constant) {
-            if (el.name === (Constant as any)[i]) {
-              if (this.statSet.has(i)) {
-                (AirStat as any)[i].property = el.name;
-                (AirStat as any)[i].value = parseInt(el.value);
-              } else {
-                (stat as any)[i].property = el.name;
-                (stat as any)[i].value = parseInt(el.value);
-              }
-            }
-          }
-        });
-      }
-      //
+
       // 动态素材
       const {
         speedRun,
@@ -290,16 +148,68 @@ export default Vue.extend({
         addHumidityRun,
         addHumidityStop
       } = this.$data;
-      // 赋值状态
-      AirStat.Speed.value = AirStat.Speed.value ? speedRun : speedStop;
-      AirStat.HeatModel.value = AirStat.HeatModel.value ? hotRun : hotStop;
-      AirStat.ColdModel.value = AirStat.ColdModel.value ? coolRun : coolStop;
-      AirStat.Dehumidification.value = AirStat.Dehumidification.value
-        ? humidityRun
-        : humidityStop;
-      AirStat.Humidification.value = AirStat.Humidification.value
-        ? addHumidityRun
-        : addHumidityStop;
+      const AirStat: airTypeObj = {
+        Speed: { property: "", name: "风速", value: speedStop },
+        HeatModel: { property: "", name: "制热", value: hotStop },
+        ColdModel: { property: "", name: "制冷", value: coolStop },
+        Dehumidification: {
+          property: "",
+          name: "除湿",
+          value: humidityStop
+        },
+        Humidification: {
+          property: "",
+          name: "加湿",
+          value: addHumidityStop
+        }
+      };
+      // 空调数据和常量数据都pull之后生成数据
+      if (this.DevConstant?.Constant && this.airData?.result) {
+        // 状态常量
+        const Constant: DevConstant_Air = this.$data.DevConstant.Constant;
+        // 设置数值量
+        const statKeys = [
+          "ColdChannelTemperature",
+          "ColdChannelHumidity",
+          "RefrigerationTemperature",
+          "RefrigerationHumidity"
+        ];
+        const parse = this.airData.parse;
+        Object.entries(Constant).forEach(([key, val]) => {
+          if (val && statKeys.includes(key)) {
+            const parse1: queryResultArgument = (parse as any)[val] as any;
+            //(stat as any)[key].property = parse1.name;
+            (stat as any)[key].value = parseInt(parse1.value);
+          }
+        });
+
+        // 设置风速
+        const speedKey = Constant.Speed;
+        if (parse[speedKey]) {
+          AirStat.Speed.property = parse[speedKey].name;
+          AirStat.Speed.value = parseInt(parse[speedKey].value)
+            ? speedRun
+            : speedStop;
+        }
+        // 设置工作状态
+        if (parse["机组工作状态"]) {
+          const devRunStat: queryResultArgument = (this
+            .$store as any).getters.getUnit(parse["机组工作状态"]);
+          //
+          AirStat.HeatModel.value = devRunStat.value.includes("热")
+            ? hotRun
+            : hotStop;
+          AirStat.ColdModel.value = devRunStat.value.includes("冷")
+            ? coolRun
+            : coolStop;
+          AirStat.Dehumidification.value = devRunStat.value.includes("除湿")
+            ? humidityRun
+            : humidityStop;
+          AirStat.Humidification.value = devRunStat.value.includes("加湿")
+            ? addHumidityRun
+            : addHumidityStop;
+        }
+      }
       return { stat, AirStat };
     }
   }

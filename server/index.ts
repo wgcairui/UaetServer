@@ -9,7 +9,6 @@ import cors from "@koa/cors";
 // nuxt
 const { Nuxt, Builder } = require("nuxt");
 // socket
-// import Socket from "./socket/socket.node";
 import NodeIO from "./socket/uart";
 import WebIO from "./socket/webClient"
 // Apollo
@@ -23,8 +22,6 @@ import config from "../nuxt.config";
 
 const app = new Koa();
 // attach
-// const ioNode = new Socket({ namespace: "Node" });
-// ioNode.attach(app);
 Event.attach(app);
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" });

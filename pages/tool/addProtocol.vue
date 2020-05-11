@@ -268,6 +268,7 @@ export default vue.extend({
           apolloProtocol: Protocol(Protocol: $Protocol) {
             Type
             Protocol
+            ProtocolType
             instruct {
               name
               resultType

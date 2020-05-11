@@ -1,4 +1,6 @@
 import core from "@alicloud/pop-core"
+import { LogSmsSend } from "../mongoose/Log";
+import { logSmsSend, smsUartAlarm } from "./interface";
 const key = require("../key/aliSms.json")
 
 interface SmsResult {
@@ -24,24 +26,16 @@ const requestOption = {
     method: 'POST'
 };
 
-// 单条发送短信
-type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警'
-interface UartAlarm {
-    tel: string
-    name: string
-    devname: string
-    air?: string
-    event?: string
-    type: UartAlarmType
-}
-export const SendUartAlarm = async (query: UartAlarm) => {
+
+
+export const SendUartAlarm = async (query: smsUartAlarm) => {
     const smsCode = {
         透传设备下线提醒: "SMS_189710812",
         透传设备上线提醒: "SMS_189710830",
         透传设备告警: 'SMS_189710878'
     }
     // 时间参数,长度限制20字节
-    let time = new Date()
+    const time = new Date()
     const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
     // 构建请求对象
     const queryObject = query.type === "透传设备告警"
@@ -55,18 +49,23 @@ export const SendUartAlarm = async (query: UartAlarm) => {
         "TemplateCode": smsCode[query.type],
         TemplateParam
     }
-    console.log(params);
-    
-    const result: SmsResult = await client.request('SendSms', params, requestOption).then(el => {
-        return el as any
-    }).catch(e => {
-        return e
-    })
-    console.log(result);
-    if (result.Code === "OK") {
+    // console.log(params);
+    return await client.request('SendSms', params, requestOption).then(el => {
+        const data: logSmsSend = {
+            query,
+            sendParams: params,
+            Success: el as any
+        }
+        new LogSmsSend(data).save()
         return true
-    } else {
-        console.log(result);
+    }).catch(e => {
+        const data: logSmsSend = {
+            query,
+            sendParams: params,
+            Success: e as any
+        }
+        new LogSmsSend(data).save()
         return false
-    } 
+    })
+
 }

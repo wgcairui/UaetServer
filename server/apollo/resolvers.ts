@@ -10,13 +10,14 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
+import { LogUserLogins } from "../mongoose/Log";
 
 const resolvers: IResolvers = {
     Query: {
@@ -326,10 +327,19 @@ const resolvers: IResolvers = {
         async addUser(root, { arg }) {
             const userStat = await Users.findOne({ user: arg.user });
             if (userStat) return { ok: 0, msg: "账号有重复,请重新编写账号" };
-            const user = Object.assign(arg, { passwd: await BcryptDo(arg.passwd) });
+            const user = Object.assign(arg, { passwd: await BcryptDo(arg.passwd) }) as UserInfo
             const User = new Users(user);
             return await User.save()
                 .then(() => {
+                    // 生成用户新的自定义配置
+                    const setup:Partial<userSetup> = {
+                        user:user.user,
+                        tels:user.tel?[String(user.tel)]:[],
+                        mails:user.mail?[user.mail]:[]
+                    }
+                    new UserAlarmSetup(setup).save()
+                    // 添加日志记录
+                    new LogUserLogins({user:user.user,type:'用户注册'} as logUserRequst).save()
                     return { ok: 1, msg: "账号注册成功" };
                 })
                 .catch((e) => console.log(e));

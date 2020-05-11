@@ -2,6 +2,7 @@ import { GetterTree, ActionTree, MutationTree } from 'vuex'
 import { Context } from "@nuxt/types"
 import { WebInfo, getInstance } from "./DB"
 import { queryResultArgument } from '../server/bin/interface'
+import { BvToast } from 'bootstrap-vue'
 
 // 获取state返回值类型
 export type RootState = ReturnType<typeof state>
@@ -21,32 +22,24 @@ export const state = () => ({
 export const getters: GetterTree<RootState, RootState> = {
   // 
   getUnit: state => (query: queryResultArgument) => {
+
     const value: queryResultArgument = Object.assign({ issimulate: false }, query)
-    // 检查unit是否含有“{”
-    if (!value.unit?.includes("{")) {
-      value.issimulate = true
-      return value
-    } else {
+    // 检查unit是否含有“{.*}”
+    if (!value.unit || !/^{.*}$/.test(value.unit)) value.issimulate = true
+    else {
       // 检查单位-》结果缓存,如果没有则新建缓存
       if (!state.unitCache.has(value.unit)) {
-        // Map缓存单位字符串-》单位json
-        const args: Map<string, string> = new Map()
-        // "{0:关闭,1:开启}"清除字符串'{,},'space,以','分割
-        const unitArray = value.unit.replace(/(\{|\}| )/g, "").split(",")
-        // 缓存到arg Map
-        unitArray.forEach(el => {
-          const [key, value] = el.split(":")
-          args.set(key, value)
-        })
-        //
-        state.unitCache.set(value.unit, args)
+        //const args: Map<string, string> = new Map()
+        // "{0:关闭,1:开启}"清除字符串'{|},'space,以','分割
+        const arr = value.unit.replace(/(\{|\}| )/g, "").split(",").map(el => el.split(":")) as Iterable<readonly [string, string]>
+        state.unitCache.set(value.unit, new Map(arr))
       }
       // 读取缓存
-      const unitCache = <string>state.unitCache.get(value.unit)?.get(value.value)
+      const unitCache = <string>state.unitCache.get(value.unit)?.get(String(value.value))
       // 没有相应缓存则返回原始值val:0,unit:{1:open,2:close}
-      value.value = unitCache || value.value + value.unit
-      return value
+      value.value = unitCache
     }
+    return value
   }
 }
 /* 
@@ -56,7 +49,7 @@ export const mutations: MutationTree<RootState> = {
   //CHANGE_NAME: (state, newName: string) => (state.temp = newName),
   // socket vuex 绑定事件
   addInfo(state, payload: WebInfo) {
-    const info:WebInfo = {
+    const info: WebInfo = {
       time: new Date().toLocaleString(),
       msg: payload.msg,
       type: payload.type,
@@ -65,13 +58,13 @@ export const mutations: MutationTree<RootState> = {
     const deepInfo = JSON.parse(JSON.stringify(info))
     //getInstance().insert<WebInfo>({ tableName: 'Infos', data: deepInfo })
     //console.log(deepInfo);
-    
+
     state.Info = info as any
-    (this as any)._vm.$bvToast.toast(payload.msg, { title: payload.type })
+    ((this as any)._vm.$bvToast as BvToast).toast(payload.msg, { title: payload.type, autoHideDelay:1500})
     state.Infos.push(state.Info)
     // 超出条例清空数据
-    if(state.Infos.length > 500) state.Infos = []
-    }
+    if (state.Infos.length > 500) state.Infos = []
+  }
 
 }
 /* 

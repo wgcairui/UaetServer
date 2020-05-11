@@ -199,6 +199,7 @@ export class NodeSocketIO {
         const query: queryObject = {
             mac: Query.TerminalMac,
             type: Protocol.Type,
+            mountDev:Query.mountDev,
             protocol: Query.protocol,
             pid: Query.pid,
             timeStamp,

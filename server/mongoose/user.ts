@@ -17,7 +17,7 @@ const Schema_Users = new Schema({
   mail: String,
   company: String,
   tel: Number,
-  creatTime: { type: Date, default: new Date().toLocaleString() },
+  creatTime: { type: Date, default: new Date() },
   modifyTime: { type: Date, default: null },
   address: String,
   status: { type: Boolean, default: true },

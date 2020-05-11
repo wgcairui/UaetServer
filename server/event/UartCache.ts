@@ -146,6 +146,7 @@ export default class Cache {
     const res = await UserAlarmSetup.find().lean<userSetup>()
     console.log(`加载用户个性化配置......`);
     this.CacheUserSetup = new Map(res.map(el=>{
+      // 如果用户没有自定义告警阀值,生成空map
       if(el.ProtocolSetup){
         el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els=>[els.Protocol,els]))
         el.ThresholdMap = new Map(el.ProtocolSetup.map(els=>{
@@ -154,6 +155,7 @@ export default class Cache {
         }))
       }else{
         el.ProtocolSetupMap = new Map()
+        el.ThresholdMap = new Map()
       }      
       return [el.user,el]
     }))
