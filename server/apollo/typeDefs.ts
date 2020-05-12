@@ -180,6 +180,17 @@ const typeDefs: DocumentNode = gql`
     mails:[String]
     ProtocolSetup:[DevConstant]
   }
+  # 日志
+  type LogTerminal{
+    NodeIP: String
+    NodeName: String
+    TerminalMac: String
+    type: String
+    msg: String
+    query: JSON
+    result: JSON
+    createdAt:Date
+  }
 
   #Query
   type Query {
@@ -224,6 +235,8 @@ const typeDefs: DocumentNode = gql`
     getDevState(mac:String,node:String):Boolean
     # 获取用户自定义配置
     getUserSetup:UserSetup
+    # 获取用户设备日志
+    getLogTerminal:[LogTerminal]
   }
 
   #mutation

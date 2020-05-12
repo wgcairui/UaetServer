@@ -6,7 +6,7 @@
         <b-tabs justified>
           <!-- ShowTag -->
           <b-tab title="显示参数">
-            <b-table :items="items" :fields="fieldsSHowTag">
+            <b-table :items="items" :fields="fieldsSHowTag" selectable select-mode="multi">
               <template v-slot:cell(show)="row">
                 <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
               </template>

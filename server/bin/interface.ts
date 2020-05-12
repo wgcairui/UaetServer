@@ -342,3 +342,29 @@ export interface logUserRequst {
   type: string,
   argument?: any
 }
+type logLogins = "用户登陆" | '用户登出' | '用户注册' | "用户重置密码" | "用户修改信息"
+// 用户登陆登出请求
+export interface logUserLogins {
+  user: string,
+  type: logLogins,
+  msg: string
+}
+// 节点连接断开等事件
+type logNodesType = "连接" | "断开" | "非法连接请求" | "TcpServer启动失败" | "告警"
+export interface logNodes {
+  ID: string
+  IP: string
+  Name: string
+  type: logNodesType
+}
+// 终端连接
+type logTerminalsType = "连接" | "断开" | "查询超时" | "查询恢复" | "操作设备" | "操作设备结果"
+export interface logTerminals {
+  NodeIP: string
+  NodeName: string
+  TerminalMac: string
+  type: logTerminalsType
+  msg: string
+  query:any
+  result:any
+}

@@ -1,9 +1,10 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { UserInfo, uartAlarmObject } from "../bin/interface";
+import { UserInfo, uartAlarmObject, logUserLogins } from "../bin/interface";
 import { JwtVerify } from "../bin/Secret";
 import { parseToken } from "../bin/util";
+import { LogUserLogins } from "../mongoose/Log";
 
 interface socketArgument {
     IP: string
@@ -27,13 +28,13 @@ export default class webClientSocketIO {
     start() {
         // middleware
         // 每个socket连接会有query.token,检查token是否合法
-        this.io.use((socket, next) => {            
+        this.io.use((socket, next) => {
             const token = parseToken(socket.handshake.query.token)
             JwtVerify(token)
                 .then(() => next())
                 .catch((err) => {
                     socket.disconnect()
-                    next(new Error('socket no find token'))                    
+                    next(new Error('socket no find token'))
                 })
         });
         // 监听所有连接事件
@@ -48,10 +49,10 @@ export default class webClientSocketIO {
             socket.on("disconnect", () => this._disconnect(Node))
         })
         // 监听Event事件
-        Event.On("UartTerminalDataTransfinite",(data)=>{
+        Event.On("UartTerminalDataTransfinite", (data) => {
             const Obj = data[0] as uartAlarmObject
             const user = Event.Cache.CacheBindUart.get(Obj.mac) as string
-            this.io.to(user).emit("UartTerminalDataTransfinite",Obj.msg)
+            this.io.to(user).emit("UartTerminalDataTransfinite", Obj.msg)
         })
     }
     // 缓存socket
@@ -73,15 +74,17 @@ export default class webClientSocketIO {
             this.CacheUserSocketids.set(Node.User, new Set([Node.ID]))
             console.log(`user:${Node.User}@单点登录,登录ID：%${Node.ID}`);
         }
+        // 记录日志
+        new LogUserLogins({ user: Node.User, type: '用户登陆' } as logUserLogins).save()
         // 发送效验成功事件        
         Node.socket.to(Node.User).emit("valdationSuccess", { user: Node.User })
     }
     // 断开socket，清除缓存
     private _disconnect(Node: socketArgument) {
-        Node.socket.disconnect()
-        this.CacheSocketidUser.delete(Node.ID)
         // 离开房间user
         Node.socket.leave(Node.User)
+        Node.socket.disconnect()
+        this.CacheSocketidUser.delete(Node.ID)
         // 获取用户数组列表
         const userSocketids = <Set<string>>this.CacheUserSocketids.get(Node.User)
         const size = userSocketids.size
@@ -94,5 +97,7 @@ export default class webClientSocketIO {
             Node.socket.to(Node.User).emit("logout", { ID: Node.ID, IP: Node.IP })
             console.log(`用户@${Node.User} 多端登录已1离线，在线数:${size - 1}`);
         }
+        // 记录日志
+        new LogUserLogins({ user: Node.User, type: '用户登出' } as logUserLogins).save()
     }
 }

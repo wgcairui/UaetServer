@@ -1,10 +1,11 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, instructQuery, ApolloMongoResult } from "../bin/interface";
+import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, instructQuery, ApolloMongoResult, logNodes, logTerminals } from "../bin/interface";
 
 import tool from "../bin/tool";
 import { DefaultContext } from "koa";
+import { LogNodes, LogTerminals } from "../mongoose/Log";
 
 export interface socketArgument {
     ID: string
@@ -66,22 +67,32 @@ export class NodeSocketIO {
     private _OnEvent() {
         console.log(`节点Socket服务器已运行,正在监听节点事件`);
         this.io.on("connect", socket => {
+            const ID = socket.id
             const IP = socket.conn.remoteAddress
             // 如果节点未注册
             if (!this.Event.Cache.CacheNode.has(IP)) {
                 console.log(`有未登记节点连接=>${IP}，断开连接`);
                 socket.disconnect()
+                // 添加日志
+                new LogNodes({ ID, IP, type: "非法连接请求" } as logNodes).save()
+                //
+                return
             }
-            const ID = socket.id
+            //
             const Name = this.Event.Cache.CacheNode.get(IP)?.Name as string
             const Node = { ID, IP, Name, socket } as socketArgument
             console.log(`new socket connect<id: ${Node.ID},IP: ${Node.IP},Name: ${Name}>`);
+            // 添加日志
+            new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "连接" })).save()
             // 注册socket事件
             Node.socket
                 // 节点离线
                 .on("disconnect", () => {
                     console.log(`${new Date().toLocaleTimeString()}## 节点：${Node.Name}断开连接，清除定时操作`);
                     this.Cache.delete(Node.Name)
+                    this.Event.Cache.CacheSocket.delete(Node.IP)
+                    // 添加日志
+                    new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "断开" })).save()
                 })
                 // Node节点注册事件
                 .on(EVENT_SOCKET.register, (data) => {
@@ -97,25 +108,33 @@ export class NodeSocketIO {
                 .on(EVENT_SOCKET.ready, () => {
                     this._InitCache(Node)
                 })
-                // 节点终端设备上线
-                .on(EVENT_TCP.terminalOn, data => {
-                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(data)
-                })
-                // 节点终端设备掉线
-                .on(EVENT_TCP.terminalOff, data => {
-                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.delete(data)
-                })
                 // 节点启动失败
                 .on(EVENT_SOCKET.startError, (data) => {
                     console.log(data);
+                    // 添加日志
+                    new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "TcpServer启动失败" })).save()
                 })
                 // 触发报警事件
                 .on(EVENT_SOCKET.alarm, (data) => {
                     console.log(data);
+                    // 添加日志
+                    new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "告警" })).save()
+                })
+                // 节点终端设备上线
+                .on(EVENT_TCP.terminalOn, data => {
+                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(data)
+                    // 添加日志
+                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
+                })
+                // 节点终端设备掉线
+                .on(EVENT_TCP.terminalOff, data => {
+                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.delete(data)
+                    // 添加日志
+                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "断开" } as logTerminals).save()
                 })
                 // 设备挂载节点查询超时
                 .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult) => {
-                    const intruct = this.compoundTntruct(Query)
+                    const intruct = Query.mac + Query.pid
                     const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     // 如果节点已存在超时指令记录则添加,
                     if (Timeout.has(Node.IP)) {
@@ -123,12 +142,16 @@ export class NodeSocketIO {
                     } else {
                         Timeout.set(Node.IP, new Set([intruct]))
                     }
+                    // 添加日志
+                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()
                 })
                 // 设备挂载节点查询超时恢复,
                 .on(EVENT_TCP.terminalMountDevTimeOutRestore, (Query: queryResult) => {
-                    const intruct = this.compoundTntruct(Query)
+                    const intruct = Query.mac + Query.pid
                     const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     Timeout.get(Node.IP)?.delete(intruct)
+                    // 添加日志
+                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询恢复", query: Query } as logTerminals).save()
                 })
 
         })
@@ -199,40 +222,36 @@ export class NodeSocketIO {
         const query: queryObject = {
             mac: Query.TerminalMac,
             type: Protocol.Type,
-            mountDev:Query.mountDev,
+            mountDev: Query.mountDev,
             protocol: Query.protocol,
             pid: Query.pid,
             timeStamp,
             content
         }
-        {
-            // 获取节点Socket实例
-            const NodeSocket = this.Event.Cache.CacheSocket.get(Query.NodeIP) as IO.Socket
-            NodeSocket.emit(EVENT_SOCKET.query, query);
-        }
-    }
-    // 
-    private compoundTntruct(query: queryResult | queryObject) {
-        console.log({ query });
-        return query.mac + query.pid
+
+        // 获取节点Socket实例
+        const NodeSocket = this.Event.Cache.CacheSocket.get(Query.NodeIP) as IO.Socket
+        NodeSocket.emit(EVENT_SOCKET.query, query);
+
     }
     // 发送程序变更指令，公开
-    public InstructQuery(Query: instructQuery) {
-        return new Promise<Partial<ApolloMongoResult>>((resolve) => {
-            // 在在线设备中查找
-            let NodeIP = ''
-            for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
-                if (DevSet.has(Query.DevMac)) {
-                    NodeIP = IP
-                    break
-                }
+    public async InstructQuery(Query: instructQuery) {
+        // 在在线设备中查找
+        let NodeIP = ''
+        for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
+            if (DevSet.has(Query.DevMac)) {
+                NodeIP = IP
+                break
             }
+        }
+        const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
             if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
             // 构建指令
             Query.content = Query.type === 485 ? tool.Crc16modbus(Query.pid, Query.content) : Query.content
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
+            if(!Socket)  resolve({ ok: 0, msg: '设备不在线' })
             // 创建一次性监听，监听来自Node节点指令查询操作结果
             Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
@@ -240,6 +259,9 @@ export class NodeSocketIO {
                 resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
             }, 20000);
         })
+        // 添加日志
+        new LogTerminals({ NodeIP: NodeIP, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result } as logTerminals).save()
+        return result
     }
 }
 

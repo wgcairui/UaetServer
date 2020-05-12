@@ -10,14 +10,14 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
-import { LogUserLogins } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals } from "../mongoose/Log";
 
 const resolvers: IResolvers = {
     Query: {
@@ -170,8 +170,19 @@ const resolvers: IResolvers = {
             return macMap?.has(mac)
         },
         // 获取用户自定义配置
-        async getUserSetup(root,arg,ctx:ApolloCtx){
-            return await UserAlarmSetup.findOne({user:ctx.user})
+        async getUserSetup(root, arg, ctx: ApolloCtx) {
+            return await UserAlarmSetup.findOne({ user: ctx.user })
+        },
+        // 获取用户设备日志
+        async getLogTerminal(root, arg, ctx: ApolloCtx) {
+            //获取用户绑定设备列表
+            const BindDevs: string[] = []
+            ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
+                if (val === ctx.user) BindDevs.push(key)
+            })
+            // 
+            const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })
+            return result
         }
     },
 
@@ -332,14 +343,14 @@ const resolvers: IResolvers = {
             return await User.save()
                 .then(() => {
                     // 生成用户新的自定义配置
-                    const setup:Partial<userSetup> = {
-                        user:user.user,
-                        tels:user.tel?[String(user.tel)]:[],
-                        mails:user.mail?[user.mail]:[]
+                    const setup: Partial<userSetup> = {
+                        user: user.user,
+                        tels: user.tel ? [String(user.tel)] : [],
+                        mails: user.mail ? [user.mail] : []
                     }
                     new UserAlarmSetup(setup).save()
                     // 添加日志记录
-                    new LogUserLogins({user:user.user,type:'用户注册'} as logUserRequst).save()
+                    new LogUserLogins({ user: user.user, type: '用户注册' } as logUserLogins).save()
                     return { ok: 1, msg: "账号注册成功" };
                 })
                 .catch((e) => console.log(e));
@@ -445,7 +456,7 @@ const resolvers: IResolvers = {
                 content: item.value
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
-            console.log({ Query, query, result });
+            // console.log({ Query, query, result });
             return result
         },
         // 设置用户自定义设置(联系方式)
