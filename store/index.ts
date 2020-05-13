@@ -63,7 +63,7 @@ export const mutations: MutationTree<RootState> = {
     ((this as any)._vm.$bvToast as BvToast).toast(payload.msg, { title: payload.type, autoHideDelay:1500})
     state.Infos.push(state.Info)
     // 超出条例清空数据
-    if (state.Infos.length > 500) state.Infos = []
+    if (state.Infos.length > 50) state.Infos = []
   }
 
 }

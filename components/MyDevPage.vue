@@ -1,7 +1,7 @@
 <template>
   <my-page :title="title">
     <template v-slot:nav>
-      <my-nav/>
+      <my-nav />
     </template>
     <!-- body-head -->
     <b-row class="m-0">
@@ -18,7 +18,7 @@
           <b-button variant="info" :to="{name:'uart-setup',query:query}">配置</b-button>
         </b-button-group>
       </separated>
-      <dev-table :query="query" :tableData="Data"></dev-table>
+      <dev-table :query="query" :tableData="items"></dev-table>
     </b-row>
     <!-- 操作指令 -->
     <b-modal
@@ -61,10 +61,24 @@ export default Vue.extend({
       DevConstant: {} as Pick<
         ProtocolConstantThreshold,
         "ProtocolType" | "Constant"
-      >
+      >,
+      ShowTags: [] as string[]
     };
   },
+  //
+  computed: {
+    // 从设备数据中刷选出用户指定的参数值
+    items() {
+      const Data = this.Data as queryResultSave;
+      const ShowTags = this.ShowTags as string[];
+      if (ShowTags && ShowTags.length > 0 && Data?.result) {
+        Data.result = Data.result.filter(el => ShowTags.includes(el.name));
+      }
+      return Data
+    }
+  },
   apollo: {
+    // 设备数据
     Data: {
       query: gql`
         query getUartTerminalData($DevMac: String, $pid: Int) {
@@ -94,6 +108,22 @@ export default Vue.extend({
         this.$emit("data", data.data.Data);
       }
     },
+    //
+    // 用户配置
+    ShowTags: {
+      query: gql`
+        query getUserDevConstant($Protocol: String) {
+          ShowTags: getUserDevConstant(Protocol: $Protocol) {
+            ShowTag
+          }
+        }
+      `,
+      variables() {
+        return { Protocol: this.query.protocol };
+      },
+      update: data => data.ShowTags.ShowTag
+    },
+    // 系统配置
     DevConstant: {
       query: gql`
         query getDevConstant($Protocol: String) {

@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult } from "../bin/interface";
 
 import { BcryptDo } from "../bin/bcrypt";
 
@@ -172,6 +172,14 @@ const resolvers: IResolvers = {
         // 获取用户自定义配置
         async getUserSetup(root, arg, ctx: ApolloCtx) {
             return await UserAlarmSetup.findOne({ user: ctx.user })
+        },
+        // 获取协议常量
+        async getUserDevConstant(root, { Protocol }, ctx: ApolloCtx) {
+            const userSetup = ctx.$Event.Cache.CacheUserSetup.get(ctx.user as string) as userSetup
+            const res = userSetup.ProtocolSetupMap.get(Protocol)
+            // const res = await UserAlarmSetup.findOne({ user: ctx.user,"ProtocolSetup.Protocol":Protocol },{"ProtocolSetup.Protocol":1,user:1})
+            // console.log({ userSetup, res });
+            return res
         },
         // 获取用户设备日志
         async getLogTerminal(root, arg, ctx: ApolloCtx) {
@@ -488,25 +496,31 @@ const resolvers: IResolvers = {
             let Up
             switch (type) {
                 case "Constant":
-                    Up = { Constant: arg }
+                    Up = { "ProtocolSetup.$.Constant": arg }
                     break
                 case "Threshold":
-                    Up = { Threshold: arg }
+                    Up = { "ProtocolSetup.$.Threshold": arg }
                     break
                 case "ShowTag":
-                    Up = { ShowTag: _.compact(arg as string[]) }
+                    Up = { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) }
                     break
                 case "Oprate":
                     Up = { OprateInstruct: arg }
                     break
             }
-            /* const result = await DevConstant.updateOne(
-                { Protocol, ProtocolType },
+            const isNull = await UserAlarmSetup.findOne({ user: ctx.user, "ProtocolSetup.Protocol": Protocol }).exec()
+            if (!isNull) {
+                await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
+            }
+            //console.log({isNull,user: ctx.user});
+
+            const result = await UserAlarmSetup.updateOne(
+                { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
                 { $set: Up },
                 { upsert: true }
-            ) */
-            //ctx.$Event.Cache.RefreshCacheConstant()
-            //return result;
+            )
+            ctx.$Event.Cache.RefreshCacheUserSetup()
+            return result;
         },
     },
 

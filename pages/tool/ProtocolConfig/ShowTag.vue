@@ -84,9 +84,14 @@ export default Vue.extend({
       if (ShowTag.includes(item.name)) {
         const index = ShowTag.indexOf(item.name);
         ShowTag.splice(index, 1, "");
-      }else{
-        ShowTag.push(item.name)
+      } else {
+        ShowTag.push(item.name);
       }
+      // 刷选出协议已经不存在的参数
+      const protocolArgstr = this.items.map(el => el.name);
+      const arg = Array.from(
+        new Set(ShowTag.filter(el => el && protocolArgstr.includes(el)))
+      );
       const { ProtocolType, Protocol } = this.$data as any;
       this.$apollo
         .mutate({
@@ -110,7 +115,7 @@ export default Vue.extend({
             }
           `,
           variables: {
-            arg: Array.from(new Set(ShowTag.filter(el=>el))),
+            arg,
             Protocol,
             type: "ShowTag",
             ProtocolType

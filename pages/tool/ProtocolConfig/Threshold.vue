@@ -5,15 +5,15 @@
         <separated title="添加参数阀值"></separated>
         <b-card>
           <b-form>
-            <b-form-group v-bind="forGroup" label="属性:">
+            <my-form label="属性:">
               <b-form-select v-model="Threshold.name" :options="items"></b-form-select>
-            </b-form-group>
-            <b-form-group v-bind="forGroup" label="最小值:">
+            </my-form>
+            <my-form label="最小值:">
               <b-form-input type="number" v-model="Threshold.min"></b-form-input>
-            </b-form-group>
-            <b-form-group v-bind="forGroup" label="最大值:">
+            </my-form>
+            <my-form label="最大值:">
               <b-form-input type="number" v-model="Threshold.max"></b-form-input>
-            </b-form-group>
+            </my-form>
             <b-button
               size="sm"
               block
@@ -61,7 +61,6 @@ export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;
     return {
-      forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       ProtocolType,
       Protocol,
       ProtocolSingle: null,
