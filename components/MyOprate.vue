@@ -12,27 +12,39 @@
         >{{val.name}}</b-button>
       </b-col>-->
       <b-col>
-        <b-list-group>
-          <b-list-group-item
-            v-for="val in OprateInstruct"
-            :key="val.name"
-            v-b-tooltip.hover
-            :title="val.readme"
-            @click="SendOprateInstruct(val)"
-            button
-          >{{val.name}}</b-list-group-item>
-        </b-list-group>
+        <b-card sub-title="快捷指令">
+          <b-list-group>
+            <b-list-group-item
+              v-for="val in OprateInstruct"
+              :key="val.name"
+              v-b-tooltip.hover
+              :title="val.readme"
+              @click="SendOprateInstruct(val)"
+              button
+            >
+              <b>{{val.name}}</b>
+            </b-list-group-item>
+          </b-list-group>
+        </b-card>
       </b-col>
     </b-row>
     <b-row no-gutters>
       <b-col>
-        <b-card sub-title="自定义指令" class="my-2">
-          <b-form>
-            <my-form label="指令内容:">
-              <b-form-input v-model="tempVal" placeholder="232协议直接输入字符串,485指令不要添加地址码和校验码"></b-form-input>
-            </my-form>
-            <b-button block @click="SendOprateInstruct({value:tempVal})" size="sm" variant="info">发送</b-button>
-          </b-form>
+        <b-card class="my-2">
+          <b-card-sub-title v-b-toggle.collapse-1>自定义指令</b-card-sub-title>
+          <b-collapse id="collapse-1" class="my-3">
+            <b-form>
+              <my-form label="指令内容:">
+                <b-form-input v-model="tempVal" placeholder="232协议直接输入字符串,485指令不要添加地址码和校验码"></b-form-input>
+              </my-form>
+              <b-button
+                block
+                @click="SendOprateInstruct({value:tempVal})"
+                size="sm"
+                variant="info"
+              >发送</b-button>
+            </b-form>
+          </b-collapse>
         </b-card>
       </b-col>
     </b-row>
@@ -52,6 +64,7 @@
         </b-overlay>
       </b-col>
     </b-row>
+    <sms-validation id="sms1"></sms-validation>
   </div>
 </template>
 <script lang="ts">
@@ -95,11 +108,10 @@ export default Vue.extend({
   },
   methods: {
     async SendOprateInstruct(item: OprateInstruct) {
-    if(item.value.includes("%")){
-        const value =  prompt(`请输入指令<${item.name}> 的值:`)
+      if (item.value.includes("%")) {
+        const value = prompt(`请输入指令<${item.name}> 的值:`);
         console.log(value);
-        
-    }
+      }
       const query = this.$data.querys;
       this.$data.loading = true;
       const result = await this.$apollo.mutate({
@@ -120,6 +132,10 @@ export default Vue.extend({
       const R = result.data.SendProcotolInstructSet as ApolloMongoResult;
       this.$data.ok = R.ok;
       this.$data.msg = R.msg;
+      if(R.ok === 4){
+        // 权限不够,要求用户短信验证权限
+        this.$bvModal.show("sms1")
+      }
     }
   }
 });

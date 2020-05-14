@@ -29,6 +29,8 @@
       button-size="sm"
       ok-title="关闭"
       ok-variant="default"
+      header-bg-variant="dark"
+      header-text-variant="light"
     >
       <my-oprate :query="query"></my-oprate>
     </b-modal>

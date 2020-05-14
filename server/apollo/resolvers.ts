@@ -191,7 +191,18 @@ const resolvers: IResolvers = {
             // 
             const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })
             return result
-        }
+        },
+        // 获取用户tel
+        async getUserTel(root,arg,ctx:ApolloCtx){
+            const user = await Users.findOne({user:ctx.user}).lean<UserInfo>() as UserInfo
+            const tel = user.tel? String(user?.tel).split("").map((el,index)=>{
+                if(index > 2 && index < 8) el = "*"
+                return el
+            }).join(""):''
+            return tel
+        },
+       
+        
     },
 
     /* 
@@ -368,7 +379,7 @@ const resolvers: IResolvers = {
             switch (type) {
                 case "UT":
                     {
-                        const isBind = await UserBindDevice.findOne({ "UTS": id })
+                        const isBind = await UserBindDevice.findOne({ UTs: id }).exec()
                         if (isBind) {
                             return { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
                         } else
@@ -459,7 +470,7 @@ const resolvers: IResolvers = {
             return result;
         },
         // 发送设备协议指令
-        async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
+        /* async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
             // 获取条协议指令开始位置
@@ -483,9 +494,14 @@ const resolvers: IResolvers = {
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
             return result
-        },
+        }, */
         //  固定发送设备操作指令
         async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
+            // 验证客户是否校验过权限
+            const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
+            if(!juri || juri !== ctx.$token){
+                return {ok:4,msg:"权限校验失败,请校验身份"} as ApolloMongoResult
+            }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
             // 携带事件名称，触发指令查询
@@ -497,7 +513,6 @@ const resolvers: IResolvers = {
                 content: item.value
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
-            // console.log({ Query, query, result });
             return result
         },
         // 设置用户自定义设置(联系方式)
@@ -555,6 +570,11 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheUserSetup()
             return result;
         },
+         //
+         async sendValidationSms(root,arg,ctx:ApolloCtx){
+            const user = await Users.findOne({user:ctx.user}).lean<UserInfo>() as UserInfo
+            return {ok:1}
+        }
     },
 
 };

@@ -239,6 +239,8 @@ const typeDefs: DocumentNode = gql`
     getUserDevConstant(Protocol:String):DevConstant
     # 获取用户设备日志
     getLogTerminal:[LogTerminal]
+    # 获取用户tel
+    getUserTel:String
   }
 
   #mutation
@@ -284,6 +286,8 @@ const typeDefs: DocumentNode = gql`
     setUserSetupContact(tels:[String],mails:[String]):result
     # 设置用户自定义设置(协议配置)
     setUserSetupProtocol(Protocol: String, ProtocolType: String,type:String arg: JSON):result
+    #
+    sendValidationSms:result
   }
 
   # Subscription

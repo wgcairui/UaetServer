@@ -17,6 +17,7 @@ export interface ApolloMongoResult {
 export interface KoaCtx extends ParameterizedContext {
   $Event: Event
   $SocketUart: NodeSocketIO
+  
 }
 
 // apollo ctx
@@ -24,6 +25,7 @@ export interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
   $SocketUart: NodeSocketIO
+  $token:string
 }
 
 // 协议指令解析格式化

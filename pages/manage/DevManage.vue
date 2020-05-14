@@ -27,13 +27,13 @@
                 <template v-slot:cell(mountDevs)="row">
                   <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
                 </template>
-                <template v-slot:cell(oprate)>
+                <template v-slot:cell(oprate)="row">
                   <b-button
                     v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
                     size="sm"
                     disabled
                   >已绑定</b-button>
-                  <b-button v-else size="sm" @click="addUserTerminal('UT', DevMac)">绑定设备</b-button>
+                  <b-button v-else size="sm" @click="addUserTerminal('UT', row.item)">绑定设备</b-button>
                 </template>
               </b-table-lite>
             </b-collapse>
@@ -136,7 +136,7 @@ export default vue.extend({
     items() {
       const BindDevice = this.BindDevice;
       console.log(BindDevice);
-      
+
       const result = { UTs: [], ECs: [] };
       if (BindDevice.UTs.length > 0) {
         result.UTs = BindDevice.UTs;
@@ -230,7 +230,7 @@ export default vue.extend({
     }
   },
   methods: {
-    async addUserTerminal(type: string, id: string) {
+    async addUserTerminal(type: string, item: { DevMac: string }) {
       const result = await this.$apollo.mutate({
         mutation: gql`
           mutation addUserTerminal($type: String, $id: String) {
@@ -240,13 +240,13 @@ export default vue.extend({
             }
           }
         `,
-        variables: { type, id }
+        variables: { type, id: item.DevMac }
       });
       if (result.data.addUserTerminal.ok !== 1)
         this.$bvModal.msgBoxOk(result.data.addUserTerminal.msg);
       else {
         this.$data.DevMac = "";
-        this.$apollo.queries.BindDevice.refetch()
+        this.$apollo.queries.BindDevice.refetch();
       }
     },
     async delUserTerminal(type: string, item: { DevMac: string }) {
@@ -261,7 +261,7 @@ export default vue.extend({
         `,
         variables: { type, id: item.DevMac }
       });
-      this.$apollo.queries.BindDevice.refetch()
+      this.$apollo.queries.BindDevice.refetch();
     }
   }
 });

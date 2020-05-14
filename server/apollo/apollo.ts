@@ -26,6 +26,6 @@ export default new ApolloServer({
     if (!user || !user.user) throw new Error("you must be logged in");
     // 保存所有的操作日志
     new LogUserRequst({ user: user.user, userGroup: user.userGroup, type: apolloRequest.operationName, argument: apolloRequest.variables } as logUserRequst).save()
-    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart };
+    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart,$token:token};
   }
 });
