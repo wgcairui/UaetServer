@@ -220,7 +220,7 @@ export default Vue.extend({
           ProtocolType: ""
         }
       });
-      this.$apollo.queries.userSetup.refresh();
+      this.$apollo.queries.userSetup.refetch({ Protocol: this.$data.protocol })
     }
   }
 });

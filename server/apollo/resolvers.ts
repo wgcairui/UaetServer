@@ -367,17 +367,50 @@ const resolvers: IResolvers = {
         async addUserTerminal(root, { type, id }, ctx: { user: any }) {
             switch (type) {
                 case "UT":
-                    return await UserBindDevice.updateOne(
-                        { user: ctx.user },
-                        { $addToSet: { UTs: id } },
-                        { upsert: true }
-                    );
+                    {
+                        const isBind = await UserBindDevice.findOne({ "UTS": id })
+                        if (isBind) {
+                            return { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
+                        } else
+                            return await UserBindDevice.updateOne(
+                                { user: ctx.user },
+                                { $addToSet: { UTs: id } },
+                                { upsert: true }
+                            );
+                    }
                 case "EC":
-                    return await UserBindDevice.updateOne(
-                        { user: ctx.user },
-                        { $addToSet: { ECs: id } },
-                        { upsert: true }
-                    );
+                    {
+                        const isBind = await UserBindDevice.findOne({ "ECS": id })
+                        if (isBind) {
+                            return { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
+                        } else
+                            return await UserBindDevice.updateOne(
+                                { user: ctx.user },
+                                { $addToSet: { ECs: id } },
+                                { upsert: true }
+                            );
+                    }
+            }
+        },
+        // 添加用户绑定终端
+        async delUserTerminal(root, { type, id }, ctx: { user: any }) {
+            switch (type) {
+                case "UT":
+                    {
+                        return await UserBindDevice.updateOne(
+                            { user: ctx.user },
+                            { $pull: { UTs: id } },
+                            { upsert: true }
+                        );
+                    }
+                case "EC":
+                    {
+                        return await UserBindDevice.updateOne(
+                            { user: ctx.user },
+                            { $pull: { ECs: id } },
+                            { upsert: true }
+                        );
+                    }
             }
         },
         // 添加设备协议常量配置

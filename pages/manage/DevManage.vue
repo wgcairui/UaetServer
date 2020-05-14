@@ -4,63 +4,51 @@
     <b-container>
       <b-row class="border-bottom mb-5">
         <separated title="透传设备">
-          <b-button variant="success" size="sm" @click="uartAdd = !uartAdd">
-            {{ !uartAdd ? "add" : "hide" }}
-          </b-button>
+          <b-button
+            variant="success"
+            size="sm"
+            @click="uartAdd = !uartAdd"
+          >{{ !uartAdd ? "add" : "hide" }}</b-button>
         </separated>
         <b-collapse v-model="uartAdd" class="w-100">
           <b-card>
             <b-form>
-              <b-form-group label="设备Mac:" v-bind="label">
+              <my-form label="设备Mac:">
                 <b-input-group>
                   <b-form-input v-model="DevMac" trim />
                   <b-input-group-append>
                     <b-button>检索</b-button>
                   </b-input-group-append>
                 </b-input-group>
-              </b-form-group>
+              </my-form>
             </b-form>
             <b-collapse v-model="uartTable">
               <b-table-lite stacked :items="uart" :fields="uartField">
                 <template v-slot:cell(mountDevs)="row">
-                  <i v-if="row.value !== ''">
-                    {{ row.value.map(el => el.mountDev) }}
-                  </i>
+                  <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
                 </template>
-                <template v-slot:cell(oprate)="row">
+                <template v-slot:cell(oprate)>
                   <b-button
                     v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
                     size="sm"
                     disabled
-                  >
-                    已绑定
-                  </b-button>
-                  <b-button
-                    v-else
-                    size="sm"
-                    @click="addUserTerminal('UT', DevMac)"
-                  >
-                    绑定设备
-                  </b-button>
+                  >已绑定</b-button>
+                  <b-button v-else size="sm" @click="addUserTerminal('UT', DevMac)">绑定设备</b-button>
                 </template>
               </b-table-lite>
             </b-collapse>
           </b-card>
         </b-collapse>
-        <b-table-lite :items="BindDevice.UTs" :fields="uartField">
+        <b-table-lite :items="items.UTs" :fields="uartField">
           <template v-slot:cell(mountDevs)="row">
-            <i v-if="row.value !== ''">
-              {{ row.value.map(el => el.mountDev) }}
-            </i>
+            <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
           </template>
           <template v-slot:cell(oprate)="row">
-            <b-button size="sm" @click="addUserTerminal('UT', DevMac)">
-              删除
-            </b-button>
+            <b-button size="sm" @click="delUserTerminal('UT', row.item)">删除</b-button>
           </template>
         </b-table-lite>
       </b-row>
-      <b-row>
+      <!-- <b-row>
         <separated title="环控设备">
           <b-button variant="success" size="sm" @click="ecAdd = !ecAdd">
             {{ !ecAdd ? "add" : "hide" }}
@@ -100,14 +88,14 @@
             </b-collapse>
           </b-card>
         </b-collapse>
-        <b-table-lite :items="BindDevice.ECs" :fields="EcField">
+        <b-table-lite :items="items.ECs" :fields="EcField">
           <template v-slot:cell(oprate)="row">
             <b-button size="sm" @click="addUserTerminal('EC', DevMac)">
               删除
             </b-button>
           </template>
         </b-table-lite>
-      </b-row>
+      </b-row>-->
     </b-container>
   </div>
 </template>
@@ -117,11 +105,6 @@ import gql from "graphql-tag";
 export default vue.extend({
   data() {
     return {
-      label: {
-        labelCols: "12",
-        labelColsSm: "2",
-        labelAlignSm: "right"
-      },
       DevMac: "86626204542797",
       uartAdd: false,
       uart: [],
@@ -132,7 +115,7 @@ export default vue.extend({
         { key: "oprate", label: "操作" }
       ],
 
-      ecAdd: false,
+      /* ecAdd: false,
       ECid: "mac01010025455",
       ECterminal: [],
       EcField: [
@@ -140,7 +123,7 @@ export default vue.extend({
         { key: "name", label: "环控名称" },
         { key: "model", label: "型号" },
         { key: "oprate", label: "操作" }
-      ],
+      ], */
 
       //
       BindDevice: {
@@ -150,6 +133,19 @@ export default vue.extend({
     };
   },
   computed: {
+    items() {
+      const BindDevice = this.BindDevice;
+      console.log(BindDevice);
+      
+      const result = { UTs: [], ECs: [] };
+      if (BindDevice.UTs.length > 0) {
+        result.UTs = BindDevice.UTs;
+      }
+      if (BindDevice.ECs.length > 0) {
+        result.ECs = BindDevice.ECs;
+      }
+      return result;
+    },
     uartTable: {
       get: function() {
         return (
@@ -192,7 +188,7 @@ export default vue.extend({
         return this.$data.DevMac.length < 5;
       }
     },
-    ECterminal: {
+    /* ECterminal: {
       query: gql`
         query get_addECterminal($ECid: String) {
           ECterminal(ECid: $ECid) {
@@ -209,7 +205,7 @@ export default vue.extend({
       skip() {
         return this.$data.ECid.length < 5;
       }
-    },
+    }, */
 
     BindDevice: {
       query: gql`
@@ -234,28 +230,38 @@ export default vue.extend({
     }
   },
   methods: {
-    addUserTerminal(type: string, id: string) {
-      this.$apollo
-        .mutate({
-          mutation: gql`
-            mutation addUserTerminal($type: String, $id: String) {
-              addUserTerminal(type: $type, id: $id) {
-                ok
-                msg
-              }
+    async addUserTerminal(type: string, id: string) {
+      const result = await this.$apollo.mutate({
+        mutation: gql`
+          mutation addUserTerminal($type: String, $id: String) {
+            addUserTerminal(type: $type, id: $id) {
+              ok
+              msg
             }
-          `,
-          variables: { type, id }
-        })
-
-        .then(res => {
-          if (res.data.addUserTerminal.ok !== 1)
-            this.$bvModal.msgBoxOk("写入数据库出错");
-          else {
-            this.$data.DevMac = "";
-            this.$apollo.queries.BindDevice.refresh();
           }
-        });
+        `,
+        variables: { type, id }
+      });
+      if (result.data.addUserTerminal.ok !== 1)
+        this.$bvModal.msgBoxOk(result.data.addUserTerminal.msg);
+      else {
+        this.$data.DevMac = "";
+        this.$apollo.queries.BindDevice.refetch()
+      }
+    },
+    async delUserTerminal(type: string, item: { DevMac: string }) {
+      const result = await this.$apollo.mutate({
+        mutation: gql`
+          mutation delUserTerminal($type: String, $id: String) {
+            delUserTerminal(type: $type, id: $id) {
+              ok
+              msg
+            }
+          }
+        `,
+        variables: { type, id: item.DevMac }
+      });
+      this.$apollo.queries.BindDevice.refetch()
     }
   }
 });

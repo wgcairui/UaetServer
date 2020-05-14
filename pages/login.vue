@@ -19,7 +19,7 @@
               <b-form-group label="密码:" label-for="passwd" v-bind="label">
                 <b-form-input id="passwd" v-model.trim="accont.passwd" type="password" placeholder />
               </b-form-group>
-              <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit">
+              <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit" @keyup.enter="login_submit">
                 {{$t('deng-lu')}}
                 <span />
               </b-button>
@@ -33,6 +33,7 @@
 
 <script lang="ts">
 import vue from "vue";
+import { AES } from "crypto-js";
 export default vue.extend({
   data() {
     return {
@@ -50,20 +51,30 @@ export default vue.extend({
   methods: {
     async login_submit() {
       const { user, passwd } = this.$data.accont;
+      // 向服务器请求加密hash
+      const { hash } = await this.$axios
+        .$get("/api/auth/hash", { params: { user } })
+        .then(el => el)
+        .catch(e => {
+          this.$bvModal.msgBoxOk(e.response.data, {
+            size: "sm",
+            buttonSize: "sm"
+          });
+        });
+      if (!hash || !passwd) return;
       try {
         const result = await this.$auth.loginWith("local", {
-          data: { user, passwd }
+          data: { user, passwd: AES.encrypt(passwd, hash).toString() }
         });
-        console.log({ result });
+        // console.log({ result });
+        localStorage.setItem("uartserverUser", user);
       } catch (error) {
-        console.log({ error, keys: Object.keys(error) });
-
+        // console.log({ error, keys: Object.keys(error) });
         if (!error.response || error.response.status !== 400) {
           this.$bvModal.msgBoxOk("登录遇到未知错误");
           return;
         } else {
-          console.log(error.response);
-
+          // console.log(error.response);
           switch (error.response.data) {
             case "userNan":
               this.$bvModal.msgBoxOk("用户名错误");
@@ -75,6 +86,12 @@ export default vue.extend({
           }
         }
       }
+    }
+  },
+  mounted() {
+    const user = localStorage.getItem("uartserverUser");
+    if (user) {
+      this.accont.user = user;
     }
   }
 });

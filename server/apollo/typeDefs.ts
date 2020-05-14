@@ -273,6 +273,7 @@ const typeDefs: DocumentNode = gql`
     addUser(arg: JSON): result
     #addUserTerminal
     addUserTerminal(type: String, id: String): result
+    delUserTerminal(type: String, id: String): result
     #添加设备协议常量配置
     addDevConstent(Protocol: String, ProtocolType: String,type:String arg: JSON): result
     # 自定义发送设备操作指令

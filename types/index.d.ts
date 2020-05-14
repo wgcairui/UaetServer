@@ -5,17 +5,20 @@ import {  DollarApollo } from "vue-apollo/types/vue-apollo";
 import { VueApolloComponentOptions } from "vue-apollo/types/options";
 import { Auth } from "nuxtjs__auth";
 import { BvModal, BvToast } from "bootstrap-vue";
+import { NuxtAxiosInstance } from "@nuxtjs/axios";
 
 // 2. 定制一个文件，设置你想要补充的类型
 //    在 types/vue.d.ts 里 Vue 有构造函数类型
 declare module "vue/types/vue" {
   // 3. 声明为 Vue 补充的东西
   interface Vue {
+    $axios: NuxtAxiosInstance;
     $apollo: DollarApollo<this>;
     $auth: Auth;
     $socket: SocketIOClient.Socket;
   }
   interface VueConstructor {
+    $axios: NuxtAxiosInstance;
     $apollo: DollarApollo<this>;
     $auth: Auth;
     $bvModal: BvModal;
