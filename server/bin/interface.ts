@@ -11,7 +11,8 @@ export interface ApolloMongoResult {
   ok: number
   n: number
   nModified: number
-  upserted: any
+  upserted: any,
+  arg?:any
 }
 // koa ctx
 export interface KoaCtx extends ParameterizedContext {
@@ -251,6 +252,7 @@ export interface Threshold {
 export interface OprateInstruct {
   name: string
   value: string
+  val?:number
   readme: string
 }
 // 协议参数-常量参数阀值
@@ -321,7 +323,7 @@ export interface smsUartAlarm {
 // LOG 日志
 // 短信发送
 export interface logSmsSend {
-  query: smsUartAlarm
+  query: string
   sendParams: {
     RegionId: string
     PhoneNumbers: string

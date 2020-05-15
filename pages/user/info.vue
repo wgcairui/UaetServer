@@ -10,7 +10,15 @@
         </b-button>
       </separated>
       <b-col>
-        <b-table-lite stacked :items="user" :fields="userField" />
+        <!-- <b-table-lite stacked :items="user" :fields="userField" /> -->
+        <div v-for="i in userField" :key="i.key">
+          <my-form :label="i.label">
+            <b-form-text @click="modifyUserInfo(i)">
+              <strong style="font-size:16px">{{user[i.key]}}</strong>
+            </b-form-text>
+          </my-form>
+          <span></span>
+        </div>
       </b-col>
     </b-row>
     <b-row>
@@ -33,11 +41,15 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { UserInfo } from "../../server/bin/interface";
+
+import { MessageBox } from "element-ui";
+import "element-ui/lib/theme-chalk/message-box.css";
 export default Vue.extend({
   data() {
     return {
       userSetup: { tels: [], mails: [] },
-      user: [],
+      user: {} as UserInfo,
       userField: [
         { key: "name", label: "用户名:" },
         { key: "user", label: "账号:" },
@@ -52,7 +64,7 @@ export default Vue.extend({
     user: {
       query: gql`
         query getMyUserInfo($user: String) {
-          User(user: $user) {
+          user: User(user: $user) {
             name
             user
             userGroup
@@ -64,21 +76,24 @@ export default Vue.extend({
       `,
       variables() {
         return { user: this.$auth.user };
-      },
-      update: data => (data.User ? [data.User] : [])
+      }
     },
     userSetup: {
       query: gql`
-      query{
-        userSetup:getUserSetup{
-          tels
-          mails
+        query {
+          userSetup: getUserSetup {
+            tels
+            mails
+          }
         }
-      }
       `
     }
   },
   methods: {
+    async modifyUserInfo(item: { key: string; label: string }) {
+      console.log(item);
+      if (item.key === "user" || item.key === "userGroup") return;
+    },
     async saveAlarmConnect() {
       const tels = this.$data.userSetup.tels as string[];
       const mails = this.$data.userSetup.mails as string[];
@@ -121,3 +136,13 @@ export default Vue.extend({
   }
 });
 </script>
+<style lang="scss" scoped>
+.bv-no-focus-ring {
+  padding: 7px;
+}
+.text-muted {
+  color: black !important;
+  padding: 5px;
+  margin: 0;
+}
+</style>

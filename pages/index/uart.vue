@@ -73,6 +73,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import separated from "../../components/separated.vue";
+import { BindDevice } from "../../server/bin/interface";
 export default Vue.extend({
   components: {
     separated
@@ -112,7 +113,14 @@ export default Vue.extend({
           }
         }
       `,
-      update: data => data.BindDevice || { UTs: [], ECs: [] }
+      fetchPolicy:"network-only",
+      // update: data => data.BindDevice || { UTs: [], ECs: [] }
+      result:function(data){
+        const BindDevice = data.data.BindDevice as BindDevice
+        console.log({BindDevice});
+        
+        if(!BindDevice || (BindDevice.UTs.length ===0 && BindDevice.ECs.length===0)) this.$router.push("/manage/DevManage")
+      }
     }
   }
 });

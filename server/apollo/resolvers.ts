@@ -18,6 +18,7 @@ import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
 import { LogUserLogins, LogTerminals } from "../mongoose/Log";
+import { SendValidation } from "../bin/SMS";
 
 const resolvers: IResolvers = {
     Query: {
@@ -470,7 +471,7 @@ const resolvers: IResolvers = {
             return result;
         },
         // 发送设备协议指令
-        /* async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
+         async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
             // 获取条协议指令开始位置
@@ -494,16 +495,22 @@ const resolvers: IResolvers = {
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
             return result
-        }, */
+        }, 
         //  固定发送设备操作指令
         async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
-            if(!juri || juri !== ctx.$token){
+            /* if(!juri || juri !== ctx.$token){
                 return {ok:4,msg:"权限校验失败,请校验身份"} as ApolloMongoResult
-            }
+            } */
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
+            // 检查操作指令是否含有自定义参数
+            if(/(%i$)/.test(item.value)){
+                const b = Buffer.allocUnsafe(2)
+                b.writeIntBE(item.val as number,0,2)
+                item.value = item.value.replace(/(%i$)/,b.toString("hex"))
+            }
             // 携带事件名称，触发指令查询
             const Query: instructQuery = {
                 DevMac: query.DevMac,
@@ -560,7 +567,7 @@ const resolvers: IResolvers = {
             if (!isNull) {
                 await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
             }
-            //console.log({isNull,user: ctx.user});
+           console.log({isNull,user: ctx.user});
 
             const result = await UserAlarmSetup.updateOne(
                 { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
@@ -570,10 +577,21 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheUserSetup()
             return result;
         },
-         //
+         // 发送验证码
          async sendValidationSms(root,arg,ctx:ApolloCtx){
             const user = await Users.findOne({user:ctx.user}).lean<UserInfo>() as UserInfo
-            return {ok:1}
+            const code = (Math.random()*10000).toFixed(0)
+            ctx.$Event.ClientCache.CacheUserValidationCode.set(ctx.$token,code)
+            return await SendValidation(String(user.tel),code)
+        },
+        // 校验验证码,校验通过缓存授权
+        ValidationCode(root,{code},ctx:ApolloCtx){
+            const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(ctx.$token)
+            if(!userCode || !code) return {ok:0,msg:'校验码不存在,请重新发送校验码'} as ApolloMongoResult
+            if(userCode !== code) return {ok:0,msg:'校验码不匹配,请确认校验码是否正确'} as ApolloMongoResult
+            // 缓存权限
+            ctx.$Event.ClientCache.CacheUserJurisdiction.set(ctx.user as string,ctx.$token)
+            return {ok:1,msg:"校验通过"} as ApolloMongoResult
         }
     },
 

@@ -39,6 +39,7 @@
     "crypto-js": "^4.0.0",
     "deepmerge": "^4.2.2",
     "echarts": "^4.6.0",
+    "element-ui": "^2.13.1",
     "graphql": "^14.6.0",
     "graphql-tag": "^2.10.3",
     "graphql-type-json": "^0.3.1",

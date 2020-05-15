@@ -20,4 +20,7 @@ body,
 #__layout {
   height: 100vh;
 }
+body {
+  padding-right: 0 !important;
+}
 </style>

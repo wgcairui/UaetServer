@@ -13,6 +13,7 @@ const typeDefs: DocumentNode = gql`
     n: Int
     nModified: Int
     upserted:JSON
+    arg:JSON
   }
   # tool节点配置
   type Node {
@@ -101,7 +102,7 @@ const typeDefs: DocumentNode = gql`
     userGroup: String
     mail: String
     company: String
-    tel: Int
+    tel: String
     creatTime: Date
     modifyTime: Date
     address: String
@@ -288,6 +289,8 @@ const typeDefs: DocumentNode = gql`
     setUserSetupProtocol(Protocol: String, ProtocolType: String,type:String arg: JSON):result
     #
     sendValidationSms:result
+    # 校验验证码,校验通过缓存授权
+    ValidationCode(code:String):result
   }
 
   # Subscription

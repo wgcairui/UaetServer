@@ -18,7 +18,7 @@
                   {{ Stat.stat.ColdChannelTemperature.value }}&#8451;
                 </span>
               </div>
-              <div class="border rounded-lg ml-auto">
+              <div class="border rounded-lg ml-auto" @click="$bvModal.show('OprateInstructMode')">
                 <p class="bg-info text-light p-1 m-0">设定制冷温度</p>
                 <b>{{ Stat.stat.RefrigerationTemperature.value }}&#8451;</b>
               </div>
@@ -31,7 +31,7 @@
                   %
                 </span>
               </div>
-              <div class="border rounded-lg ml-auto">
+              <div class="border rounded-lg ml-auto" @click="$bvModal.show('OprateInstructMode')">
                 <p class="bg-info text-light p-1 m-0">设定制冷湿度</p>
                 <b>{{ Stat.stat.RefrigerationHumidity.value }}%</b>
               </div>

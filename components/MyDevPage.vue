@@ -14,26 +14,14 @@
     <b-row>
       <separated title="模拟量">
         <b-button-group size="sm" class="m-2">
-          <b-button variant="info" v-b-modal.OprateInstructMode>操作</b-button>
+          <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">操作</b-button>
           <b-button variant="info" :to="{name:'uart-setup',query:query}">配置</b-button>
         </b-button-group>
       </separated>
       <dev-table :query="query" :tableData="items"></dev-table>
     </b-row>
     <!-- 操作指令 -->
-    <b-modal
-      size="lg"
-      title="指令操作"
-      id="OprateInstructMode"
-      ok-only
-      button-size="sm"
-      ok-title="关闭"
-      ok-variant="default"
-      header-bg-variant="dark"
-      header-text-variant="light"
-    >
-      <my-oprate :query="query"></my-oprate>
-    </b-modal>
+    <my-oprate :query="query" id="OprateInstructMode"></my-oprate>
   </my-page>
 </template>
 <script lang="ts">
@@ -76,7 +64,7 @@ export default Vue.extend({
       if (ShowTags && ShowTags.length > 0 && Data?.result) {
         Data.result = Data.result.filter(el => ShowTags.includes(el.name));
       }
-      return Data
+      return Data;
     }
   },
   apollo: {

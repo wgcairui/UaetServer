@@ -1,54 +1,55 @@
 <template>
-  <div>
-    <my-head title="设备管理" />
-    <b-container>
-      <b-row class="border-bottom mb-5">
-        <separated title="透传设备">
-          <b-button
-            variant="success"
-            size="sm"
-            @click="uartAdd = !uartAdd"
-          >{{ !uartAdd ? "add" : "hide" }}</b-button>
-        </separated>
-        <b-collapse v-model="uartAdd" class="w-100">
-          <b-card>
-            <b-form>
-              <my-form label="设备Mac:">
-                <b-input-group>
-                  <b-form-input v-model="DevMac" trim />
-                  <b-input-group-append>
-                    <b-button>检索</b-button>
-                  </b-input-group-append>
-                </b-input-group>
-              </my-form>
-            </b-form>
-            <b-collapse v-model="uartTable">
-              <b-table-lite stacked :items="uart" :fields="uartField">
-                <template v-slot:cell(mountDevs)="row">
-                  <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
-                </template>
-                <template v-slot:cell(oprate)="row">
-                  <b-button
-                    v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
-                    size="sm"
-                    disabled
-                  >已绑定</b-button>
-                  <b-button v-else size="sm" @click="addUserTerminal('UT', row.item)">绑定设备</b-button>
-                </template>
-              </b-table-lite>
-            </b-collapse>
-          </b-card>
-        </b-collapse>
-        <b-table-lite :items="items.UTs" :fields="uartField">
-          <template v-slot:cell(mountDevs)="row">
-            <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
-          </template>
-          <template v-slot:cell(oprate)="row">
-            <b-button size="sm" @click="delUserTerminal('UT', row.item)">删除</b-button>
-          </template>
-        </b-table-lite>
-      </b-row>
-      <!-- <b-row>
+  <my-page title="设备管理">
+    <template v-slot:nav>
+      <my-nav />
+    </template>
+    <b-row class="border-bottom mb-5">
+      <separated title="透传设备">
+        <b-button
+          variant="success"
+          size="sm"
+          @click="uartAdd = !uartAdd"
+        >{{ !uartAdd ? "add" : "hide" }}</b-button>
+      </separated>
+      <b-collapse v-model="uartAdd" class="w-100">
+        <b-card>
+          <b-form>
+            <my-form label="设备Mac:">
+              <b-input-group>
+                <b-form-input v-model="DevMac" trim />
+                <b-input-group-append>
+                  <b-button>检索</b-button>
+                </b-input-group-append>
+              </b-input-group>
+            </my-form>
+          </b-form>
+          <b-collapse v-model="uartTable">
+            <b-table-lite stacked :items="uart" :fields="uartField">
+              <template v-slot:cell(mountDevs)="row">
+                <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
+              </template>
+              <template v-slot:cell(oprate)="row">
+                <b-button
+                  v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
+                  size="sm"
+                  disabled
+                >已绑定</b-button>
+                <b-button v-else size="sm" @click="addUserTerminal('UT', row.item)">绑定设备</b-button>
+              </template>
+            </b-table-lite>
+          </b-collapse>
+        </b-card>
+      </b-collapse>
+      <b-table-lite :items="items.UTs" :fields="uartField">
+        <template v-slot:cell(mountDevs)="row">
+          <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
+        </template>
+        <template v-slot:cell(oprate)="row">
+          <b-button size="sm" @click="delUserTerminal('UT', row.item)">删除</b-button>
+        </template>
+      </b-table-lite>
+    </b-row>
+    <!-- <b-row>
         <separated title="环控设备">
           <b-button variant="success" size="sm" @click="ecAdd = !ecAdd">
             {{ !ecAdd ? "add" : "hide" }}
@@ -95,9 +96,8 @@
             </b-button>
           </template>
         </b-table-lite>
-      </b-row>-->
-    </b-container>
-  </div>
+    </b-row>-->
+  </my-page>
 </template>
 <script lang="ts">
 import vue from "vue";

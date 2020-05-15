@@ -1,5 +1,15 @@
 <template>
-  <div>
+  <b-modal
+    size="lg"
+    title="指令操作"
+    :id="id"
+    ok-only
+    button-size="sm"
+    ok-title="关闭"
+    ok-variant="default"
+    header-bg-variant="dark"
+    header-text-variant="light"
+  >
     <b-row no-gutters>
       <!-- <b-col>
         <b-button
@@ -65,14 +75,24 @@
       </b-col>
     </b-row>
     <sms-validation id="sms1"></sms-validation>
-  </div>
+  </b-modal>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import { OprateInstruct, ApolloMongoResult } from "../server/bin/interface";
 import gql from "graphql-tag";
+import { MessageBox } from "element-ui";
+import "element-ui/lib/theme-chalk/message-box.css";
 export default Vue.extend({
-  props: ["query"],
+  props: {
+    query: {
+      type: Object
+    },
+    id: {
+      type: String,
+      default: "OprateInstructMode"
+    }
+  },
   data() {
     return {
       querys: this.query,
@@ -109,8 +129,25 @@ export default Vue.extend({
   methods: {
     async SendOprateInstruct(item: OprateInstruct) {
       if (item.value.includes("%")) {
-        const value = prompt(`请输入指令<${item.name}> 的值:`);
-        console.log(value);
+        //const value = prompt(`请输入指令<${item.name}> 的值:`);
+        //this.$bvModal.hide("OprateInstructMode");
+        const content = document.getElementById(
+          "OprateInstructMode___BV_modal_content_"
+        ) as HTMLElement;
+        content.removeAttribute("tabIndex");
+        const value = await MessageBox.prompt("请输入改变的值:", {
+          inputPlaceholder: "仅支持正负数字"
+        })
+          .then(data => {
+            const value = Number((data as any).value);
+            return Number.isNaN(value) ? 0 : value;
+          })
+          .catch(e => {
+            console.log("用户取消输入");
+            return 0;
+          });
+        if (!value) return;
+        item.val = value;
       }
       const query = this.$data.querys;
       this.$data.loading = true;
@@ -132,11 +169,13 @@ export default Vue.extend({
       const R = result.data.SendProcotolInstructSet as ApolloMongoResult;
       this.$data.ok = R.ok;
       this.$data.msg = R.msg;
-      if(R.ok === 4){
+      if (R.ok === 4) {
         // 权限不够,要求用户短信验证权限
-        this.$bvModal.show("sms1")
+        this.$bvModal.show("sms1");
       }
     }
   }
 });
 </script>
+<style lang="scss" scoped>
+</style>
