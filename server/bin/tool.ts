@@ -122,4 +122,11 @@ export default class Tool {
     // 保留小数点后一位
     return parseInt(value.toFixed(1))
   }
+  // 混淆号码
+  static Mixtel(tel?: number) {
+    return tel ? String(tel).split("").map((el, index) => {
+      if (index > 2 && index < 8) el = "*"
+      return el
+    }).join("") : ''
+  }
 }

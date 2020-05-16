@@ -46,6 +46,7 @@ const Threshold = new Schema({
 const OprateInstruct = new Schema({
   name: String,
   value: String,
+  bl: { type: Number, default: 1 },
   readme: String
 }, { _id: false })
 

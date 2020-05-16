@@ -13,7 +13,7 @@
         <!-- <b-table-lite stacked :items="user" :fields="userField" /> -->
         <div v-for="i in userField" :key="i.key">
           <my-form :label="i.label">
-            <b-form-text @click="modifyUserInfo(i)">
+            <b-form-text @click="modifyUserInfo(i,user[i.key])">
               <strong style="font-size:16px">{{user[i.key]}}</strong>
             </b-form-text>
           </my-form>
@@ -41,7 +41,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { UserInfo } from "../../server/bin/interface";
+import { UserInfo, ApolloMongoResult } from "../../server/bin/interface";
 
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
@@ -90,9 +90,30 @@ export default Vue.extend({
     }
   },
   methods: {
-    async modifyUserInfo(item: { key: string; label: string }) {
-      console.log(item);
+    async modifyUserInfo(item: { key: string; label: string }, val: any) {
       if (item.key === "user" || item.key === "userGroup") return;
+      const value = await MessageBox.prompt(`请输入新的${item.label}`, {
+        inputValue: val
+      }).catch(e => {
+        console.log("取消输入");
+        return false
+      });
+      if(!value) return
+      const result = await this.$apollo.mutate({
+        mutation: gql`
+          mutation modifyUserInfo($arg: JSON) {
+            modifyUserInfo(arg: $arg) {
+              ok
+              msg
+            }
+          }
+        `,
+        variables: { arg: { [item.key]: (value as any).value } }
+      });
+      //
+      const modify = result.data.modifyUserInfo as ApolloMongoResult;
+      if (!modify.ok) MessageBox.alert(modify.msg);
+      else this.$apollo.queries.user.refetch();
     },
     async saveAlarmConnect() {
       const tels = this.$data.userSetup.tels as string[];

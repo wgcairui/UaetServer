@@ -28,7 +28,7 @@
             </b-form-group>
             <b-form-group label="模块地理地址:" v-bind="label">
               <b-form-text class="terminal text-dark">
-                <b-link href="http://www.gpsspg.com/maps.htm" target="_blank">{{ Terminals.jw }}</b-link>
+                <b-link href="http://www.gzhatu.com/dingwei.html" target="_blank">{{ Terminals.jw }}</b-link>
               </b-form-text>
             </b-form-group>
             <b-form-group label="在线状态:" v-bind="label">
@@ -137,10 +137,10 @@ export default Vue.extend({
     let children = Terminal.mountDevs.map(el =>
       Object.assign(el, { name: el.mountDev + el.pid })
     );
-    Terminal.jw = (Terminal.jw as string)
+    /* Terminal.jw = (Terminal.jw as string)
       .split(",")
       .reverse()
-      .join(",");
+      .join(","); */
     let Terminals = Object.assign(Terminal, { children });
     return { Terminals, DevMac };
   },

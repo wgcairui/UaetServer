@@ -13,6 +13,9 @@
               placeholder="例子:060001%i,占位符%i是发送指令是设定的值,232协议默认不包含占位符"
             ></b-form-input>
           </my-form>
+          <my-form label="值的倍数:">
+            <b-form-select  v-model="instruct.bl" :options="[0.1,1,10,100]"></b-form-select>
+          </my-form>
           <my-form label="指令说明:">
             <b-form-textarea v-model="instruct.readme"></b-form-textarea>
           </my-form>
@@ -61,12 +64,14 @@ export default Vue.extend({
       instruct: {
         name: "",
         value: "",
+        bl:1,
         readme: ""
       } as OprateInstruct,
       instructs: [] as OprateInstruct[],
       fields: [
         { key: "name", label: "指令名称" },
         { key: "value", label: "指令值" },
+        "bl",
         { key: "readme", label: "指令说明" },
         { key: "oprate", label: "操作" }
       ] as BvTableFieldArray,

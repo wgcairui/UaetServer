@@ -19,6 +19,8 @@ import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
 import { LogUserLogins, LogTerminals } from "../mongoose/Log";
 import { SendValidation } from "../bin/SMS";
+import Tool from "../bin/tool";
+import { JwtSign, JwtVerify } from "../bin/Secret";
 
 const resolvers: IResolvers = {
     Query: {
@@ -79,8 +81,7 @@ const resolvers: IResolvers = {
         },
         // 用户
         async User(root, { user }, ctx: ApolloCtx) {
-            return ctx
-            //return await Users.findOne({ user });
+            return await Users.findOne({ user: ctx.user });
         },
         async Users() {
             return await Users.find();
@@ -194,16 +195,11 @@ const resolvers: IResolvers = {
             return result
         },
         // 获取用户tel
-        async getUserTel(root,arg,ctx:ApolloCtx){
-            const user = await Users.findOne({user:ctx.user}).lean<UserInfo>() as UserInfo
-            const tel = user.tel? String(user?.tel).split("").map((el,index)=>{
-                if(index > 2 && index < 8) el = "*"
-                return el
-            }).join(""):''
+        async getUserTel(root, arg, ctx: ApolloCtx) {
+            const user = await Users.findOne({ user: ctx.user }).lean<UserInfo>() as UserInfo
+            const tel = Tool.Mixtel(user.tel)
             return tel
-        },
-       
-        
+        }
     },
 
     /* 
@@ -375,6 +371,14 @@ const resolvers: IResolvers = {
                 })
                 .catch((e) => console.log(e));
         },
+        //
+        async modifyUserInfo(root, { arg }, ctx: ApolloCtx) {
+            const keys = Object.keys(arg)
+            if (keys.includes('user')) return { ok: 0, msg: '不能修改用户名' } as ApolloMongoResult
+            if (keys.includes('userGroup') && ctx.userGroup !== 'root') return { ok: 0, msg: '权限校验失败' } as ApolloMongoResult
+            if (keys.some(el => arg[el].length > 50)) return { ok: 0, msg: '参数值过长' } as ApolloMongoResult
+            return await Users.updateOne({ user: ctx.user }, { $set: arg })
+        },
         // 添加用户绑定终端
         async addUserTerminal(root, { type, id }, ctx: { user: any }) {
             switch (type) {
@@ -471,7 +475,7 @@ const resolvers: IResolvers = {
             return result;
         },
         // 发送设备协议指令
-         async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
+        async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
             // 获取条协议指令开始位置
@@ -495,21 +499,21 @@ const resolvers: IResolvers = {
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
             return result
-        }, 
+        },
         //  固定发送设备操作指令
         async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
-            /* if(!juri || juri !== ctx.$token){
-                return {ok:4,msg:"权限校验失败,请校验身份"} as ApolloMongoResult
-            } */
+            if (!juri || juri !== ctx.$token) {
+                // return {ok:4,msg:"权限校验失败,请校验身份"} as ApolloMongoResult
+            }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
             // 检查操作指令是否含有自定义参数
-            if(/(%i$)/.test(item.value)){
+            if (/(%i$)/.test(item.value)) {
                 const b = Buffer.allocUnsafe(2)
-                b.writeIntBE(item.val as number,0,2)
-                item.value = item.value.replace(/(%i$)/,b.toString("hex"))
+                b.writeIntBE(item.val as number * item.bl, 0, 2)
+                item.value = item.value.replace(/(%i$)/, b.toString("hex"))
             }
             // 携带事件名称，触发指令查询
             const Query: instructQuery = {
@@ -567,7 +571,7 @@ const resolvers: IResolvers = {
             if (!isNull) {
                 await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
             }
-           console.log({isNull,user: ctx.user});
+            console.log({ isNull, user: ctx.user });
 
             const result = await UserAlarmSetup.updateOne(
                 { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
@@ -577,21 +581,56 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheUserSetup()
             return result;
         },
-         // 发送验证码
-         async sendValidationSms(root,arg,ctx:ApolloCtx){
-            const user = await Users.findOne({user:ctx.user}).lean<UserInfo>() as UserInfo
-            const code = (Math.random()*10000).toFixed(0)
-            ctx.$Event.ClientCache.CacheUserValidationCode.set(ctx.$token,code)
-            return await SendValidation(String(user.tel),code)
+        // 发送验证码
+        async sendValidationSms(root, arg, ctx: ApolloCtx) {
+            const user = await Users.findOne({ user: ctx.user }).lean<UserInfo>() as UserInfo
+            const code = (Math.random() * 10000).toFixed(0)
+            ctx.$Event.ClientCache.CacheUserValidationCode.set(ctx.$token, code)
+            return await SendValidation(String(user.tel), code)
         },
         // 校验验证码,校验通过缓存授权
-        ValidationCode(root,{code},ctx:ApolloCtx){
+        ValidationCode(root, { code }, ctx: ApolloCtx) {
             const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(ctx.$token)
-            if(!userCode || !code) return {ok:0,msg:'校验码不存在,请重新发送校验码'} as ApolloMongoResult
-            if(userCode !== code) return {ok:0,msg:'校验码不匹配,请确认校验码是否正确'} as ApolloMongoResult
+            if (!userCode || !code) return { ok: 0, msg: '校验码不存在,请重新发送校验码' } as ApolloMongoResult
+            if (userCode !== code) return { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as ApolloMongoResult
             // 缓存权限
-            ctx.$Event.ClientCache.CacheUserJurisdiction.set(ctx.user as string,ctx.$token)
-            return {ok:1,msg:"校验通过"} as ApolloMongoResult
+            ctx.$Event.ClientCache.CacheUserJurisdiction.set(ctx.user as string, ctx.$token)
+            return { ok: 1, msg: "校验通过" } as ApolloMongoResult
+        },
+        // 重置用户密码
+        async resetUserPasswd(root, { user }, ctx: ApolloCtx) {
+            const User = await Users.findOne({ $or: [{ user }, { mail: user }] }).lean<UserInfo>()
+            if (User) {
+                const code = (Math.random() * 10000).toFixed(0)
+                ctx.$Event.ClientCache.CacheUserValidationCode.set('reset' + user, code)
+                const res = await SendValidation(String(User.tel), code)
+                if (res.ok) res.msg = Tool.Mixtel(User.tel)
+                return res
+            } else {
+                return { ok: 0, msg: '账号不存在,请和对账号' } as ApolloMongoResult
+            }
+        },
+        //校验用户验证码
+        async resetValidationCode(root, { user, code }, ctx: ApolloCtx) {
+            const codeMap = ctx.$Event.ClientCache.CacheUserValidationCode
+            if (codeMap.has('reset' + user)) {
+                if (code === codeMap.get('reset' + user)) {
+                    const hash = await JwtSign({ user, code })
+                    return { ok: 1, msg: hash } as ApolloMongoResult
+                } else {
+                    return { ok: 0, msg: '校验码不正确' } as ApolloMongoResult
+                }
+
+            } else {
+                return { ok: 0, msg: '没有校验码' } as ApolloMongoResult
+            }
+        },
+        // 重置用户密码
+        async setUserPasswd(root, { hash, passwd }: { hash: string, passwd: string }, ctx: ApolloCtx) {
+            const { user } = await JwtVerify(hash)
+            if (!user) return { ok: 0, msg: 'token出错' } as ApolloMongoResult
+            ctx.$Event.ClientCache.CacheUserValidationCode.delete('reset' + user)
+            return await Users.updateOne({ user }, { $set: { passwd: await BcryptDo(passwd) } })
         }
     },
 

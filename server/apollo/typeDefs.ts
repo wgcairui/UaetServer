@@ -163,6 +163,7 @@ const typeDefs: DocumentNode = gql`
  type OprateInstruct{
     name:String
     value:String
+    bl:Int
     readme:String
   }
   # 每个协议的设备常量和阀值，显示参数
@@ -274,7 +275,15 @@ const typeDefs: DocumentNode = gql`
     modifyTerminalMountDev( DevMac:String,pid:Int,arg:JSON):result
     #User
     addUser(arg: JSON): result
-    #addUserTerminal
+    # 修改用户信息
+    modifyUserInfo(arg: JSON):result
+    # 获取验证码重置用户密码
+    resetUserPasswd(user:String):result
+    # 校验用户验证码
+    resetValidationCode(user:String,code:String):result
+    # 重置用户密码
+    setUserPasswd(hash:String,passwd:String):result
+    # addUserTerminal
     addUserTerminal(type: String, id: String): result
     delUserTerminal(type: String, id: String): result
     #添加设备协议常量配置
@@ -287,7 +296,7 @@ const typeDefs: DocumentNode = gql`
     setUserSetupContact(tels:[String],mails:[String]):result
     # 设置用户自定义设置(协议配置)
     setUserSetupProtocol(Protocol: String, ProtocolType: String,type:String arg: JSON):result
-    #
+    # 发送校验码短信
     sendValidationSms:result
     # 校验验证码,校验通过缓存授权
     ValidationCode(code:String):result

@@ -90,21 +90,18 @@ const SchemaTerminalClientResultSingle = new Schema({
 export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
 
 export const TerminalClientResults = mongoose.model(
-  "NodeTerminalClientResults",
+  "ClientResult",
   SchemaTerminalClientResults,
-  "NodeTerminalClientResults"
 );
 
 export const TerminalClientResult = mongoose.model(
-  "NodeTerminalClientResult",
+  "ClientResultColltion",
   SchemaTerminalClientResult,
-  "NodeTerminalClientResult"
 );
 
 export const TerminalClientResultSingle = mongoose.model(
-  "NodeTerminalClientResultSingle",
+  "ClientResultSingle",
   SchemaTerminalClientResultSingle,
-  "NodeTerminalClientResultSingle"
 );
 
 export const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);

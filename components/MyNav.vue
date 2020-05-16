@@ -44,7 +44,7 @@
               <b-dropdown-item :to="{ name: 'user-info' }">
                 <i class="iconfont">&#xeb6b;</i>用户详情
               </b-dropdown-item>
-              <b-dropdown-item>
+              <b-dropdown-item :to="{ name: 'user-reset' }">
                 <i class="iconfont">&#xebe3;</i>修改密码
               </b-dropdown-item>
               <b-dropdown-divider />

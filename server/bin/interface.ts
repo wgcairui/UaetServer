@@ -252,6 +252,7 @@ export interface Threshold {
 export interface OprateInstruct {
   name: string
   value: string
+  bl:number
   val?:number
   readme: string
 }
