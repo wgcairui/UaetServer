@@ -24,10 +24,11 @@ export default async (R: queryResult) => {
           // 把buffer转换为utf8字符串并掐头去尾
           const parseStr = Buffer.from(data)
             .toString('utf8', instructs.shift ? instructs.shiftNum : 0, instructs.pop ? data.length - instructs.popNum : data.length)
+            .replace(/(#)/g, '')
             .split(' ')
           return instructs.formResize.map(el2 => {
             const [start, len] = (el2.regx?.split("-") as string[]).map(el => parseInt(el));
-            return { name: el2.name, value: parseStr[start - 1]?.replace(/(#)/g, ''), unit: el2.unit } as queryResultArgument
+            return { name: el2.name, value: parseStr[start - 1], unit: el2.unit } as queryResultArgument
           })
         }).flat()
       }

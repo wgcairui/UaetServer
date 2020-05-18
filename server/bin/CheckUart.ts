@@ -16,7 +16,7 @@ export default (query: queryResult) => {
   // 获取用户个性化配置实例
   const UserSetup = Event.Cache.CacheUserSetup.get(User) as userSetup;
   // 获取挂载设备名词
-  const DevName = Event.Cache.CacheTerminal.get(query.mac)?.mountDevs.find(el => el.pid === query.pid)?.mountDev
+  //const DevName =query.mountDev;// Event.Cache.CacheTerminal.get(query.mac)?.mountDevs.find(el => el.pid === query.pid)?.mountDev
   // console.log(UserSetup);
   // 获取用户协议配置
   const UserThreshold = UserSetup.ThresholdMap.get(query.protocol);
@@ -59,7 +59,7 @@ export default (query: queryResult) => {
           pid: query.pid,
           protocol: query.protocol,
           timeStamp: query.timeStamp,
-          msg: `${DevName}:${el.name}超限,限值${el.min}/${el.max},实际值${val}`
+          msg: `${query.mountDev}:${el.name}超限,限值${el.min}/${el.max},实际值${val}`
         };
         // 发送事件，socket发送用户
         Event.Emit("UartTerminalDataTransfinite", data);

@@ -15,9 +15,9 @@ export default new ApolloServer({
     const apolloRequest = ctx.request.body as GraphQLRequest
     // 没有token则检查body，注册和重置页面的请求则通过
     if (!token || token === "false") {
-      const guestQuery = ["getUser", "addUserAccont"];
+      const guestQuery = ["getUser", "addUserAccont", 'resetUserPasswd', "resetValidationCode", "setUserPasswd"];
       if (guestQuery.includes(apolloRequest.operationName || ''))
-        return { user: "guest", loggedIn: false };
+        return { user: "guest", loggedIn: false, $Event: ctx.$Event };
       else throw new Error("query error");
     }
     // 解构token
@@ -26,6 +26,6 @@ export default new ApolloServer({
     if (!user || !user.user) throw new Error("you must be logged in");
     // 保存所有的操作日志
     new LogUserRequst({ user: user.user, userGroup: user.userGroup, type: apolloRequest.operationName, argument: apolloRequest.variables } as logUserRequst).save()
-    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart,$token:token};
+    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token };
   }
 });

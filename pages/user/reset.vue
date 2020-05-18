@@ -97,7 +97,7 @@ export default Vue.extend({
       }
       //
       this.$auth.logout()
-      // this.$router
+      this.$router.push("/")
     }
   }
 });
