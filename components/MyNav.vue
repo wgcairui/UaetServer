@@ -1,11 +1,32 @@
 <template>
-  <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start">
+  <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" sticky>
+    <b-navbar-brand>
+      <span v-if="back">
+        <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="$router.go(-1)">
+          <i class="iconfont text-light">&#xe641;</i>
+        </b-button>
+        <span class="text-light">|</span>
+      </span>
+      <span class="text-center text-light" style="font-size:1rem">{{ title }}</span>
+    </b-navbar-brand>
     <div class="navber-m-2 ml-auto">
       <div class="navber-m-3 float-right d-inline-flex flex-column head-right">
         <b-navbar-toggle target="nav-collapse" class="float-right head-btn" />
         <b-collapse id="nav-collapse" is-nav class="float-rigth mr-1">
           <!-- Right aligned nav items -->
           <b-navbar-nav class="ml-auto text-nowrap">
+            <b-nav-dropdown right>
+              <template v-slot:button-content>
+                <span>
+                  <i class="iconfont">&#xebd0;</i>设备列表
+                </span>
+              </template>
+              <b-dropdown-item
+                v-for="val in mountDev"
+                :key="val.text"
+                @click="toDev(val)"
+              >{{val.text}}</b-dropdown-item>
+            </b-nav-dropdown>
             <b-nav-item>
               <span class="text-light text-wrap" v-b-toggle.alarms>
                 <i class="iconfont">&#xeb68;</i>告警管理
@@ -30,13 +51,14 @@
                 <i class="iconfont">&#xebe0;</i>En
               </b-dropdown-item>
             </b-nav-dropdown>
-            <b-nav-item>
+            <!-- <b-nav-item>
               <socket-state />
             </b-nav-item>
-
+            -->
             <b-nav-dropdown right>
               <template v-slot:button-content>
                 <span>
+                  <socket-state />
                   <i class="iconfont">&#xeb8d;</i>
                   {{ $auth.user }}
                 </span>
@@ -77,16 +99,104 @@
 <script lang="ts">
 import Vue from "vue";
 import { WebInfo } from "../store/DB";
+import gql from "graphql-tag";
+import { Terminal } from "../server/bin/interface";
 export default Vue.extend({
+  props: {
+    title: {
+      default: "Ladis",
+      type: String
+    },
+    back: {
+      default: true,
+      type: Boolean
+    }
+  },
+  data() {
+    return {
+      BindDevice: {
+        UTs: [],
+        ECs: []
+      }
+    };
+  },
   computed: {
     Infos() {
       return ((this.$store as any).state.Infos as WebInfo[]) || [];
+    },
+    mountDev() {
+      const terminals = (this as any).BindDevice.UTs as Terminal[];
+      return terminals
+        .map(el => {
+          return el.mountDevs.map(els => ({
+            DevMac: el.DevMac,
+            pid: els.pid,
+            mountDev: els.mountDev,
+            protocol: els.protocol,
+            type: els.Type,
+            text: `${el.name}-${els.pid}-${els.mountDev}`
+          }));
+        })
+        .flat();
     }
   },
   methods: {
+    toDev(val: {
+      DevMac: string;
+      pid: number;
+      mountDev: string;
+      protocol: string;
+      type: string;
+    }) {
+      const query = {
+        DevMac: val.DevMac,
+        pid: String(val.pid),
+        mountDev: val.mountDev,
+        protocol: val.protocol
+      };
+      switch (val.type) {
+        case "温湿度":
+          this.$router.push({ name: "uart-th", query });
+          break;
+        case "空调":
+          this.$router.push({ name: "uart-air", query });
+          break;
+        case "电量仪":
+          this.$router.push({ name: "uart-em", query });
+          break;
+        case "UPS":
+          this.$router.push({ name: "uart-ups", query });
+          break;
+      }
+    },
     logout() {
       this.$socket.disconnect();
       this.$auth.logout();
+    }
+  },
+  apollo: {
+    BindDevice: {
+      query: gql`
+        query getUserBindDevice {
+          BindDevice {
+            UTs {
+              DevMac
+              name
+              mountDevs {
+                Type
+                mountDev
+                protocol
+                pid
+              }
+            }
+            ECs {
+              ECid
+              name
+              model
+            }
+          }
+        }
+      `
     }
   }
 });

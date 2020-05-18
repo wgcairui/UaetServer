@@ -1,8 +1,9 @@
 <template>
   <div class="h-100 w-100">
-    <my-head :title="title">
+    <!-- <my-head :title="title">
       <slot name="nav" />
-    </my-head>
+    </my-head>-->
+    <my-nav :title="title"></my-nav>
     <b-container class="mb-5">
       <slot />
     </b-container>

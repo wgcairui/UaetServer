@@ -5,9 +5,10 @@
         <b-tab title="模拟量">
           <b-table :items="line.simulate" :fields="fields">
             <template v-slot:cell(value)="row">
-              <h5>
-                <b-badge>{{row.value}}{{row.item.unit}}</b-badge>
-              </h5>
+              <b class="value">
+                <b-badge>{{row.value}}</b-badge>
+              </b>
+              <span>{{row.item.unit}}</span>
             </template>
             <template v-slot:cell(oprate)="row">
               <b-button-group size="sm" v-if="row.item.unit">
@@ -25,8 +26,7 @@
           </b-table>
         </b-tab>
         <b-tab title="状态量" lazy v-if="line.quantity.length>0">
-          <b-table :items="line.quantity" :fields="fields">
-          </b-table>
+          <b-table :items="line.quantity" :fields="fields"></b-table>
         </b-tab>
       </b-tabs>
     </b-overlay>
@@ -98,3 +98,8 @@ export default Vue.extend({
   }
 });
 </script>
+<style lang="scss" scoped>
+.value {
+  font-size: 1.3rem;
+}
+</style>

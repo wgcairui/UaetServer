@@ -12,7 +12,7 @@
       </span>
       <span class="text-light mx-2">|</span>
       <span class="text-center text-light">{{ title }}</span>
-      <div class="ml-auto">
+      <div class="ml-auto d-flex">
         <slot>
           <socket-state></socket-state>
           <span v-if="User" class="ml-auto text-light">

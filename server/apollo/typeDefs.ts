@@ -84,7 +84,7 @@ const typeDefs: DocumentNode = gql`
   }
   # 节点的运行状态
   type NodeInfo {
-    updateTime: Date
+    updateTime: String
     hostname: String
     totalmem: String
     freemem: String

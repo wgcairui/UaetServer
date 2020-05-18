@@ -7,6 +7,7 @@ import {
 } from "./interface";
 import Event from "../event/index";
 import { SendUartAlarm } from "./SMS";
+import { SendAlarmEvent } from "./Mail";
 
 export default (query: queryResult) => {
   // 获取mac绑定的用户
@@ -86,7 +87,7 @@ async function sendSmsAlarm(query: queryResult, UserSetup: userSetup, parseArgum
       // 检查是否有告警手机号
       if (UserSetup.tels.length > 0) {
         await SendUartAlarm({
-          user:UserSetup.user,
+          user: UserSetup.user,
           type: "透传设备告警",
           tel: UserSetup.tels.join(','),
           name: UserSetup.user,
@@ -94,6 +95,12 @@ async function sendSmsAlarm(query: queryResult, UserSetup: userSetup, parseArgum
           air: query.mountDev,
           event: `:${parseArgument.name}超限[${parseArgument.value}]`
         });
+      }
+      //
+      if (UserSetup.mails.length > 0) {
+        UserSetup.mails.forEach(mail => {
+          SendAlarmEvent(mail, `${query.mountDev}:${parseArgument.name}超限,实际值${parseArgument.value}`)
+        })
       }
     }
   } else {

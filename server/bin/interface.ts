@@ -12,13 +12,13 @@ export interface ApolloMongoResult {
   n: number
   nModified: number
   upserted: any,
-  arg?:any
+  arg?: any
 }
 // koa ctx
 export interface KoaCtx extends ParameterizedContext {
   $Event: Event
   $SocketUart: NodeSocketIO
-  
+
 }
 
 // apollo ctx
@@ -26,7 +26,7 @@ export interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
   $SocketUart: NodeSocketIO
-  $token:string
+  $token: string
 }
 
 // 协议指令解析格式化
@@ -79,6 +79,8 @@ export interface TerminalMountDevs {
 }
 // 终端
 export interface Terminal extends RegisterTerminal {
+  DevMac: string
+  mountNode: string
   name: string;
   ip?: string
   prto?: number
@@ -252,8 +254,8 @@ export interface Threshold {
 export interface OprateInstruct {
   name: string
   value: string
-  bl:number
-  val?:number
+  bl: number
+  val?: number
   readme: string
 }
 // 协议参数-常量参数阀值
@@ -370,6 +372,6 @@ export interface logTerminals {
   TerminalMac: string
   type: logTerminalsType
   msg: string
-  query:any
-  result:any
+  query: any
+  result: any
 }

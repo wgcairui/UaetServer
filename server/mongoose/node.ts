@@ -19,7 +19,7 @@ const SchemaWebSocketTerminal = new Schema(
 )
 // 节点状态流
 const SchemaNodeRunInfo = new Schema({
-  updateTime: { type: Date, default: new Date().toLocaleString() },
+  updateTime: { type: String, default: new Date().toLocaleString() },
   hostname: String,
   totalmem: String,
   freemem: String,

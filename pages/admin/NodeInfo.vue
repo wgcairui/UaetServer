@@ -56,7 +56,7 @@ export default Vue.extend({
             mac
             port
             ip
-            jw
+            jw 
           }
         }
       }
