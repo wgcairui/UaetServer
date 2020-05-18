@@ -135,8 +135,6 @@ export default vue.extend({
   computed: {
     items() {
       const BindDevice = this.BindDevice;
-      console.log(BindDevice);
-
       const result = { UTs: [], ECs: [] };
       if (BindDevice.UTs.length > 0) {
         result.UTs = BindDevice.UTs;
@@ -186,6 +184,9 @@ export default vue.extend({
       update: data => [data.Terminal || {}],
       skip() {
         return this.$data.DevMac.length < 5;
+      },
+      result:function(data){
+        if(!data.data.Terminal) this.uartAdd = true
       }
     },
     /* ECterminal: {

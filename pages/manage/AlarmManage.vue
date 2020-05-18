@@ -6,7 +6,11 @@
           <b-tab title="设备运行日志">
             <b-table :items="terminals" :fields="fieldsTerminal" responsive striped>
               <template v-slot:cell(query)="row">
-                <b-button size="sm" @click="row.toggleDetails" v-if="row.value">{{row.detailsShowing ? '收起':'展开'}}</b-button>
+                <b-button
+                  size="sm"
+                  @click="row.toggleDetails"
+                  v-if="row.value"
+                >{{row.detailsShowing ? '收起':'展开'}}</b-button>
               </template>
               <template v-slot:row-details="row">
                 <b-card>
@@ -69,7 +73,8 @@ export default Vue.extend({
             createdAt
           }
         }
-      `
+      `,
+      update: data => (data.terminals ? data.terminals.reverse() : [])
     }
   },
   methods: {

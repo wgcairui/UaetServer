@@ -14,8 +14,8 @@
     <b-row>
       <separated title="模拟量">
         <b-button-group size="sm" class="m-2">
-          <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">操作</b-button>
-          <b-button variant="info" :to="{name:'uart-setup',query:query}">配置</b-button>
+          <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">快捷指令</b-button>
+          <b-button variant="info" :to="{name:'uart-setup',query:query}">用户配置</b-button>
         </b-button-group>
       </separated>
       <dev-table :query="query" :tableData="items"></dev-table>
@@ -111,7 +111,7 @@ export default Vue.extend({
       variables() {
         return { Protocol: this.query.protocol };
       },
-      update: data => data.ShowTags.ShowTag
+      update: data => data.ShowTags?.ShowTag || []
     },
     // 系统配置
     DevConstant: {

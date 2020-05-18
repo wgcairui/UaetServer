@@ -1,9 +1,8 @@
 <template>
   <div class=" d-flex flex-column h-100 w-100 overflow-hidden">
     <b-container class="flex-grow-1 overflow-auto">
-      <b-row id="uart">
+      <b-row id="uart" class=" my-4">
         <separated title="透传设备" />
-
         <b-col
           v-for="(link, key) in BindDevice.UTs"
           :key="key"
@@ -113,12 +112,8 @@ export default Vue.extend({
           }
         }
       `,
-      fetchPolicy:"network-only",
-      // update: data => data.BindDevice || { UTs: [], ECs: [] }
       result:function(data){
         const BindDevice = data.data.BindDevice as BindDevice
-        console.log({BindDevice});
-        
         if(!BindDevice || (BindDevice.UTs.length ===0 && BindDevice.ECs.length===0)) this.$router.push("/manage/DevManage")
       }
     }

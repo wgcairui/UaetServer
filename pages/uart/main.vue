@@ -191,4 +191,15 @@ export default Vue.extend({
   border-color: #28a745;
   background-color: #28a745;
 }
+@media (min-width: 576px) {
+  .jumbotron {
+    padding: 0;
+  }
+}
+.jumbotron {
+    padding: 2rem 1rem;
+    margin-bottom: 2rem;
+    background-color: #e9ecef;
+    border-radius: 0.3rem;
+}
 </style>
