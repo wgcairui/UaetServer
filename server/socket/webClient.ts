@@ -2,8 +2,8 @@ import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
 import { UserInfo, uartAlarmObject, logUserLogins } from "../bin/interface";
-import { JwtVerify } from "../bin/Secret";
-import { parseToken } from "../bin/util";
+import { JwtVerify } from "../util/Secret";
+import { parseToken } from "../util/util";
 import { LogUserLogins } from "../mongoose/Log";
 
 interface socketArgument {

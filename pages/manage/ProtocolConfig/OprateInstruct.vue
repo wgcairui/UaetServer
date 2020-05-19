@@ -1,5 +1,5 @@
 <template>
-  <my-page title="操作指令">
+  <my-page-user title="操作指令" :isUser="false">
     <b-row>
       <b-col>
         <separated title="添加操作指令"></separated>
@@ -14,7 +14,7 @@
             ></b-form-input>
           </my-form>
           <my-form label="值的倍数:">
-            <b-form-select  v-model="instruct.bl" :options="[0.1,1,10,100]"></b-form-select>
+            <b-form-select v-model="instruct.bl" :options="[0.1,1,10,100]"></b-form-select>
           </my-form>
           <my-form label="指令说明:">
             <b-form-textarea v-model="instruct.readme"></b-form-textarea>
@@ -41,7 +41,7 @@
         </div>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -64,7 +64,7 @@ export default Vue.extend({
       instruct: {
         name: "",
         value: "",
-        bl:1,
+        bl: 1,
         readme: ""
       } as OprateInstruct,
       instructs: [] as OprateInstruct[],
@@ -98,7 +98,7 @@ export default Vue.extend({
       query: gql`
         query getDevConstant($Protocol: String) {
           instructs: getDevConstant(Protocol: $Protocol) {
-            OprateInstruct{
+            OprateInstruct {
               name
               value
               readme
@@ -155,7 +155,7 @@ export default Vue.extend({
     addDevConstent() {
       const arg = this.$data.instructs as OprateInstruct[];
       const Protocol = this.$data.Protocol;
-      const ProtocolType = this.$data.ProtocolType
+      const ProtocolType = this.$data.ProtocolType;
       this.$apollo
         .mutate({
           mutation: gql`

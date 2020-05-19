@@ -1,5 +1,5 @@
 <template>
-  <my-page :title="'挂载设备:' + DevMac">
+  <my-page-user :title="'挂载设备:' + DevMac">
     <b-row>
       <b-col>
         <separated title="透传终端信息"></separated>
@@ -59,7 +59,7 @@
         </b-card>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";

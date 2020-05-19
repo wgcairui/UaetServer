@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <my-head title="添加节点" />
+  <my-page-user title="添加节点" :isUser="false">
     <b-form class="p-3">
       <b-form-group label="节点名称:" v-bind="forGroup">
         <b-form-input v-model="accont.Name" trim />
@@ -12,15 +11,9 @@
         <b-form-input v-model="accont.Port" trim :state="statPort" />
       </b-form-group>
       <b-form-group label="连接数限制:" v-bind="forGroup">
-        <b-form-input
-          v-model="accont.MaxConnections"
-          trim
-          :state="statMaxConnections"
-        />
+        <b-form-input v-model="accont.MaxConnections" trim :state="statMaxConnections" />
       </b-form-group>
-      <b-button block @click="submit">
-        提交
-      </b-button>
+      <b-button block @click="submit">提交</b-button>
     </b-form>
     <b-table-lite
       :items="Nodes"
@@ -28,12 +21,10 @@
       responsive
     >
       <template v-slot:cell(oprate)="row">
-        <b-button @click="deleteNode(row.item)">
-          delete
-        </b-button>
+        <b-button @click="deleteNode(row.item)">delete</b-button>
       </template>
     </b-table-lite>
-  </div>
+  </my-page-user>
 </template>
 <script lang="ts">
 import vue from "vue";
@@ -114,7 +105,7 @@ export default vue.extend({
         this.$bvModal.msgBoxOk("参数不合法!!");
         return;
       }
-      const accont = this.accont
+      const accont = this.accont;
       this.$apollo
         .mutate({
           mutation: gql`
@@ -131,7 +122,7 @@ export default vue.extend({
         })
         .then(res => {
           this.$apollo.queries.Nodes.refresh();
-          this.$bvModal.msgBoxOk("添加节点成功",{buttonSize:'sm'});
+          this.$bvModal.msgBoxOk("添加节点成功", { buttonSize: "sm" });
         });
     },
     deleteNode(item: NodeClient) {

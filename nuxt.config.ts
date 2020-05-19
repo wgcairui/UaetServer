@@ -129,7 +129,7 @@ const Config = {
       login: "/login",
       logout: "/login",
       // callback: '/admin/edit',
-      home: "/"
+      home: false
     }
   },
   // Give apollo module options

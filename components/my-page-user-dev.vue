@@ -1,9 +1,5 @@
 <template>
-  <my-page :title="title">
-    <template v-slot:nav>
-      <my-nav />
-    </template>
-    <!-- body-head -->
+  <my-page-user :title="title">
     <b-row class="m-0">
       <separated :title="query.DevMac">
         <b>{{Data ? new Date(Data.time).toLocaleString():''}}</b>
@@ -18,11 +14,40 @@
           <b-button variant="info" :to="{name:'uart-setup',query:query}">用户配置</b-button>
         </b-button-group>
       </separated>
-      <dev-table :query="query" :tableData="items"></dev-table>
+      <b-overlay :show="$apollo.loading" class="w-100">
+        <b-tabs justified>
+          <b-tab title="模拟量">
+            <b-table :items="line.simulate" :fields="fields">
+              <template v-slot:cell(value)="row">
+                <b class="value">
+                  <b-badge>{{row.value}}</b-badge>
+                </b>
+                <span>{{row.item.unit}}</span>
+              </template>
+              <template v-slot:cell(oprate)="row">
+                <b-button-group size="sm" v-if="row.item.unit">
+                  <b-button
+                    variant="info"
+                    class="block px-1 py-0 pt-1"
+                    :to="{
+                        name: 'uart-line',
+                        query: { ...$route.query, name: row.item.name }
+                      }"
+                  >趋势</b-button>
+                  <!-- <b-button @click="AlarmArgument(row.item)" variant="info">Alarm</b-button> -->
+                </b-button-group>
+              </template>
+            </b-table>
+          </b-tab>
+          <b-tab title="状态量" lazy v-if="line.quantity.length>0">
+            <b-table :items="line.quantity" :fields="fields"></b-table>
+          </b-tab>
+        </b-tabs>
+      </b-overlay>
     </b-row>
     <!-- 操作指令 -->
     <my-oprate :query="query" id="OprateInstructMode"></my-oprate>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -52,7 +77,12 @@ export default Vue.extend({
         ProtocolConstantThreshold,
         "ProtocolType" | "Constant"
       >,
-      ShowTags: [] as string[]
+      ShowTags: [] as string[],
+      fields: [
+        { key: "name", label: "变量" },
+        { key: "value", label: "值" },
+        { key: "oprate", label: "操作" }
+      ] as BvTableFieldArray
     };
   },
   //
@@ -65,6 +95,26 @@ export default Vue.extend({
         Data.result = Data.result.filter(el => ShowTags.includes(el.name));
       }
       return Data;
+    },
+    //
+    line() {
+      // 状态量
+      const quantity: queryResultArgument[] = [];
+      // 模拟量
+      const simulate: queryResultArgument[] = [];
+      if (this.Data?.result) {
+        const Data = this.Data as queryResultSave;
+        // 空调设备数据
+        const result: queryResultArgument[] = Data.result;
+        result.forEach(el => {
+          const valGetter: queryResultArgument = (this
+            .$store as any).getters.getUnit(el);
+          valGetter.issimulate
+            ? simulate.push(valGetter)
+            : quantity.push(valGetter);
+        });
+      }
+      return { simulate, quantity };
     }
   },
   apollo: {
@@ -158,3 +208,8 @@ export default Vue.extend({
   }
 });
 </script>
+<style lang="scss" scoped>
+.value {
+  font-size: 1.3rem;
+}
+</style>

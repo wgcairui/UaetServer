@@ -1,145 +1,112 @@
 <template>
-  <div>
-    <my-head title="所有协议"></my-head>
-    <b-container>
-      <b-row>
-        <b-col>
-          <separated title="filter"></separated>
-          <b-card>
-            <b-form>
-              <b-form-group label="协议类型:" v-bind="forGroup">
-                <b-form-radio-group
-                  v-model="DevType"
-                  :options="DevTypes"
-                ></b-form-radio-group>
-              </b-form-group>
-              <b-form-group
-                label="协议名称:"
-                v-bind="forGroup"
-                v-if="DevType !== ''"
-              >
-                <b-form-select
-                  v-model="selectProtocol"
-                  :options="instructsNames"
-                ></b-form-select>
-              </b-form-group>
-            </b-form>
-          </b-card>
-        </b-col>
-      </b-row>
-      <!--  -->
-      <b-row>
-        <b-col>
-          <separated title="所有协议指令"></separated>
+  <my-page-user title="所有协议" :isUser="false">
+    <b-row>
+      <b-col>
+        <separated title="filter"></separated>
+        <b-card>
+          <b-form>
+            <b-form-group label="协议类型:" v-bind="forGroup">
+              <b-form-radio-group v-model="DevType" :options="DevTypes"></b-form-radio-group>
+            </b-form-group>
+            <b-form-group label="协议名称:" v-bind="forGroup" v-if="DevType !== ''">
+              <b-form-select v-model="selectProtocol" :options="instructsNames"></b-form-select>
+            </b-form-group>
+          </b-form>
+        </b-card>
+      </b-col>
+    </b-row>
+    <!--  -->
+    <b-row>
+      <b-col>
+        <separated title="所有协议指令"></separated>
 
-          <b-table-lite
-            :items="protocolsFilter"
-            :fields="ProtocolsFields"
-            responsive
-          >
-            <template v-slot:cell(instruct)="row">
-              <b-button @click="row.toggleDetails" size="sm">详情</b-button>
-            </template>
-            <template v-slot:cell(oprate)="data">
-              <b-button-group>
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-ProtocolConfig-OprateInstruct',
+        <b-table-lite :items="protocolsFilter" :fields="ProtocolsFields" responsive>
+          <template v-slot:cell(instruct)="row">
+            <b-button @click="row.toggleDetails" size="sm">详情</b-button>
+          </template>
+          <template v-slot:cell(oprate)="data">
+            <b-button-group>
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-ProtocolConfig-OprateInstruct',
                     query: {
                       ProtocolType: data.item.ProtocolType,
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >操作指令</b-button
-                >
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-ProtocolConfig-DevConstant',
+              >操作指令</b-button>
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-ProtocolConfig-DevConstant',
                     query: {
                       ProtocolType: data.item.ProtocolType,
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >常量配置</b-button
-                >
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-ProtocolConfig-Threshold',
+              >常量配置</b-button>
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-ProtocolConfig-Threshold',
                     query: {
                       ProtocolType: data.item.ProtocolType,
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >阀值配置</b-button
-                >
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-ProtocolConfig-StatWacth',
+              >阀值配置</b-button>
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-ProtocolConfig-StatWacth',
                     query: {
                       ProtocolType: data.item.ProtocolType,
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >状态监控</b-button
-                >
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-ProtocolConfig-ShowTag',
+              >状态监控</b-button>
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-ProtocolConfig-ShowTag',
                     query: {
                       ProtocolType: data.item.ProtocolType,
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >显示标签</b-button
-                >
-                
-                <b-button
-                  variant="info"
-                  :to="{
-                    name: 'tool-addProtocol',
+              >显示标签</b-button>
+
+              <b-button
+                variant="info"
+                :to="{
+                    name: 'manage-addProtocol',
                     query: {
                       Protocol: data.item.Protocol
                     }
                   }"
-                  >修改协议</b-button
-                >
-                <b-button @click="deleteProtocol(data.item)" size="sm"
-                  >delete</b-button
-                >
-              </b-button-group>
-            </template>
-            <template v-slot:row-details="row">
-              <b-card>
-                <b-table-lite
-                  responsive
-                  :items="row.item.instruct"
-                  :fields="instructFields"
-                >
-                  <template v-slot:cell(formResize)="row2">
-                    <b-button @click="row2.toggleDetails" size="sm"
-                      >详情</b-button
-                    >
-                  </template>
-                  <template v-slot:row-details="row2">
-                    <b-card>
-                      <b-table-lite
-                        :items="row2.item.formResize"
-                      ></b-table-lite>
-                    </b-card>
-                  </template>
-                </b-table-lite>
-              </b-card>
-            </template>
-          </b-table-lite>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+              >修改协议</b-button>
+              <b-button @click="deleteProtocol(data.item)" size="sm">delete</b-button>
+            </b-button-group>
+          </template>
+          <template v-slot:row-details="row">
+            <b-card>
+              <b-table-lite responsive :items="row.item.instruct" :fields="instructFields">
+                <template v-slot:cell(formResize)="row2">
+                  <b-button @click="row2.toggleDetails" size="sm">详情</b-button>
+                </template>
+                <template v-slot:row-details="row2">
+                  <b-card>
+                    <b-table-lite :items="row2.item.formResize"></b-table-lite>
+                  </b-card>
+                </template>
+              </b-table-lite>
+            </b-card>
+          </template>
+        </b-table-lite>
+      </b-col>
+    </b-row>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -231,9 +198,9 @@ export default Vue.extend({
       console.log(item);
 
       const { ProtocolType, Protoclo } = item;
-      //:to="{name:'tool-configuration',query:{DevType:data.item}}"
+      //:to="{name:'manage-configuration',query:{DevType:data.item}}"
       this.$router.push({
-        name: "tool-configuration",
+        name: "manage-configuration",
         params: { ProtocolType, Protoclo }
       });
     },

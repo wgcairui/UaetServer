@@ -1,23 +1,22 @@
 <template>
-  <div>
-    <my-head title="节点运行状态" />
-
-    <b-card>
-      <b-table-lite :items="NodeInfo" :fields="NodeInfoFields" responsive>
-        <template v-slot:cell(loadavg)="row">
-          <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
-        </template>
-        <template v-slot:cell(updateTime)="row">
-          {{ time(row.value) }}
-        </template>
-      </b-table-lite>
-    </b-card>
-  </div>
+  <my-page-user title="节点运行状态" :isUser="false">
+    <b-row class="my-5">
+      <b-col>
+        <b-card>
+          <b-table-lite :items="NodeInfo" :fields="NodeInfoFields" responsive>
+            <template v-slot:cell(loadavg)="row">
+              <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
+            </template>
+            <template v-slot:cell(updateTime)="row">{{ new Date(row.value).toLocaleString()}}</template>
+          </b-table-lite>
+        </b-card>
+      </b-col>
+    </b-row>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { paresTime } from "../../plugins/tools";
 export default Vue.extend({
   data() {
     return {
@@ -33,11 +32,6 @@ export default Vue.extend({
         { key: "updateTime", label: "更新时间" }
       ]
     };
-  },
-  methods: {
-    time(time: string) {
-      return paresTime(time);
-    }
   },
   apollo: {
     NodeInfo: gql`
@@ -56,7 +50,7 @@ export default Vue.extend({
             mac
             port
             ip
-            jw 
+            jw
           }
         }
       }

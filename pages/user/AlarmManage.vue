@@ -1,5 +1,5 @@
 <template>
-  <my-page title="告警管理">
+  <my-page-user title="告警管理">
     <b-row>
       <b-col>
         <b-tabs pills class="my-3">
@@ -26,7 +26,7 @@
         </b-tabs>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";

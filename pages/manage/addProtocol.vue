@@ -1,6 +1,5 @@
 <template>
-  <my-page title="添加设备">
-    <!--  -->
+  <my-page-user title="添加设备" :isUser="false">
     <b-row no-gutters>
       <b-col cols="12">
         <separated title="添加设备协议"></separated>
@@ -143,7 +142,7 @@
         </b-card>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 
 <script lang="ts">
@@ -252,8 +251,6 @@ export default vue.extend({
         }); */
         this.$data.instructItems = newVal.instruct;
         this.$data.accont.ProtocolType = newVal.ProtocolType;
-        console.log({ a: this.$data.accont.ProtocolType, b: newVal });
-
         this.$data.accont.Type = newVal.Type;
       } else {
         this.$data.instructItems = [];

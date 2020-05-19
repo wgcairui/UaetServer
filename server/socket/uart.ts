@@ -3,7 +3,7 @@ import { Server } from "http";
 import Event, { Event as event } from "../event/index";
 import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, instructQuery, ApolloMongoResult, logNodes, logTerminals } from "../bin/interface";
 
-import tool from "../bin/tool";
+import tool from "../util/tool";
 import { DefaultContext } from "koa";
 import { LogNodes, LogTerminals } from "../mongoose/Log";
 

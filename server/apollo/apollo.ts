@@ -1,6 +1,6 @@
 import { ApolloServer } from "apollo-server-koa";
 import { GraphQLRequest } from "apollo-server-types";
-import { JwtVerify } from "../bin/Secret";
+import { JwtVerify } from "../util/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
 import { KoaCtx, UserInfo, logUserRequst } from "../bin/interface";

@@ -1,5 +1,5 @@
 <template>
-  <my-page :title="`设备常量配置-${DevMac}-${pid}-${mountDev}`">
+  <my-page-user :title="`设备常量配置-${DevMac}-${pid}-${mountDev}`">
     <b-row>
       <b-col>
         <separated title="添加透传终端自定义配置"></separated>
@@ -41,7 +41,7 @@
         </b-tabs>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";

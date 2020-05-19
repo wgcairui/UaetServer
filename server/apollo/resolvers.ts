@@ -12,15 +12,15 @@ import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
 import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult } from "../bin/interface";
 
-import { BcryptDo } from "../bin/bcrypt";
+import { BcryptDo } from "../util/bcrypt";
 
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
 import { LogUserLogins, LogTerminals } from "../mongoose/Log";
-import { SendValidation } from "../bin/SMS";
-import Tool from "../bin/tool";
-import { JwtSign, JwtVerify } from "../bin/Secret";
+import { SendValidation } from "../util/SMS";
+import Tool from "../util/tool";
+import { JwtSign, JwtVerify } from "../util/Secret";
 
 const resolvers: IResolvers = {
     Query: {
@@ -174,6 +174,10 @@ const resolvers: IResolvers = {
         // 获取用户自定义配置
         async getUserSetup(root, arg, ctx: ApolloCtx) {
             return await UserAlarmSetup.findOne({ user: ctx.user })
+        },
+        // 获取用户自定义配置
+        async getUserSetups() {
+            return await UserAlarmSetup.find()
         },
         // 获取协议常量
         async getUserDevConstant(root, { Protocol }, ctx: ApolloCtx) {

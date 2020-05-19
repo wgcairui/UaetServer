@@ -17,9 +17,15 @@
                 <b-form-input id="user" v-model.trim="accont.user" placeholder />
               </b-form-group>
               <b-form-group label="密码:" label-for="passwd" v-bind="label">
-                <b-form-input id="passwd" v-model.trim="accont.passwd" type="password" placeholder />
+                <b-form-input
+                  id="passwd"
+                  v-model.trim="accont.passwd"
+                  type="password"
+                  placeholder
+                  @keyup.enter="login_submit"
+                />
               </b-form-group>
-              <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit" @keyup.enter="login_submit">
+              <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit">
                 {{$t('deng-lu')}}
                 <span />
               </b-button>
@@ -52,17 +58,54 @@ export default vue.extend({
     async login_submit() {
       const { user, passwd } = this.$data.accont;
       // 向服务器请求加密hash
-      const { hash } = await this.$axios
+      const data = await this.$axios
         .$get("/api/auth/hash", { params: { user } })
         .then(el => el)
-        .catch(e => {
-          this.$bvModal.msgBoxOk(e.response.data, {
+        .catch(error => {
+          this.$bvModal.msgBoxOk(error?.response?.data || "流程出错", {
             size: "sm",
             buttonSize: "sm"
           });
         });
-      if (!hash || !passwd) return;
-      try {
+      //
+      if (!data?.hash || !passwd) return;
+      this.$auth
+        .loginWith("local", {
+          data: { user, passwd: AES.encrypt(passwd, data.hash).toString() }
+        })
+        .then((data: any) => {
+          localStorage.setItem("uartserverUser", data.data.user);
+          switch (data.data.userGroup) {
+            case "admin":
+              this.$router.push({ name: "manage" });
+              break;
+            case "root":
+              this.$router.push({ name: "admin" });
+              break;
+            default:
+              this.$router.push("/");
+              break;
+          }
+        })
+        .catch(error => {
+          //console.log({ error, keys: Object.keys(error) });
+          if (!error.response || error.response.status !== 400) {
+            this.$bvModal.msgBoxOk("登录遇到未知错误");
+            return;
+          } else {
+            // console.log(error.response);
+            switch (error.response.data) {
+              case "userNan":
+                this.$bvModal.msgBoxOk("用户名错误");
+                break;
+              case "passwdError":
+                this.accont.passwd = "";
+                this.$bvModal.msgBoxOk("用户密码错误");
+                break;
+            }
+          }
+        });
+      /* try {
         const result = await this.$auth.loginWith("local", {
           data: { user, passwd: AES.encrypt(passwd, hash).toString() }
         });
@@ -85,20 +128,20 @@ export default vue.extend({
               break;
           }
         }
-      }
+      } */
     }
   },
   mounted() {
     const user = localStorage.getItem("uartserverUser");
-    if (user) {
-      this.accont.user = user;
-    }
+    if (user) this.accont.user = user;
   }
 });
 </script>
 <style scoped>
 @media screen and (min-width: 568px) {
   .login {
+    max-width: 90%;
+    margin: auto;
     min-width: 500px;
     height: 368px;
   }

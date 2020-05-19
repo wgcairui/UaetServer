@@ -1,5 +1,5 @@
 <template>
-  <my-page title="用户信息">
+  <my-page-user title="用户信息">
     <template v-slot:nav>
       <my-nav />
     </template>
@@ -35,7 +35,7 @@
         </b-form>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";

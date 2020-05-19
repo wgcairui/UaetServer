@@ -1,5 +1,5 @@
 <template>
-  <my-page title="协议显示标签配置">
+  <my-page-user title="协议显示标签配置" :isUser="false">
     <b-row>
       <b-col>
         <separated title="add Sim"></separated>
@@ -11,7 +11,7 @@
         </b-table>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 
 <script lang="ts">

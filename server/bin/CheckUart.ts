@@ -6,8 +6,8 @@ import {
   Threshold
 } from "./interface";
 import Event from "../event/index";
-import { SendUartAlarm } from "./SMS";
-import { SendAlarmEvent } from "./Mail";
+import { SendUartAlarm } from "../util/SMS";
+import { SendAlarmEvent } from "../util/Mail";
 
 export default (query: queryResult) => {
   // 获取mac绑定的用户

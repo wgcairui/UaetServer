@@ -1,30 +1,20 @@
 <template>
-  <div>
-    <my-head title="添加设备" />
+  <my-page-user title="添加设备" :isUser="false">
     <separated title="添加设备" />
     <b-form class="p-2">
       <b-form-group label="设备型号:" v-bind="forGroup">
         <b-form-input v-model="accont.DevModel" trim />
       </b-form-group>
       <b-form-group label="设备类型:" v-bind="forGroup">
-        <b-form-select
-          v-model="accont.Type"
-          :options="['UPS', '空调', '电量仪', '温湿度']"
-        />
+        <b-form-select v-model="accont.Type" :options="['UPS', '空调', '电量仪', '温湿度']" />
       </b-form-group>
       <b-form-group label="设备协议(可多选):" v-bind="forGroup">
-        <b-form-select
-          v-model="accont.Protocols"
-          multiple
-          :options="filterProtocols"
-        />
+        <b-form-select v-model="accont.Protocols" multiple :options="filterProtocols" />
       </b-form-group>
       <b-form-group label="已选协议:" v-bind="forGroup">
         <b-form-input v-model="selectProtocols" plaintext />
       </b-form-group>
-      <b-button block @click="addDevType">
-        submit
-      </b-button>
+      <b-button block @click="addDevType">submit</b-button>
     </b-form>
     <separated title="所有设备型号" />
     <b-table-lite :items="DevTypes" responsive :fields="DevTypesFields">
@@ -33,16 +23,12 @@
       </template>
       <template v-slot:cell(oprate)="row">
         <b-button-group>
-          <b-button @click="accont.DevModel = row.item.DevModel" variant="info"
-            >修改</b-button
-          >
-          <b-button @click="deleteDevModel(row.item)">
-            delete
-          </b-button>
+          <b-button @click="accont.DevModel = row.item.DevModel" variant="info">修改</b-button>
+          <b-button @click="deleteDevModel(row.item)">delete</b-button>
         </b-button-group>
       </template>
     </b-table-lite>
-  </div>
+  </my-page-user>
 </template>
 <script lang="ts">
 import vue from "vue";

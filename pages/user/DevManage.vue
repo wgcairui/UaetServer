@@ -1,5 +1,5 @@
 <template>
-  <my-page title="设备管理">
+  <my-page-user title="设备管理">
     <template v-slot:nav>
       <my-nav />
     </template>
@@ -97,7 +97,7 @@
           </template>
         </b-table-lite>
     </b-row>-->
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import vue from "vue";

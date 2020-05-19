@@ -1,22 +1,25 @@
 <template>
-  <my-page title="重置密码">
-    <b-row>
-      <b-col>
-        <b-card sub-title="输入邮箱或账号" class="my-5 p-5">
-          <b-form>
-            <my-form label="邮箱|账号:">
-              <b-input-group>
-                <b-form-input v-model="user"></b-form-input>
-                <b-input-group-append>
-                  <b-button @click="resetUserPasswd(user)">确定</b-button>
-                </b-input-group-append>
-              </b-input-group>
-            </my-form>
-          </b-form>
-        </b-card>
-      </b-col>
-    </b-row>
-  </my-page>
+  <b-container fluid class="p-0">
+    <my-head title="重置密码" />
+    <b-container>
+      <b-row>
+        <b-col>
+          <b-card sub-title="输入邮箱或账号" class="my-5 p-5">
+            <b-form>
+              <my-form label="邮箱|账号:">
+                <b-input-group>
+                  <b-form-input v-model="user"></b-form-input>
+                  <b-input-group-append>
+                    <b-button @click="resetUserPasswd(user)">确定</b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </my-form>
+            </b-form>
+          </b-card>
+        </b-col>
+      </b-row>
+    </b-container>
+  </b-container>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -77,27 +80,27 @@ export default Vue.extend({
       const passwd = await MessageBox.prompt("输入新的密码:")
         .then(el => (el as any).value)
         .catch(e => false);
-      if(!passwd) return
+      if (!passwd) return;
       //
       const reset = await this.$apollo.mutate({
-        mutation:gql`
-        mutation setUserPasswd($hash:String,$passwd:String){
-          setUserPasswd(hash:$hash,passwd:$passwd){
-            ok
-            msg
+        mutation: gql`
+          mutation setUserPasswd($hash: String, $passwd: String) {
+            setUserPasswd(hash: $hash, passwd: $passwd) {
+              ok
+              msg
+            }
           }
-        }
         `,
-        variables:{hash:hashs.msg,passwd}
-      })
-      const setUserPasswd = reset.data.setUserPasswd as ApolloMongoResult
-      if(!setUserPasswd.ok){
-        MessageBox.alert(setUserPasswd.msg)
-        return
+        variables: { hash: hashs.msg, passwd }
+      });
+      const setUserPasswd = reset.data.setUserPasswd as ApolloMongoResult;
+      if (!setUserPasswd.ok) {
+        MessageBox.alert(setUserPasswd.msg);
+        return;
       }
       //
-      this.$auth.logout()
-      this.$router.push("/")
+      this.$auth.logout();
+      this.$router.push("/");
     }
   }
 });

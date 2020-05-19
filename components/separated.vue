@@ -1,5 +1,5 @@
 <template>
-  <b-col cols="12" class="border-bottom my-2 px-3 d-flex flex-row justify-content-center">
+  <b-col cols="12" class="border-bottom mt-4 my-2 px-3 d-flex flex-row justify-content-center">
     <div>
       <span v-show="back" @click="backto">
         <i class="el-icon-back" />

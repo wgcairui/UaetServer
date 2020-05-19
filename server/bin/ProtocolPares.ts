@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import Event from "../event/index";
-import Tool from "../bin/tool";
+import Tool from "../util/tool";
 import { protocolInstruct, queryResult, queryResultArgument, protocol } from "./interface";
 
 export default async (R: queryResult) => {

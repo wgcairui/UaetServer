@@ -1,141 +1,105 @@
 <template>
-  <div>
-    <my-head title="添加终端" />
-    <b-container>
-      <b-row>
-        <b-col>
-          <separated title="注册设备"></separated>
-          <b-card>
-            <b-form class="px-5">
-              <b-form-group label="设备Mac:" v-bind="forGroup">
-                <b-form-input
-                  v-model="accont.DevMac"
-                  number
-                  trim
-                  :state="isRegisterTerminal"
-                  aria-describedby="input-live-feedback"
-                />
-                <b-form-invalid-feedback id="input-live-feedback">
-                  此设备Mac未注册{{ isRegisterTerminal }}
-                </b-form-invalid-feedback>
+  <my-page-user title="添加终端" :isUser="false">
+    <b-row>
+      <b-col>
+        <separated title="查询设备"></separated>
+        <b-card>
+          <b-form class="px-5">
+            <b-form-group label="设备Mac:" v-bind="forGroup">
+              <b-form-input
+                v-model="accont.DevMac"
+                number
+                trim
+                :state="isRegisterTerminal"
+                aria-describedby="input-live-feedback"
+              />
+              <b-form-invalid-feedback id="input-live-feedback">此设备Mac未注册{{ isRegisterTerminal }}</b-form-invalid-feedback>
+            </b-form-group>
+          </b-form>
+          <b-collapse v-model="isRegisterTerminal">
+            <b-form class="px-5" v-if="isRegisterTerminal">
+              <b-form-group label="注册节点:" v-bind="forGroup">
+                <b-form-input v-model="accont.mountNode" disabled />
               </b-form-group>
-            </b-form>
-            <b-collapse v-model="isRegisterTerminal">
-              <b-form class="px-5" v-if="isRegisterTerminal">
-                <b-form-group label="注册节点:" v-bind="forGroup">
-                  <b-form-input v-model="accont.mountNode" disabled />
+              <b-form-group label="设备别名:" v-bind="forGroup">
+                <b-form-input v-model="accont.name" trim :disabled="Boolean(Terminal)" />
+              </b-form-group>
+              <b-collapse v-model="TerminalStat">
+                <b-form-group label="设备地址：" v-bind="forGroup">
+                  <b-form-spinbutton
+                    v-model="accont.pid"
+                    min="0"
+                    max="254"
+                    :disabled="OprateMode === 'registerTerminalMountDev'"
+                  ></b-form-spinbutton>
                 </b-form-group>
-                <b-form-group label="设备别名:" v-bind="forGroup">
-                  <b-form-input
-                    v-model="accont.name"
-                    trim
-                    :disabled="Boolean(Terminal)"
-                  />
+                <b-form-group label="挂载设备类型:" v-bind="forGroup">
+                  <b-form-select v-model="accont.Type" :options="Devices" />
                 </b-form-group>
-                <b-collapse v-model="TerminalStat">
-                  <b-form-group label="设备地址：" v-bind="forGroup">
-                    <b-form-spinbutton
-                      v-model="accont.pid"
-                      min="0"
-                      max="254"
-                      :disabled="OprateMode === 'registerTerminalMountDev'"
-                    ></b-form-spinbutton>
-                  </b-form-group>
-                  <b-form-group label="挂载设备类型:" v-bind="forGroup">
-                    <b-form-select v-model="accont.Type" :options="Devices" />
-                  </b-form-group>
-                  <b-form-group label="挂载设备:" v-bind="forGroup">
-                    <b-form-select
-                      v-model="accont.mountDev"
-                      :options="SelectDevtype.DevType"
-                    />
-                  </b-form-group>
-                  <b-form-group label="协议类型:" v-bind="forGroup">
-                    <b-form-select
-                      v-model="accont.protocol"
-                      :options="
+                <b-form-group label="挂载设备:" v-bind="forGroup">
+                  <b-form-select v-model="accont.mountDev" :options="SelectDevtype.DevType" />
+                </b-form-group>
+                <b-form-group label="协议类型:" v-bind="forGroup">
+                  <b-form-select
+                    v-model="accont.protocol"
+                    :options="
                         SelectDevtype.Protocols.get(accont.mountDev) || []
                       "
-                    />
-                  </b-form-group>
-                  <b-button block @click="addTerminal()">
-                    {{ Stat }}
-                  </b-button>
-                </b-collapse>
-              </b-form>
-            </b-collapse>
-          </b-card>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col>
-          <b-table-lite
-            :items="TerminalItem"
-            :fields="TerminalsFields"
-            responsive
-          >
-            <template v-slot:cell(mountDevs)="row">
-              <b-button
-                type="link"
-                size="sm"
-                @click="row.toggleDetails"
-                variant="dark"
-                >查看</b-button
+                  />
+                </b-form-group>
+                <b-button block @click="addTerminal()">{{ Stat }}</b-button>
+              </b-collapse>
+            </b-form>
+          </b-collapse>
+        </b-card>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col>
+        <b-table-lite :items="TerminalItem" :fields="TerminalsFields" responsive>
+          <template v-slot:cell(mountDevs)="row">
+            <b-button type="link" size="sm" @click="row.toggleDetails" variant="dark">查看</b-button>
+          </template>
+          <template v-slot:row-details="row">
+            <b-card>
+              <b-table-lite
+                striped
+                borderless
+                hover
+                :items="row.item.mountDevs"
+                :fields="mountDevsFields"
               >
-            </template>
-            <template v-slot:row-details="row">
-              <b-card>
-                <b-table-lite
-                  striped
-                  borderless
-                  hover
-                  :items="row.item.mountDevs"
-                  :fields="mountDevsFields"
-                >
-                  <template v-slot:cell(oprate)="row1">
-                    <b-button-group>
-                      <b-button
-                        size="sm"
-                        @click="delTerminalMountDev(row1.item)"
-                        >删除</b-button
-                      >
-                      <b-button
-                        size="sm"
-                        @click="registerTerminalMountDevMode(row1.item)"
-                        >{{
-                          OprateMode === "registerTerminalMountDev"
-                            ? "取消"
-                            : "修改"
-                        }}</b-button
-                      >
-                    </b-button-group>
-                  </template>
-                </b-table-lite>
-              </b-card>
-            </template>
-            <template v-slot:cell(oprate)="row">
-              <b-button-group>
-                <b-button variant="info" @click="addTerminalMountDev" size="sm">
-                  {{
-                    OprateMode === "addTerminalMountDev"
+                <template v-slot:cell(oprate)="row1">
+                  <b-button-group>
+                    <b-button size="sm" @click="delTerminalMountDev(row1.item)">删除</b-button>
+                    <b-button size="sm" @click="registerTerminalMountDevMode(row1.item)">
+                      {{
+                      OprateMode === "registerTerminalMountDev"
                       ? "取消"
-                      : "添加挂载设备"
-                  }}
-                </b-button>
-                <b-button
-                  variant="danger"
-                  @click="deleteTerminal(row.item)"
-                  size="sm"
-                >
-                  删除
-                </b-button>
-              </b-button-group>
-            </template>
-          </b-table-lite>
-        </b-col>
-      </b-row>
-    </b-container>
-  </div>
+                      : "修改"
+                      }}
+                    </b-button>
+                  </b-button-group>
+                </template>
+              </b-table-lite>
+            </b-card>
+          </template>
+          <template v-slot:cell(oprate)="row">
+            <b-button-group>
+              <b-button variant="info" @click="addTerminalMountDev" size="sm">
+                {{
+                OprateMode === "addTerminalMountDev"
+                ? "取消"
+                : "添加挂载设备"
+                }}
+              </b-button>
+              <b-button variant="danger" @click="deleteTerminal(row.item)" size="sm">删除</b-button>
+            </b-button-group>
+          </template>
+        </b-table-lite>
+      </b-col>
+    </b-row>
+  </my-page-user>
 </template>
 <script lang="ts">
 import vue from "vue";
@@ -152,6 +116,7 @@ type OprateMode =
   | "addTerminalMountDev"
   | "registerTerminalMountDev";
 export default vue.extend({
+  name: "aaaaaaaaaaaaaaaaaaaaaaa",
   data() {
     const routeDevMac = this.$route.query.DevMac;
     const TerminalsFields = [
@@ -253,10 +218,10 @@ export default vue.extend({
     RegisterTerminal(newValue) {
       if (newValue) {
         this.isRegisterTerminal = true;
-        this.accont.mountNode = newValue.mountNode
+        this.accont.mountNode = newValue.mountNode;
       } else {
         this.isRegisterTerminal = false;
-        this.accont.mountNode = ""
+        this.accont.mountNode = "";
       }
     }
   },
@@ -335,7 +300,10 @@ export default vue.extend({
       for (let i in this.accont) {
         if (i === "pid") continue;
         if (!this.$data.accont[i] || this.$data.accont[i] === "") {
-          this.$bvModal.msgBoxOk("参数不能为空", { title: "Error" ,size:"lg"});
+          this.$bvModal.msgBoxOk("参数不能为空", {
+            title: "Error",
+            size: "lg"
+          });
           return;
         }
       }

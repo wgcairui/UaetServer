@@ -18,7 +18,7 @@ const typeDefs: DocumentNode = gql`
   # tool节点配置
   type Node {
     Name: String
-    IP: String
+    IP: String 
     Port: Int
     MaxConnections: String
   }
@@ -237,6 +237,7 @@ const typeDefs: DocumentNode = gql`
     getDevState(mac:String,node:String):Boolean
     # 获取用户自定义配置
     getUserSetup:UserSetup
+    getUserSetups:[UserSetup]
     # 获取用户协议常量
     getUserDevConstant(Protocol:String):DevConstant
     # 获取用户设备日志

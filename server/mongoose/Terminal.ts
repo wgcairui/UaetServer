@@ -11,7 +11,7 @@ const SchemaTerminal = new Schema({
   ip: String,
   port: Number,
   jw: String,
-  uptime: String,
+  uptime: { type: String, default: new Date().toLocaleString() },
   mountNode: { type: String, required: true },
   mountDevs: [
     new Schema(

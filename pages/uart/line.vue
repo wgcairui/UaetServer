@@ -1,5 +1,5 @@
 <template>
-  <my-page title="图表">
+  <my-page-user title="图表">
     <b-row>
       <b-col cols="12">
         <separated title="选择参数"></separated>
@@ -21,7 +21,7 @@
         </b-overlay>
       </b-col>
     </b-row>
-  </my-page>
+  </my-page-user>
 </template>
 <script lang="ts">
 import Vue from "vue";

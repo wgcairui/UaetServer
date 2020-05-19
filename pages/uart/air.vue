@@ -1,5 +1,5 @@
 <template>
-  <my-dev-page title="Air空调" :query="query" v-on:data="onData" v-on:constant="onConstant">
+  <my-page-user-dev title="Air空调" :query="query" v-on:data="onData" v-on:constant="onConstant">
     <template>
       <b-row class="w-100">
         <b-col cols="12">
@@ -50,7 +50,7 @@
         </b-col>
       </b-row>
     </template>
-  </my-dev-page>
+  </my-page-user-dev>
 </template>
 <script lang="ts">
 import Vue from "vue";

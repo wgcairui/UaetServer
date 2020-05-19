@@ -1,5 +1,5 @@
 <template>
-  <my-dev-page title="ups" :query="query" v-on:data="onData" v-on:constant="onConstant">
+  <my-page-user-dev title="ups" :query="query" v-on:data="onData" v-on:constant="onConstant">
     <template>
       <b-col cols="12" md="8" class="m-0 p-0 my-2">
         <b-card :sub-title="betty_model.name">
@@ -29,7 +29,7 @@
         </b-card>
       </b-col>
     </template>
-  </my-dev-page>
+  </my-page-user-dev>
 </template>
 <script lang="ts">
 import Vue from "vue";

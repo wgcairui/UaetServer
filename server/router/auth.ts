@@ -1,5 +1,5 @@
-import { JwtSign, JwtVerify } from "../bin/Secret";
-import { BcryptCompare } from "../bin/bcrypt";
+import { JwtSign, JwtVerify } from "../util/Secret";
+import { BcryptCompare } from "../util/bcrypt";
 import { Users } from "../mongoose/user";
 import { KoaCtx, UserInfo } from "../bin/interface";
 import { ParameterizedContext } from "koa";
@@ -25,7 +25,7 @@ export default async (ctx: ParameterizedContext) => {
         // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
         if (u && pwStat) {
           (ctx as KoaCtx).$Event.ClientCache.CacheUserLoginHash.delete(user)
-          ctx.body = { token: await JwtSign(u), user: u.user };
+          ctx.body = { token: await JwtSign(u), user: u.user, name: u.name, userGroup: u.userGroup };
         }
         break;
       }
@@ -33,7 +33,7 @@ export default async (ctx: ParameterizedContext) => {
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");
         const User: UserInfo = await JwtVerify(token);
-        ctx.body = { user: User.user }
+        ctx.body = { user: User.name }
       }
       break
     case "userGroup":

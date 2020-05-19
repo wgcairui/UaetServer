@@ -1,6 +1,6 @@
 import core from "@alicloud/pop-core"
 import { LogSmsSend } from "../mongoose/Log";
-import { logSmsSend, smsUartAlarm, ApolloMongoResult } from "./interface";
+import { logSmsSend, smsUartAlarm, ApolloMongoResult } from "../bin/interface";
 const key = require("../key/aliSms.json")
 
 interface SmsResult {
