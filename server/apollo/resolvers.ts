@@ -17,7 +17,7 @@ import { BcryptDo } from "../util/bcrypt";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
-import { LogUserLogins, LogTerminals } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -74,7 +74,7 @@ const resolvers: IResolvers = {
         },
         async EcTerminals() {
             return await EcTerminal.find({});
-        }, 
+        },
         // 节点信息
         async NodeInfo(root, { NodeName }) {
             return await NodeRunInfo.find(NodeName ? { NodeName } : {});
@@ -203,7 +203,46 @@ const resolvers: IResolvers = {
             const user = await Users.findOne({ user: ctx.user }).lean<UserInfo>() as UserInfo
             const tel = Tool.Mixtel(user.tel)
             return tel
-        }
+        },
+        // 获取socket node状态
+        getSocketNode(root, arg, ctx: ApolloCtx) {
+            return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline.entries()).map(el => {
+                const timeOutOprate = Array.from(ctx.$Event.Cache.CacheTerminalQueryIntructTimeout.get(el[0]) || [])
+                return { node: el[0], set: Array.from(el[1]), timeOutOprate }
+            })
+        },
+        // 获取socket user状态
+        getUserNode(root, arg, ctx: ApolloCtx) {
+            return Array.from(ctx.$Event.ClientCache.CacheUserSocketids.entries()).map(el => ({ user: el[0], set: Array.from(el[1]) }))
+        },
+        // 获取节点日志
+        async lognodes(root, { start, end }: { start: Date, end: Date }) {
+            return await LogNodes.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取终端日志
+        async logterminals(root, { start, end }: { start: Date, end: Date }) {
+            return await LogTerminals.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取短信日志
+        async logsmssends(root, { start, end }: { start: Date, end: Date }) {
+            return await LogSmsSend.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取邮件日志
+        async logmailsends(root, { start, end }: { start: Date, end: Date }) {
+            return []
+        },
+        // 获取设备告警日志
+        async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }) {
+            return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取用户登陆日志
+        async loguserlogins(root, { start, end }: { start: Date, end: Date }) {
+            return await LogUserLogins.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取用户请求日志
+        async loguserrequsts(root, { start, end }: { start: Date, end: Date }) {
+            return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
+        },
     },
 
     /* 
@@ -509,7 +548,7 @@ const resolvers: IResolvers = {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
-                return {ok:4,msg:"权限校验失败,请校验身份"} as ApolloMongoResult
+                return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
             }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol

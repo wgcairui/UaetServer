@@ -1,8 +1,11 @@
 <template>
-  <my-page-user title="用户状态" :isUser="false">
+  <my-page-manage title="用户状态" :isUser="false">
     <b-row class="my-5">
       <b-col>
-        <b-table :items="Users" :fields="NodeInfoFields" responsive>
+        <separated title="节点列表">
+          <b-input v-model="filter" placeholder="输入账号搜索数据" size="sm"></b-input>
+        </separated>
+        <b-table :items="Users" :filter="new RegExp(filter)"  :fields="NodeInfoFields" responsive striped hover show-empty>
           <template v-slot:cell(creatTime)="row">{{ new Date(row.value).toLocaleDateString()}}</template>
           <template
             v-slot:cell(modifyTime)="row"
@@ -10,15 +13,17 @@
         </b-table>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { UserInfo } from "../../../server/bin/interface";
 export default Vue.extend({
   data() {
     return {
+      filter: this.$route.query.user || "",
       Users: [],
       NodeInfoFields: [
         { key: "user", label: "账号" },

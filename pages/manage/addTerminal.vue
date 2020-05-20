@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="添加终端" :isUser="false">
+  <my-page-manage title="添加终端" :isUser="false">
     <b-row>
       <b-col>
         <separated title="查询设备"></separated>
@@ -99,7 +99,7 @@
         </b-table-lite>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import vue from "vue";

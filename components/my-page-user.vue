@@ -144,19 +144,21 @@ export default Vue.extend({
       return ((this.$store as any).state.Infos as WebInfo[]) || [];
     },
     mountDev() {
-      const terminals = (this as any).BindDevice.UTs as Terminal[];
+      const terminals = (this as any).BindDevice?.UTs as Terminal[];
       return terminals
-        .map(el => {
-          return el.mountDevs.map(els => ({
-            DevMac: el.DevMac,
-            pid: els.pid,
-            mountDev: els.mountDev,
-            protocol: els.protocol,
-            type: els.Type,
-            text: `${el.name}-${els.pid}-${els.mountDev}`
-          }));
-        })
-        .flat();
+        ? terminals
+            .map(el => {
+              return el.mountDevs.map(els => ({
+                DevMac: el.DevMac,
+                pid: els.pid,
+                mountDev: els.mountDev,
+                protocol: els.protocol,
+                type: els.Type,
+                text: `${el.name}-${els.pid}-${els.mountDev}`
+              }));
+            })
+            .flat()
+        : [];
     }
   },
   methods: {
@@ -217,6 +219,33 @@ export default Vue.extend({
         }
       `
     }
+  },
+  beforeCreate() {
+    this.$apollo
+      .query({
+        query: gql`
+          {
+            userGroup
+          }
+        `
+      })
+      .then(el => {
+        const userGroup = el.data.userGroup;
+        const name = this.$route.name as string;
+        //console.log({ userGroup, name });
+        if (userGroup === "user" && /(^index|^uart*|^user*)/.test(name)) return;
+        switch (userGroup) {
+          case "admin":
+            this.$router.push({ name: "manage" });
+            break;
+          case "root":
+            this.$router.push({ name: "admin" });
+            break;
+          default:
+            this.$router.push("/");
+            break;
+        }
+      });
   }
 });
 </script>

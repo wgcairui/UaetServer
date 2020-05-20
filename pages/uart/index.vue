@@ -150,9 +150,7 @@ export default Vue.extend({
       const { Type, mountDev, pid, protocol }: selectTree = item.data;
       if (!Type) return;
       const DevMac = <string>this.$route.query.DevMac;
-
       const query = { DevMac, pid: String(pid), mountDev, protocol };
-
       switch (Type) {
         case "温湿度":
           this.$router.push({ name: "uart-th", query });

@@ -7,7 +7,7 @@
       </span>
       <b>{{ title }}</b>
     </div>
-    <div class="ml-auto">
+    <div class="ml-auto my-1">
       <slot />
     </div>
   </b-col>

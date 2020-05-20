@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="Manage" :isUser="false">
+  <my-page-manage title="Manage" :isUser="false">
     <b-row>
       <separated title="基础数据"></separated>
       <b-col v-for="(link, key) in Protocols" :key="key" cols="12" md="6">
@@ -39,7 +39,7 @@
         </b-link>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";

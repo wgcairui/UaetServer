@@ -5,7 +5,7 @@ import separated from "../components/separated.vue"
 import MyHead from "../components/MyHead.vue"
 import MyPageUser from "../components/my-page-user.vue"
 import MyPageUserDev from "../components/my-page-user-dev.vue"
-
+import MyPageManage from "../components/my-page-manage.vue"
 import MyForm from "../components/MyForm.vue"
 import MyOprate from "../components/MyOprate.vue"
 
@@ -17,6 +17,7 @@ Vue.component("my-oprate", MyOprate)
 Vue.component("my-form", MyForm)
 Vue.component("my-page-user", MyPageUser)
 Vue.component("my-page-user-dev", MyPageUserDev)
+Vue.component("my-page-manage", MyPageManage)
 
 Vue.component("socket-state", SocketState)
 Vue.component("my-head", MyHead)

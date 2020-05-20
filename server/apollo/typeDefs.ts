@@ -244,6 +244,25 @@ const typeDefs: DocumentNode = gql`
     getLogTerminal:[LogTerminal]
     # 获取用户tel
     getUserTel:String
+    # 获取socket node状态
+    getSocketNode:JSON
+    # 获取socket user状态
+    getUserNode:JSON
+    # 获取节点日志
+    lognodes(start:Date,end:Date):JSON
+    # 获取终端日志
+    logterminals(start:Date,end:Date):JSON
+    # 获取终端日志
+    logsmssends(start:Date,end:Date):JSON
+    # 获取终端日志
+    logmailsends(start:Date,end:Date):JSON
+    # 获取设备告警日志
+    loguartterminaldatatransfinites(start:Date,end:Date):JSON
+    # 获取终端日志
+    loguserlogins(start:Date,end:Date):JSON
+    # 获取终端日志
+    loguserrequsts(start:Date,end:Date):JSON
+
   }
 
   #mutation

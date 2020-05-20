@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="用户状态" :isUser="false">
+  <my-page-manage title="用户状态" :isUser="false">
     <b-row class="my-5">
       <b-col>
         <b-table :items="Users" :fields="NodeInfoFields" responsive striped>
@@ -16,7 +16,7 @@
         </b-table>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";

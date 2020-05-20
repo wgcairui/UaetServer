@@ -1,33 +1,38 @@
 <template>
-  <my-page-user title="透传终端运行状态" :isUser="false">
+  <my-page-manage title="透传终端运行状态" :isUser="false">
     <b-row class="my-5">
       <b-col>
-        <b-card>
-          <b-table responsive :items="Terminals" :fields="fields" striped>
-            <template v-slot:cell(mountDevs)="row">
-              <b-button
-                size="sm"
-                @click="row.toggleDetails"
-                v-if="row.value"
-              >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-            </template>
-            <template v-slot:row-details="row">
+        <separated title="节点列表">
+          <b-input v-model="filter" placeholder="输入设备ID搜索数据" size="sm"></b-input>
+        </separated>
+        <b-table responsive :items="Terminals" :filter="new RegExp(filter)" :fields="fields" hover>
+          <template v-slot:cell(mountDevs)="row">
+            <b-button
+              size="sm"
+              @click="row.toggleDetails"
+              v-if="row.value"
+            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
+          </template>
+          <template v-slot:row-details="row">
+            <b-card>
               <b-table :items="row.item.mountDevs" :fields="childFields"></b-table>
-            </template>
-          </b-table>
-        </b-card>
+            </b-card>
+          </template>
+        </b-table>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
+import { Terminal } from "../../../server/bin/interface";
 export default Vue.extend({
   data() {
     return {
-      Terminals: [],
+      filter: this.$route.query.DevMac || "",
+      Terminals: [] as Terminal[],
       fields: [
         { key: "name", label: "别名" },
         { key: "DevMac", label: "设备ID" },

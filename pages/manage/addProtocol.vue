@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="添加设备" :isUser="false">
+  <my-page-manage title="添加设备" :isUser="false">
     <b-row no-gutters>
       <b-col cols="12">
         <separated title="添加设备协议"></separated>
@@ -142,7 +142,7 @@
         </b-card>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 
 <script lang="ts">

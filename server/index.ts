@@ -17,10 +17,14 @@ import ApolloServer from "./apollo/apollo";
 import router from "./router/index";
 // Event
 import Event from "./event/index";
+// Cron
+import * as Cron from "./cron/index";
 // nuxt config
 import config from "../nuxt.config";
 
 const app = new Koa();
+// cron start
+Cron.start()
 // attach
 Event.attach(app);
 // new apollo

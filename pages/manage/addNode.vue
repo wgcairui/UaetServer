@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="添加节点" :isUser="false">
+  <my-page-manage title="添加节点" :isUser="false">
     <b-form class="p-3">
       <b-form-group label="节点名称:" v-bind="forGroup">
         <b-form-input v-model="accont.Name" trim />
@@ -24,7 +24,7 @@
         <b-button @click="deleteNode(row.item)">delete</b-button>
       </template>
     </b-table-lite>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import vue from "vue";

@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="Administrator" :isUser="false">
+  <my-page-manage title="Administrator" :isUser="false">
     <b-row>
       <separated title="基础"></separated>
       <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="4">
@@ -39,7 +39,7 @@
         </b-link>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -66,17 +66,17 @@ export default Vue.extend({
         }
       ] as navi[],
       Socket: [
-        { to: {}, text: "节点", ico: "\uEB64" },
-        { to: {}, text: "用户", ico: "\uEB6f" }
+        { to: { name: "admin-socket-node" }, text: "节点", ico: "\uEB64" },
+        { to: { name: "admin-socket-user" }, text: "用户", ico: "\uEB6f" }
       ] as navi[],
       log: [
-        { to: {}, text: "节点", ico: "\uEB64" },
-        { to: {}, text: "终端", ico: "\uEB23" },
-        { to: {}, text: "短信", ico: "\uEB8b" },
-        { to: {}, text: "邮件", ico: "\uEB8b" },
-        { to: {}, text: "告警", ico: "\uEB68" },
-        { to: {}, text: "用户登陆", ico: "\uEB6b" },
-        { to: {}, text: "用户请求", ico: "\uEB8c" }
+        { to: { name: "admin-log-node" }, text: "节点", ico: "\uEB64" },
+        { to: { name: "admin-log-terminal" }, text: "终端", ico: "\uEB23" },
+        { to: { name: "admin-log-sms" }, text: "短信", ico: "\uEB8b" },
+        { to: { name: "admin-log-mail" }, text: "邮件", ico: "\uEB8b" },
+        { to: { name: "admin-log-uartterminaldatatransfinites" }, text: "告警", ico: "\uEB68" },
+        { to: { name: "admin-log-userlogins" }, text: "用户登陆", ico: "\uEB6b" },
+        { to: { name: "admin-log-userrequsts" }, text: "用户请求", ico: "\uEB8c" }
       ] as navi[]
     };
   }

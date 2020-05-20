@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="操作指令" :isUser="false">
+  <my-page-manage title="操作指令" :isUser="false">
     <b-row>
       <b-col>
         <separated title="添加操作指令"></separated>
@@ -41,7 +41,7 @@
         </div>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";

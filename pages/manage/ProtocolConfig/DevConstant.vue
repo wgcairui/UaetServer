@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="协议常量配置" :isUser="false">
+  <my-page-manage title="协议常量配置" :isUser="false">
     <b-row>
       <b-col>
         <separated :title="'配置设备类型:' + ProtocolType + ',Protocol:' + Protocol"></separated>
@@ -87,7 +87,7 @@
         </b-form>-->
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 
 <script lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="添加设备" :isUser="false">
+  <my-page-manage title="添加设备" :isUser="false">
     <separated title="添加设备" />
     <b-form class="p-2">
       <b-form-group label="设备型号:" v-bind="forGroup">
@@ -28,7 +28,7 @@
         </b-button-group>
       </template>
     </b-table-lite>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import vue from "vue";

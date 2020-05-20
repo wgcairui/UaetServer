@@ -1,18 +1,17 @@
 <template>
-  <my-page-user title="节点运行状态" :isUser="false">
+  <my-page-manage title="节点运行状态" :isUser="false">
     <b-row class="my-5">
       <b-col>
-        <b-card>
-          <b-table-lite :items="NodeInfo" :fields="NodeInfoFields" responsive>
-            <template v-slot:cell(loadavg)="row">
-              <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
-            </template>
-            <template v-slot:cell(updateTime)="row">{{ new Date(row.value).toLocaleString()}}</template>
-          </b-table-lite>
-        </b-card>
+        <separated title="节点列表"></separated>
+        <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive>
+          <template v-slot:cell(loadavg)="row">
+            <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
+          </template>
+          <template v-slot:cell(updateTime)="row">{{ new Date(row.value).toLocaleString()}}</template>
+        </b-table>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";

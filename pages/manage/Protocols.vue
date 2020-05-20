@@ -1,5 +1,5 @@
 <template>
-  <my-page-user title="所有协议" :isUser="false">
+  <my-page-manage title="所有协议" :isUser="false">
     <b-row>
       <b-col>
         <separated title="filter"></separated>
@@ -106,7 +106,7 @@
         </b-table-lite>
       </b-col>
     </b-row>
-  </my-page-user>
+  </my-page-manage>
 </template>
 <script lang="ts">
 import Vue from "vue";

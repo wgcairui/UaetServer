@@ -4,26 +4,34 @@
       <b-row id="uart" class="my-4">
         <separated title="透传设备" />
         <b-col v-for="(link, key) in BindDevice.UTs" :key="key" cols="12" md="6" class="mt-4">
-          <b-link
-            :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
-            class="text-decoration-none text-dark"
-          >
-            <b-card>
+          <b-card>
+            <b-link
+              :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
+              class="text-decoration-none text-dark"
+            >
               <b-card-title>
                 <i class="iconfont">&#xec4a;</i>
                 {{ link.name }}
               </b-card-title>
               <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
-              <b-card-body>
-                <i class="iconfont">&#xec24;</i>
-                <span>
+            </b-link>
+            <b-card-body>
+              <i class="iconfont">&#xec24;</i>
+              <span>
+                <b-button
+                  variant="link"
+                  v-for="val in link.mountDevs"
+                  :key="val.mountDev"
+                  class="text-dark"
+                  @click="toDev(link.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
+                >
                   {{
-                  link.mountDevs.map(el => el.mountDev + el.pid).join(",")
+                  val.mountDev+val.pid
                   }}
-                </span>
-              </b-card-body>
-            </b-card>
-          </b-link>
+                </b-button>
+              </span>
+            </b-card-body>
+          </b-card>
         </b-col>
       </b-row>
       <b-row id="ECs">
@@ -84,6 +92,7 @@ export default Vue.extend({
               DevMac
               name
               mountDevs {
+                Type
                 mountDev
                 protocol
                 pid
@@ -97,9 +106,38 @@ export default Vue.extend({
           }
         }
       `,
-      result:function(data){
-        const BindDevice = data.data.BindDevice as BindDevice
-        if(!BindDevice || (BindDevice.UTs.length ===0 && BindDevice.ECs.length===0)) this.$router.push("/user/DevManage")
+      result: function(data) {
+        const BindDevice = data.data.BindDevice as BindDevice;
+        if (
+          !BindDevice ||
+          (BindDevice.UTs.length === 0 && BindDevice.ECs.length === 0)
+        )
+          this.$router.push("/user/DevManage");
+      }
+    }
+  },
+  methods: {
+    toDev(
+      DevMac: string,
+      pid: string,
+      mountDev: string,
+      protocol: string,
+      Type: string
+    ) {
+      const query = { DevMac, pid, mountDev, protocol };
+      switch (Type) {
+        case "温湿度":
+          this.$router.push({ name: "uart-th", query });
+          break;
+        case "空调":
+          this.$router.push({ name: "uart-air", query });
+          break;
+        case "电量仪":
+          this.$router.push({ name: "uart-em", query });
+          break;
+        case "UPS":
+          this.$router.push({ name: "uart-ups", query });
+          break;
       }
     }
   }
