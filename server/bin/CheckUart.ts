@@ -60,6 +60,7 @@ export default (query: queryResult) => {
           pid: query.pid,
           protocol: query.protocol,
           timeStamp: query.timeStamp,
+          tag: el.name,
           msg: `${query.mountDev}:${el.name}超限,限值${el.min}/${el.max},实际值${val}`
         };
         // 发送事件，socket发送用户

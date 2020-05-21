@@ -21,6 +21,7 @@ import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataT
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
+import * as Cron from "../cron/index";
 
 const resolvers: IResolvers = {
     Query: {
@@ -232,8 +233,24 @@ const resolvers: IResolvers = {
             return []
         },
         // 获取设备告警日志
-        async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }) {
-            return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
+        async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }, ctx: ApolloCtx) {
+            const query = LogUartTerminalDataTransfinite.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
+            // 如果未清洗的数据查询结果的大于N条,则先清洗数据
+            if (await query.countDocuments() > 2000) {
+                const cur = query.cursor()
+                await Cron.Uartterminaldatatransfinites(cur)
+            }
+            if (ctx.userGroup === "user") {
+                //获取用户绑定设备列表
+                const BindDevs: string[] = []
+                ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
+                    if (val === ctx.user) BindDevs.push(key)
+                })
+                const result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end).lean()
+                return result.reverse()
+            } else {
+                return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
+            }
         },
         // 获取用户登陆日志
         async loguserlogins(root, { start, end }: { start: Date, end: Date }) {
@@ -241,6 +258,12 @@ const resolvers: IResolvers = {
         },
         // 获取用户请求日志
         async loguserrequsts(root, { start, end }: { start: Date, end: Date }) {
+            const query = LogUserRequst.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
+            // 如果未清洗的数据查询结果的大于N条,则先清洗数据
+            if (await query.countDocuments() > 2000) {
+                const cur = query.cursor()
+                await Cron.CleanUserRequst(cur)
+            }
             return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
         },
     },

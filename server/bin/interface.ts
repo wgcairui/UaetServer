@@ -137,7 +137,7 @@ export interface queryResultArgument {
   issimulate?: boolean
 }
 //协议查询结果
-export interface queryResult extends queryObject {
+export interface queryResult extends queryObject, queryObject {
   contents: IntructQueryResult[]
   parse?: { [x: string]: queryResultArgument }
   result?: queryResultArgument[];
@@ -308,6 +308,7 @@ export interface uartAlarmObject {
   mac: string
   pid: number
   protocol: string
+  tag: string
   timeStamp: number
   msg: string
 }

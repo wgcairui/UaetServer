@@ -1,5 +1,5 @@
 <template>
-  <my-page-manage title="Administrator" :isUser="false">
+  <my-page-manage title="Administrator" :back="false">
     <b-row>
       <separated title="基础"></separated>
       <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="4">

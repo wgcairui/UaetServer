@@ -13,16 +13,11 @@
             <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
           </my-form>
         </b-form>
-        <b-table
-          id="my-table"
-          :items="data"
-          :per-page="perPage"
-          :current-page="currentPage"
-          :fields="fields"
-          :filter="new RegExp(filter)"
-          hover
-        >
-          <template v-slot:cell(ids)="row">{{(currentPage*10-10)+(row.index+1)}}</template>
+      </b-col>
+    </b-row>
+    <b-row>
+      <b-col>
+        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
           <template v-slot:cell(argument)="row">
             <b-button
               size="sm"
@@ -35,16 +30,7 @@
               <p>请求参数:{{row.item.argument}}</p>
             </b-card>
           </template>
-        </b-table>
-        <b-pagination
-          v-if="rows>10"
-          pills
-          align="center"
-          v-model="currentPage"
-          :total-rows="rows"
-          :per-page="perPage"
-          aria-controls="my-table"
-        ></b-pagination>
+        </my-table-log>
       </b-col>
     </b-row>
   </my-page-manage>
@@ -58,29 +44,18 @@ export default Vue.extend({
     return {
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
-      perPage: 10,
-      currentPage: 1,
+
       filter: "" as string,
       data: [],
       fields: [
-        { key: "ids", label: "id" },
         { key: "user", label: "用户" },
         { key: "userGroup", label: "用户组" },
         { key: "type", label: "操作类型" },
         { key: "argument", label: "参数" },
-        {
-          key: "createdAt",
-          label: "时间",
-          formatter: data => new Date(data).toLocaleString()
-        }
       ] as BvTableFieldArray
     };
   },
-  computed: {
-    rows() {
-      return this.$data.data.length;
-    }
-  },
+
   apollo: {
     data: {
       query: gql`
