@@ -1,6 +1,6 @@
 <template>
   <b-container fluid class="d-flex flex-column h-100 p-0">
-    <my-head title="登录" />
+    <my-head title="登录" :back="false" />
     <b-row class="flex-grow-1" no-gutters>
       <b-col ref="loginBody" cols="12" class="d-flex align-items-center justify-content-center">
         <b-card class="shadow login p-3">

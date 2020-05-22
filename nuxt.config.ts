@@ -5,7 +5,7 @@ const Config = {
   // mode: "universal",
   server: {
     host: isProd ? "0.0.0.0" : "0.0.0.0",
-    port: isProd ? 9010 : 3000
+    port: 9010
   },
   /*
    ** Headers of the page

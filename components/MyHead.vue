@@ -5,12 +5,12 @@
       cols="12"
       class="loginTitle bg-info d-flex flex-row align-items-center px-2"
     >
-      <span>
+      <!-- <span>
         <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="backto">
           <i class="iconfont text-light">&#xe641;</i>
         </b-button>
       </span>
-      <span class="text-light mx-2">|</span>
+      <span class="text-light mx-2">|</span> -->
       <span class="text-center text-light">{{ title }}</span>
       <div class="ml-auto d-flex">
         <slot>
@@ -41,11 +41,11 @@ export default Vue.extend({
       return user;
     }
   },
-  methods: {
+  /* methods: {
     backto() {
       this.$router.go(-1);
     }
-  }
+  } */
 });
 </script>
 

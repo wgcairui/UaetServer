@@ -30,7 +30,8 @@ const DataClean = new CronJob('0 0 2 * * *', async () => {
         CleanClientresultcolltion(curClientresultcolltion)
     ] as any[]
     const result = await Promise.all(curArray)
-    new LogDataClean(Object.assign({}, ...result)).save()
+
+    new LogDataClean(Object.assign({}, ...result, { lastDate: DataClean.lastDate() })).save()
     return result
 })
 

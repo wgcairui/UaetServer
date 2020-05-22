@@ -26,7 +26,7 @@ const SchemaUartTerminalDataTransfinite = new Schema({
     pid: Number,
     protocol: String,
     timeStamp: Number,
-    tag:String,
+    tag: String,
     msg: String,
 }, { timestamps: true })
 // 记录用户的所有操作
@@ -62,7 +62,11 @@ const SchemaTerminals = new Schema({
 }, { timestamps: true })
 // 数据清洗
 const SchemaDataClean = new Schema({
-    NumUartterminaldatatransfinites:Number
+    NumUartterminaldatatransfinites: Number,
+    NumUserRequst: Number,
+    NumClientresults: Number,
+    NumClientresultcolltion: Number,
+    lastDate: Date
 }, { timestamps: true })
 export const LogSmsSend = mongoose.model("LogSmsSend", SchemaSmsSend)
 export const LogUartTerminalDataTransfinite = mongoose.model("LogUartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
@@ -71,4 +75,4 @@ export const LogUserLogins = mongoose.model("LogUserLogin", SchemaUserLogins)
 export const LogNodes = mongoose.model("LogNode", SchemaNodes)
 export const LogTerminals = mongoose.model("LogTerminal", SchemaTerminals)
 
-export const LogDataClean = mongoose.model("LogDataClean",SchemaDataClean)
+export const LogDataClean = mongoose.model("LogDataClean", SchemaDataClean)

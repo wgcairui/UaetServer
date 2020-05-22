@@ -18,7 +18,7 @@ html {
 body,
 #__nuxt,
 #__layout {
-  height: 100vh;
+  height: 100%;
 }
 body {
   padding-right: 0 !important;
