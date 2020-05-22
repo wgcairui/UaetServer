@@ -135,6 +135,7 @@ export interface queryResultArgument {
   unit: string | null;
   parse?: any
   issimulate?: boolean
+  alarm?: boolean
 }
 //协议查询结果
 export interface queryResult extends queryObject, queryObject {

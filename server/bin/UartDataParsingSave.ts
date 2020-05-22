@@ -1,6 +1,6 @@
 import { queryResult, queryResultArgument } from "./interface";
-import ProtocolPares from "./ProtocolPares";
-import { TerminalClientResults, TerminalClientResultSingle, TerminalClientResult } from "../mongoose/node";
+import ProtocolPares from "../util/ProtocolPares";
+import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 
 export default async (queryResultArray: queryResult[]) => {
@@ -22,13 +22,7 @@ export default async (queryResultArray: queryResult[]) => {
         // 把结果转换为对象
         const P = data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[]
         data.parse = Object.assign({}, ...P)
-        //保存对象
-        TerminalClientResultSingle.updateOne(
-            { mac: data.mac, pid: data.pid },
-            data,
-            { upsert: true }
-        ).exec()
-        // 把数据发给检查器,检查数据是否有故障
+        // 把数据发给检查器,检查数据是否有故障,保存数据单例
         CheckUart(data)
     })
 }

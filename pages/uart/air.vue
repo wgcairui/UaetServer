@@ -40,7 +40,7 @@
         </b-col>
         <b-col cols="12" md="7">
           <b-row class="m-0">
-            <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="key">
+            <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="val.name+key">
               <div class="border rounded-lg d-flex flex-column align-items-center">
                 <i class="bg-info d-inline w-100 p-1 text-center text-light">{{ val.name }}</i>
                 <b-img fluid :src="val.value" alt="Card image" class="p-1"></b-img>
@@ -164,7 +164,7 @@ export default Vue.extend({
         }
       };
       // 空调数据和常量数据都pull之后生成数据
-      if (this.DevConstant?.Constant && this.airData?.result) {
+      if (this.DevConstant?.Constant && this.airData?.parse) {
         // 状态常量
         const Constant: DevConstant_Air = this.$data.DevConstant.Constant;
         // 设置数值量

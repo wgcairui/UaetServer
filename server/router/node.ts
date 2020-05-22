@@ -14,6 +14,9 @@ export default async (ctx: ParameterizedContext) => {
     case "UartData":
       {
         const UartData: uartData = body;
+        /* if(UartData.data?.length ===0){
+          console.log(UartData);          
+        } */
         UartDataParsingSave(UartData.data)
         ctx.body = { code: 200 }
       }

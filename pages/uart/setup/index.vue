@@ -6,7 +6,7 @@
         <b-tabs justified>
           <!-- ShowTag -->
           <b-tab title="显示参数">
-            <b-table :items="items.ShowTag" :fields="fieldsSHowTag" selectable select-mode="multi">
+            <b-table :items="items.ShowTags" :fields="fieldsSHowTag" selectable select-mode="multi">
               <template v-slot:cell(show)="row">
                 <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
               </template>
@@ -17,17 +17,17 @@
             <b-card>
               <b-form>
                 <my-form label="属性:">
-                  <b-form-select v-model="Threshold.name" :options="items.ShowTag.map(el=>el.name)"></b-form-select>
+                  <b-form-select v-model="Thresholds.name" :options="items.ShowTags.map(el=>el.name)"></b-form-select>
                 </my-form>
                 <my-form label="最小值:">
-                  <b-form-input type="number" v-model="Threshold.min"></b-form-input>
+                  <b-form-input type="number" v-model="Thresholds.min"></b-form-input>
                 </my-form>
                 <my-form label="最大值:">
-                  <b-form-input type="number" v-model="Threshold.max"></b-form-input>
+                  <b-form-input type="number" v-model="Thresholds.max"></b-form-input>
                 </my-form>
-                <b-button size="sm" block variant="info" @click="addThreshold(Threshold)">添加</b-button>
+                <b-button size="sm" block variant="info" @click="addThreshold">添加</b-button>
               </b-form>
-              <b-table :items="items.Threshold" :fields="ThresholdsFields">
+              <b-table :items="items.Thresholds" :fields="ThresholdsFields">
                 <template v-slot:cell(oprate)="data">
                   <b-button-group size="sm">
                     <b-button @click="deleteThreshold(data.item)">删除</b-button>
@@ -68,7 +68,7 @@ export default Vue.extend({
       protocol,
       DevMac,
       // threshold
-      Threshold: {
+      Thresholds: {
         name: "",
         min: 0,
         max: 0
@@ -96,18 +96,18 @@ export default Vue.extend({
       const DevConstant = this.DevConstant;
       const userSetup = this.userSetup;
       //
-      let ShowTag: tags[] = [];
+      let ShowTags: tags[] = [];
       if (DevConstant?.ShowTag) {
-        ShowTag = DevConstant.ShowTag.map(el => ({ name: el, show: true }));
+        ShowTags = DevConstant.ShowTag.map(el => ({ name: el, show: true }));
         // 判断用户配置是否是null
         if (userSetup && userSetup.ShowTag) {
-          ShowTag.forEach(el => {
+          ShowTags.forEach(el => {
             if (!userSetup.ShowTag.includes(el.name)) el.show = false;
           });
         }
       }
       //
-      let Threshold = [] as Threshold[];
+      let Thresholds = [] as Threshold[];
       if (DevConstant?.Threshold) {
         // 获取默认配置key
         const ThresholdMap = new Map(
@@ -118,9 +118,11 @@ export default Vue.extend({
             ThresholdMap.set(el.name, el);
           });
         }
-        Threshold = Array.from(ThresholdMap.values());
+        Thresholds = Array.from(ThresholdMap.values());
+        console.log(Thresholds);
+        
       }
-      return { ShowTag, Threshold };
+      return { ShowTags, Thresholds };
     }
   },
   //
@@ -157,7 +159,7 @@ export default Vue.extend({
     // 添加删除showtags
     async selects(item: tags) {
       // 获取tag表
-      const ShowTags = this.items.ShowTag;
+      const ShowTags = this.items.ShowTags;
       const ShowTag = new Set(
         ShowTags.filter(el => el.show).map(el => el.name)
       );
@@ -169,11 +171,12 @@ export default Vue.extend({
       this.pushThreshold(Array.from(ShowTag), "ShowTag");
     },
     // 添加阀值
-    addThreshold(Threshold: Threshold) {
+    addThreshold() {
+      const Threshold = JSON.parse(JSON.stringify(this.Thresholds))
       let data = [Threshold] as Threshold[];
       if (this.DevConstant?.Threshold) {
         const ThresholdMap = new Map(
-          this.DevConstant.Threshold.map(el => [el.name, el])
+          this.items.Thresholds.map(el => [el.name, el])
         );
         ThresholdMap.set(Threshold.name, Threshold);
         data = Array.from(ThresholdMap.values());

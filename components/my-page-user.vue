@@ -95,8 +95,8 @@
         >查看所有告警信息</b-button>
         <b-list-group>
           <b-list-group-item
-            v-for="info in Infos"
-            :key="info.time"
+            v-for="(info,key) in Infos"
+            :key="info.time+key"
             class="bg-dark text-light"
             :to="{name:'user-AlarmManage',params:info}"
           >{{info.msg}}</b-list-group-item>

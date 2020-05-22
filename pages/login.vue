@@ -1,12 +1,25 @@
 <template>
   <b-container fluid class="d-flex flex-column h-100 p-0">
-    <my-head title="登录" :back="false" />
-    <b-row class="flex-grow-1" no-gutters>
-      <b-col ref="loginBody" cols="12" class="d-flex align-items-center justify-content-center">
+    <b-row name="header" no-gutters>
+      <b-col>
+        <header class="d-flex flex-row p-2 shadow-sm">
+          <b-img src="https://www.ladishb.com/logo.png"></b-img>
+          <b-button variant="link" class="ml-auto text-success">English</b-button>
+        </header>
+      </b-col>
+    </b-row>
+    <b-row class="flex-grow-1 login-body" no-gutters>
+      <b-col class cols="0" md="6"></b-col>
+      <b-col
+        ref="loginBody"
+        cols="12"
+        md="6"
+        class="d-flex align-items-center justify-content-center"
+      >
         <b-card class="shadow login p-3">
           <b-card-body class="d-flex flex-column h-100">
             <div class="d-flex flex-row mb-3">
-              <h4 class="text-success login-left">login</h4>
+              <h4 class="text-success login-left">登陆</h4>
               <div class="ml-auto">
                 <b-link class="m-1 text-info" :to="{ name: 'user-register' }">{{$t('zhu-ce')}}</b-link>
                 <b-link class="m-1 ml-2 text-info" :to="{ name: 'user-reset' }">{{$t('zhong-zhi')}}</b-link>
@@ -144,6 +157,13 @@ export default vue.extend({
     margin: auto;
     min-width: 500px;
     height: 368px;
+  }
+  .login-body {
+    background-color: #f5f5f6;
+    background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg");
+    /* background-image: url(https://www.ladishb.com/banner/banner04-pc.jpg); */
+    background-size:contain;
+    /* background-blend-mode:luminosity */
   }
 }
 </style>

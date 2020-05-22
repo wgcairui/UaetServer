@@ -82,7 +82,7 @@ const SchemaTerminalClientResultSingle = new Schema({
       { _id: false }
     )
   ],
-  parse:Object,
+  parse: Object,
   pid: { type: Number, index: true },
   time: String,
   mac: { type: String, index: true },

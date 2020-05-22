@@ -1,6 +1,14 @@
 import { Context } from "@nuxt/types";
 
 export default (ctx: Context) => {
+    // 判断是否是IE
+    (function isIE(){
+        if("ActiveXObject" in window){
+            console.log('正在使用IE登陆');
+            alert('本网站不支持IE浏览器,请切换至chrome,edge,firefox,safari浏览器.')
+        }
+    })()
+
     const socket = ctx.app.$socket as SocketIOClient.Socket
 
     if (socket.disconnected) {
