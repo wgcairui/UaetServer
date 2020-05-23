@@ -307,6 +307,7 @@ export default vue.extend({
         }
       }
       const instruct: protocolInstruct = this.$data.instruct;
+      instruct.name = instruct.name.replace(/\s*/g, "")
       instruct.formResize = [];
       const result = <protocolInstruct>deepmerge(instruct, { formResize });
       // 协议
