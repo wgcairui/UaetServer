@@ -8,44 +8,71 @@
         </header>
       </b-col>
     </b-row>
-    <b-row class="flex-grow-1 login-body" no-gutters>
-      <b-col class cols="0" md="6"></b-col>
-      <b-col
-        ref="loginBody"
-        cols="12"
-        md="6"
-        class="d-flex align-items-center justify-content-center"
-      >
-        <b-card class="shadow login p-3">
-          <b-card-body class="d-flex flex-column h-100">
-            <div class="d-flex flex-row mb-3">
-              <h4 class="text-success login-left">登陆</h4>
-              <div class="ml-auto">
-                <b-link class="m-1 text-info" :to="{ name: 'user-register' }">{{$t('zhu-ce')}}</b-link>
-                <b-link class="m-1 ml-2 text-info" :to="{ name: 'user-reset' }">{{$t('zhong-zhi')}}</b-link>
+    <b-row class="flex-grow-1 login-body d-flex flex-column" no-gutters>
+      <b-row no-gutters class="flex-grow-1">
+        <b-col class cols="0" md="6"></b-col>
+        <b-col
+          ref="loginBody"
+          cols="12"
+          md="6"
+          class="d-flex align-items-center justify-content-center"
+        >
+          <b-card class="shadow login p-3">
+            <b-card-body class="d-flex flex-column h-100">
+              <div class="d-flex flex-row mb-3">
+                <h4 class="text-success login-left">登陆</h4>
+                <div class="ml-auto">
+                  <b-link class="m-1 text-info" :to="{ name: 'user-register' }">{{$t('zhu-ce')}}</b-link>
+                  <b-link
+                    class="m-1 ml-2 text-info"
+                    :to="{ name: 'user-reset' }"
+                  >{{$t('zhong-zhi')}}</b-link>
+                </div>
               </div>
-            </div>
-            <b-form class="mx-3 mt-auto">
-              <b-form-group label="账号:" label-for="user" v-bind="label">
-                <b-form-input id="user" v-model.trim="accont.user" placeholder />
-              </b-form-group>
-              <b-form-group label="密码:" label-for="passwd" v-bind="label">
-                <b-form-input
-                  id="passwd"
-                  v-model.trim="accont.passwd"
-                  type="password"
-                  placeholder
-                  @keyup.enter="login_submit"
-                />
-              </b-form-group>
-              <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit">
-                {{$t('deng-lu')}}
-                <span />
-              </b-button>
-            </b-form>
-          </b-card-body>
-        </b-card>
-      </b-col>
+              <b-form class="mx-3 mt-auto">
+                <b-form-group label="账号:" label-for="user" v-bind="label">
+                  <b-form-input id="user" v-model.trim="accont.user" placeholder />
+                </b-form-group>
+                <b-form-group label="密码:" label-for="passwd" v-bind="label">
+                  <b-form-input
+                    id="passwd"
+                    v-model.trim="accont.passwd"
+                    type="password"
+                    placeholder
+                    @keyup.enter="login_submit"
+                  />
+                </b-form-group>
+                <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit">
+                  {{$t('deng-lu')}}
+                  <span />
+                </b-button>
+              </b-form>
+            </b-card-body>
+          </b-card>
+        </b-col>
+      </b-row>
+      <b-row class="mt-auto" no-gutters>
+        <b-col>
+          <footer class="d-flex align-items-center px-3 py-1 flex-md-row">
+            <b-link
+              class="d-none d-sm-block px-1"
+              href="https://www.ladis.com.cn"
+              target="_blank"
+            >雷迪司官网</b-link>
+            <b-link
+              class="d-none d-sm-block px-1"
+              href="https://www.ladishb.com"
+              target="_blank"
+            >雷迪司湖北</b-link>
+            <span class="ml-auto">
+              <small>© 2019 All Rights Reserved 湖北雷迪司</small>
+              <b-link href="http://www.beian.miit.gov.cn/">
+                <small class="text-decoration-none text-dark">鄂ICP备19029626号-1</small>
+              </b-link>
+            </span>
+          </footer>
+        </b-col>
+      </b-row>
     </b-row>
   </b-container>
 </template>
@@ -118,30 +145,6 @@ export default vue.extend({
             }
           }
         });
-      /* try {
-        const result = await this.$auth.loginWith("local", {
-          data: { user, passwd: AES.encrypt(passwd, hash).toString() }
-        });
-        // console.log({ result });
-        localStorage.setItem("uartserverUser", user);
-      } catch (error) {
-        // console.log({ error, keys: Object.keys(error) });
-        if (!error.response || error.response.status !== 400) {
-          this.$bvModal.msgBoxOk("登录遇到未知错误");
-          return;
-        } else {
-          // console.log(error.response);
-          switch (error.response.data) {
-            case "userNan":
-              this.$bvModal.msgBoxOk("用户名错误");
-              break;
-            case "passwdError":
-              this.accont.passwd = "";
-              this.$bvModal.msgBoxOk("用户密码错误");
-              break;
-          }
-        }
-      } */
     }
   },
   mounted() {
@@ -150,20 +153,25 @@ export default vue.extend({
   }
 });
 </script>
-<style scoped>
-@media screen and (min-width: 568px) {
+<style lang="scss" scoped>
+.login {
+  min-width: 50%;
+  height: 368px;
+}
+
+@media screen and (max-width: 568px) {
   .login {
     max-width: 90%;
     margin: auto;
-    min-width: 500px;
-    height: 368px;
+    min-width: 80%;
+    height: auto;
   }
-  .login-body {
-    background-color: #f5f5f6;
-    background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg");
-    /* background-image: url(https://www.ladishb.com/banner/banner04-pc.jpg); */
-    background-size:contain;
-    /* background-blend-mode:luminosity */
-  }
+}
+.login-body {
+  background-color: #f5f5f6;
+  /*  background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg"); */
+  background-image: url("https://www.ladishb.com/banner/banner04-pc.jpg");
+  background-size: contain;
+  /* background-blend-mode:luminosity */
 }
 </style>

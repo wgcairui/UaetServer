@@ -129,7 +129,7 @@ export default Vue.extend({
   },
   methods: {
     async SendOprateInstruct(item: OprateInstruct) {
-      if (item.value.includes("%")) {
+      if (item.value.includes("%i")) {
         //const value = prompt(`请输入指令<${item.name}> 的值:`);
         //this.$bvModal.hide("OprateInstructMode");
         const content = document.getElementById(

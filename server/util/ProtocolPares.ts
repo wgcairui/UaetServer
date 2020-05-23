@@ -37,51 +37,61 @@ export default async (R: queryResult) => {
 
     case 485:
       {
-        // 迭代结果集
-        // 比较查询和结果的功能码是否一致
-        R.result = IntructResult.filter(el => el.buffer.data[1] === parseInt(el.content.slice(2, 4)))
-          .map(el => {
-            // 取出请求指令部分,后期做成缓存
-            const instruct = el.content.slice(2, 12)
-            // 解析规则
-            const instructs = InstructMap.get(instruct) as protocolInstruct;
-            // 取出返回值部分,转换为buffer,最前面留出一位,为采样留出
-            const bufSize = el.buffer.data[2]
-            // 检查数据实际长度是否对应
-            //if (bufSize + 5 === el.buffer.data.length) return
-            const buf = Buffer.from(el.buffer.data.slice(2, bufSize + 3));
-            // 迭代指令解析规则,解析结果集返回
-            return instructs.formResize.map(el2 => {
-              // 申明结果
-              let value = 0
-              // 每个数据的结果地址
-              const [start, len] = (el2.regx?.split("-") as string[]).map(el2 => parseInt(el2));
-              if (start + len > buf.byteLength) {
-                /* console.log({
-                  const: el.content,
-                  msg: JSON.stringify(el2) + 'buf长度超出',
-                  buf
-                }); */
-                return { name: el2.name, value, unit: "bufLow" };
-              }
-              switch (instructs.resultType) {
-                // 处理整形
-                case "hex":
-                case "short":
-                  // 转换为带一位小数点的浮点数
-                  value = parseFloat((buf.readIntBE(start, len) * el2.bl).toFixed(1))//parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
-                  break;
-                // 处理单精度浮点数
-                case "float":
-                  value = Tool.HexToSingle(buf.slice(start, start + len))//Tool.BufferToFlot(buf, start)
-                  break;
-              }
-              //
-              // console.log({ name: el2.name, value, unit: el2.unit });
-              return { name: el2.name, value, unit: el2.unit };
-            })
+        console.log({ R: R.contents });
+        if ((/(^HX.*)/.test(R.protocol))) {
+          IntructResult.filter(el => console.log());
 
-          }).flat()
+          //R.result = IntructResult.filter(el => el.buffer.data[1] === parseInt(el.content.slice(2, 4)))
+        } else {
+          // 迭代结果集
+          // 比较查询和结果的功能码是否一致
+          R.result = IntructResult.filter(el => el.buffer.data[1] === parseInt(el.content.slice(2, 4)))
+            .map(el => {
+              // 取出请求指令部分,后期做成缓存
+              const instruct = el.content.slice(2, 12)
+              // 解析规则
+              const instructs = InstructMap.get(instruct) as protocolInstruct;
+              // 取出返回值部分,转换为buffer,最前面留出一位,为采样留出
+              const bufSize = el.buffer.data[2]
+              // 检查数据实际长度是否对应
+              //if (bufSize + 5 === el.buffer.data.length) return
+              const buf = Buffer.from(el.buffer.data.slice(2, bufSize + 3));
+              // 迭代指令解析规则,解析结果集返回
+              return instructs.formResize.map(el2 => {
+                // 申明结果
+                let value = 0
+                // 每个数据的结果地址
+                const [start, len] = (el2.regx?.split("-") as string[]).map(el2 => parseInt(el2));
+                if (start + len > buf.byteLength) {
+                  /* console.log({
+                    const: el.content,
+                    msg: JSON.stringify(el2) + 'buf长度超出',
+                    buf
+                  }); */
+                  return { name: el2.name, value, unit: "bufLow" };
+                }
+                switch (instructs.resultType) {
+                  // 处理整形
+                  case "HX":
+
+                    break
+                  case "hex":
+                  case "short":
+                    // 转换为带一位小数点的浮点数
+                    value = parseFloat((buf.readIntBE(start, len) * el2.bl).toFixed(1))//parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
+                    break;
+                  // 处理单精度浮点数
+                  case "float":
+                    value = Tool.HexToSingle(buf.slice(start, start + len))//Tool.BufferToFlot(buf, start)
+                    break;
+                }
+                //
+                // console.log({ name: el2.name, value, unit: el2.unit });
+                return { name: el2.name, value, unit: el2.unit };
+              })
+
+            }).flat()
+        }
       }
       break;
   }

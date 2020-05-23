@@ -4,7 +4,7 @@ import NodeSocketIO from "server/socket/uart";
 /* protocol */
 export type communicationType = 232 | 485;
 export type protocolType = "ups" | "air" | "em" | "th";
-export type characterType = "utf8" | "hex" | "float" | "short" | "int";
+export type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX";
 // apollo server result
 export interface ApolloMongoResult {
   msg: string
@@ -295,6 +295,7 @@ export interface instructQueryArg extends queryResultArgument {
 }
 // 操作指令请求对象
 export interface instructQuery {
+  protocol: string
   DevMac: string
   pid: number
   type: number

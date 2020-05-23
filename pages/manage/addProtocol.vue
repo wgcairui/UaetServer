@@ -63,7 +63,6 @@
         </b-table>
         <b-button
           @click="submit"
-          v-if="instructItems.length > 0"
           size="sm"
           block
           variant="success"
@@ -87,7 +86,7 @@
               <my-form label="结果集:">
                 <b-form-select
                   v-model="instruct.resultType"
-                  :options="['hex', 'utf8', 'float', 'short', 'int']"
+                  :options="['hex', 'utf8', 'float', 'short', 'int','HX']"
                 ></b-form-select>
               </my-form>
               <my-form label="字符去头处理:">

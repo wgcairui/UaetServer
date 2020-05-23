@@ -213,9 +213,17 @@ export class NodeSocketIO {
                 if (CacheQueryIntruct.has(IntructName)) {
                     return CacheQueryIntruct.get(IntructName) as string
                 } else {
-                    const content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                    let content = ""
+                    switch (ProtocolInstruct.resultType) {
+                        case "HX":
+                            content = tool.HX(Query.pid, ProtocolInstruct.name)
+                            break;
+                        default:
+                            content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                            break;
+                    }
                     CacheQueryIntruct.set(IntructName, content)
-                    return CacheQueryIntruct.get(IntructName) as string
+                    return content//CacheQueryIntruct.get(IntructName) as string
                 }
             }
         })
@@ -228,7 +236,7 @@ export class NodeSocketIO {
             timeStamp,
             content
         }
-
+        //console.log({query,ins:Protocol.instruct});        
         // 获取节点Socket实例
         const NodeSocket = this.Event.Cache.CacheSocket.get(Query.NodeIP) as IO.Socket
         NodeSocket.emit(EVENT_SOCKET.query, query);
@@ -247,11 +255,17 @@ export class NodeSocketIO {
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
             if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
-            // 构建指令
-            Query.content = Query.type === 485 ? tool.Crc16modbus(Query.pid, Query.content) : Query.content
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
-            if(!Socket)  resolve({ ok: 0, msg: '设备不在线' })
+            if (!Socket) resolve({ ok: 0, msg: '设备不在线' })
+            // 构建指令
+            if (Query.type === 485) {
+                if (/(^HX.*)/.test(Query.protocol)) {
+                    Query.content = tool.HX(Query.pid, Query.content)
+                } else {
+                    Query.content = tool.Crc16modbus(Query.pid, Query.content)
+                }
+            }
             // 创建一次性监听，监听来自Node节点指令查询操作结果
             Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏

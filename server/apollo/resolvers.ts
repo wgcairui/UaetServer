@@ -540,7 +540,7 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheConstant()
             return result;
         },
-        // 发送设备协议指令
+        /* // 发送设备协议指令
         async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
@@ -565,24 +565,32 @@ const resolvers: IResolvers = {
             }
             const result = await ctx.$SocketUart.InstructQuery(Query)
             return result
-        },
+        }, */
         //  固定发送设备操作指令
         async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
-                return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
+                // return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
             }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
             // 检查操作指令是否含有自定义参数
-            if (/(%i$)/.test(item.value)) {
-                const b = Buffer.allocUnsafe(2)
-                b.writeIntBE(item.val as number * item.bl, 0, 2)
-                item.value = item.value.replace(/(%i$)/, b.toString("hex"))
+            if (/(%i)/.test(item.value)) {
+                // 如果是海信协议
+                if (/(^HX.*)/.test(query.protocol)) {
+                    const b = Buffer.allocUnsafe(2)
+                    b.writeInt16BE((item.val as number +20) *2)
+                    item.value = item.value.replace(/(%i$)/, b.slice(1, 2).toString("hex"))
+                } else {
+                    const b = Buffer.allocUnsafe(2)
+                    b.writeIntBE(item.val as number * item.bl, 0, 2)
+                    item.value = item.value.replace(/(%i$)/, b.toString("hex"))
+                }
             }
             // 携带事件名称，触发指令查询
             const Query: instructQuery = {
+                protocol: query.protocol,
                 DevMac: query.DevMac,
                 pid: query.pid,
                 type: protocol.Type,

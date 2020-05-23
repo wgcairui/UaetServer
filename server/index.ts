@@ -45,7 +45,7 @@ ApolloServer.applyMiddleware({ app, path: "/graphql" });
 // cron start
 Cron.start()
 // use
-app.use(koaLogger());
+// app.use(koaLogger());
 app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());

@@ -9,6 +9,15 @@ export default class Tool {
     const [a, b, c, d] = [...crc];
     return body + c + d + a + b;
   }
+
+  static HX(address: number = 0, instruct: string) {
+    const content = ("AA" + address.toString(16).padStart(2, "0") + instruct).replace(/\s*/g, "");
+    const num = 255 - (Buffer.from(content, 'hex').toJSON().data.reduce((pre, cur) => pre + cur))
+    const crc = Buffer.allocUnsafe(2)
+    crc.writeInt16BE(num, 0)
+    return content + crc.slice(1,2).toString("hex").padStart(2, '0')
+  }
+
   static InsertString(
     t: { length: number; substr: (arg0: number, arg1: any) => void },
     c: string,

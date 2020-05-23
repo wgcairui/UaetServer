@@ -101,6 +101,7 @@ export default Vue.extend({
             OprateInstruct {
               name
               value
+              bl
               readme
             }
           }
