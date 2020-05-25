@@ -262,16 +262,17 @@ export class NodeSocketIO {
             if (Query.type === 485) {
                 if (/(^HX.*)/.test(Query.protocol)) {
                     Query.content = tool.HX(Query.pid, Query.content)
+                    //console.log({Query});
                 } else {
                     Query.content = tool.Crc16modbus(Query.pid, Query.content)
                 }
             }
-            // 创建一次性监听，监听来自Node节点指令查询操作结果
+            // 创建一次性监听，监听来自Node节点指令查询操作结果            
             Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
             setTimeout(() => {
                 resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
-            }, 20000);
+            }, 10000);
         })
         // 添加日志
         new LogTerminals({ NodeIP: NodeIP, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result } as logTerminals).save()

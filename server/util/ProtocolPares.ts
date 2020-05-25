@@ -58,13 +58,12 @@ export default async (R: queryResult) => {
             .map(el => {
               // 取出请求指令部分,后期做成缓存
               const instruct = el.content.slice(4, el.content.length - 2);
-              console.log({instruct,InstructMap});
-              
               // 解析规则
               const instructs = InstructMap.get(instruct) as protocolInstruct;
               const buf = Buffer.from(
-                el.buffer.data.slice(2, el.buffer.data.length - 1)
+                el.buffer.data.slice(1, el.buffer.data.length - 1)
               );
+              // console.log({ instruct, buf });
               // 迭代指令解析规则,解析结果集返回
               return instructs.formResize.map(el2 => {
                 // 申明结果
@@ -76,13 +75,18 @@ export default async (R: queryResult) => {
                 switch (instructs.resultType) {
                   // 处理整形
                   case "HX":
-                    value = parseFloat(
-                      (buf.readIntBE(start, len) * el2.bl).toFixed(1)
-                    );
+                    if (/(温度|湿度)/.test(el2.name)) {
+                      value = parseFloat(
+                        ((buf.readIntBE(start, len) / 2) - 20).toFixed(1)
+                      );
+                    } else {
+                      value = parseFloat(
+                        (buf.readIntBE(start, len) * el2.bl).toFixed(1)
+                      );
+                    }
+
                     break;
                 }
-                //
-                console.log({ name: el2.name, value, unit: el2.unit });
                 return { name: el2.name, value, unit: el2.unit };
               });
             })

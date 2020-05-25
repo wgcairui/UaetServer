@@ -581,11 +581,11 @@ const resolvers: IResolvers = {
                 if (/(^HX.*)/.test(query.protocol)) {
                     const b = Buffer.allocUnsafe(2)
                     b.writeInt16BE((item.val as number +20) *2)
-                    item.value = item.value.replace(/(%i$)/, b.slice(1, 2).toString("hex"))
+                    item.value = item.value.replace(/(%i)/, b.slice(1, 2).toString("hex"))
                 } else {
                     const b = Buffer.allocUnsafe(2)
                     b.writeIntBE(item.val as number * item.bl, 0, 2)
-                    item.value = item.value.replace(/(%i$)/, b.toString("hex"))
+                    item.value = item.value.replace(/(%i)/, b.toString("hex"))
                 }
             }
             // 携带事件名称，触发指令查询
