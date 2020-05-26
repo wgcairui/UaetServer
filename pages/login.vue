@@ -10,7 +10,12 @@
     </b-row>
     <b-row class="flex-grow-1 login-body d-flex flex-column" no-gutters>
       <b-row no-gutters class="flex-grow-1">
-        <b-col class cols="0" md="6"></b-col>
+        <b-col cols="0" md="6" class="d-flex flex-column align-items-center justify-content-center">
+          <span class="mt-n5">
+            <h3 class="text-light">物联网ITO监控服务平台</h3>
+            <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
+          </span>
+        </b-col>
         <b-col
           ref="loginBody"
           cols="12"
@@ -128,7 +133,7 @@ export default vue.extend({
           }
         })
         .catch(error => {
-          //console.log({ error, keys: Object.keys(error) });
+          //console.log({ error, keys: Object.keys(error不) });
           if (!error.response || error.response.status !== 400) {
             this.$bvModal.msgBoxOk("登录遇到未知错误");
             return;
@@ -154,6 +159,9 @@ export default vue.extend({
 });
 </script>
 <style lang="scss" scoped>
+a {
+  color: black;
+}
 .login {
   min-width: 50%;
   height: 368px;
