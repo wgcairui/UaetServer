@@ -10,8 +10,8 @@
     </b-row>
     <b-row class="flex-grow-1 login-body d-flex flex-column" no-gutters>
       <b-row no-gutters class="flex-grow-1">
-        <b-col cols="0" md="6" class="d-flex flex-column align-items-center justify-content-center">
-          <span class="mt-n5">
+        <b-col cols="0" md="6" class="d-flex flex-column align-items-center justify-content-center" style="padding-left: 10%">
+          <span class="mt-n5  	d-none d-md-block d-lg-block" >
             <h3 class="text-light">物联网ITO监控服务平台</h3>
             <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
           </span>
@@ -178,7 +178,7 @@ a {
 .login-body {
   background-color: #f5f5f6;
   /*  background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg"); */
-  background-image: url("https://www.ladishb.com/banner/banner04-pc.jpg");
+  background-image: url("../assets/backgrounpImg.jpg");
   background-size: contain;
   /* background-blend-mode:luminosity */
 }
