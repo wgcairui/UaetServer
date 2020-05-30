@@ -83,6 +83,7 @@ export default Vue.extend({
     logout() {
       this.$socket.disconnect();
       this.$auth.logout();
+      location.reload()
     }
   },
   beforeCreate() {

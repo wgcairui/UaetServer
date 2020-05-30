@@ -1,6 +1,6 @@
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start">
+    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" sticky>
       <b-navbar-brand>
         <span v-if="back">
           <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="$router.go(-1)">

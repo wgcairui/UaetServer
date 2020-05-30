@@ -209,6 +209,7 @@ const typeDefs: DocumentNode = gql`
     RegisterTerminals(NodeName:String):[RegisterTerminal]
     # 终端
     Terminal(DevMac: String): Terminal
+    TerminalOnline(DevMac: String): Terminal
     Terminals: [Terminal]
     ECterminal(ECid: String): ECterminal
     EcTerminals: [ECterminal]

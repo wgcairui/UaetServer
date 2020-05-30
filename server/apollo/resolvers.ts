@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal } from "../bin/interface";
 
 import { BcryptDo } from "../util/bcrypt";
 
@@ -65,6 +65,14 @@ const resolvers: IResolvers = {
         // 终端信息
         async Terminal(root, { DevMac }) {
             return await Terminal.findOne({ DevMac });
+        },
+        // 检索在线的终端
+        async TerminalOnline(root, { DevMac }, ctx: ApolloCtx) {
+            const terminal = await Terminal.findOne({ DevMac }).lean() as terminal
+            if (!terminal) return null
+            const NodeIP = ctx.$Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
+            if (ctx.$Event.Cache.CacheNodeTerminalOnline.get(NodeIP)?.has(DevMac)) return terminal
+            else return null
         },
         async Terminals() {
             return await Terminal.find();
@@ -580,7 +588,7 @@ const resolvers: IResolvers = {
                 // 如果是海信协议
                 if (/(^HX.*)/.test(query.protocol)) {
                     const b = Buffer.allocUnsafe(2)
-                    b.writeInt16BE((item.val as number +20) *2)
+                    b.writeInt16BE((item.val as number + 20) * 2)
                     item.value = item.value.replace(/(%i)/, b.slice(1, 2).toString("hex"))
                 } else {
                     const b = Buffer.allocUnsafe(2)

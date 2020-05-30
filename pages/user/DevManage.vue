@@ -1,8 +1,8 @@
 <template>
   <my-page-user title="设备管理">
-    <template v-slot:nav>
+    <!-- <template v-slot:nav>
       <my-nav />
-    </template>
+    </template>-->
     <b-row class="border-bottom mb-5">
       <separated title="透传设备">
         <b-button
@@ -25,6 +25,9 @@
           </b-form>
           <b-collapse v-model="uartTable">
             <b-table-lite stacked :items="uart" :fields="uartField">
+              <template v-slot:cell(name)="row">
+                <b-button variant="link" class="p-0 m-0">{{row.value}}</b-button>
+              </template>
               <template v-slot:cell(mountDevs)="row">
                 <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
               </template>
@@ -166,8 +169,8 @@ export default vue.extend({
   apollo: {
     uart: {
       query: gql`
-        query get_addTerminal($DevMac: String) {
-          Terminal(DevMac: $DevMac) {
+        query TerminalOnline($DevMac: String) {
+          uart: TerminalOnline(DevMac: $DevMac) {
             DevMac
             name
             mountDevs {
@@ -181,12 +184,12 @@ export default vue.extend({
           DevMac: this.$data.DevMac
         };
       },
-      update: data => [data.Terminal || {}],
+      update: data => [data.uart || {}],
       skip() {
         return this.$data.DevMac.length < 5;
       },
-      result:function(data){
-        if(!data.data.Terminal) this.uartAdd = true
+      result: function(data) {
+        if (!data.data.uart) this.uartAdd = true;
       }
     },
     /* ECterminal: {

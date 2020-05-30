@@ -2,8 +2,10 @@
   <my-page-user :back="false">
     <b-container class="flex-grow-1 overflow-auto">
       <b-row id="uart" class="my-4">
-        <separated title="透传设备" />
-        <b-col v-for="(link, key) in BindDevice.UTs" :key="key" cols="12" md="6" class="mt-4">
+        <separated title="透传设备">
+          <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
+        </separated>
+        <b-col v-for="(link, key) in uts" :key="key" cols="12" md="6" class="mt-4">
           <b-card>
             <b-link
               :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
@@ -34,7 +36,12 @@
           </b-card>
         </b-col>
       </b-row>
-      <b-row id="ECs">
+      <b-row id="aggregation">
+        <separated title="聚合设备">
+          <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
+        </separated>
+      </b-row>
+      <!-- <b-row id="ECs">
         <separated title="环控设备" />
         <b-col v-for="(link, key) in BindDevice.ECs" :key="key" cols="12" md="6" class="mt-4">
           <b-link
@@ -54,13 +61,13 @@
             </b-card>
           </b-link>
         </b-col>
-      </b-row>
+      </b-row>-->
     </b-container>
     <template v-slot:footer>
       <div class="mt-auto w-100">
         <b-nav fill class="bg-info">
-          <b-nav-item href="#ECs">
-            <span class="text-light">环控</span>
+          <b-nav-item href="#aggregation">
+            <span class="text-light">聚合</span>
           </b-nav-item>
           <b-nav-item href="#uart">
             <span class="text-light">透传</span>
@@ -73,15 +80,37 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { BindDevice } from "../server/bin/interface";
+import { BindDevice, Terminal } from "../server/bin/interface";
 export default Vue.extend({
   data() {
     return {
       BindDevice: {
         UTs: [],
-        ECs: []
-      }
+        ECs: [],
+        AGG: [],
+        user: ""
+      },
+      uartFilter: "",
+      aggregationFilter: ""
     };
+  },
+  computed: {
+    uts() {
+      const uts = this.$data.BindDevice.UTs as Terminal[];
+      const uartFilter = this.$data.uartFilter as string;
+      if (!uartFilter) return uts;
+      const regex = new RegExp(uartFilter);
+      return uts.filter(el => uartFilter && regex.test(JSON.stringify(el)));
+    },
+    agg() {
+      const uts = this.$data.BindDevice.AGG as any[];
+      const aggregationFilter = this.$data.aggregationFilter as string;
+      if (!aggregationFilter) return uts;
+      const regex = new RegExp(aggregationFilter);
+      return uts.filter(
+        el => aggregationFilter && regex.test(JSON.stringify(el))
+      );
+    }
   },
   apollo: {
     BindDevice: {
