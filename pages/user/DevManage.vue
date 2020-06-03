@@ -1,8 +1,5 @@
 <template>
   <my-page-user title="设备管理">
-    <!-- <template v-slot:nav>
-      <my-nav />
-    </template>-->
     <b-row class="border-bottom mb-5">
       <separated title="透传设备">
         <b-button
@@ -25,9 +22,6 @@
           </b-form>
           <b-collapse v-model="uartTable">
             <b-table-lite stacked :items="uart" :fields="uartField">
-              <template v-slot:cell(name)="row">
-                <b-button variant="link" class="p-0 m-0">{{row.value}}</b-button>
-              </template>
               <template v-slot:cell(mountDevs)="row">
                 <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
               </template>
@@ -44,11 +38,17 @@
         </b-card>
       </b-collapse>
       <b-table-lite :items="items.UTs" :fields="uartField">
+        <template v-slot:cell(name)="row">
+          <b-button variant="link" class="p-0 m-0" @click="modifyTerminalInfo(row)">{{row.value}}</b-button>
+        </template>
         <template v-slot:cell(mountDevs)="row">
           <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
         </template>
         <template v-slot:cell(oprate)="row">
-          <b-button size="sm" @click="delUserTerminal('UT', row.item)">删除</b-button>
+          <b-button-group size="sm">
+            <b-button @click="modifyBind(row.item.DevMac)">修改挂载</b-button>
+            <b-button @click="delUserTerminal('UT', row.item)">删除</b-button>
+          </b-button-group>
         </template>
       </b-table-lite>
     </b-row>
@@ -105,6 +105,10 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
+
+import { MessageBox } from "element-ui";
+import "element-ui/lib/theme-chalk/message-box.css";
+import { MessageBoxInputData } from "element-ui/types/message-box";
 export default vue.extend({
   data() {
     return {
@@ -234,6 +238,36 @@ export default vue.extend({
     }
   },
   methods: {
+    // 修改终端信息
+    async modifyTerminalInfo(val: any) {
+      const key = val.field.key as string;
+      const value = val.value as string;
+      const DevMac = val.item.DevMac as string;
+      const modifyval = (await MessageBox.prompt("输入新的名称:").catch(e => ({
+        value: ""
+      }))) as MessageBoxInputData;
+      if (!modifyval.value) return;
+      const result = await this.$apollo.mutate({
+        mutation: gql`
+          mutation modifyTerminal($DevMac: String, $arg: JSON) {
+            modifyTerminal(DevMac: $DevMac, arg: $arg) {
+              ok
+              msg
+            }
+          }
+        `,
+        variables: {
+          DevMac,
+          arg: { [key]: modifyval.value }
+        }
+      });
+      this.$apollo.queries.BindDevice.refetch();
+    },
+    // 用户修改挂载设备
+    async modifyBind(DevMac: string) {
+      this.$router.push({ name: "user-addTerminal", query: { DevMac } });
+    },
+    // 添加绑定设备
     async addUserTerminal(type: string, item: { DevMac: string }) {
       const result = await this.$apollo.mutate({
         mutation: gql`
@@ -253,6 +287,7 @@ export default vue.extend({
         this.$apollo.queries.BindDevice.refetch();
       }
     },
+    // 删除绑定设备
     async delUserTerminal(type: string, item: { DevMac: string }) {
       const result = await this.$apollo.mutate({
         mutation: gql`

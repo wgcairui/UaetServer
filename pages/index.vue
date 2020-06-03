@@ -3,7 +3,7 @@
     <b-container class="flex-grow-1 overflow-auto">
       <b-row id="uart" class="my-4">
         <separated title="透传设备">
-          <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
+          <b-input v-if="uts && uts.length>2" v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
         </separated>
         <b-col v-for="(link, key) in uts" :key="key" cols="12" md="6" class="mt-4">
           <b-card>
@@ -40,6 +40,7 @@
         <separated title="聚合设备">
           <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
         </separated>
+        
       </b-row>
       <!-- <b-row id="ECs">
         <separated title="环控设备" />

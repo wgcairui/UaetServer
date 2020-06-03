@@ -73,6 +73,7 @@ const resolvers: IResolvers = {
             const NodeIP = ctx.$Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
             if (ctx.$Event.Cache.CacheNodeTerminalOnline.get(NodeIP)?.has(DevMac)) return terminal
             else return null
+            //return await Terminal.findOne({ DevMac });
         },
         async Terminals() {
             return await Terminal.find();
@@ -380,6 +381,16 @@ const resolvers: IResolvers = {
             const result = await Terminal.updateOne(
                 { DevMac, name, mountNode },
                 { $set: { mountDevs } },
+                { upsert: true }
+            );
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+            return result;
+        },
+        // 修改终端
+        async modifyTerminal(root, { DevMac, arg }, ctx: ApolloCtx) {
+            const result = await Terminal.updateOne(
+                { DevMac },
+                { $set: arg },
                 { upsert: true }
             );
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);

@@ -1,8 +1,8 @@
 <template>
   <my-page-user :title="'挂载设备:' + DevMac">
     <b-row>
-      <b-col>
-        <separated title="透传终端信息"></separated>
+      <separated title="透传终端信息"></separated>
+      <b-col cols="12" md="6">
         <b-jumbotron>
           <b-form>
             <b-form-group label="模块ID:" v-bind="label">
@@ -26,7 +26,7 @@
                 }}
               </b-form-text>
             </b-form-group>
-            <b-form-group label="模块地理地址:" v-bind="label">
+            <b-form-group label="GPS定位:" v-bind="label">
               <b-form-text class="terminal text-dark">
                 <b-link href="http://www.gzhatu.com/dingwei.html" target="_blank">{{ Terminals.jw }}</b-link>
               </b-form-text>
@@ -41,6 +41,18 @@
             </b-form-group>
           </b-form>
         </b-jumbotron>
+      </b-col>
+      <b-col cols="12" md="6" style="min-height:300px">
+        <baidu-map
+          class="bm-view"
+          ak="bqZOsTpZOlX780PFinrOXhk0yAnbqUWN"
+          :center="center"
+          :zoom="zoom"
+          @ready="handler"
+        >
+          <bm-marker :position="center"></bm-marker>
+          <bm-map-type :map-types="['BMAP_NORMAL_MAP', 'BMAP_HYBRID_MAP']" anchor="BMAP_ANCHOR_TOP_LEFT"></bm-map-type>
+        </baidu-map>
       </b-col>
     </b-row>
     <b-row>
@@ -66,6 +78,9 @@ import Vue from "vue";
 import gql from "graphql-tag";
 import { tree } from "vued3tree";
 import { Terminal } from "../../server/bin/interface";
+import BaiduMap from "vue-baidu-map/components/map/Map.vue";
+import BmMarker from "vue-baidu-map/components/overlays/Marker.vue";
+import BmMapType from "vue-baidu-map/components/controls/MapType.vue";
 interface selectTree {
   Type: string;
   mountDev: string;
@@ -73,7 +88,7 @@ interface selectTree {
   pid: number;
 }
 export default Vue.extend({
-  components: { tree },
+  components: { tree, BaiduMap, BmMarker, BmMapType },
   data() {
     const label = {
       labelCols: "12",
@@ -81,6 +96,8 @@ export default Vue.extend({
       labelAlignSm: "right"
     };
     return {
+      center: { lng: 0, lat: 0 },
+      zoom: 15,
       label,
       devState: false,
       DevMac: ""
@@ -146,6 +163,18 @@ export default Vue.extend({
   },
 
   methods: {
+    handler({ BMap, map }: any) {
+      const jw = ((this  as any).Terminals.jw) as string
+      const [x,y] = jw.split(",").map(el=>el?parseFloat(el):0)
+      console.log({x,y});
+      
+      const Point: BMap.Point = new BMap.Point(x, y);
+      const convert: BMap.Convertor = new BMap.Convertor();
+      convert.translate([Point], 1, 5, data => {
+        this.$data.center = data.points[0];
+      });
+    },
+
     treeSelect(item: any) {
       const { Type, mountDev, pid, protocol }: selectTree = item.data;
       if (!Type) return;
@@ -195,9 +224,14 @@ export default Vue.extend({
   }
 }
 .jumbotron {
-    padding: 2rem 1rem;
-    margin-bottom: 2rem;
-    background-color: #e9ecef;
-    border-radius: 0.3rem;
+  padding: 2rem 1rem;
+  margin-bottom: 2rem;
+  background-color: #e9ecef;
+  border-radius: 0.3rem;
+}
+.bm-view {
+  width: 100%;
+  height: 100%;
+  padding-bottom: 32px;
 }
 </style>

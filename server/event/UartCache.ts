@@ -41,7 +41,7 @@ export default class Cache {
   CacheSocket: Map<string, Socket>
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   //CacheQueryNode: Map<string, NodeJS.Timeout>;
-  // 缓存每个节点在线的设备
+  // 缓存每个节点在线的设备ip->terminal
   CacheNodeTerminalOnline: Map<string, Set<string>>
   // 缓存节点查询终端设备超时的指令
   CacheTerminalQueryIntructTimeout: Map<string, Set<string>>

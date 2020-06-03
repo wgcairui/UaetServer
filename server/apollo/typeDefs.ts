@@ -284,8 +284,11 @@ const typeDefs: DocumentNode = gql`
     addRegisterTerminal(DevMac:String,mountNode:String):result
     # 删除注册终端
     deleteRegisterTerminal(DevMac:String):result
+    
     # 添加终端
     addTerminal(arg: JSON): result
+    # 修改终端
+    modifyTerminal(DevMac:String,arg: JSON): result
     # 删除终端
     deleteTerminal(DevMac: String): result
     # 添加终端挂载设备

@@ -63,6 +63,7 @@
     "ts-indexdb": "^0.0.6",
     "v-charts": "^1.19.0",
     "vue": "^2.6.11",
+    "vue-baidu-map": "^0.21.22",
     "vue-server-renderer": "^2.6.11",
     "vue-socket.io-extended": "^4.0.1",
     "vue-template-compiler": "^2.6.11",
