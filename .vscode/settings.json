@@ -6,5 +6,6 @@
     "javascript.autoClosingTags": false,
     "typescript.tsserver.maxTsServerMemory": 2048,
     "i18n-ally.localesPaths": "locales",
-    "i18n-ally.keystyle": "flat"
+    "i18n-ally.keystyle": "flat",
+    "typescript.tsdk": "node_modules/typescript/lib"
 }

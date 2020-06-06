@@ -147,6 +147,7 @@ export default Vue.extend({
       const terminals = (this as any).BindDevice?.UTs as Terminal[];
       return terminals
         ? terminals
+            .filter(el => el.mountDevs)
             .map(el => {
               return el.mountDevs.map(els => ({
                 DevMac: el.DevMac,

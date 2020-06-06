@@ -23,7 +23,7 @@
                 <b-button
                   variant="link"
                   v-for="val in link.mountDevs"
-                  :key="val.mountDev"
+                  :key="val.mountDev+val.pid"
                   class="text-dark"
                   @click="toDev(link.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
                 >
@@ -40,7 +40,18 @@
         <separated title="聚合设备">
           <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
         </separated>
-        
+        <!-- <b-col cols="12" md="6">
+
+        </b-col>-->
+        <!-- <b-col class="d-flex flex-row flex-wrap">
+          <div class="p-3">
+            <b-card class="col-12 col-md-6 m-3">ss</b-card>
+          </div>
+
+          <div class="p-3">
+            <b-card class="col-12 col-md-6" v-for="i in 5" :key="i" title="sdddddddddddd">ss</b-card>
+          </div>
+        </b-col> -->
       </b-row>
       <!-- <b-row id="ECs">
         <separated title="环控设备" />

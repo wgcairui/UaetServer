@@ -5,7 +5,7 @@
         <separated title="注册设备"></separated>
         <b-card>
           <b-form class="p-5">
-            <my-form label="设备IMEI:">
+            <my-form label="设备MAC:">
               <b-form-input :state="accont.DevMac !== ''" v-model="accont.DevMac" trim />
             </my-form>
             <b-form-group label="注册节点:" label-align-sm="right" label-cols-md="2">
@@ -175,7 +175,7 @@ export default Vue.extend({
         })
         .then(res => {
           this.$bvToast.toast("添加节点成功", { title: "success" });
-          this.$apollo.queries.RegisterTerminals.refresh();
+          this.$apollo.queries.RegisterTerminals.refetch()
         });
     },
     async deleteRegisterTerminal(DevMac: string) {
@@ -198,7 +198,7 @@ export default Vue.extend({
         this.$bvModal.msgBoxOk(result.msg, { title: "Info" });
       } else {
         this.$bvModal.msgBoxOk("delete success", { title: "Info" });
-        this.$apollo.queries.RegisterTerminals.refresh();
+        this.$apollo.queries.RegisterTerminals.refetch()
       }
     }
   }

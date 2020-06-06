@@ -78,10 +78,10 @@ export default Vue.extend({
       this.EmData = data;
       // 检查电池工作模式
       if (data?.parse["工作模式"]) {
-        const result = data.result.find(
+        /* const result = data.result.find(
           el => el.name === "工作模式"
-        ) as queryResultArgument;
-        const pas = this.$store.getters.getUnit(result) as queryResultArgument;
+        ) as queryResultArgument; */
+        const pas = this.$store.getters.getUnit(data.parse["工作模式"]) as queryResultArgument;
         this.betty_model.name = pas.value;
         this.betty_model.src = (this.map as any)[pas.value];
         // console.log({pas,b:this.betty_model});
@@ -92,9 +92,9 @@ export default Vue.extend({
       // console.log(data);      
       this.DevConstant = data
       // 设置电池工作状态
-      if (data.Constant && this.EmData && this.EmData.result) {
+      if (data.Constant && this.EmData && this.EmData.parse) {
         const keys = Object.values(data.Constant);
-        this.betty_stat = this.EmData.result.filter(el => keys.includes(el.name));
+        this.betty_stat = Object.values(this.EmData.parse).filter(el => keys.includes(el.name));
       }
     }
   },

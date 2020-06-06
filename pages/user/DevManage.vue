@@ -189,9 +189,6 @@ export default vue.extend({
         };
       },
       update: data => [data.uart || {}],
-      skip() {
-        return this.$data.DevMac.length < 5;
-      },
       result: function(data) {
         if (!data.data.uart) this.uartAdd = true;
       }

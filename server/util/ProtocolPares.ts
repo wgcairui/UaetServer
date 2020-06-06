@@ -3,6 +3,10 @@ import Tool from "./tool";
 import { protocolInstruct, queryResult, queryResultArgument, protocol } from "../bin/interface";
 
 export default async (R: queryResult) => {
+  // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
+  if(R.content.length !== R.contents.length){
+    Event.Emit("QueryIntervalLow",R)
+  }
   // 结果集数组
   const IntructResult = R.contents;
   // 协议数组

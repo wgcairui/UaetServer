@@ -1,6 +1,6 @@
 import { IResolvers } from "apollo-server-koa";
 
-import { NodeClient, NodeRunInfo, TerminalClientResultSingle, TerminalClientResult } from "../mongoose/node";
+import { NodeClient, NodeRunInfo, TerminalClientResultSingle, TerminalClientResult, TerminalClientResults } from "../mongoose/node";
 
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
 
@@ -71,6 +71,8 @@ const resolvers: IResolvers = {
             const terminal = await Terminal.findOne({ DevMac }).lean() as terminal
             if (!terminal) return null
             const NodeIP = ctx.$Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
+            console.log({ terminal, aa: ctx.$Event.Cache.CacheNodeTerminalOnline, NodeIP });
+
             if (ctx.$Event.Cache.CacheNodeTerminalOnline.get(NodeIP)?.has(DevMac)) return terminal
             else return null
             //return await Terminal.findOne({ DevMac });
@@ -179,7 +181,7 @@ const resolvers: IResolvers = {
             const nodeIP = ctx.$Event.Cache.CacheNodeName.get(node)?.IP as string
             const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
             // console.log({mac,macMap});
-            return macMap?.has(mac)
+            return macMap?.has(mac) || false
         },
         // 获取用户自定义配置
         async getUserSetup(root, arg, ctx: ApolloCtx) {
@@ -363,16 +365,30 @@ const resolvers: IResolvers = {
             return result;
         },
         // 添加登记设备
-        async addRegisterTerminal(root, { DevMac, mountNode }) {
-            return await new RegisterTerminal({ DevMac, mountNode }).save()
+        async addRegisterTerminal(root, { DevMac, mountNode }, ctx: ApolloCtx) {
+            await new RegisterTerminal({ DevMac, mountNode }).save()
+            const result = await Terminal.updateOne(
+                { DevMac },
+                { $set: { mountNode, name: DevMac } },
+                { upsert: true }
+            );
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+            return result;
         },
-        // 删除登记设备
+        // 删除登记设备 
         async deleteRegisterTerminal(root, { DevMac }) {
-            const terminal = await Terminal.findOne({ DevMac })
+            // 如果没有被绑定则删除
+            const terminal = await UserBindDevice.findOne({"UTS":DevMac})
             if (terminal) {
-                return { ok: 0, msg: "设备已登记注册" }
+                return { ok: 0, msg: "设备已被用户绑定" }
             } else {
-                return await RegisterTerminal.deleteOne({ DevMac })
+                await TerminalClientResult.deleteMany({mac:DevMac}).exec()
+                await TerminalClientResults.deleteMany({mac:DevMac}).exec()
+                await TerminalClientResultSingle.deleteMany({mac:DevMac}).exec()                
+                await Terminal.deleteOne({ DevMac }).exec()
+                const result = await RegisterTerminal.deleteOne({ DevMac })
+                //await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+                return result
             }
         },
         // 添加终端信息
@@ -398,9 +414,22 @@ const resolvers: IResolvers = {
         },
         // 删除终端信息
         async deleteTerminal(root, { DevMac }, ctx: ApolloCtx) {
-            const result = await Terminal.deleteOne({ DevMac });
+            /* const result = await Terminal.deleteOne({ DevMac });
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
-            return result;
+            return result; */
+            // 如果没有被绑定则删除
+            const terminal = await UserBindDevice.findOne({"UTS":DevMac})
+            if (terminal) {
+                return { ok: 0, msg: "设备已被用户绑定" }
+            } else {
+                await TerminalClientResult.deleteMany({mac:DevMac}).exec()
+                await TerminalClientResults.deleteMany({mac:DevMac}).exec()
+                await TerminalClientResultSingle.deleteMany({mac:DevMac}).exec()                
+                await Terminal.deleteOne({ DevMac }).exec()
+                const result = await RegisterTerminal.deleteOne({ DevMac })
+                await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+                return result
+            }
         },
         // 添加终端挂载信息
         async addTerminalMountDev(root, { arg }, ctx: ApolloCtx) {

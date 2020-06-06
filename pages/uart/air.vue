@@ -40,7 +40,13 @@
         </b-col>
         <b-col cols="12" md="7">
           <b-row class="m-0">
-            <b-col cols="4" md="4" class="py-1 px-2" v-for="(val, key) in Stat.AirStat" :key="val.name+key">
+            <b-col
+              cols="4"
+              md="4"
+              class="py-1 px-2"
+              v-for="(val, key) in Stat.AirStat"
+              :key="val.name+key"
+            >
               <div class="border rounded-lg d-flex flex-column align-items-center">
                 <i class="bg-info d-inline w-100 p-1 text-center text-light">{{ val.name }}</i>
                 <b-img fluid :src="val.value" alt="Card image" class="p-1"></b-img>
@@ -94,6 +100,7 @@ export default Vue.extend({
       "Humidification"
     ]);
     return {
+      count: 0,
       query: this.$route.query,
       airData: {} as queryResultSave,
       DevConstant: {} as Pick<
@@ -176,9 +183,8 @@ export default Vue.extend({
         ];
         const parse = this.airData.parse;
         Object.entries(Constant).forEach(([key, val]) => {
-          if (val && statKeys.includes(key)) {
+          if (val && statKeys.includes(key) && parse.hasOwnProperty(val)) {
             const parse1: queryResultArgument = (parse as any)[val] as any;
-            //(stat as any)[key].property = parse1.name;
             (stat as any)[key].value = parseInt(parse1.value);
           }
         });

@@ -18,6 +18,7 @@ import {
 import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { UserBindDevice, UserAlarmSetup } from "../mongoose/user";
+import { Event as event } from "./index";
 
 export interface sendQuery {
   IP: string;
@@ -29,7 +30,7 @@ export default class Cache {
   CacheProtocol: Map<string, protocol>;
   // 设备类型缓存devmodal=>
   CacheDevsType: Map<string, devsType>;
-  // 透传终端缓存mac=>
+  // 透传终端缓存mac=>terminal
   CacheTerminal: Map<string, terminal>;
   // Node节点=》终端缓存 
   CacheNodeTerminal: Map<string, Map<string, terminal>>;
@@ -54,8 +55,10 @@ export default class Cache {
   // 缓存告警参数次数 tag=>number
   CacheAlarmNum: Map<string, number>
   // 缓存用户配置 user=>setup
-  CacheUserSetup:Map<string,userSetup>
-  constructor() {
+  CacheUserSetup: Map<string, userSetup>
+  private Events: event;
+  constructor(Events: event) {
+    this.Events = Events
     // 缓存
     this.CacheProtocol = new Map();
     this.CacheDevsType = new Map();
@@ -107,22 +110,31 @@ export default class Cache {
   }
   //
   async RefreshCacheTerminal(DevMac?: string) {
-    const res: terminal[] = await Terminal.find().lean()
-    console.log(`加载4g终端缓存......`)
-    res.forEach(el => {
-      this.CacheTerminal.set(el.DevMac, el)
-      this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
-    })
     // 如果有Mac参数,更新超时指令查询
     if (DevMac) {
-      const Terminal = this.CacheTerminal.get(DevMac) as terminal
-      if (this.CacheTerminalQueryIntructTimeout.has(Terminal.mountNode)) {
-        const CacheTerminalQueryIntructTimeout = this.CacheTerminalQueryIntructTimeout.get(Terminal.mountNode)
+      const terminal = await Terminal.findOne({ DevMac }).lean<terminal>() as terminal
+      // 更新terminalCache
+      if (!terminal.mountDevs) terminal.mountDevs = []
+      this.CacheTerminal.set(terminal.DevMac, terminal)
+      this.CacheNodeTerminal.get(terminal.mountNode)?.set(terminal.DevMac, terminal)
+      // 如果超时指令包含devmac,删除
+      if (this.CacheTerminalQueryIntructTimeout.has(terminal.mountNode)) {
+        const CacheTerminalQueryIntructTimeout = this.CacheTerminalQueryIntructTimeout.get(terminal.mountNode)
         CacheTerminalQueryIntructTimeout?.forEach(el => {
           const Reg = new RegExp(`^${DevMac}`)
           if (Reg.test(el)) CacheTerminalQueryIntructTimeout.delete(el)
         })
       }
+      // 触发终端更新事件
+      this.Events.Emit("UpdateTerminal", this.CacheTerminal.get(terminal.DevMac) as terminal)
+    } else {
+      const res: terminal[] = await Terminal.find().lean()
+      console.log(`加载4g终端缓存......`)
+      res.forEach(el => {
+        if (!el.mountDevs) el.mountDevs = []
+        this.CacheTerminal.set(el.DevMac, el)
+        this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
+      })
     }
   }
   //
@@ -142,22 +154,22 @@ export default class Cache {
     })
   }
   //
-  async RefreshCacheUserSetup(){
+  async RefreshCacheUserSetup() {
     const res = await UserAlarmSetup.find().lean<userSetup>()
     console.log(`加载用户个性化配置......`);
-    this.CacheUserSetup = new Map(res.map(el=>{
+    this.CacheUserSetup = new Map(res.map(el => {
       // 如果用户没有自定义告警阀值,生成空map
-      if(el.ProtocolSetup){
-        el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els=>[els.Protocol,els]))
-        el.ThresholdMap = new Map(el.ProtocolSetup.map(els=>{
-          const ThresholdMap = new Map(els.Threshold.map(ela=>[ela.name,ela]))
-          return [els.Protocol,ThresholdMap]
+      if (el.ProtocolSetup) {
+        el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els => [els.Protocol, els]))
+        el.ThresholdMap = new Map(el.ProtocolSetup.map(els => {
+          const ThresholdMap = new Map(els.Threshold.map(ela => [ela.name, ela]))
+          return [els.Protocol, ThresholdMap]
         }))
-      }else{
+      } else {
         el.ProtocolSetupMap = new Map()
         el.ThresholdMap = new Map()
-      }      
-      return [el.user,el]
+      }
+      return [el.user, el]
     }))
   }
 }

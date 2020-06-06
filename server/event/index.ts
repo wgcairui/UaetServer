@@ -9,14 +9,20 @@ export interface socketData {
   socket: Socket;
   data: any;
 }
-export type eventsName = 'UartTerminalOnline' | 'UartTerminalOff' | 'UartTerminalDataTransfinite' | 'UartTerminalDataTransfiniteReset'
+// UartTerminalOnline  终端上线
+// UartTerminalOff  终端下线
+// UartTerminalDataTransfinite 终端超时
+// UartTerminalDataTransfiniteReset' 终端超时恢复
+// "UpdateTerminal" 终端更新
+// 'QueryIntervalLow'  终端返回数据数目有差异
+export type eventsName = 'UartTerminalOnline' | 'UartTerminalOff' | 'UartTerminalDataTransfinite' | 'UartTerminalDataTransfiniteReset' | "UpdateTerminal" | 'QueryIntervalLow'
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
   ClientCache: ClientCache
   constructor() {
     super();
     // Node节点,透传协议，设备...缓存
-    this.Cache = new Cache();
+    this.Cache = new Cache(this);
     // web客户端socket缓存
     this.ClientCache = new ClientCache()
     // start Query,加载数据缓存

@@ -75,12 +75,16 @@ export class NodeSocketIO {
                 socket.disconnect()
                 // 添加日志
                 new LogNodes({ ID, IP, type: "非法连接请求" } as logNodes).save()
-                //
                 return
             }
-            //
             const Name = this.Event.Cache.CacheNode.get(IP)?.Name as string
             const Node = { ID, IP, Name, socket } as socketArgument
+            // 检测节点是否重复注册socket
+            if (this.Event.Cache.CacheSocket.has(Node.IP)) {
+                console.log(`节点##${Node.Name} 重复请求连接socket,断开连接`);
+                Node.socket.disconnect()
+                return
+            }
             console.log(`new socket connect<id: ${Node.ID},IP: ${Node.IP},Name: ${Name}>`);
             // 添加日志
             new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "连接" })).save()
@@ -122,16 +126,25 @@ export class NodeSocketIO {
                     new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "告警" })).save()
                 })
                 // 节点终端设备上线
-                .on(EVENT_TCP.terminalOn, data => {
-                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(data)
-                    // 添加日志
-                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
+                .on(EVENT_TCP.terminalOn, (data: string | string[]) => {
+                    if (Array.isArray(data)) {
+                        data.forEach(el => this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(el))
+                        console.info(`${new Date().toLocaleTimeString()}##模块:/${data.join("|")}/ 已上线`);
+                    } else {
+                        this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(data)
+                        console.info(`${new Date().toLocaleTimeString()}##模块:${data} 已上线`);
+                        // 添加日志
+                        new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
+                    }
+                    // console.log({Node,stat:'online',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 节点终端设备掉线
                 .on(EVENT_TCP.terminalOff, data => {
                     this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.delete(data)
+                    console.error(`${new Date().toLocaleTimeString()}##模块:${data} 已离线`);
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "断开" } as logTerminals).save()
+                    // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 设备挂载节点查询超时
                 .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult) => {
@@ -156,6 +169,9 @@ export class NodeSocketIO {
                 })
 
         })
+        // 监听Event事件
+        this.Event.On("UpdateTerminal", ([ter]) => this._UpdateCache(ter))
+            .On("QueryIntervalLow", ([R]) => this._AddQueryInterval(R))
     }
     // 初始化缓存
     private _InitCache(Node: socketArgument) {
@@ -163,16 +179,59 @@ export class NodeSocketIO {
         const Terminals = this.Event.Cache.CacheNodeTerminal.get(Node.Name) as Map<string, Terminal>
         // 构建Map
         const TerminalMountDev: Map<TerminalPid, TerminalMountDevsEX> = new Map()
+        // console.log({ Terminals });
+
         // 迭代所有设备,加入缓存
         Terminals.forEach(Terminal => {
-            Terminal.mountDevs.forEach(mountDevs => {
+            Terminal.mountDevs.forEach(mountDev => {
                 const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 1000 }, mountDevs) as Required<TerminalMountDevsEX>
-                TerminalMountDev.set(Terminal.DevMac + mountDevs.pid, mount)
+                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 1000 }, mountDev) as Required<TerminalMountDevsEX>
+                TerminalMountDev.set(Terminal.DevMac + mountDev.pid, mount)
             })
         })
         this.Cache.set(Node.Name, TerminalMountDev)
         console.log(`${new Date().toLocaleTimeString()}##节点: ${Node.Name} 上线,载入设备缓存Size: ${TerminalMountDev.size}`);
+    }
+    // 更新缓存
+    private _UpdateCache(terminal: Terminal) {
+        console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
+        // 获取设备绑定节点的map
+        const nodeTerminals = this.Cache.get(terminal.mountNode) as Map<string, TerminalMountDevsEX>
+        // 
+        const Regexs = new RegExp("^" + terminal.DevMac)
+        const terEnts = Array.from(nodeTerminals?.entries()).filter(([key]) => Regexs.test(key))
+        // 比较缓存和terminal,terminal没有则从缓存清除
+        const terminalMountdevsKey = terminal.mountDevs.map(el => terminal.DevMac + el.pid)
+        terEnts.forEach(([key]) => {
+            if (!terminalMountdevsKey.includes(key)) nodeTerminals.delete(key)
+        })
+        // 迭代terminal挂载设备,更新缓存
+        terminal.mountDevs.forEach(el => {
+            const hash = terminal.DevMac + el.pid
+            if (nodeTerminals.has(hash)) {
+                Object.assign(nodeTerminals.get(hash) as TerminalMountDevsEX, el)
+            } else {
+                const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
+                    ({ NodeName: terminal.mountNode, NodeIP: this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP, TerminalMac: terminal.DevMac, Interval: 1000 }, el) as Required<TerminalMountDevsEX>
+                nodeTerminals.set(hash, mount)
+            }
+        })
+        //console.log({ a: Array.from(nodeTerminals?.entries()).filter(([key]) => Regexs.test(key)) });
+    }
+    // 增加设备查询间隔
+    private _AddQueryInterval(R: queryResult) {
+        const terminal = this.Event.Cache.CacheTerminal.get(R.mac) as Terminal
+        const hash = R.mac + R.pid
+        const QueryList = this.Cache.get(terminal.mountNode)
+        const Query = QueryList?.get(hash) as TerminalMountDevsEX
+        if(!Query) return
+        const Interval = Query.Interval
+        if(Interval <= 10000){
+            Query.Interval = Query.Interval + 500
+        }else{
+            
+        }
+        console.log({ time:new Date().toLocaleTimeString(),R:R.contents, Interval: Query.Interval });
     }
     // 定时器总线,粒度控制在500毫秒
     private _Interval() {
@@ -194,7 +253,7 @@ export class NodeSocketIO {
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
         if (this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP)?.has(Query.TerminalMac + Query.pid)) {
-            //console.log('指令包含在超时列表中');
+            //console.log('指令包含在超时列表中' + Array.from(this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP) as Set<string>).join("|"));
             return
         }
         // 生成时间戳
@@ -235,7 +294,8 @@ export class NodeSocketIO {
             protocol: Query.protocol,
             pid: Query.pid,
             timeStamp,
-            content
+            content,
+            Interval:Query.Interval
         }
         //console.log({query,ins:Protocol.instruct});        
         // 获取节点Socket实例
@@ -246,13 +306,16 @@ export class NodeSocketIO {
     // 发送程序变更指令，公开
     public async InstructQuery(Query: instructQuery) {
         // 在在线设备中查找
-        let NodeIP = ''
-        for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
+        const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
+        const NodeIP = this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
+        /* for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
             if (DevSet.has(Query.DevMac)) {
                 NodeIP = IP
                 break
             }
-        }
+        } */
+        console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
+
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
             if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
@@ -263,7 +326,6 @@ export class NodeSocketIO {
             if (Query.type === 485) {
                 if (/(^HX.*)/.test(Query.protocol)) {
                     Query.content = tool.HX(Query.pid, Query.content)
-                    //console.log({Query});
                 } else {
                     Query.content = tool.Crc16modbus(Query.pid, Query.content)
                 }

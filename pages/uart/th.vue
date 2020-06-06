@@ -4,13 +4,13 @@
       <b-col cols="6">
         <div class="ths">
           <i class="iconfont text-success">&#xe604;</i>
-          <b>{{ data.data.temperature }}&#8451;</b>
+          <b>{{ TH.data.temperature }}&#8451;</b>
         </div>
       </b-col>
       <b-col cols="6">
         <div class="ths">
           <i class="iconfont text-primary">&#xe604;</i>
-          <b>{{ data.data.humidity }}%</b>
+          <b>{{ TH.data.humidity }}%</b>
         </div>
       </b-col>
     </template>
@@ -49,13 +49,14 @@ export default Vue.extend({
   },
   methods: {
     onData(data: queryResultSave) {
-      this.EmData = data;
-      if (data.result) {
-        let th = TerminalResultArrayToJson(data.result as any[]);
-        (this.TH.DateTime = new Date(data.timeStamp).toTimeString()),
-          (this.TH.data.temperature = th.get("温度"));
-        this.TH.data.humidity = th.get("湿度");
-        this.TH.result = data.result;
+      console.log({data});
+      // this.EmData = data;
+      if (data?.parse) {     
+        const th = data.parse;
+        this.TH.DateTime = new Date(data.timeStamp).toTimeString();
+        this.TH.data.temperature = th["温度"].value;
+        this.TH.data.humidity = th["湿度"].value;
+        //this.TH.result = data.result;
       }
     },
     onConstant(data: ProtocolConstantThreshold) {

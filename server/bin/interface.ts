@@ -127,6 +127,7 @@ export interface queryObject {
   pid: number;
   timeStamp: number;
   content: string | string[];
+  Interval: number
 }
 // 协议查询结果解析存储结构
 export interface queryResultArgument {
