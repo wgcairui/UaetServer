@@ -49,14 +49,11 @@ export default Vue.extend({
   },
   methods: {
     onData(data: queryResultSave) {
-      console.log({data});
-      // this.EmData = data;
-      if (data?.parse) {     
+      if (data?.parse) {
         const th = data.parse;
         this.TH.DateTime = new Date(data.timeStamp).toTimeString();
-        this.TH.data.temperature = th["温度"].value;
-        this.TH.data.humidity = th["湿度"].value;
-        //this.TH.result = data.result;
+        this.TH.data.temperature = th["温度"]?.value || 0;
+        this.TH.data.humidity = th["湿度"]?.value || 0;
       }
     },
     onConstant(data: ProtocolConstantThreshold) {

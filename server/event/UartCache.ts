@@ -13,7 +13,8 @@ import {
   NodeClient as nodeClient,
   ProtocolConstantThreshold,
   BindDevice,
-  userSetup
+  userSetup,
+  TerminalMountDevsEX
 } from "../bin/interface";
 import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
@@ -25,6 +26,10 @@ export interface sendQuery {
   Name?: string;
   socket: SocketIO.Socket;
 }
+
+type NodeName = string
+type TerminalPid = string
+
 export default class Cache {
   // 协议缓存protocol=>
   CacheProtocol: Map<string, protocol>;
@@ -56,6 +61,10 @@ export default class Cache {
   CacheAlarmNum: Map<string, number>
   // 缓存用户配置 user=>setup
   CacheUserSetup: Map<string, userSetup>
+  // 用户uart挂载终端缓存
+  QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
+  // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
+  QueryTerminaluseTime: Map<string, number[]>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events
@@ -75,6 +84,8 @@ export default class Cache {
     this.CacheBindEt = new Map()
     this.CacheAlarmNum = new Map()
     this.CacheUserSetup = new Map()
+    this.QueryTerminal = new Map()
+    this.QueryTerminaluseTime = new Map()
   }
   //
   async start(): Promise<void> {
@@ -127,6 +138,11 @@ export default class Cache {
       }
       // 触发终端更新事件
       this.Events.Emit("UpdateTerminal", this.CacheTerminal.get(terminal.DevMac) as terminal)
+      //
+      terminal.mountDevs.forEach(el => {
+        this.QueryTerminaluseTime.set(terminal.DevMac + el.pid, [])
+      })
+
     } else {
       const res: terminal[] = await Terminal.find().lean()
       console.log(`加载4g终端缓存......`)
@@ -134,6 +150,9 @@ export default class Cache {
         if (!el.mountDevs) el.mountDevs = []
         this.CacheTerminal.set(el.DevMac, el)
         this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
+        el.mountDevs.forEach(el2 => {
+          this.QueryTerminaluseTime.set(el.DevMac + el2.pid, [])
+        })
       })
     }
   }

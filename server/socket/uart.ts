@@ -1,7 +1,7 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, instructQuery, ApolloMongoResult, logNodes, logTerminals } from "../bin/interface";
+import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals } from "../bin/interface";
 
 import tool from "../util/tool";
 import { DefaultContext } from "koa";
@@ -12,13 +12,6 @@ export interface socketArgument {
     IP: string
     Name: string
     socket: Socket
-}
-
-interface TerminalMountDevsEX extends TerminalMountDevs {
-    NodeIP: string
-    NodeName: string
-    TerminalMac: string
-    Interval: number
 }
 
 const EVENT_TCP = {
@@ -41,26 +34,48 @@ const EVENT_SERVER = {
     'instructQuery': 'instructQuery', // 操作设备状态指令
 }
 
-type NodeName = string
-type TerminalPid = string
-
 export class NodeSocketIO {
     private io: IO.Server;
     private Event: event;
-    // Cache
-    private Cache: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
+
     // 缓存查询指令
     private CacheQueryIntruct: Map<string, string>
+    Cache: Map<string, Map<string, TerminalMountDevsEX>>;
     constructor(server: Server, opt: ServerOptions) {
         this.io = IO(server, opt)
         this.Event = Event
-        this.Cache = new Map()
+        this.Cache = Event.Cache.QueryTerminal
         this.CacheQueryIntruct = new Map()
     }
     start(app: DefaultContext) {
         app.context.$SocketUart = this;
         this._OnEvent()
         this._Interval()
+        this._updateQueryInterval()
+    }
+    // 每10分钟更新每个设备查询间隔
+    private _updateQueryInterval() {
+        setInterval(() => {
+            this.Cache.forEach(el => {
+                el.forEach((terEX, hash) => {
+                    const useTimeArray = this.Event.Cache.QueryTerminaluseTime.get(hash) as number[]
+                    const len = useTimeArray.length
+                    const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
+                    const maxTime = Math.max(...yxuseTimeArray)
+                    // 如果查询最大值大于1秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
+                    if (maxTime && maxTime < 1001) {
+                        terEX.Interval = 1000
+                    } else {
+                        const maxTimeString = String(maxTime)
+                        const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
+                        terEX.Interval = Number(han) > 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
+                    }
+                })
+            })
+            console.log(`更新Query查询缓存间隔时间`);
+            // 清空查询计数数组
+            this.Event.Cache.QueryTerminaluseTime.forEach(el => el = [])
+        }, 60000 * 10)
     }
 
     // 触发IO监听处理事件
@@ -149,24 +164,29 @@ export class NodeSocketIO {
                 // 设备挂载节点查询超时
                 .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult) => {
                     const intruct = Query.mac + Query.pid
-                    const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
+                    console.log(`${intruct} 查询超时`);
+                    /* const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     // 如果节点已存在超时指令记录则添加,
                     if (Timeout.has(Node.IP)) {
                         Timeout.get(Node.IP)?.add(intruct)
                     } else {
                         Timeout.set(Node.IP, new Set([intruct]))
-                    }
+                    } */
+                    const QueryTerminal = this.Cache.get(Node.Name)?.get(intruct) as TerminalMountDevsEX
+                    QueryTerminal.Interval = QueryTerminal.Interval + 1000
+                    console.log();
+
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()
                 })
                 // 设备挂载节点查询超时恢复,
                 .on(EVENT_TCP.terminalMountDevTimeOutRestore, (Query: queryResult) => {
-                    const intruct = Query.mac + Query.pid
+                    /* const intruct = Query.mac + Query.pid
                     const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
                     Timeout.get(Node.IP)?.delete(intruct)
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询恢复", query: Query } as logTerminals).save()
-                })
+                 */})
 
         })
         // 监听Event事件
@@ -178,7 +198,7 @@ export class NodeSocketIO {
         // 获取节点挂载的设备s
         const Terminals = this.Event.Cache.CacheNodeTerminal.get(Node.Name) as Map<string, Terminal>
         // 构建Map
-        const TerminalMountDev: Map<TerminalPid, TerminalMountDevsEX> = new Map()
+        const TerminalMountDev: Map<string, TerminalMountDevsEX> = new Map()
         // console.log({ Terminals });
 
         // 迭代所有设备,加入缓存
@@ -224,14 +244,14 @@ export class NodeSocketIO {
         const hash = R.mac + R.pid
         const QueryList = this.Cache.get(terminal.mountNode)
         const Query = QueryList?.get(hash) as TerminalMountDevsEX
-        if(!Query) return
+        if (!Query) return
         const Interval = Query.Interval
-        if(Interval <= 10000){
+        if (Interval <= 10000) {
             Query.Interval = Query.Interval + 500
-        }else{
-            
+        } else {
+
         }
-        console.log({ time:new Date().toLocaleTimeString(),R:R.contents, Interval: Query.Interval });
+        console.log({ time: new Date().toLocaleTimeString(), R: R.contents, Interval: Query.Interval });
     }
     // 定时器总线,粒度控制在500毫秒
     private _Interval() {
@@ -252,10 +272,10 @@ export class NodeSocketIO {
     // 发送查询指令
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
-        if (this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP)?.has(Query.TerminalMac + Query.pid)) {
+        /* if (this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP)?.has(Query.TerminalMac + Query.pid)) {
             //console.log('指令包含在超时列表中' + Array.from(this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP) as Set<string>).join("|"));
             return
-        }
+        } */
         // 生成时间戳
         const timeStamp = Date.now()
         // 获取设备协议
@@ -295,7 +315,9 @@ export class NodeSocketIO {
             pid: Query.pid,
             timeStamp,
             content,
-            Interval:Query.Interval
+            // 
+            Interval: Query.Interval,
+            useTime: 0
         }
         //console.log({query,ins:Protocol.instruct});        
         // 获取节点Socket实例
@@ -308,17 +330,14 @@ export class NodeSocketIO {
         // 在在线设备中查找
         const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
         const NodeIP = this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
-        /* for (let [IP, DevSet] of this.Event.Cache.CacheNodeTerminalOnline) {
-            if (DevSet.has(Query.DevMac)) {
-                NodeIP = IP
-                break
-            }
-        } */
-        console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
+
+        // console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
 
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
             if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
+            // 取出查询间隔
+            Query.Interval = this.Cache.get(terminal.mountNode)?.get(Query.DevMac + Query.pid)?.Interval || 20000
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
             if (!Socket) resolve({ ok: 0, msg: '设备不在线' })
@@ -335,7 +354,7 @@ export class NodeSocketIO {
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
             setTimeout(() => {
                 resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
-            }, 10000);
+            }, Query.Interval);
         })
         // 添加日志
         new LogTerminals({ NodeIP: NodeIP, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result } as logTerminals).save()

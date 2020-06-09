@@ -2,7 +2,9 @@
   <my-page-user :title="title">
     <b-row class="m-0">
       <separated :title="query.DevMac">
-        <b>{{Data ? new Date(Data.time).toLocaleString():''}}</b>
+        <b  v-b-tooltip.hover title="查询耗时">{{Queryarg.useTime}}/</b>
+        <b v-b-tooltip.hover title="查询间隔">{{Queryarg.Interval}}/</b>
+        <b v-b-tooltip.hover title="查询时间">{{Queryarg.queryTime}}</b>
       </separated>
       <slot />
     </b-row>
@@ -14,10 +16,10 @@
           <b-button variant="info" :to="{name:'uart-setup',query:query}">用户配置</b-button>
         </b-button-group>
       </separated>
-      <b-overlay :show="$apollo.loading" class="w-100">
+      <b-overlay :show="$apollo.loading" class="w-100 px-2">
         <b-tabs justified>
           <b-tab title="模拟量">
-            <b-table :items="line.simulate" :fields="fields" :tbody-tr-class="rowClass">
+            <b-table :items="line.simulate" :fields="fields" :tbody-tr-class="rowClass" class="">
               <template v-slot:cell(value)="row">
                 <b class="value">
                   <b-badge>{{row.value}}</b-badge>
@@ -110,6 +112,22 @@ export default Vue.extend({
         });
       }
       return { simulate, quantity };
+    },
+    // 查询耗时和查询间隔
+    Queryarg(){
+      const Data = this.Data as queryResultSave;
+      const time = {
+        queryTime:'',
+        useTime:0,
+        Interval:0
+      }
+      if(Data?.parse){
+        time.useTime = Data.parse['查询耗时'].value
+        time.Interval = Data.parse['查询间隔'].value
+        time.queryTime = new Date((Data as any).time).toLocaleString()
+        this.$apollo.queries.Data.startPolling(time.Interval)
+      }
+      return time
     }
   },
   apollo: {

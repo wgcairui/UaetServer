@@ -88,6 +88,12 @@ export interface Terminal extends RegisterTerminal {
   uptime?: string
   mountDevs: TerminalMountDevs[];
 }
+export interface TerminalMountDevsEX extends TerminalMountDevs {
+  NodeIP: string
+  NodeName: string
+  TerminalMac: string
+  Interval: number
+}
 // Node节点
 export interface NodeClient {
   Name: string;
@@ -128,6 +134,7 @@ export interface queryObject {
   timeStamp: number;
   content: string | string[];
   Interval: number
+  useTime: number
 }
 // 协议查询结果解析存储结构
 export interface queryResultArgument {
@@ -303,6 +310,7 @@ export interface instructQuery {
   events: string
   content: string
   result?: Buffer
+  Interval?: number
 }
 
 // 透传设备告警对象

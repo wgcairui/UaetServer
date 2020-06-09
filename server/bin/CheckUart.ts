@@ -11,6 +11,8 @@ import { SendAlarmEvent } from "../util/Mail";
 import { TerminalClientResultSingle } from "../mongoose/node";
 
 export default (query: queryResult) => {
+  // 保存查询的查询时间
+  Event.Cache.QueryTerminaluseTime.get(query.mac + query.pid)?.push(query.useTime)
   // 获取mac绑定的用户
   const User = Event.Cache.CacheBindUart.get(query.mac);
   // 没有绑定用户则跳出检查
@@ -122,7 +124,7 @@ async function sendSmsAlarm(query: queryResult, Threshold: Threshold, UserSetup:
   if (Event.Cache.CacheAlarmNum.has(tag)) {
     const n = Event.Cache.CacheAlarmNum.get(tag) as number;
     Event.Cache.CacheAlarmNum.set(tag, n + 1);
-    if (n === 20) {      
+    if (n === 20) {
       // 检查是否有告警手机号
       if (UserSetup.tels.length > 0) {
         await SendUartAlarm({

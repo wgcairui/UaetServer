@@ -8,7 +8,7 @@
           </b-button>
           <span class="text-light">|</span>
         </span>
-        <span class="text-center text-light" style="font-size:1rem">{{ title }}</span>
+        <span class="text-center text-light" style="font-size:1.5rem">{{ title }}</span>
       </b-navbar-brand>
       <div class="navber-m-2 ml-auto">
         <div class="navber-m-3 float-right d-inline-flex flex-column head-right">

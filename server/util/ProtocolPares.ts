@@ -4,8 +4,8 @@ import { protocolInstruct, queryResult, queryResultArgument, protocol } from "..
 
 export default async (R: queryResult) => {
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
-  if(R.content.length !== R.contents.length){
-    Event.Emit("QueryIntervalLow",R)
+  if (R.content.length !== R.contents.length) {
+    Event.Emit("QueryIntervalLow", R)
   }
   // 结果集数组
   const IntructResult = R.contents;
@@ -120,5 +120,7 @@ export default async (R: queryResult) => {
       }
       break;
   }
+  R.result?.push({ name: '查询耗时', value: R.useTime, unit: 'ms' })
+  R.result?.push({ name: '查询间隔', value: R.Interval, unit: "ms" })
   return R;
 };

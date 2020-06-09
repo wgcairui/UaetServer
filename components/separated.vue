@@ -1,6 +1,6 @@
 <template>
-  <b-col cols="12" class="border-bottom mt-4 my-2 px-3 d-flex flex-row justify-content-center">
-    <div>
+  <b-col cols="12" class="border-bottom my-2 px-3 d-md-flex justify-content-center flex-row">
+    <div class=" my-1">
       <span v-show="back" @click="backto">
         <i class="el-icon-back" />
         <span class="text-dark mx-2">|</span>
