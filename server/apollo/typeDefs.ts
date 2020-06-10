@@ -133,6 +133,8 @@ const typeDefs: DocumentNode = gql`
     content: String
     result: [terminalData]
     parse:JSON
+    Interval: Int
+    useTime: Int
   }
   # 设备常量
   type Constant{

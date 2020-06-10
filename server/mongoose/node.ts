@@ -39,6 +39,8 @@ const SchemaTerminalClientResults = new Schema({
   mac: String,
   type: Number,
   protocol: String,
+  Interval: Number,
+  useTime: Number,
   contents: [
     new Schema(
       {
@@ -50,7 +52,8 @@ const SchemaTerminalClientResults = new Schema({
           },
           { _id: false }
         ),
-      }
+      },
+      { _id: false }
     )
   ]
 });
@@ -69,8 +72,8 @@ const SchemaTerminalClientResult = new Schema({
   timeStamp: { type: Number, index: true },
   pid: { type: Number, index: true },
   mac: { type: String, index: true },
-  Interval:Number,
-  useTime:Number
+  Interval: Number,
+  useTime: Number
 });
 // 终端设备上传数据=>解析数据单例
 const SchemaTerminalClientResultSingle = new Schema({
@@ -88,6 +91,8 @@ const SchemaTerminalClientResultSingle = new Schema({
   pid: { type: Number, index: true },
   time: String,
   mac: { type: String, index: true },
+  Interval: Number,
+  useTime: Number
 }, { timestamps: true });
 export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
 

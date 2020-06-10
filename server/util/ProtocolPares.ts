@@ -3,10 +3,6 @@ import Tool from "./tool";
 import { protocolInstruct, queryResult, queryResultArgument, protocol } from "../bin/interface";
 
 export default async (R: queryResult) => {
-  // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
-  if (R.content.length !== R.contents.length) {
-    Event.Emit("QueryIntervalLow", R)
-  }
   // 结果集数组
   const IntructResult = R.contents;
   // 协议数组
@@ -111,7 +107,6 @@ export default async (R: queryResult) => {
                     break;
                 }
                 //
-                // console.log({ name: el2.name, value, unit: el2.unit });
                 return { name: el2.name, value, unit: el2.unit };
               });
             })
@@ -120,7 +115,14 @@ export default async (R: queryResult) => {
       }
       break;
   }
-  R.result?.push({ name: '查询耗时', value: R.useTime, unit: 'ms' })
-  R.result?.push({ name: '查询间隔', value: R.Interval, unit: "ms" })
+  // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
+  if (R.content.length !== R.contents.length) {
+    /* console.log(R.contents.map(el => ({
+      content: el.content,
+      buf: Buffer.from(el.buffer.data), 
+      R
+    }))); */
+    Event.Emit("QueryIntervalLow", R)
+  }
   return R;
 };

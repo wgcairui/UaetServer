@@ -292,6 +292,9 @@ export interface queryResultSave {
   timeStamp: number
   result: queryResultArgument[]
   parse: { [x: string]: queryResultArgument }
+  Interval: number,
+  useTime: number,
+  time:string
 }
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate"
 // 操作指令查询对象

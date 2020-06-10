@@ -173,8 +173,7 @@ export class NodeSocketIO {
                         Timeout.set(Node.IP, new Set([intruct]))
                     } */
                     const QueryTerminal = this.Cache.get(Node.Name)?.get(intruct) as TerminalMountDevsEX
-                    QueryTerminal.Interval = QueryTerminal.Interval + 1000
-                    console.log();
+                    QueryTerminal.Interval = QueryTerminal.Interval ? QueryTerminal.Interval + 1000 : 1000
 
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()
@@ -251,7 +250,7 @@ export class NodeSocketIO {
         } else {
 
         }
-        console.log({ time: new Date().toLocaleTimeString(), R: R.contents, Interval: Query.Interval });
+        // console.log({ time: new Date().toLocaleTimeString(), R: R.contents, Interval: Query.Interval });
     }
     // 定时器总线,粒度控制在500毫秒
     private _Interval() {

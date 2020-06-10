@@ -4,11 +4,13 @@ import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 
 export default async (queryResultArray: queryResult[]) => {
+    if (queryResultArray.length === 0) return
     const UartData = queryResultArray.reverse()
     // 保存原始数据
     TerminalClientResults.insertMany(UartData);
     //
-    const ParseData = await Promise.all(UartData.map(el => ProtocolPares(el)));
+    const ParseData = await Promise.all(UartData.map(el => ProtocolPares(el)))
+        .then(el => el.filter(el2 => el2.result?.length as number > 0))
     // 保存解析后的数据
     TerminalClientResult.insertMany(ParseData);
     // 保存单例数据库
