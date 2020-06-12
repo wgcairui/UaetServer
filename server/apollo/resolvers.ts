@@ -10,7 +10,7 @@ import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
 import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal, Aggregation, AggregationDev } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal, Aggregation, AggregationDev, ProtocolConstantThreshold } from "../bin/interface";
 
 import { BcryptDo } from "../util/bcrypt";
 
@@ -104,7 +104,7 @@ const resolvers: IResolvers = {
             if (!Bind) return null;
             Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
             Bind.ECs = await EcTerminal.find({ ECid: { $in: Bind.ECs } }).lean();
-            Bind.AGG = await UserAggregation.find({user:ctx.user})
+            Bind.AGG = await UserAggregation.find({ user: ctx.user })
             //
             Bind.UTs = Bind.UTs.map((el: any) => {
                 const nodeIP = ctx.$Event.Cache.CacheNodeName.get(el.mountNode)?.IP as string
@@ -285,6 +285,25 @@ const resolvers: IResolvers = {
             }
             return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
         },
+        // id获取用户聚合设备
+        async Aggregation(root, { id }, ctx: ApolloCtx) {
+            const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean() as Aggregation
+            if (!agg) return agg
+            const query = agg.aggregations.map(async el => {
+                const constant = await DevConstant.findOne({ Protocol: el.protocol }).select("Constant").lean() as ProtocolConstantThreshold
+                const constantVals = _.pickBy(constant.Constant, Boolean) as any
+                const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid }).select("parse time").lean() as queryResult
+                // ter.parse = _.pick(ter.parse,constantVals) as any
+                const constantParse = {} as { [x in string]: queryResultArgument }
+                for (let key in constantVals) {
+                    constantParse[key] = (ter.parse as any)[constantVals[key]]
+                }
+                // console.log({ constantParse });
+                return Object.assign(el, { parse: constantParse })
+            })
+            agg.devs = await Promise.all(query) as any
+            return agg
+        }
     },
 
     /* 
@@ -764,15 +783,16 @@ const resolvers: IResolvers = {
         },
         // 添加聚合设备
         async addAggregation(root, { name, aggs }: { name: string, aggs: AggregationDev[] }, ctx: ApolloCtx) {
-            const aggObj:Aggregation = {
-                user:ctx.user as string,
-                id:'',
+            const aggObj: Aggregation = {
+                user: ctx.user as string,
+                id: '',
                 name,
-                aggregations:aggs
+                aggregations: aggs,
+                devs: []
             }
             const agg = await new UserAggregation(aggObj).save()
-            const result = await UserAggregation.updateOne({name,user:ctx.user},{$set:{id:agg._id}})
-            return result       
+            const result = await UserAggregation.updateOne({ name, user: ctx.user }, { $set: { id: agg._id } })
+            return result
         }
     },
 

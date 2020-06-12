@@ -103,7 +103,7 @@
         </b-list-group>
       </b-sidebar>
     </b-navbar>
-    <b-container class="mb-5 flex-grow-1">
+    <b-container class="mb-5 flex-grow-1" :fluid="fluid">
       <slot />
     </b-container>
     <footer class="mt-auto">
@@ -128,6 +128,10 @@ export default Vue.extend({
     },
     isUser: {
       default: true,
+      type: Boolean
+    },
+    fluid: {
+      default: false,
       type: Boolean
     }
   },

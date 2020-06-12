@@ -146,7 +146,7 @@ export interface queryResultArgument {
   alarm?: boolean
 }
 //协议查询结果
-export interface queryResult extends queryObject, queryObject {
+export interface queryResult extends queryObject {
   contents: IntructQueryResult[]
   parse?: { [x: string]: queryResultArgument }
   result?: queryResultArgument[];
@@ -397,9 +397,19 @@ export interface AggregationDev extends TerminalMountDevs {
   name: string
   online: boolean
 }
+export interface AggregationDevParse {
+  pid: number,
+  DevMac: string,
+  name: string,
+  Type: string,
+  mountDev: string,
+  protocol: string,
+  parse: { [x: string]: queryResultArgument }
+}
 export interface Aggregation {
   user: string
   id: string
   name: string
   aggregations: AggregationDev[]
+  devs: AggregationDevParse[]
 }

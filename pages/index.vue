@@ -56,7 +56,7 @@
         <b-col cols="12" md="6" class="mt-4" v-for="(link, key) in agg" :key="key+link.name">
           <b-card class="shadow">
             <b-link
-              :to="{ name: 'uart', query: { DevMac: link.id } }"
+              :to="{ name: 'uart-aggregation', query: { id: link.id } }"
               class="text-decoration-none text-dark"
             >
               <b-card-title>
@@ -298,6 +298,7 @@ export default Vue.extend({
           `,
           variables: { name: aggName, aggs: aggDevices }
         });
+        this.$apollo.queries.BindDevice.refetch();
       }
     }
   }
