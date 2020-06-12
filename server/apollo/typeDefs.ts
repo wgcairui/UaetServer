@@ -53,6 +53,21 @@ const typeDefs: DocumentNode = gql`
     protocol: String
     pid: Int
   }
+  # 聚合设备
+  type aggregationDev {
+    DevMac: String
+    name: String
+    Type:String
+    mountDev: String
+    protocol: String
+    pid: Int
+  }
+  type aggregation {
+    user: String
+    id: String
+    name: String
+    aggregations:[aggregationDev]
+  }
   # 注册终端
   type RegisterTerminal{
     DevMac: String
@@ -65,7 +80,8 @@ const typeDefs: DocumentNode = gql`
     ip:String
     port:Int
     jw:String
-    uptime:String
+    uptime: String
+    online: Boolean
     mountNode: String
     mountDevs: [MountDev]
   }
@@ -114,6 +130,7 @@ const typeDefs: DocumentNode = gql`
     user: String
     UTs: [Terminal]
     ECs: [ECterminal]
+    AGG: [aggregation]
   }
   # terminalData
   type terminalData {
@@ -265,6 +282,9 @@ const typeDefs: DocumentNode = gql`
     loguserlogins(start:Date,end:Date):JSON
     # 获取终端日志
     loguserrequsts(start:Date,end:Date):JSON
+    # 获取聚合设备
+    Aggregation(user:String):aggregation
+    Aggregations:[aggregation]
 
   }
 
@@ -326,6 +346,8 @@ const typeDefs: DocumentNode = gql`
     sendValidationSms:result
     # 校验验证码,校验通过缓存授权
     ValidationCode(code:String):result
+    #添加聚合设备
+    addAggregation(name:String,aggs:JSON):result
   }
 
   # Subscription

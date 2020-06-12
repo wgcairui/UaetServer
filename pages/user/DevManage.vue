@@ -1,12 +1,12 @@
 <template>
   <my-page-user title="设备管理">
-    <b-row class="border-bottom mb-5">
+    <b-row class="border-bottom mb-5 px-2">
       <separated title="透传设备">
-        <b-button
+       <!--  <b-button
           variant="success"
           size="sm"
           @click="uartAdd = !uartAdd"
-        >{{ !uartAdd ? "add" : "hide" }}</b-button>
+        >{{ !uartAdd ? "add" : "hide" }}</b-button> -->
       </separated>
       <b-collapse v-model="uartAdd" class="w-100">
         <b-card>
@@ -37,7 +37,7 @@
           </b-collapse>
         </b-card>
       </b-collapse>
-      <b-table-lite :items="items.UTs" :fields="uartField">
+      <b-table-lite :items="items.UTs" :fields="uartField" responsive>
         <template v-slot:cell(name)="row">
           <b-button variant="link" class="p-0 m-0" @click="modifyTerminalInfo(row)">{{row.value}}</b-button>
         </template>
@@ -240,7 +240,7 @@ export default vue.extend({
       const key = val.field.key as string;
       const value = val.value as string;
       const DevMac = val.item.DevMac as string;
-      const modifyval = (await MessageBox.prompt("输入新的名称:").catch(e => ({
+      const modifyval = (await MessageBox.prompt("输入新的名称:",{inputValue:value}).catch(e => ({
         value: ""
       }))) as MessageBoxInputData;
       if (!modifyval.value) return;

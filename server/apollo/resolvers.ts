@@ -8,9 +8,9 @@ import { Terminal, RegisterTerminal } from "../mongoose/Terminal";
 
 import { EcTerminal } from "../mongoose/EnvironmentalControl";
 
-import { Users, UserBindDevice, UserAlarmSetup } from "../mongoose/user";
+import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongoose/user";
 
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal } from "../bin/interface";
+import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal, Aggregation, AggregationDev } from "../bin/interface";
 
 import { BcryptDo } from "../util/bcrypt";
 
@@ -99,11 +99,19 @@ const resolvers: IResolvers = {
             return await Users.find();
         },
         // 绑定设备信息
-        async BindDevice(root, arg, ctx: { user: any }) {
-            const Bind: BindDevice | null = await UserBindDevice.findOne({ user: ctx.user }).lean();
+        async BindDevice(root, arg, ctx: ApolloCtx) {
+            const Bind: any = await UserBindDevice.findOne({ user: ctx.user }).lean();
             if (!Bind) return null;
             Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
             Bind.ECs = await EcTerminal.find({ ECid: { $in: Bind.ECs } }).lean();
+            Bind.AGG = await UserAggregation.find({user:ctx.user})
+            //
+            Bind.UTs = Bind.UTs.map((el: any) => {
+                const nodeIP = ctx.$Event.Cache.CacheNodeName.get(el.mountNode)?.IP as string
+                const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
+                el.online = macMap?.has(el.DevMac) || false
+                return el
+            })
             return Bind;
         },
         async BindDevices() {
@@ -378,13 +386,13 @@ const resolvers: IResolvers = {
         // 删除登记设备 
         async deleteRegisterTerminal(root, { DevMac }) {
             // 如果没有被绑定则删除
-            const terminal = await UserBindDevice.findOne({"UTS":DevMac})
+            const terminal = await UserBindDevice.findOne({ "UTS": DevMac })
             if (terminal) {
                 return { ok: 0, msg: "设备已被用户绑定" }
             } else {
-                await TerminalClientResult.deleteMany({mac:DevMac}).exec()
-                await TerminalClientResults.deleteMany({mac:DevMac}).exec()
-                await TerminalClientResultSingle.deleteMany({mac:DevMac}).exec()                
+                await TerminalClientResult.deleteMany({ mac: DevMac }).exec()
+                await TerminalClientResults.deleteMany({ mac: DevMac }).exec()
+                await TerminalClientResultSingle.deleteMany({ mac: DevMac }).exec()
                 await Terminal.deleteOne({ DevMac }).exec()
                 const result = await RegisterTerminal.deleteOne({ DevMac })
                 //await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
@@ -418,13 +426,13 @@ const resolvers: IResolvers = {
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result; */
             // 如果没有被绑定则删除
-            const terminal = await UserBindDevice.findOne({"UTS":DevMac})
+            const terminal = await UserBindDevice.findOne({ "UTS": DevMac })
             if (terminal) {
                 return { ok: 0, msg: "设备已被用户绑定" }
             } else {
-                await TerminalClientResult.deleteMany({mac:DevMac}).exec()
-                await TerminalClientResults.deleteMany({mac:DevMac}).exec()
-                await TerminalClientResultSingle.deleteMany({mac:DevMac}).exec()                
+                await TerminalClientResult.deleteMany({ mac: DevMac }).exec()
+                await TerminalClientResults.deleteMany({ mac: DevMac }).exec()
+                await TerminalClientResultSingle.deleteMany({ mac: DevMac }).exec()
                 await Terminal.deleteOne({ DevMac }).exec()
                 const result = await RegisterTerminal.deleteOne({ DevMac })
                 await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
@@ -753,6 +761,18 @@ const resolvers: IResolvers = {
             if (!user) return { ok: 0, msg: 'token出错' } as ApolloMongoResult
             ctx.$Event.ClientCache.CacheUserValidationCode.delete('reset' + user)
             return await Users.updateOne({ user }, { $set: { passwd: await BcryptDo(passwd) } })
+        },
+        // 添加聚合设备
+        async addAggregation(root, { name, aggs }: { name: string, aggs: AggregationDev[] }, ctx: ApolloCtx) {
+            const aggObj:Aggregation = {
+                user:ctx.user as string,
+                id:'',
+                name,
+                aggregations:aggs
+            }
+            const agg = await new UserAggregation(aggObj).save()
+            const result = await UserAggregation.updateOne({name,user:ctx.user},{$set:{id:agg._id}})
+            return result       
         }
     },
 

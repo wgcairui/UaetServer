@@ -216,6 +216,7 @@ export class NodeSocketIO {
         console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
         // 获取设备绑定节点的map
         const nodeTerminals = this.Cache.get(terminal.mountNode) as Map<string, TerminalMountDevsEX>
+        if(!nodeTerminals) return
         // 
         const Regexs = new RegExp("^" + terminal.DevMac)
         const terEnts = Array.from(nodeTerminals?.entries()).filter(([key]) => Regexs.test(key))

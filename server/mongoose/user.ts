@@ -30,14 +30,31 @@ const SchemaUserBindDevice = new Schema({
   UTs: [String]
 });
 
+const SchemaUserAggregation = new Schema({
+  user: String,
+  id: String,
+  name: String,
+  aggregations: [
+    new Schema({
+      DevMac: { type: String, required: true },
+      name: { type: String, required: true },
+      Type: { type: String, required: true },
+      mountDev: { type: String, required: true },
+      protocol: { type: String, required: true },
+      pid: { type: Number, default: 0 }
+    }, { _id: false })
+  ]
+})
+
 const SchemaUserAlarmSetup = new Schema({
-  user:String,
-  tels:[String],
-  mails:[String],
-  ProtocolSetup:[Schema_DevConstant]
+  user: String,
+  tels: [String],
+  mails: [String],
+  ProtocolSetup: [Schema_DevConstant]
 })
 
 const Users = mongoose.model("users", Schema_Users);
 const UserBindDevice = mongoose.model("UserBindDevice", SchemaUserBindDevice);
-const UserAlarmSetup = mongoose.model("userAlarmSetup",SchemaUserAlarmSetup)
-export { Users, UserBindDevice,UserAlarmSetup };
+const UserAlarmSetup = mongoose.model("userAlarmSetup", SchemaUserAlarmSetup)
+const UserAggregation = mongoose.model("useraggregation", SchemaUserAggregation)
+export { Users, UserBindDevice, UserAlarmSetup, UserAggregation };

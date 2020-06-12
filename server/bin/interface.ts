@@ -294,7 +294,7 @@ export interface queryResultSave {
   parse: { [x: string]: queryResultArgument }
   Interval: number,
   useTime: number,
-  time:string
+  time: string
 }
 export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate"
 // 操作指令查询对象
@@ -389,4 +389,17 @@ export interface logTerminals {
   msg: string
   query: any
   result: any
+}
+
+// 聚合设备
+export interface AggregationDev extends TerminalMountDevs {
+  DevMac: string
+  name: string
+  online: boolean
+}
+export interface Aggregation {
+  user: string
+  id: string
+  name: string
+  aggregations: AggregationDev[]
 }
