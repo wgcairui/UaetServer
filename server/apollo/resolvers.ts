@@ -793,6 +793,10 @@ const resolvers: IResolvers = {
             const agg = await new UserAggregation(aggObj).save()
             const result = await UserAggregation.updateOne({ name, user: ctx.user }, { $set: { id: agg._id } })
             return result
+        },
+        async deleteAggregation(root, { id }, ctx: ApolloCtx) {
+            const result = await UserAggregation.deleteOne({ user: ctx.user, id })
+            return result
         }
     },
 

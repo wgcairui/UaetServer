@@ -1,7 +1,7 @@
 <template>
   <my-page-user :title="title">
     <b-row class="m-0">
-      <separated :title="query.DevMac">
+      <separated :title="query.mountDev">
         <b v-b-tooltip.hover title="查询耗时">{{Queryarg.useTime}}/</b>
         <b v-b-tooltip.hover title="查询间隔">{{Queryarg.Interval}}/</b>
         <b v-b-tooltip.hover title="查询时间">{{Queryarg.queryTime}}</b>

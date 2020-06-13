@@ -9,7 +9,7 @@
       </b-col>
       <b-col cols="6">
         <div class="ths">
-          <i class="iconfont text-primary">&#xe604;</i>
+          <i class="iconfont text-primary">&#xe601;</i>
           <b>{{ TH.data.humidity }}%</b>
         </div>
       </b-col>

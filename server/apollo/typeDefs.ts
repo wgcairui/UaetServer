@@ -348,6 +348,7 @@ const typeDefs: DocumentNode = gql`
     ValidationCode(code:String):result
     #添加聚合设备
     addAggregation(name:String,aggs:JSON):result
+    deleteAggregation(id:String):result
   }
 
   # Subscription

@@ -296,13 +296,13 @@ export default vue.extend({
       // 判断字段中是否有错误的
       for (let el of formResize) {
         const a = el.name !== "";
-        const isreg = el.regx && /(^[1-9]{1,2}-[1-9])/.test(el.regx);
+        const isreg = el.regx && /(^[0-9]{1,2}-[1-9])/.test(el.regx);
         /*  const b = typeof el.regx === "string";
         const c = el.regx?.split("-").length == 2;
         const d = el.regx?.split("-").some(e => Number(e)); */
         const e = Number(el.bl);
         if (!a || !isreg || !e) {
-          this.$bvModal.msgBoxOk("参数效验错误");
+          this.$bvModal.msgBoxOk("参数效验错误"+a+isreg+e);
           return;
         }
       }

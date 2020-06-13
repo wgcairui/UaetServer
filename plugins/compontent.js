@@ -1,5 +1,6 @@
 import Vue from "vue"
 import VeLine from "v-charts/lib/line.common"
+import { IconsPlugin } from "bootstrap-vue"
 import SocketState from "../components/SocketState.vue"
 import separated from "../components/separated.vue"
 import MyHead from "../components/MyHead.vue"
@@ -14,6 +15,7 @@ import MyOprate from "../components/MyOprate.vue"
 
 import SmsValidation from "../components/SmsValidation.vue"
 
+Vue.use(IconsPlugin)
 Vue.component("sms-validation", SmsValidation)
 Vue.component("my-table-log", MyTableLog)
 Vue.component("my-oprate", MyOprate)

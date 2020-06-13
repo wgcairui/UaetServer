@@ -63,7 +63,12 @@
                 <i class="iconfont">&#xeb64;</i>
                 {{ link.name }}
               </b-card-title>
-              <b-card-sub-title>&nbsp;&nbsp;{{ link.id }}</b-card-sub-title>
+              <b-card-sub-title>
+                &nbsp;&nbsp;{{ link.id }}
+                <b-button variant="link" @click.stop.prevent="aggregationTrash(link.id)">
+                  <b-icon-trash></b-icon-trash>
+                </b-button>
+              </b-card-sub-title>
             </b-link>
             <b-card-body class="d-flex flex-row">
               <i class="iconfont" style="padding-top:7px">&#xec24;</i>
@@ -161,6 +166,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BindDevice, Terminal, AggregationDev } from "../server/bin/interface";
+import aggregationVue from "./uart/aggregation.vue";
 export default Vue.extend({
   data() {
     return {
@@ -297,6 +303,28 @@ export default Vue.extend({
             }
           `,
           variables: { name: aggName, aggs: aggDevices }
+        });
+        this.$apollo.queries.BindDevice.refetch();
+      }
+    },
+    async aggregationTrash(id: string) {
+      const isOk = await this.$bvModal.msgBoxConfirm("是否删除聚合设备:" + id, {
+        buttonSize: "sm",
+        okTitle: "确定!",
+        okVariant: "info",
+        centered: true
+      });
+      if (isOk) {
+        const result = await this.$apollo.mutate({
+          mutation: gql`
+            mutation deleteAggregation($id: String) {
+              deleteAggregation(id: $id) {
+                ok
+                msg
+              }
+            }
+          `,
+          variables: { id }
         });
         this.$apollo.queries.BindDevice.refetch();
       }
