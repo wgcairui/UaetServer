@@ -4,7 +4,7 @@ import NodeSocketIO from "server/socket/uart";
 /* protocol */
 export type communicationType = 232 | 485;
 export type protocolType = "ups" | "air" | "em" | "th";
-export type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX";
+export type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX" | 'bit2'
 // apollo server result
 export interface ApolloMongoResult {
   msg: string

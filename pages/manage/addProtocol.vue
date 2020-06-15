@@ -61,13 +61,7 @@
             </b-button-group>
           </template>
         </b-table>
-        <b-button
-          @click="submit"
-          size="sm"
-          block
-          variant="success"
-          class="mb-3"
-        >更新协议</b-button>
+        <b-button @click="submit" size="sm" block variant="success" class="mb-3">更新协议</b-button>
       </b-col>
     </b-row>
     <!--  -->
@@ -86,7 +80,7 @@
               <my-form label="结果集:">
                 <b-form-select
                   v-model="instruct.resultType"
-                  :options="['hex', 'utf8', 'float', 'short', 'int','HX']"
+                  :options="['hex', 'utf8', 'float', 'short', 'int','HX','bit2']"
                 ></b-form-select>
               </my-form>
               <my-form label="字符去头处理:">
@@ -302,12 +296,12 @@ export default vue.extend({
         const d = el.regx?.split("-").some(e => Number(e)); */
         const e = Number(el.bl);
         if (!a || !isreg || !e) {
-          this.$bvModal.msgBoxOk("参数效验错误"+a+isreg+e);
+          this.$bvModal.msgBoxOk("参数效验错误" + a + isreg + e);
           return;
         }
       }
       const instruct: protocolInstruct = this.$data.instruct;
-      instruct.name = instruct.name.replace(/\s*/g, "")
+      instruct.name = instruct.name.replace(/\s*/g, "");
       instruct.formResize = [];
       const result = <protocolInstruct>deepmerge(instruct, { formResize });
       // 协议

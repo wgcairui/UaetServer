@@ -10,15 +10,15 @@
             @click="toDev(dev.DevMac,dev.pid,dev.mountDev,dev.protocol,dev.Type)"
           >
             <h6>
-              <i>{{dev.mountDev+'-'+dev.pid}}</i>
+              <i class="text-success">{{dev.mountDev+'-'+dev.pid}}</i>
             </h6>
             <span class="mr-5">
               <i class="iconfont text-success">&#xe604;</i>
-              <b>{{dev.parse.Temperature.value }}&#8451;</b>
+              <b class="text-light">{{dev.parse.Temperature.value }}&#8451;</b>
             </span>
             <span>
               <i class="iconfont text-primary">&#xe601;</i>
-              <b>{{ dev.parse.Humidity.value }}%</b>
+              <b class="text-light">{{ dev.parse.Humidity.value }}%</b>
             </span>
           </div>
         </b-col>
@@ -27,7 +27,7 @@
         <b-col
           cols="12"
           md="4"
-          class="p-3 border shadow-sm rounded-sm overflow-auto"
+          class="p-3 overflow-auto"
           v-for="(devs,key) in [devs.ups,devs.air,devs.em]"
           :key="key"
         >

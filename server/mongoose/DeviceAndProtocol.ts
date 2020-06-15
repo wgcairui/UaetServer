@@ -32,7 +32,7 @@ const SchemaProtocols = new Schema({
         name: String, // 指令名称--GQS
         resultType: {
           type: String,
-          enum: ["utf8", "hex", "float", "short", "int","HX"]
+          enum: ["utf8", "hex", "float", "short", "int","HX",'bit2']
         }, // 怎么格式化返回结果
         shift: { type: Boolean, default: false }, // 结果是否需要去除头部符号
         shiftNum: { type: Number, default: 1 }, // 头部去除个数

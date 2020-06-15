@@ -84,26 +84,47 @@ export default async (R: queryResult) => {
               const bufSize = el.buffer.data[2];
               // 检查数据实际长度是否对应
               //if (bufSize + 5 === el.buffer.data.length) return
-              const buf = Buffer.from(el.buffer.data.slice(2, bufSize + 3));
+              let buf: Buffer | Array<number>
+              //根据指令结果类型预先处理数据
+              switch (instructs.resultType) {
+                case "bit2":
+                  {
+                    // 把结果字段中的10进制转换为2进制,代表modbus线圈状态
+                    // https://blog.csdn.net/qq_26093511/article/details/58628270
+                    // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
+                    const bit2Array = el.buffer.data.slice(3, bufSize + 3).map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
+                    buf = [0, ...bit2Array]
+                  }
+                  break
+                default:
+                  buf = Buffer.from(el.buffer.data.slice(2, bufSize + 3));
+                  break
+              }
               // 迭代指令解析规则,解析结果集返回
               return instructs.formResize.map(el2 => {
                 // 申明结果
                 let value = 0;
                 // 每个数据的结果地址
                 const [start, len] = (el2.regx?.split("-") as string[]).map(el2 => parseInt(el2));
-                if (start + len > buf.byteLength) return { name: el2.name, value, unit: "bufLow" };
+                // if (start + len > buf.byteLength) return { name: el2.name, value, unit: "bufLow" };
 
                 switch (instructs.resultType) {
+                  // 处理
+                  case 'bit2':
+                    {
+                      value = (<Array<number>>buf)[start]
+                    }
+                    break
                   // 处理整形
                   case "hex":
                   case "short":
                     // 转换为带一位小数点的浮点数
-                    value = parseFloat((buf.readIntBE(start, len) * el2.bl).toFixed(1));
+                    value = parseFloat(((<Buffer>buf).readIntBE(start, len) * el2.bl).toFixed(1));
                     //parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
                     break;
                   // 处理单精度浮点数
                   case "float":
-                    value = Tool.HexToSingle(buf.slice(start, start + len)); //Tool.BufferToFlot(buf, start)
+                    value = Tool.HexToSingle((<Buffer>buf).slice(start, start + len)); //Tool.BufferToFlot(buf, start)
                     break;
                 }
                 //
