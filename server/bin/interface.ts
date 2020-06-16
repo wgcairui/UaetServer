@@ -145,10 +145,14 @@ export interface queryResultArgument {
   issimulate?: boolean
   alarm?: boolean
 }
+//
+export interface queryResultParse extends Object {
+   [x: string]: queryResultArgument | any
+  }
 //协议查询结果
 export interface queryResult extends queryObject {
   contents: IntructQueryResult[]
-  parse?: { [x: string]: queryResultArgument }
+  parse?: queryResultParse
   result?: queryResultArgument[];
   time?: string;
 }
@@ -291,7 +295,7 @@ export interface queryResultSave {
   pid: number
   timeStamp: number
   result: queryResultArgument[]
-  parse: { [x: string]: queryResultArgument }
+  parse: queryResultParse
   Interval: number,
   useTime: number,
   time: string

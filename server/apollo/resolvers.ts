@@ -70,10 +70,7 @@ const resolvers: IResolvers = {
         async TerminalOnline(root, { DevMac }, ctx: ApolloCtx) {
             const terminal = await Terminal.findOne({ DevMac }).lean() as terminal
             if (!terminal) return null
-            const NodeIP = ctx.$Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
-            console.log({ terminal, aa: ctx.$Event.Cache.CacheNodeTerminalOnline, NodeIP });
-
-            if (ctx.$Event.Cache.CacheNodeTerminalOnline.get(NodeIP)?.has(DevMac)) return terminal
+            if (ctx.$Event.Cache.CacheNodeTerminalOnline.has(DevMac)) return terminal
             else return null
             //return await Terminal.findOne({ DevMac });
         },
@@ -107,9 +104,7 @@ const resolvers: IResolvers = {
             Bind.AGG = await UserAggregation.find({ user: ctx.user })
             //
             Bind.UTs = Bind.UTs.map((el: any) => {
-                const nodeIP = ctx.$Event.Cache.CacheNodeName.get(el.mountNode)?.IP as string
-                const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
-                el.online = macMap?.has(el.DevMac) || false
+                el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
                 return el
             })
             return Bind;
@@ -185,11 +180,7 @@ const resolvers: IResolvers = {
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx: ApolloCtx) {
-            if (!mac || !node) return false
-            const nodeIP = ctx.$Event.Cache.CacheNodeName.get(node)?.IP as string
-            const macMap = ctx.$Event.Cache.CacheNodeTerminalOnline.get(nodeIP)
-            // console.log({mac,macMap});
-            return macMap?.has(mac) || false
+            return ctx.$Event.Cache.CacheNodeTerminalOnline.has(mac)
         },
         // 获取用户自定义配置
         async getUserSetup(root, arg, ctx: ApolloCtx) {

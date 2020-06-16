@@ -14,9 +14,6 @@ export default async (ctx: ParameterizedContext) => {
     case "UartData":
       {
         const UartData: uartData = body;
-        /* if(UartData.data?.length ===0){
-          console.log(UartData);          
-        } */
         UartDataParsingSave(UartData.data)
         ctx.body = { code: 200 }
       }
@@ -29,14 +26,14 @@ export default async (ctx: ParameterizedContext) => {
         // 节点websocket运行信息
         const WebSocketInfos: WebSocketInfo = body.WebSocketInfos
         // 设备port jw
+        // console.log(WebSocketInfos);
+
         WebSocketInfos.SocketMaps.forEach(el => {
+          ctx.$Event.Cache.CacheNodeTerminalOnline.add(el.mac)
           const { port, ip, jw } = el
-          Terminal
-            .updateOne({ DevMac: el.mac }, { $set: { ip, port, jw } }, { upsert: true })
-            .catch((e: Error) => console.log(e))
+          Terminal.updateOne({ DevMac: el.mac }, { $set: { ip, port, jw } }, { upsert: true })
         })
         //写入运行信息
-
         const reslut = await NodeRunInfo.updateOne(
           { NodeName: WebSocketInfos.NodeName },
           { $set: { ...WebSocketInfos, ...NodeInfo, updateTime: body.updateTime } },

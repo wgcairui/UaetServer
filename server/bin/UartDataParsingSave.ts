@@ -1,6 +1,6 @@
 import { queryResult, queryResultArgument } from "./interface";
 import ProtocolPares from "../util/ProtocolPares";
-import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
+import { TerminalClientResults, TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 
 export default async (queryResultArray: queryResult[]) => {
@@ -22,9 +22,16 @@ export default async (queryResultArray: queryResult[]) => {
         if (MacID.has(ID)) return
         MacID.add(ID)
         // 把结果转换为对象
-        const P = data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[]
-        data.parse = Object.assign({}, ...P)
+        data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[])
         // 把数据发给检查器,检查数据是否有故障,保存数据单例
-        CheckUart(data)
+        const checkData = CheckUart(data)
+        console.log({checkData});
+        
+        //保存对象
+        TerminalClientResultSingle.updateOne(
+            { mac: checkData.mac, pid: checkData.pid },
+            checkData,
+            { upsert: true }
+        ).exec()
     })
 }

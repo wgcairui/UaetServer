@@ -48,7 +48,7 @@ export default class Cache {
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   //CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备ip->terminal
-  CacheNodeTerminalOnline: Map<string, Set<string>>
+  CacheNodeTerminalOnline: Set<string>
   // 缓存节点查询终端设备超时的指令
   CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
@@ -65,6 +65,8 @@ export default class Cache {
   QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
   QueryTerminaluseTime: Map<string, number[]>
+  // 设备超时列表
+  TimeOutMonutDev: Set<String>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events
@@ -77,7 +79,7 @@ export default class Cache {
     this.CacheNodeName = new Map()
     this.CacheSocket = new Map()
     //this.CacheQueryNode = new Map()
-    this.CacheNodeTerminalOnline = new Map()
+    this.CacheNodeTerminalOnline = new Set()
     this.CacheConstant = new Map()
     this.CacheTerminalQueryIntructTimeout = new Map()
     this.CacheBindUart = new Map()
@@ -86,6 +88,7 @@ export default class Cache {
     this.CacheUserSetup = new Map()
     this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
+    this.TimeOutMonutDev = new Set()
   }
   //
   async start(): Promise<void> {
@@ -117,7 +120,6 @@ export default class Cache {
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
     this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
     this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
-    this.CacheNodeTerminalOnline = new Map(res.map(el => [el.IP, new Set()]))
   }
   //
   async RefreshCacheTerminal(DevMac?: string) {

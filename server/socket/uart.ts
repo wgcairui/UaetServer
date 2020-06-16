@@ -143,54 +143,48 @@ export class NodeSocketIO {
                 // 节点终端设备上线
                 .on(EVENT_TCP.terminalOn, (data: string | string[]) => {
                     if (Array.isArray(data)) {
-                        data.forEach(el => this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(el))
+                        data.forEach(el => this.Event.Cache.CacheNodeTerminalOnline.add(el))
                         console.info(`${new Date().toLocaleTimeString()}##模块:/${data.join("|")}/ 已上线`);
                     } else {
-                        this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.add(data)
+                        this.Event.Cache.CacheNodeTerminalOnline.add(data)
                         console.info(`${new Date().toLocaleTimeString()}##模块:${data} 已上线`);
                         // 添加日志
                         new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
                     }
-                    // console.log({Node,stat:'online',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 节点终端设备掉线
                 .on(EVENT_TCP.terminalOff, data => {
-                    this.Event.Cache.CacheNodeTerminalOnline.get(Node.IP)?.delete(data)
+                    this.Event.Cache.CacheNodeTerminalOnline.delete(data)
                     console.error(`${new Date().toLocaleTimeString()}##模块:${data} 已离线`);
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "断开" } as logTerminals).save()
                     // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 设备挂载节点查询超时
-                .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult) => {
-                    const intruct = Query.mac + Query.pid
-                    console.log(`${intruct} 查询超时`);
-                    /* const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
-                    // 如果节点已存在超时指令记录则添加,
-                    if (Timeout.has(Node.IP)) {
-                        Timeout.get(Node.IP)?.add(intruct)
-                    } else {
-                        Timeout.set(Node.IP, new Set([intruct]))
-                    } */
-                    const QueryTerminal = this.Cache.get(Node.Name)?.get(intruct) as TerminalMountDevsEX
-                    QueryTerminal.Interval = QueryTerminal.Interval ? QueryTerminal.Interval + 1000 : 1000
-
+                .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult, timeOut: number) => {
+                    const hash = Query.mac + Query.pid
+                    // 查询间隔大于30s,加入到离线列表
+                    // 如果超时次数>=10,加500ms
+                    if (timeOut >= 10) {
+                        console.log(`${hash} 查询超时:${timeOut}`);
+                        const QueryTerminal = this.Cache.get(Node.Name)?.get(hash) as TerminalMountDevsEX
+                        // 查询间隔大于30s,加入到离线列表
+                        if (QueryTerminal) {
+                            if (QueryTerminal.Interval >= 1000 * 10) {
+                                this.Event.Cache.TimeOutMonutDev.add(hash)
+                            } else {
+                                QueryTerminal.Interval = QueryTerminal?.Interval ? QueryTerminal.Interval + 500 : 1000
+                            }
+                        }
+                    }
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()
                 })
-                // 设备挂载节点查询超时恢复,
-                .on(EVENT_TCP.terminalMountDevTimeOutRestore, (Query: queryResult) => {
-                    /* const intruct = Query.mac + Query.pid
-                    const Timeout = this.Event.Cache.CacheTerminalQueryIntructTimeout
-                    Timeout.get(Node.IP)?.delete(intruct)
-                    // 添加日志
-                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询恢复", query: Query } as logTerminals).save()
-                 */})
 
         })
         // 监听Event事件
-        this.Event.On("UpdateTerminal", ([ter]) => this._UpdateCache(ter))
-            .On("QueryIntervalLow", ([R]) => this._AddQueryInterval(R))
+        this.Event.On("UpdateTerminal", ([ter]) => this._UpdateCache(ter)) //更新terminalhuancun
+            .On("QueryIntervalLow", ([R]) => this._AddQueryInterval(R)) // 增加查询间隔
     }
     // 初始化缓存
     private _InitCache(Node: socketArgument) {
@@ -216,7 +210,7 @@ export class NodeSocketIO {
         console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
         // 获取设备绑定节点的map
         const nodeTerminals = this.Cache.get(terminal.mountNode) as Map<string, TerminalMountDevsEX>
-        if(!nodeTerminals) return
+        if (!nodeTerminals) return
         // 
         const Regexs = new RegExp("^" + terminal.DevMac)
         const terEnts = Array.from(nodeTerminals?.entries()).filter(([key]) => Regexs.test(key))
@@ -272,10 +266,12 @@ export class NodeSocketIO {
     // 发送查询指令
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
-        /* if (this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP)?.has(Query.TerminalMac + Query.pid)) {
-            //console.log('指令包含在超时列表中' + Array.from(this.Event.Cache.CacheTerminalQueryIntructTimeout.get(Query.NodeIP) as Set<string>).join("|"));
+        if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)) return
+        // 判断挂载设备是否在线
+        if (!this.Event.Cache.CacheNodeTerminalOnline.has(Query.TerminalMac)) {
+            console.log(`终端设备${Query.TerminalMac} 不在线,取消查询指令`);
             return
-        } */
+        }
         // 生成时间戳
         const timeStamp = Date.now()
         // 获取设备协议
@@ -284,27 +280,29 @@ export class NodeSocketIO {
         const CacheQueryIntruct = this.CacheQueryIntruct
         // 迭代设备协议获取多条查询数据
         const content = Protocol.instruct.map(ProtocolInstruct => {
+
             // 如果指令是utf8类型,直接使用指令,否则添加地址码和校验码
-            if (ProtocolInstruct.resultType == 'utf8') {
+            /* if (ProtocolInstruct.resultType == 'utf8') {
                 return ProtocolInstruct.name
-            } else {
-                // 缓存查询指令
-                const IntructName = Query.pid + ProtocolInstruct.name
-                if (CacheQueryIntruct.has(IntructName)) {
-                    return CacheQueryIntruct.get(IntructName) as string
-                } else {
-                    let content = ""
-                    switch (ProtocolInstruct.resultType) {
-                        case "HX":
-                            content = tool.HX(Query.pid, ProtocolInstruct.name)
-                            break;
-                        default:
-                            content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
-                            break;
-                    }
-                    CacheQueryIntruct.set(IntructName, content)
-                    return content//CacheQueryIntruct.get(IntructName) as string
+            } else { */
+            // 缓存查询指令
+            const IntructName = Query.pid + ProtocolInstruct.name
+            if (CacheQueryIntruct.has(IntructName)) return CacheQueryIntruct.get(IntructName) as string
+            else {
+                let content = ""
+                switch (ProtocolInstruct.resultType) {
+                    case "utf8":
+                        content = ProtocolInstruct.name
+                        break
+                    case "HX":
+                        content = tool.HX(Query.pid, ProtocolInstruct.name)
+                        break;
+                    default:
+                        content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                        break;
                 }
+                CacheQueryIntruct.set(IntructName, content)
+                return content
             }
         })
         const query: queryObject = {
@@ -323,16 +321,13 @@ export class NodeSocketIO {
         // 获取节点Socket实例
         const NodeSocket = this.Event.Cache.CacheSocket.get(Query.NodeIP) as IO.Socket
         NodeSocket.emit(EVENT_SOCKET.query, query);
-
     }
     // 发送程序变更指令，公开
     public async InstructQuery(Query: instructQuery) {
         // 在在线设备中查找
         const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
         const NodeIP = this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
-
         // console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
-
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
             if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
@@ -354,7 +349,7 @@ export class NodeSocketIO {
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
             setTimeout(() => {
                 resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
-            }, Query.Interval);
+            }, Query.Interval * 3);
         })
         // 添加日志
         new LogTerminals({ NodeIP: NodeIP, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result } as logTerminals).save()

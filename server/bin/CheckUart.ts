@@ -1,77 +1,63 @@
-import {
-  queryResult,
-  queryResultArgument,
-  uartAlarmObject,
-  userSetup,
-  Threshold
-} from "./interface";
+import { queryResult, queryResultArgument, uartAlarmObject, userSetup, Threshold, queryResultParse } from "./interface";
 import Event from "../event/index";
 import { SendUartAlarm } from "../util/SMS";
 import { SendAlarmEvent } from "../util/Mail";
 import { TerminalClientResultSingle } from "../mongoose/node";
 
 export default (query: queryResult) => {
-  // 保存查询的查询时间
-  Event.Cache.QueryTerminaluseTime.get(query.mac + query.pid)?.push(query.useTime)
   // 获取mac绑定的用户
   const User = Event.Cache.CacheBindUart.get(query.mac);
   // 没有绑定用户则跳出检查
   if (User) {
     // 获取用户个性化配置实例
     const UserSetup = Event.Cache.CacheUserSetup.get(User) as userSetup;
-    // console.log(UserSetup);
     // 获取用户协议配置
     const UserThreshold = UserSetup.ThresholdMap.get(query.protocol);
     // 获取协议参数阀值缓存
-    const Threshold =
-      Event.Cache.CacheConstant.get(query.protocol)?.Threshold || [];
+    let Threshold = Event.Cache.CacheConstant.get(query.protocol)?.Threshold || [];
     // 合并配置
     {
       // 先检查系统配置，是否有用户设置覆盖
       if (UserThreshold) {
-        const keys: string[] = [];
         // 迭代系统默认配置,如果用户有相同的配置则覆盖系统设置
-        Threshold.forEach((el, index) => {
-          keys.push(el.name);
-          if (UserThreshold.has(el.name))
+        /* Threshold
+          .filter(el => UserThreshold.has(el.name))
+          .forEach((el, index) => {
             Threshold[index] = UserThreshold.get(el.name) as Threshold;
-        });
+          }); */
+        /* UserThreshold.forEach(el => {
+        if (!keys.includes(el.name)) Threshold.push(el);
+      }); */
+        Threshold = Threshold.map(el => {
+          if (UserThreshold.has(el.name)) return UserThreshold.get(el.name) as Threshold
+          else return el
+        })
         // 检查用户配置，是否包含系统默认配置没有的设置
-        UserThreshold.forEach(el => {
-          if (!keys.includes(el.name)) Threshold.push(el);
-        });
+        const keys: string[] = Threshold.map(el => el.name);
+        Threshold.push(...Array.from(UserThreshold.values()).filter(el => !keys.includes(el.name)))
+
       }
     }
+    const parse = query.parse as queryResultParse;
     // 迭代规则
     Threshold.forEach(el => {
       // 检测结果对象中是否含有告警规则name
-      const parse = query.parse as Object;
       if (parse.hasOwnProperty(el.name)) {
         // 解析后的参数字节
-        const parseArgument = (parse as any)[el.name] as queryResultArgument
+        const parseArgument = parse[el.name] as queryResultArgument
         // 实际值
         const val = parseFloat(parseArgument.value);
-        //console.log({val,parse,el});
-        // 比较大小
+        // 比较大小,交给短信&邮件处理程序,如果参数没有超限,查看告警缓存缓存
         if (val < el.min || val > el.max) {
           parseArgument.alarm = true
-          // 交给短信&邮件处理程序
           sendSmsAlarm(query, el, UserSetup, parseArgument)
-        }
-        // 如果参数没有超限,查看告警缓存缓存
-        else {
+        } else {
           sendAlarmReset(query, el, UserSetup, parseArgument)
         }
       }
     });
   }
-
-  //保存对象
-  TerminalClientResultSingle.updateOne(
-    { mac: query.mac, pid: query.pid },
-    query,
-    { upsert: true }
-  ).exec()
+  return query
 };
 // 发送告警恢复推送,短信,邮件
 async function sendAlarmReset(query: queryResult, Threshold: Threshold, UserSetup: userSetup, parseArgument: queryResultArgument) {
