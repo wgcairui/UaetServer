@@ -98,7 +98,7 @@ export default Vue.extend({
       .then(el => {
         const userGroup = el.data.userGroup;
         const name = this.$route.name as string;
-        console.log({ userGroup, name });
+        // console.log({ userGroup, name });
         if (userGroup !== "user" && !/(^index|^uart*|^user*)/.test(name)) return;
         switch (userGroup) {
           case "admin":

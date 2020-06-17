@@ -141,14 +141,13 @@ export interface queryResultArgument {
   name: string;
   value: any;
   unit: string | null;
-  parse?: any
   issimulate?: boolean
   alarm?: boolean
 }
 //
 export interface queryResultParse extends Object {
-   [x: string]: queryResultArgument | any
-  }
+  [x: string]: queryResultArgument | any
+}
 //协议查询结果
 export interface queryResult extends queryObject {
   contents: IntructQueryResult[]
@@ -263,6 +262,10 @@ export interface Threshold {
   min: number
   max: number
 }
+// 协议参数告警状态
+export interface ConstantAlarmStat extends queryResultArgument {
+  alarmStat: number[]
+}
 // 协议操作指令
 export interface OprateInstruct {
   name: string
@@ -277,6 +280,7 @@ export interface ProtocolConstantThreshold {
   ProtocolType: string,
   Constant: DevConstant
   Threshold: Threshold[]
+  AlarmStat: ConstantAlarmStat[]
   ShowTag: string[]
   OprateInstruct: OprateInstruct[]
 }
@@ -300,7 +304,7 @@ export interface queryResultSave {
   useTime: number,
   time: string
 }
-export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate"
+export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate" | "AlarmStat"
 // 操作指令查询对象
 export interface instructQueryArg extends queryResultArgument {
   DevMac: string

@@ -1,43 +1,40 @@
 <template>
-  <my-page-manage title="协议参数阀值配置" :isUser="false">
+  <my-page-manage title="协议参数状态配置" :isUser="false">
     <b-row>
       <b-col>
-        <separated title="添加参数阀值"></separated>
+        <separated title="添加参数状态"></separated>
         <b-card>
           <b-form>
-            <b-form-group v-bind="forGroup" label="属性:">
-              <b-form-select v-model="Threshold.name" :options="items"></b-form-select>
-            </b-form-group>
-            <b-form-group v-bind="forGroup" label="最小值:">
-              <b-form-input type="number" v-model="Threshold.min"></b-form-input>
-            </b-form-group>
-            <b-form-group v-bind="forGroup" label="最大值:">
-              <b-form-input type="number" v-model="Threshold.max"></b-form-input>
-            </b-form-group>
+            <my-form label="属性:">
+              <b-form-select v-model="State" :options="items"></b-form-select>
+            </my-form>
+            <my-form label="正常值:">
+              <b-form-select v-model="State.alarmStat" :options="itemAlarm" multiple></b-form-select>
+            </my-form>
             <b-button
               size="sm"
               block
               variant="info"
-              @click="addThreshold(Threshold, addModal)"
-            >{{ addModal ? "Add" : "Modify" }}</b-button>
+              @click="addState(State)"
+              :disabled="State.name === ''"
+            >add</b-button>
           </b-form>
         </b-card>
       </b-col>
     </b-row>
-    <b-row v-if="Thresholds.length > 0">
+    <b-row>
       <b-col>
-        <separated title="全部参数阀值"></separated>
+        <separated title="全部参数状态"></separated>
         <b-card>
-          <b-table-lite :items="Thresholds" :fields="ThresholdsFields">
+          <b-table-lite :items="States" :fields="StatesFields">
             <template v-slot:cell(oprate)="data">
               <b-button-group size="sm">
-                <b-button variant="info" @click="modifyThreshold(data.item)">修改</b-button>
-                <b-button @click="deleteThreshold(data)">删除</b-button>
+                <b-button @click="deleteState(data)">删除</b-button>
               </b-button-group>
             </template>
           </b-table-lite>
           <div class="text-center">
-            <b-button size="sm" @click="pushThreshold(Thresholds)">提交</b-button>
+            <b-button block size="sm" @click="pushState(States)">提交</b-button>
           </div>
         </b-card>
       </b-col>
@@ -49,74 +46,65 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import {
-  DevConstant_Air,
+  queryResultArgument,
   protocol,
-  DevConstant_EM,
-  DevConstant_Ups,
-  DevConstant_TH,
-  protocolType,
-  Threshold
+  ConstantAlarmStat
 } from "../../../server/bin/interface";
+import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;
     return {
-      forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       ProtocolType,
       Protocol,
       ProtocolSingle: null,
       //
       addModal: true,
-      Threshold: {
+      State: {
         name: "",
-        min: 0,
-        max: 0
+        value: "",
+        unit: "{0:正常,1:报警}",
+        alarmStat: [0]
       },
-      Thresholds: [],
-      ThresholdsFields: ["name", "min", "max", { key: "oprate", label: "操作" }]
+      States: [] as ConstantAlarmStat[],
+      StatesFields: [
+        "name",
+        {
+          key: "alarmStat",
+          formatter: (a, b, item) => (<any>this).formet(item)
+        },
+        { key: "oprate", label: "操作" }
+      ] as BvTableFieldArray
     };
   },
   computed: {
     items() {
-      if (this.addModal) {
-        let ProtocolSingle: protocol = this.$data.ProtocolSingle;
-        let i = 0;
-        let result: any[] = [];
-        if (ProtocolSingle) {
-          ProtocolSingle.instruct.forEach(el => {
-            el.formResize.forEach(ep => {
-              if (!ep.isState && !this.ThresholdCache.has(ep.name)) {
-                result.push({
-                  text: `${i++}--${ep.name}`,
-                  value: ep.name
-                });
-              }
-            });
-          });
-        }
-        return result;
-      } else {
-        return [this.$data.Threshold.name];
+      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      const States = this.States;
+      const names = States.map(el => el.name);
+      let i = 0;
+      let result: any[] = [];
+      if (ProtocolSingle) {
+        result = ProtocolSingle.instruct
+          .map(el => {
+            return el.formResize
+              .filter(el2 => el2.isState && !names.includes(el2.name))
+              .map(el3 => ({
+                text: `${i++}--${el3.name}`,
+                value: Object.assign(el3, { alarmStat: [0] })
+              }));
+          })
+          .flat();
       }
+      return result;
     },
-    // 阀值名称字段缓存
-    ThresholdCache() {
-      const Thresholds = this.Thresholds;
-      let ThresholdCache: Set<string> = new Set();
-      if (Thresholds) {
-        Thresholds.forEach(({ name }) => ThresholdCache.add(name));
-      }
-      return ThresholdCache;
-    }
-  },
-
-  watch: {
-    "Threshold.name": function(newVal) {
-      if (this.ThresholdCache.has(newVal)) {
-        this.addModal = false;
-      } else {
-        this.addModal = true;
-      }
+    itemAlarm() {
+      const value = this.$data.State;
+      return (<string>value.unit)
+        .replace(/(\{|\}| )/g, "")
+        .split(",")
+        .map(el => el.split(":"))
+        .map(el => ({ text: el[1], value: Number(el[0]) }));
     }
   },
   apollo: {
@@ -134,56 +122,46 @@ export default Vue.extend({
         return { Protocol: this.$data.Protocol };
       }
     },
-    Thresholds: {
+    States: {
       query: gql`
         query getDevConstant($Protocol: String) {
-          Thresholds: getDevConstant(Protocol: $Protocol) {
-            Threshold
+          States: getDevConstant(Protocol: $Protocol) {
+            AlarmStat {
+              name
+              unit
+              alarmStat
+            }
           }
         }
       `,
       variables() {
         return { Protocol: this.$data.Protocol };
       },
-      update: data => data.Thresholds.Threshold
+      update: data => data.States.AlarmStat
     }
   },
   methods: {
-    addThreshold(Threshold: Threshold, addModal: boolean) {
-      if (Threshold.name === "" || Threshold.min > Threshold.max) {
-        this.$bvToast.toast("参数错误", { title: "error", variant: "warn" });
-        return;
-      }
-      let Thresholds: Threshold[] = this.Thresholds;
-      const ThresholdCy = Object.assign({}, Threshold);
-      if (!addModal) {
-        Thresholds.forEach((el, index) => {
-          if (el.name === ThresholdCy.name) {
-            this.$set(Thresholds, index, ThresholdCy);
-            this.ThresholdCache.add(ThresholdCy.name);
-          }
-        });
-      } else {
-        this.ThresholdCache.add(ThresholdCy.name);
-        Thresholds.push(ThresholdCy);
-      }
-      this.Threshold.name = "";
-      this.Threshold.min = 0;
-      this.Threshold.max = 0;
+    formet(item: ConstantAlarmStat) {
+      const arr = (<string>item.unit)
+        .replace(/(\{|\}| )/g, "")
+        .split(",")
+        .map(el => el.split(":"))
+        .map(el => ({ [Number(el[0])]: el[1] }));
+      const obj = Object.assign({}, ...arr);
+      return item.alarmStat.map(el => obj[el]);
     },
-    modifyThreshold(Threshold: Threshold) {
-      this.Threshold.name = Threshold.name;
-      this.Threshold.min = Threshold.min;
-      this.Threshold.max = Threshold.max;
+    addState(State: ConstantAlarmStat) {
+      const AlarmStats = this.States;
+      const n = AlarmStats.findIndex(el => el.name === State.name);
+      if (n === -1) {
+        AlarmStats.push(State);
+      } else AlarmStats[n] = State;
     },
-    deleteThreshold(data: any) {
-      const { item, index }: { item: Threshold; index: number } = data;
-      console.log(item.name);
-
-      this.ThresholdCache.delete(item.name);
-      this.Thresholds.splice(index, 1);
+    deleteState(data: any) {
+      const { item, index }: { item: ConstantAlarmStat; index: number } = data;
+      this.States.splice(index, 1);
     },
-    pushThreshold(Thresholds: Threshold[]) {
+    pushState(AlarmStats: ConstantAlarmStat[]) {
       const {
         ProtocolType,
         Protocol
@@ -210,9 +188,9 @@ export default Vue.extend({
             }
           `,
           variables: {
-            arg: Thresholds,
+            arg: AlarmStats,
             Protocol,
-            type: "Threshold",
+            type: "AlarmStat",
             ProtocolType
           }
         })
@@ -223,7 +201,7 @@ export default Vue.extend({
               variant: "info",
               title: "Info"
             });
-            this.$apollo.queries.Thresholds.refresh();
+            this.$apollo.queries.AlarmStats.refetch();
           }
         });
     }

@@ -179,12 +179,19 @@ const typeDefs: DocumentNode = gql`
     OutputFrequency: String
     OutputLoad: String
   }
-  #
+ # 操作指令
  type OprateInstruct{
     name:String
     value:String
     bl:Int
     readme:String
+  }
+  # 协议告警状态
+  type AlarmStat{
+    name: String
+    value: String
+    unit: String
+    alarmStat:[Int]
   }
   # 每个协议的设备常量和阀值，显示参数
   type DevConstant{
@@ -192,6 +199,7 @@ const typeDefs: DocumentNode = gql`
     ProtocolType: String
     Constant:Constant
     Threshold:JSON
+    AlarmStat: [AlarmStat]
     ShowTag:[String]
     OprateInstruct:[OprateInstruct]
   }

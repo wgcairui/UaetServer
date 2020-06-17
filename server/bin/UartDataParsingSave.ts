@@ -25,8 +25,7 @@ export default async (queryResultArray: queryResult[]) => {
         data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[])
         // 把数据发给检查器,检查数据是否有故障,保存数据单例
         const checkData = CheckUart(data)
-        console.log({checkData});
-        
+        // console.log({checkData});
         //保存对象
         TerminalClientResultSingle.updateOne(
             { mac: checkData.mac, pid: checkData.pid },

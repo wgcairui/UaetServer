@@ -50,11 +50,19 @@ const OprateInstruct = new Schema({
   readme: String
 }, { _id: false })
 
+const AlarmStat = new Schema({
+  name: String,
+  value: String,
+  unit: String,
+  alarmStat: [Number]
+}, { _id: false })
+
 export const Schema_DevConstant = new Schema({
   Protocol: String,
   ProtocolType: String,
   Constant: Constant,
   Threshold: [Threshold],
+  AlarmStat: [AlarmStat],
   ShowTag: [String],
   OprateInstruct: [OprateInstruct]
 });

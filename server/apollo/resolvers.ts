@@ -594,6 +594,9 @@ const resolvers: IResolvers = {
                 case "ShowTag":
                     Up = { ShowTag: _.compact(arg as string[]) }
                     break
+                case "AlarmStat":
+                    Up = { AlarmStat: arg }
+                    break
                 case "Oprate":
                     Up = { OprateInstruct: arg }
                     break

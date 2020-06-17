@@ -65,6 +65,10 @@ export default class Cache {
   QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
   QueryTerminaluseTime: Map<string, number[]>
+  // 序列化参数单位解析
+  CacheParseUnit: Map<string, { [x in number]: string }>
+  // 每个手机号发送告警的次数
+  CacheAlarmSendNum: Map<string, number>
   // 设备超时列表
   TimeOutMonutDev: Set<String>
   private Events: event;
@@ -89,6 +93,8 @@ export default class Cache {
     this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
     this.TimeOutMonutDev = new Set()
+    this.CacheParseUnit = new Map()
+    this.CacheAlarmSendNum = new Map()
   }
   //
   async start(): Promise<void> {
