@@ -17,7 +17,7 @@ import { BcryptDo } from "../util/bcrypt";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
-import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -217,9 +217,13 @@ const resolvers: IResolvers = {
         },
         // 获取socket node状态
         getSocketNode(root, arg, ctx: ApolloCtx) {
-            return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline.entries()).map(el => {
-                const timeOutOprate = Array.from(ctx.$Event.Cache.CacheTerminalQueryIntructTimeout.get(el[0]) || [])
-                return { node: el[0], set: Array.from(el[1]), timeOutOprate }
+            const TimeOutMonutDev = Array.from(ctx.$Event.Cache.TimeOutMonutDev)
+            return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline).map(el => {
+                const reg = new RegExp("^" + el)
+                return {
+                    terminal: el,
+                    TimeOutMonutDev: TimeOutMonutDev.filter(el2 => reg.test(el2))
+                }
             })
         },
         // 获取socket user状态
@@ -240,7 +244,7 @@ const resolvers: IResolvers = {
         },
         // 获取邮件日志
         async logmailsends(root, { start, end }: { start: Date, end: Date }) {
-            return []
+            return await LogMailSend.find().where("createdAt").gte(start).lte(end).exec()
         },
         // 获取设备告警日志
         async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }, ctx: ApolloCtx) {
@@ -294,6 +298,39 @@ const resolvers: IResolvers = {
             })
             agg.devs = await Promise.all(query) as any
             return agg
+        },
+        // 获取后台运行状态
+        async runingState(root, arg, ctx: ApolloCtx) {
+            if (ctx.userGroup === 'root') {
+                const Event = ctx.$Event
+                const Cache = Event.Cache
+                const CacheClient = Event.ClientCache
+                // 在线用户
+                const User = {
+                    online: CacheClient.CacheSocketidUser.size - 1,
+                    all: await Users.find().count().exec()
+                }
+                // 在线节点
+                const Node = {
+                    online: Cache.CacheSocket.size,
+                    all: Cache.CacheNode.size
+                }
+                // 在线终端
+                const Terminal = {
+                    online: Cache.CacheNodeTerminalOnline.size,
+                    all: Cache.CacheTerminal.size
+                }
+                // 所以协议
+                const Protocol = Cache.CacheProtocol.size
+                // 超时设备数量
+                const TimeOutMonutDev = Cache.TimeOutMonutDev.size
+                // 系统事件总数
+                const events = Event.eventNames()
+                // 系统性能
+                const SysInfo = Tool.NodeInfo()
+                return { User, Node, Terminal, Protocol, TimeOutMonutDev, events, SysInfo }
+            }
+            else return null
         }
     },
 

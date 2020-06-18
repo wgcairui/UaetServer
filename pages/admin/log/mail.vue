@@ -17,21 +17,7 @@
     </b-row>
     <b-row>
       <b-col>
-        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
-          <template v-slot:cell(query)="row">
-            <b-button
-              size="sm"
-              @click="row.toggleDetails"
-              v-if="row.value"
-            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-          </template>
-          <template v-slot:row-details="row">
-            <b-card>
-              <p>请求参数:{{row.item.query}}</p>
-              <p>请求结果:{{row.item.result}}</p>
-            </b-card>
-          </template>
-        </my-table-log>
+        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading"></my-table-log>
       </b-col>
     </b-row>
   </my-page-manage>
@@ -48,8 +34,13 @@ export default Vue.extend({
       filter: "" as string,
       data: [],
       fields: [
-        { key: "sendParams", label: "发送参数" },
-        { key: "Success", label: "响应" }
+        { key: "mails", label: "邮箱地址", formatter: data => data.join(",") },
+        { key: "sendParams", label: "事件", formatter: data => data.html },
+        {
+          key: "Success",
+          label: "messageId",
+          formatter: data => data.messageId
+        }
       ] as BvTableFieldArray
     };
   },
@@ -62,7 +53,7 @@ export default Vue.extend({
     data: {
       query: gql`
         query logsmssends($start: Date, $end: Date) {
-          data: logsmssends(start: $start, end: $end)
+          data: logmailsends(start: $start, end: $end)
         }
       `,
       variables() {

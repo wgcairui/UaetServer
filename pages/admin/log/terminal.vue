@@ -17,21 +17,7 @@
     </b-row>
     <b-row>
       <b-col>
-        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
-          <template v-slot:cell(query)="row">
-            <b-button
-              size="sm"
-              @click="row.toggleDetails"
-              v-if="row.value"
-            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-          </template>
-          <template v-slot:row-details="row">
-            <b-card>
-              <p>请求参数:{{row.item.query}}</p>
-              <p>请求结果:{{row.item.result}}</p>
-            </b-card>
-          </template>
-        </my-table-log>
+        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading"/>
       </b-col>
     </b-row>
   </my-page-manage>

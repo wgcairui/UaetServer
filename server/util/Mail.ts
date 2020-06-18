@@ -1,4 +1,6 @@
 import { createTransport } from "nodemailer";
+import { mailResponse, logMailSend } from "../bin/interface";
+import { LogMailSend } from "../mongoose/Log";
 const key = require("../key/qqMail.json");
 
 let transporter = createTransport({
@@ -22,7 +24,7 @@ let transporter = createTransport({
  * @param {*} body  校验码
  * @returns
  */
-const Send = (mail: string, title: string, subject: string, body: string) => {
+const Send = async (mail: string, title: string, subject: string, body: string) => {
     body = String(body);
     title = title || "Ladis";
     if (title == "注册") body = `注册验证码：<strong>${body}</strong>`;
@@ -35,22 +37,34 @@ const Send = (mail: string, title: string, subject: string, body: string) => {
         html: body // 发送text或者html格式 // text: 'Hello world?', // plain text body
     };
 
-    return new Promise((res, rej) => {
-        transporter.sendMail(mailOptions, (error, info) => {
+    await new Promise<mailResponse>((res, rej) => {
+        transporter.sendMail(mailOptions, (error, info: mailResponse) => {
             if (error) rej(error);
             res(info);
         });
-    });
+    }).then(el => {
+        const data: logMailSend = {
+            mails: mail.split(","),
+            sendParams: mailOptions,
+            Success: el
+        }
+        new LogMailSend(data).save()
+    }).catch(e => {
+        const data: logMailSend = {
+            mails: mail.split(","),
+            sendParams: mailOptions,
+            Error: e
+        }
+        new LogMailSend(data).save()
+    })
+
+
 };
 
 export const SendValidation = async (mail: string, code: string) => {
     const title = "Ladis"
-    const result = await Send(mail, title, "验证码", code)
-    console.log(result);
-    return result
+    return await Send(mail, title, "验证码", code)
 }
-export const SendAlarmEvent = async (mail: string, body: string) => {
-    const title = "Ladis"
-    const result = await Send(mail, title, "告警事件", body)
-    return result
+export const SendMailAlarm = async (mail: string[], body: string) => {
+    return await Send(mail.join(","), "Ladis透传平台", "透传设备告警事件", body)
 }

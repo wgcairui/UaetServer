@@ -3,12 +3,8 @@
     <b-row>
       <b-col>
         <b-table :items="node" :fields="fields">
-          <template v-slot:cell(set)="row">
-            <b-link
-              v-for="i in row.value"
-              :key="i"
-              :to="{name:'admin-node-Terminal',query:{DevMac:i}}"
-            >{{i}}</b-link>
+          <template v-slot:cell(terminal)="row">
+            <b-link :to="{name:'admin-node-Terminal',query:{DevMac:row.value}}">{{row.value}}</b-link>
           </template>
         </b-table>
       </b-col>
@@ -24,9 +20,13 @@ export default Vue.extend({
     return {
       node: [],
       fields: [
-        { key: "node", label: "挂载节点" },
-        { key: "set", label: "在线终端" },
-        { key: "timeOutOprate", label: "超时" }
+        { key: "terminal", label: "在线终端" },
+        {
+          key: "TimeOutMonutDev",
+          label: "超时设备",
+          formatter: (value: string[], key, item) =>
+            value.map(el => el.replace(item.terminal, ""))
+        }
       ] as BvTableFieldArray
     };
   },

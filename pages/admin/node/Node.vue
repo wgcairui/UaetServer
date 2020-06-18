@@ -1,6 +1,6 @@
 <template>
   <my-page-manage title="节点运行状态" :isUser="false">
-    <b-row class="my-5">
+    <b-row>
       <b-col>
         <separated title="节点列表"></separated>
         <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive>

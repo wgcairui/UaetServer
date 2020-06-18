@@ -2,10 +2,8 @@ import { mongoose, Schema } from "./index";
 
 // 发送短信记录
 const SchemaSmsSend = new Schema({
-    query: { type: "Mixed" },
+    tels: [String],
     sendParams: {
-        RegionId: String,
-        PhoneNumbers: String,
         SignName: String,
         TemplateCode: String,
         TemplateParam: String
@@ -16,6 +14,19 @@ const SchemaSmsSend = new Schema({
         BizId: String,
         Code: String,
     },
+    Error: { type: "Mixed" }
+
+}, { timestamps: true })
+
+const SchemaMailSend = new Schema({
+    mails: [String],
+    sendParams: {
+        from: String,
+        to: String,
+        subject: String,
+        html: String
+    },
+    Success: { type: "Mixed" },
     Error: { type: "Mixed" }
 
 }, { timestamps: true })
@@ -69,6 +80,7 @@ const SchemaDataClean = new Schema({
     lastDate: Date
 }, { timestamps: true })
 export const LogSmsSend = mongoose.model("LogSmsSend", SchemaSmsSend)
+export const LogMailSend = mongoose.model("LogMailSend", SchemaMailSend)
 export const LogUartTerminalDataTransfinite = mongoose.model("LogUartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
 export const LogUserRequst = mongoose.model("LogUserRequst", SchemaUserRequst)
 export const LogUserLogins = mongoose.model("LogUserLogin", SchemaUserLogins)

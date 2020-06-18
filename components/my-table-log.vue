@@ -9,6 +9,7 @@
       :filter="new RegExp(cfilter)"
       hover
       :busy="busy"
+      responsive
     >
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">
@@ -17,7 +18,7 @@
         </div>
       </template>
       <template v-slot:cell(ids)="row">{{(currentPage*10-10)+(row.index+1)}}</template>
-      <slot />
+      <slot/>
     </b-table>
     <b-pagination
       v-if="item.length>10"
@@ -61,7 +62,7 @@ export default Vue.extend({
   computed: {
     item(){
       const items = this.items as any[]
-      return items
+      return items.reverse()
     },
     cfilter(){
       let filter = this.filter as string
@@ -75,7 +76,7 @@ export default Vue.extend({
         key: "createdAt",
         label: "时间",
         formatter: data => new Date(data).toLocaleString()
-      });
+      });      
       return fields
     }
   }

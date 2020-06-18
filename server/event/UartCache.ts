@@ -37,7 +37,7 @@ export default class Cache {
   CacheDevsType: Map<string, devsType>;
   // 透传终端缓存mac=>terminal
   CacheTerminal: Map<string, terminal>;
-  // Node节点=》终端缓存 
+  // Node节点=》终端缓存
   CacheNodeTerminal: Map<string, Map<string, terminal>>;
   // Node节点缓存ip=>nodeclient
   CacheNode: Map<string, nodeClient>;
@@ -70,7 +70,7 @@ export default class Cache {
   // 每个手机号发送告警的次数
   CacheAlarmSendNum: Map<string, number>
   // 设备超时列表
-  TimeOutMonutDev: Set<String>
+  TimeOutMonutDev: Set<string>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events

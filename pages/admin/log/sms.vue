@@ -18,18 +18,8 @@
     <b-row>
       <b-col>
         <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
-          <template v-slot:cell(query)="row">
-            <b-button
-              size="sm"
-              @click="row.toggleDetails"
-              v-if="row.value"
-            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-          </template>
-          <template v-slot:row-details="row">
-            <b-card>
-              <p>请求参数:{{row.item.query}}</p>
-              <p>请求结果:{{row.item.result}}</p>
-            </b-card>
+          <template v-slot:cell(ids)="row">
+            <p>{{row}}</p>
           </template>
         </my-table-log>
       </b-col>
@@ -40,16 +30,30 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { logSmsSend } from "../../../server/bin/interface";
 export default Vue.extend({
   data() {
     return {
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
       filter: "" as string,
-      data: [],
+      data: [] as logSmsSend[],
       fields: [
-        { key: "sendParams", label: "发送参数" },
-        { key: "Success", label: "响应" }
+        {
+          key: "tels",
+          label: "号码",
+          formatter: (data: string[]) => data.join(",")
+        },
+        {
+          key: "sendParams",
+          label: "发送参数",
+          formatter: data => JSON.parse(data.TemplateParam)
+        },
+        {
+          key: "Success",
+          label: "RequestId",
+          formatter: data => data.RequestId
+        }
       ] as BvTableFieldArray
     };
   },

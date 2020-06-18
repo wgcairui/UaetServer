@@ -57,7 +57,7 @@
         </div>
       </div>
     </b-navbar>
-    <b-container class="mb-5 flex-grow-1">
+    <b-container class="mb-5 flex-grow-1 p-5" fluid>
       <slot />
     </b-container>
     <footer class="mt-auto">

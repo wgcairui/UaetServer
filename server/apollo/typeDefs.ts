@@ -281,9 +281,9 @@ const typeDefs: DocumentNode = gql`
     lognodes(start:Date,end:Date):JSON
     # 获取终端日志
     logterminals(start:Date,end:Date):JSON
-    # 获取终端日志
+    # 获取短信日志
     logsmssends(start:Date,end:Date):JSON
-    # 获取终端日志
+    # 获取邮件日志
     logmailsends(start:Date,end:Date):JSON
     # 获取设备告警日志
     loguartterminaldatatransfinites(start:Date,end:Date):JSON
@@ -294,6 +294,8 @@ const typeDefs: DocumentNode = gql`
     # 获取聚合设备
     Aggregation(id:String):aggregation
     Aggregations:[aggregation]
+    # 获取后台运行状态
+    runingState:JSON
   }
 
   #mutation

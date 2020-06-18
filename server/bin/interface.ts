@@ -192,10 +192,9 @@ export interface nodeInfo {
   totalmem: string;
   freemem: string;
   loadavg: number[];
-  networkInterfaces: any;
   type: string;
   uptime: string;
-  userInfo: any;
+  version: string
 }
 
 /* 用户信息 */
@@ -349,7 +348,7 @@ export interface smsUartAlarm {
 // LOG 日志
 // 短信发送
 export interface logSmsSend {
-  query: string
+  tels: string[]
   sendParams: {
     RegionId: string
     PhoneNumbers: string
@@ -363,6 +362,29 @@ export interface logSmsSend {
     BizId: string
     Code: string
   },
+  Error?: any
+}
+// 邮件
+export interface mailResponse {
+  accepted: string[]
+  rejected: string[],
+  envelopeTime: number
+  messageTime: number
+  messageSize: number
+  response: string
+  envelope: { from: string, to: string[] },
+  messageId: string
+}
+
+export interface logMailSend {
+  mails: string[]
+  sendParams: {
+    from: string
+    to: string
+    subject: string
+    html: string
+  }
+  Success?: mailResponse
   Error?: any
 }
 // 操作请求

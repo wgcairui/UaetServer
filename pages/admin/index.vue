@@ -1,8 +1,12 @@
 <template>
   <my-page-manage title="Administrator" :back="false">
     <b-row>
+      <separated title="Server运行状态"></separated>
+      <b-col></b-col>
+    </b-row>
+    <b-row>
       <separated title="基础"></separated>
-      <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="4">
+      <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="3">
         <b-link :to="link.to" class="text-decoration-none">
           <b-card class="my-3">
             <b-card-body>
@@ -15,7 +19,7 @@
     </b-row>
     <b-row>
       <separated title="Socket"></separated>
-      <b-col v-for="(link, key) in Socket" :key="key" cols="12" md="4">
+      <b-col v-for="(link, key) in Socket" :key="key" cols="12" md="3">
         <b-link :to="link.to" class="text-decoration-none">
           <b-card class="my-3">
             <b-card-body>
@@ -28,7 +32,7 @@
     </b-row>
     <b-row>
       <separated title="日志"></separated>
-      <b-col v-for="(link, key) in log" :key="key" cols="12" md="4">
+      <b-col v-for="(link, key) in log" :key="key" cols="12" md="3">
         <b-link :to="link.to" class="text-decoration-none">
           <b-card class="my-3">
             <b-card-body>
@@ -43,6 +47,8 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
+import gql from "graphql-tag";
+import { VeLine, VePie} from "v-charts";
 interface navi {
   to: { name: string };
   text: string;
@@ -74,11 +80,35 @@ export default Vue.extend({
         { to: { name: "admin-log-terminal" }, text: "终端", ico: "\uEB23" },
         { to: { name: "admin-log-sms" }, text: "短信", ico: "\uEB8b" },
         { to: { name: "admin-log-mail" }, text: "邮件", ico: "\uEB8b" },
-        { to: { name: "admin-log-uartterminaldatatransfinites" }, text: "告警", ico: "\uEB68" },
-        { to: { name: "admin-log-userlogins" }, text: "用户登陆", ico: "\uEB6b" },
-        { to: { name: "admin-log-userrequsts" }, text: "用户请求", ico: "\uEB8c" }
-      ] as navi[]
+        {
+          to: { name: "admin-log-uartterminaldatatransfinites" },
+          text: "告警",
+          ico: "\uEB68"
+        },
+        {
+          to: { name: "admin-log-userlogins" },
+          text: "用户登陆",
+          ico: "\uEB6b"
+        },
+        {
+          to: { name: "admin-log-userrequsts" },
+          text: "用户请求",
+          ico: "\uEB8c"
+        }
+      ] as navi[],
+      //
+      runingState: {}
     };
+  },
+  apollo: {
+    runingState: {
+      query: gql`
+        query runingState {
+          runingState
+        }
+      `,
+      pollInterval: 10000
+    }
   }
 });
 </script>

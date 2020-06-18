@@ -1,5 +1,5 @@
 import Event from "../event/index";
-
+// 把协议参数单位从string转换为object
 export default (unit: string): { [x in number]: string } => {
     const Cache = Event.Cache.CacheParseUnit
     if (Cache.has(unit)) {

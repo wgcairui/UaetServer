@@ -39,6 +39,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { logUserRequst } from "../../../server/bin/interface";
 export default Vue.extend({
   data() {
     return {
@@ -68,7 +69,8 @@ export default Vue.extend({
           start: this.$data.start,
           end: this.$data.end
         };
-      }
+      },
+      update:data=>(data.data as logUserRequst[]).filter(el=>el.type)
     }
   }
 });

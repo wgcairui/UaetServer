@@ -1,4 +1,5 @@
 import { CronJob } from "cron";
+import Event from "../event/index";
 import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst } from "../mongoose/Log";
 import { QueryCursor, Document, Types } from "mongoose";
 import { uartAlarmObject, logUserRequst, queryResult } from "../bin/interface";
@@ -30,8 +31,13 @@ const DataClean = new CronJob('0 0 2 * * *', async () => {
         CleanClientresultcolltion(curClientresultcolltion)
     ] as any[]
     const result = await Promise.all(curArray)
-
     new LogDataClean(Object.assign({}, ...result, { lastDate: DataClean.lastDate() })).save()
+
+    // 数据缓存重置
+    {
+        // 重置短信发送数量
+        Event.Cache.CacheAlarmSendNum = new Map()
+    }
     return result
 })
 

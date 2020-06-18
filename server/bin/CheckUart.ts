@@ -2,7 +2,8 @@ import { queryResult, queryResultArgument, uartAlarmObject, userSetup, Threshold
 import Event from "../event/index";
 import _ from "lodash";
 import { SendUartAlarm } from "../util/SMS";
-import { SendAlarmEvent } from "../util/Mail";
+import { SendMailAlarm } from "../util/Mail";
+import unitCache from "../util/unitCache";
 
 export default (query: queryResult) => {
   // 获取mac绑定的用户
@@ -47,9 +48,10 @@ export default (query: queryResult) => {
             parseArgument.alarm = true
             const alarmMsg = `:${parseArgument.name}超限[${parseArgument.value}]`
             sendSmsAlarm(query, alarmMsg, UserSetup, parseArgument)
-          } else {
-            sendAlarmReset(query, el, UserSetup, parseArgument)
-          }
+          }/*  else {
+            const alarmMsg = `${query.mountDev}:${parseArgument.name}超限已恢复,实际值${parseArgument.value}`
+            sendAlarmReset(query, alarmMsg, UserSetup, parseArgument)
+          } */
         }
       });
     }
@@ -57,17 +59,14 @@ export default (query: queryResult) => {
     {
       //
       let AlarmStat = _.has(Constant, 'AlarmStat') ? _.cloneDeep(Constant.AlarmStat) : []
-      //console.log({AlarmStat,parse});
       // 迭代每条状态值
       AlarmStat.forEach(el => {
         if (parse.hasOwnProperty(el.name)) {
           const parseArgument = parse[el.name] as queryResultArgument
           if (!el.alarmStat.includes(parseInt(parseArgument.value))) {
             parseArgument.alarm = true
-            const alarmMsg = `:${parseArgument.name}[${parseArgument.value}]`
+            const alarmMsg = `:${parseArgument.name}[${unitCache(parseArgument.unit as string)[parseArgument.value]}]`
             sendSmsAlarm(query, alarmMsg, UserSetup, parseArgument)
-            //console.log(parseArgument);
-
           }
         }
       })
@@ -84,10 +83,15 @@ async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSe
   if (Event.Cache.CacheAlarmNum.has(tag)) {
     const n = Event.Cache.CacheAlarmNum.get(tag) as number;
     Event.Cache.CacheAlarmNum.set(tag, n + 1);
+    // console.log({ n, tels: UserSetup.tels });
     if (n === 20) {
+      // 是否有邮件
+      if (UserSetup.mails.length > 0) {
+        SendMailAlarm(UserSetup.mails, `尊敬的${UserSetup.user},您的透传设备${query.mac}挂载的${query.mountDev}于${new Date().toLocaleString()}发生异常,异常事件` + event)
+      }
       // 检查是否有告警手机号
       if (UserSetup.tels.length > 0) {
-        await SendUartAlarm({
+        const result = await SendUartAlarm({
           user: UserSetup.user,
           type: "透传设备告警",
           tel: UserSetup.tels.join(','),
@@ -97,32 +101,25 @@ async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSe
           event
         });
       }
-      // 是否有邮件
-      if (UserSetup.mails.length > 0) {
-        UserSetup.mails.forEach(mail => {
-          //SendAlarmEvent(mail, data.msg)
-        })
-      }
+      // 构造告警信息
+      const data: uartAlarmObject = {
+        type: "UartTerminalDataTransfinite",
+        mac: query.mac,
+        pid: query.pid,
+        protocol: query.protocol,
+        timeStamp: query.timeStamp,
+        tag: parseArgument.name,
+        msg: event
+      };
+      // 发送事件，socket发送用户
+      Event.Emit("UartTerminalDataTransfinite", data);
     }
-  } else {
-    Event.Cache.CacheAlarmNum.set(tag, 0);
-    // 构造告警信息
-    const data: uartAlarmObject = {
-      type: "UartTerminalDataTransfinite",
-      mac: query.mac,
-      pid: query.pid,
-      protocol: query.protocol,
-      timeStamp: query.timeStamp,
-      tag: parseArgument.name,
-      msg: event
-    };
-    // 发送事件，socket发送用户
-    Event.Emit("UartTerminalDataTransfinite", data);
-  }
-}
+  } else Event.Cache.CacheAlarmNum.set(tag, 0);
 
+}
+/*
 // 发送告警恢复推送,短信,邮件
-async function sendAlarmReset(query: queryResult, Threshold: Threshold, UserSetup: userSetup, parseArgument: queryResultArgument) {
+async function sendAlarmReset(query: queryResult, event: string, UserSetup: userSetup, parseArgument: queryResultArgument) {
   // 创建tag
   const tag = query.mac + query.pid + parseArgument.name;
   // 检查缓存告警记录,如果没有记录则不处理
@@ -138,7 +135,7 @@ async function sendAlarmReset(query: queryResult, Threshold: Threshold, UserSetu
       protocol: query.protocol,
       timeStamp: query.timeStamp,
       tag: parseArgument.name,
-      msg: `${query.mountDev}:${parseArgument.name}超限已恢复,实际值${parseArgument.value}`
+      msg: event
     };
     // 发送事件，socket发送用户
     Event.Emit("UartTerminalDataTransfinite", data);
@@ -163,4 +160,4 @@ async function sendAlarmReset(query: queryResult, Threshold: Threshold, UserSetu
     }
   }
 }
-
+ */

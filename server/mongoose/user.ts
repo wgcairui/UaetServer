@@ -3,6 +3,7 @@
 import { mongoose, Schema } from "./index";
 import { Schema_DevConstant } from "./DeviceParameterConstant";
 
+// 用户信息
 const Schema_Users = new Schema({
   userId: String,
   name: String,
@@ -24,12 +25,14 @@ const Schema_Users = new Schema({
   messageId: String,
 });
 
+// 用户绑定设备
 const SchemaUserBindDevice = new Schema({
   user: String,
   ECs: [String],
   UTs: [String]
 });
 
+// 用户聚合设备
 const SchemaUserAggregation = new Schema({
   user: String,
   id: String,
@@ -46,6 +49,7 @@ const SchemaUserAggregation = new Schema({
   ]
 })
 
+// 用户告警设备
 const SchemaUserAlarmSetup = new Schema({
   user: String,
   tels: [String],

@@ -1,4 +1,5 @@
 import core from "@alicloud/pop-core"
+import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
 import { logSmsSend, smsUartAlarm, ApolloMongoResult } from "../bin/interface";
 const key = require("../key/aliSms.json")
@@ -58,7 +59,7 @@ export const SendValidation = (tel: string, code: string) => {
     if (!tel || tel.length !== 11) {
         return { ok: 0, msg: `电话号码错误,${tel}` } as ApolloMongoResult
     }
-    const TemplateParam = JSON.stringify({code})
+    const TemplateParam = JSON.stringify({ code })
     const params: params = {
         "RegionId": "cn-hangzhou",
         "PhoneNumbers": tel,
@@ -70,23 +71,37 @@ export const SendValidation = (tel: string, code: string) => {
 }
 
 // 发送短信
-const SendSms = async (params: params):Promise<Partial<ApolloMongoResult>> => {
+const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
+    const CacheAlarmSendNum = Event.Cache.CacheAlarmSendNum
+    //const tels = params.PhoneNumbers.split(",")
+    // 迭代发送的手机号码,检查号码每天的发送次数,每个号码每天限额50
+    const tels = params.PhoneNumbers.split(",").filter(el => !CacheAlarmSendNum.has(el) || CacheAlarmSendNum.get(el) as number < 51)
+    params.PhoneNumbers = tels.join(',')
+    if (!params.PhoneNumbers) return { ok: 0, msg: "all tels Sending messages in excess of the number 50 " }
     // console.log(params);
-    return await client.request('SendSms', params, { method: 'POST' }).then(el => {
+    const result = await client.request<SmsResult>('SendSms', params, { method: 'POST' }).then(el => {
         const data: logSmsSend = {
-            query: params.TemplateParam,
+            tels,
             sendParams: params,
-            Success: el as any
+            Success: el
         }
         new LogSmsSend(data).save()
-        return {ok:1,msg:"send success"}
+        return { ok: 1, msg: "send Success" }
     }).catch(e => {
         const data: logSmsSend = {
-            query: params.TemplateParam,
+            tels,
             sendParams: params,
-            Success: e as any
+            Error: e
         }
         new LogSmsSend(data).save()
-        return {ok:0,msg:"send error",arg:e}
+        return { ok: 0, msg: "send Error", arg: e }
     })
+    // 如果发送成功,号码发送次数+1
+    if (result.ok && params.TemplateCode !== 'SMS_190275627') {
+        tels.forEach(tel => {
+            const n = CacheAlarmSendNum.get(tel)
+            CacheAlarmSendNum.set(tel, n ? n + 1 : 1)
+        })
+    }
+    return result
 }
