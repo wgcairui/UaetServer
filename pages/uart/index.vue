@@ -27,9 +27,10 @@
               </b-form-text>
             </b-form-group>
             <b-form-group label="GPS定位:" v-bind="label">
-              <b-form-text class="terminal text-dark">
-                <b-link href="http://www.gzhatu.com/dingwei.html" target="_blank">{{ Terminals.jw }}</b-link>
-              </b-form-text>
+              <b-form-text class="terminal text-dark">{{ Terminals.jw || '没有gps信息时以IP模糊定位'}}</b-form-text>
+            </b-form-group>
+            <b-form-group label="模糊地址:" v-bind="label">
+              <b-form-text class="terminal text-dark">{{address}}</b-form-text>
             </b-form-group>
             <b-form-group label="在线状态:" v-bind="label">
               <b-form-checkbox
@@ -43,23 +44,18 @@
         </b-jumbotron>
       </b-col>
       <b-col cols="12" md="6" style="min-height:300px">
-        <baidu-map
-          class="bm-view"
-          ak="bqZOsTpZOlX780PFinrOXhk0yAnbqUWN"
-          :center="center"
-          :zoom="zoom"
-          @ready="handler"
-        >
-          <bm-marker :position="center"></bm-marker>
-          <bm-map-type :map-types="['BMAP_NORMAL_MAP', 'BMAP_HYBRID_MAP']" anchor="BMAP_ANCHOR_TOP_LEFT"></bm-map-type>
-        </baidu-map>
+        <ve-amap
+          :settings="chartSettings"
+          :tooltip="{ show: true }"
+          :after-set-option-once="afterSet"
+        ></ve-amap>
       </b-col>
     </b-row>
     <b-row>
       <b-col cols="12">
         <separated title="挂载"></separated>
         <b-card>
-          <tree
+          <!-- <tree
             :data="Terminals"
             node-text="name"
             layout-type="horizontal"
@@ -67,7 +63,8 @@
             :radius="6"
             @clickedNode="treeSelect"
             @clickedText="treeSelect"
-          />
+          />-->
+          <ve-tree :data="chartData" :settings="treeSettings"></ve-tree>
         </b-card>
       </b-col>
     </b-row>
@@ -76,11 +73,15 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { tree } from "vued3tree";
-import { Terminal } from "../../server/bin/interface";
-import BaiduMap from "vue-baidu-map/components/map/Map.vue";
-import BmMarker from "vue-baidu-map/components/overlays/Marker.vue";
-import BmMapType from "vue-baidu-map/components/controls/MapType.vue";
+// import { tree } from "vued3tree";
+import { Terminal, TerminalMountDevs } from "../../server/bin/interface";
+import { VeAmap, VeTree } from "v-charts";
+import {
+  API_Aamp_gps2autoanvi,
+  API_Aamp_local2address,
+  API_Aamp_address2local,
+  API_Aamp_ip2local
+} from "../../plugins/tools";
 interface selectTree {
   Type: string;
   mountDev: string;
@@ -88,7 +89,7 @@ interface selectTree {
   pid: number;
 }
 export default Vue.extend({
-  components: { tree, BaiduMap, BmMarker, BmMapType },
+  components: { VeAmap, VeTree },
   data() {
     const label = {
       labelCols: "12",
@@ -96,31 +97,36 @@ export default Vue.extend({
       labelAlignSm: "right"
     };
     return {
-      center: { lng: 0, lat: 0 },
-      zoom: 15,
+      chartSettings: {
+        key: "2bbc666ac8e6a9d69c2910a7053243b6",
+        v: "1.4.3",
+        amap: {
+          resizeEnable: true,
+          center: [113.975299479167, 29.924395345053],
+          zoom: 15
+        }
+      },
+      address: "",
+      //
+      treeSettings: {
+        seriesMap: {
+          tree1: {
+            symbol: (this as any).treeSysbol, //pin
+            symbolSize: 15,
+            label: {
+              show: true,
+              position: "top",
+              fontSize: 16
+            }
+          }
+        }
+      },
+      //
       label,
-      devState: false,
-      DevMac: ""
+      devState: false
     };
   },
-  apollo: {
-    devState: {
-      query: gql`
-        query getDevState($mac: String, $node: String) {
-          devState: getDevState(mac: $mac, node: $node)
-        }
-      `,
-      variables() {
-        return {
-          mac: this.$data.DevMac,
-          node: this.$data.Terminals.mountNode
-        };
-      },
-      pollInterval: 1000
-    }
-  },
   async asyncData({ route, query, app }) {
-    // 获取apollo client句柄
     const client = app.apolloProvider.defaultClient;
     // 路由query
     const DevMac = query.DevMac;
@@ -151,30 +157,100 @@ export default Vue.extend({
     });
     let Terminal: Terminal = data.Terminal;
     // 构建tree对象
-    let children = Terminal.mountDevs.map(el =>
+    const children = Terminal.mountDevs.map(el =>
       Object.assign(el, { name: el.mountDev + el.pid })
     );
-    /* Terminal.jw = (Terminal.jw as string)
-      .split(",")
-      .reverse()
-      .join(","); */
-    let Terminals = Object.assign(Terminal, { children });
-    return { Terminals, DevMac };
+    const Terminals = Object.assign(Terminal, { children });
+
+    const chartData = {
+      columns: ["name", "value"],
+      rows: [
+        {
+          name: "tree1",
+          value: [Terminals]
+        }
+      ]
+    };
+    console.log(Terminals);
+
+    return { chartData, Terminals, DevMac };
+  },
+  apollo: {
+    devState: {
+      query: gql`
+        query getDevState($mac: String, $node: String) {
+          devState: getDevState(mac: $mac, node: $node)
+        }
+      `,
+      variables() {
+        return {
+          mac: this.$data.DevMac,
+          node: this.$data.Terminals.mountNode
+        };
+      }
+      // pollInterval: 1000
+    }
   },
 
   methods: {
-    handler({ BMap, map }: any) {
-      const jw = ((this  as any).Terminals.jw) as string
-      const [x,y] = jw.split(",").map(el=>el?parseFloat(el):0)
-      console.log({x,y});
-      
-      const Point: BMap.Point = new BMap.Point(x, y);
-      const convert: BMap.Convertor = new BMap.Convertor();
-      convert.translate([Point], 1, 5, data => {
-        this.$data.center = data.points[0];
-      });
+    //
+    treeSysbol(
+      value: Array<any> | number,
+      { data }: { data: TerminalMountDevs }
+    ) {
+      if (!data.Type) return "pin";
+      else return 'path://'
     },
+    // 修改map
+    async afterSet(echarts: any) {
+      // 获取页面amap实例
+      const amap = echarts
+        .getModel()
+        .getComponent("amap")
+        .getAMap() as AMap.Map;
+      const terminal = (this as any).Terminals as Terminal;
 
+      let position = terminal.jw as AMap.LngLat;
+      // 如果有gps信息则把gps转换为autonavi坐标,否则根据ip获取模糊定位
+      if (position) {
+        const gps = (position as any)
+          .split(",")
+          .map((el: string) => parseFloat(el)) as [number, number];
+        position = await new Promise<AMap.LngLat>(res => {
+          window.AMap.convertFrom(gps, "gps", (stat, result) => {
+            const jws = (result as AMap.convertFrom.Result).locations[0];
+            res(jws);
+          });
+        });
+      } else {
+        const jws = await API_Aamp_ip2local(terminal.ip as string);
+        const gps =
+          typeof jws.rectangle === "string"
+            ? (jws.rectangle
+                .split(";")[0]
+                .split(",")
+                .map(el => parseFloat(el)) as [number, number])
+            : ([0.0, 0.0] as [number, number]);
+        position = await new Promise<AMap.LngLat>(res => {
+          window.AMap.convertFrom(gps, null, (stat, result) => {
+            const jws = (result as AMap.convertFrom.Result).locations[0];
+            res(jws);
+          });
+        });
+      }
+
+      amap.setCenter(position);
+      amap.add(
+        new window.AMap.Marker({
+          position
+        })
+      );
+      const address = await API_Aamp_local2address(
+        [position.getLng(), position.getLat()].join(",")
+      );
+      this.$data.address = address.regeocode.formatted_address;
+    },
+    //
     treeSelect(item: any) {
       const { Type, mountDev, pid, protocol }: selectTree = item.data;
       if (!Type) return;
@@ -200,8 +276,8 @@ export default Vue.extend({
 </script>
 <style>
 .terminal {
-  font-size: larger;
-  padding-top: 2px;
+  font-size: 0.9rem;
+  padding-top: 5px;
 }
 .text-muted {
   color: black !important;

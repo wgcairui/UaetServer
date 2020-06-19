@@ -66,8 +66,7 @@
     "vue-baidu-map": "^0.21.22",
     "vue-server-renderer": "^2.6.11",
     "vue-socket.io-extended": "^4.0.1",
-    "vue-template-compiler": "^2.6.11",
-    "vued3tree": "^5.1.0"
+    "vue-template-compiler": "^2.6.11"
   },
   "devDependencies": {
     "@babel/highlight": "^7.8.3",
@@ -77,6 +76,7 @@
     "@nuxtjs/eslint-config-typescript": "^1.0.2",
     "@nuxtjs/eslint-module": "^1.0.0",
     "@nuxtjs/stylelint-module": "^3.1.0",
+    "@types/amap-js-api": "^1.4.8",
     "@types/bcrypt": "^3.0.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/crc": "^3.4.0",

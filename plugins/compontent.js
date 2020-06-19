@@ -15,6 +15,7 @@ import MyOprate from "../components/MyOprate.vue"
 
 import SmsValidation from "../components/SmsValidation.vue"
 
+// Amap
 Vue.use(IconsPlugin)
 Vue.component("sms-validation", SmsValidation)
 Vue.component("my-table-log", MyTableLog)

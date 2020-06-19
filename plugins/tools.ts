@@ -1,47 +1,80 @@
+import axios from "axios";
+const AmapKey = "0e99d0426f1afb11f2b95864ebd898d0"
+const ApiAddress = "https://restapi.amap.com/v3/"
 
-/* eslint-disable no-console */
-// 把[{name:"ss",value:"5"},{name:"aa",value:"5"}] 转换{aa:5,ss:5}
-export const TerminalResultArrayToJson = (Arr: { name: string, value: any }[]) => {
-  let newObj: Map<string, any> = new Map()
-  Arr.forEach(el => {
-    newObj.set(el.name, el.value)
-  })
-  return newObj
-};
+//const axios:NuxtAxiosInstance = Nuxtaxios
+type restype = 'ip' | 'geocode/geo' | 'geocode/regeo' | 'assistant/coordinate/convert'
 
-// 把[{name:"ss",value:"5"},{name:"aa",value:"5"}] 转换{aa:5,ss:5}
-export const TerminalResultArrayToArrayJson = (
-  Arr: any,
-  col = ""
-) => {
-  let val = "";
-  return val
-  /* return Arr.reduce(
-    (pre: { time: string; [s: string]: string }[] | undefined, cu) => {
-      const { result, time } = cu;
-      const r = result.find((el) => el.name === col);
-      if (r && r.value && r.value !== val && pre) {
-        return [{ time: paresTime(<string>time), [col]: r.value }, ...pre];
-      }
-      if (r) val = r.value;
-    },
-    []
-  ); */
-};
+interface AmapResonp {
+  status: string
+  info: string
+  infocode: string
+}
+
+interface AmapResonpIP extends AmapResonp {
+  province: string
+  city: string
+  adcode: string
+  rectangle: string
+}
+
+interface AmapResonpGeocodeGeo extends AmapResonp {
+  "count": string
+  "geocodes":
+  {
+    "formatted_address": string
+    "country": string
+    "province": string
+    "citycode": string
+    "city": string
+    "district": string
+    "adcode": string
+    "street": string
+    "number": string
+    "location": string
+    "level": string
+  }[]
+}
+
+interface AmapResonpGeocodeRegeo extends AmapResonp {
+  regeocode: {
+    formatted_address: string
+  }
+}
+
+interface AmapResonpAutonavi extends AmapResonp {
+  locations: string
+}
+
+// ip转gps
+export const API_Aamp_ip2local = (ip: string) => {
+  return get<AmapResonpIP>("ip", { ip })
+}
+
+// 地址转gps
+export const API_Aamp_address2local = (address: string) => {
+  return get<AmapResonpGeocodeGeo>('geocode/geo', { address })
+}
+// gps转地址
+export const API_Aamp_local2address = (location: string) => {
+  return get<AmapResonpGeocodeRegeo>("geocode/regeo", { location })
+}
+
+// gps转高德gps
+export const API_Aamp_gps2autoanvi = (coordsys: 'gps' | 'mapbar' | 'baidu', locations: string) => {
+  return get<AmapResonpAutonavi>('assistant/coordinate/convert', { coordsys, locations })
+}
+
 // 格式化日期时间
 export const paresTime = (time: string | number | Date): string => {
   const T = new Date(time);
   return `${T.getMonth() +
     1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
 };
-// 把vue data对象转换为普通JSON
 
-export function parseJsonToJson<T>(jsons: T): T {
-  return jsons
-  /* const target = new (<any>jsons).constructor()
-  const objKeys = Object.keys(jsons)
-  const newJson:T = new Object()
-  const objs = Object.entries(jsons)
-  .forEach((el) => (newJson[el] = jsons[el]));
-  return newJson; */
-};
+
+async function get<T>(type: restype, params: Object): Promise<T> {
+  const result = await axios.get(ApiAddress + type, { params: { key: AmapKey, ...params } })
+  return result.data
+}
+

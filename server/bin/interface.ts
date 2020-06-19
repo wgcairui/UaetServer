@@ -84,7 +84,7 @@ export interface Terminal extends RegisterTerminal {
   name: string;
   ip?: string
   prto?: number
-  jw?: string;
+  jw?: string | AMap.LngLat;
   uptime?: string
   mountDevs: TerminalMountDevs[];
 }

@@ -48,7 +48,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { VeLine, VePie} from "v-charts";
+import { VeLine, VePie,VeHistogram,VeGauge} from "v-charts";
 interface navi {
   to: { name: string };
   text: string;
