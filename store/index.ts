@@ -1,7 +1,7 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
 import { Context } from "@nuxt/types"
 import { WebInfo, getInstance } from "./DB"
-import { queryResultArgument } from '../server/bin/interface'
+import { queryResultArgument, nodeInfo } from '../server/bin/interface'
 import { BvToast } from 'bootstrap-vue'
 
 // 获取state返回值类型
@@ -16,7 +16,8 @@ export const state = () => ({
     msg: "default message",
     type: "SYS"
   } as WebInfo,
-  Infos: [] as WebInfo[]
+  Infos: [] as WebInfo[],
+  SysInfos: [] as nodeInfo[]
 })
 
 export const getters: GetterTree<RootState, RootState> = {
@@ -46,6 +47,9 @@ export const getters: GetterTree<RootState, RootState> = {
 
 */
 export const mutations: MutationTree<RootState> = {
+  addSysInfo(state, payload) {
+    state.SysInfos.push(payload)
+  },
   //CHANGE_NAME: (state, newName: string) => (state.temp = newName),
   // socket vuex 绑定事件
   addInfo(state, payload: WebInfo) {

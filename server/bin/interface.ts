@@ -72,7 +72,7 @@ export interface RegisterTerminal {
 }
 // 终端挂载设备
 export interface TerminalMountDevs {
-  Type: number
+  Type: string
   mountDev: string;
   protocol: string;
   pid: number;
@@ -192,6 +192,8 @@ export interface nodeInfo {
   totalmem: string;
   freemem: string;
   loadavg: number[];
+  usemen?: number
+  usecpu?: number
   type: string;
   uptime: string;
   version: string

@@ -1,39 +1,31 @@
 <template>
-  <my-page-manage title="用户请求日志">
-    <b-row>
-      <b-col>
-        <separated title="用户请求日志">
-          <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
-        </separated>
-        <b-form>
-          <my-form label="开始时间:">
-            <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
-          </my-form>
-          <my-form label="结束时间:">
-            <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
-          </my-form>
-        </b-form>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col>
-        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
-          <template v-slot:cell(argument)="row">
-            <b-button
-              size="sm"
-              @click="row.toggleDetails"
-              v-if="row.value"
-            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-          </template>
-          <template v-slot:row-details="row">
-            <b-card>
-              <p>请求参数:{{row.item.argument}}</p>
-            </b-card>
-          </template>
-        </my-table-log>
-      </b-col>
-    </b-row>
-  </my-page-manage>
+  <b-col>
+    <separated title="用户请求日志">
+      <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
+    </separated>
+    <b-form>
+      <my-form label="开始时间:">
+        <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
+      </my-form>
+      <my-form label="结束时间:">
+        <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
+      </my-form>
+    </b-form>
+    <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
+      <template v-slot:cell(argument)="row">
+        <b-button
+          size="sm"
+          @click="row.toggleDetails"
+          v-if="row.value"
+        >{{row.detailsShowing ? '收起':'展开'}}</b-button>
+      </template>
+      <template v-slot:row-details="row">
+        <b-card>
+          <p>请求参数:{{row.item.argument}}</p>
+        </b-card>
+      </template>
+    </my-table-log>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -52,7 +44,7 @@ export default Vue.extend({
         { key: "user", label: "用户" },
         { key: "userGroup", label: "用户组" },
         { key: "type", label: "操作类型" },
-        { key: "argument", label: "参数" },
+        { key: "argument", label: "参数" }
       ] as BvTableFieldArray
     };
   },
@@ -70,7 +62,7 @@ export default Vue.extend({
           end: this.$data.end
         };
       },
-      update:data=>(data.data as logUserRequst[]).filter(el=>el.type)
+      update: data => (data.data as logUserRequst[]).filter(el => el.type)
     }
   }
 });

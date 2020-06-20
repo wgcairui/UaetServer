@@ -9,15 +9,17 @@ export default class Tool {
     const loadavg: number[] = os.loadavg();
     const type: string = os.type();
     const uptime: number = os.uptime() / 60 / 60;
-    
+
     return {
       hostname,
       totalmem: totalmem.toFixed(1) + "GB",
       freemem: freemem.toFixed(1) + "%",
-      loadavg:loadavg.map(el=>parseFloat(el.toFixed(1))),
+      loadavg: loadavg.map(el => parseFloat(el.toFixed(1))),
       type,
       uptime: uptime.toFixed(0) + "h",
-      version:os.version()
+      version: os.version(),
+      usecpu: parseFloat(loadavg[2].toFixed(2)),
+      usemen: 100 - parseFloat(freemem.toFixed(2))
     };
   }
   // 生成modbus16校验码
@@ -35,7 +37,7 @@ export default class Tool {
     const num = 255 - (Buffer.from(content, 'hex').toJSON().data.reduce((pre, cur) => pre + cur))
     const crc = Buffer.allocUnsafe(2)
     crc.writeInt16BE(num, 0)
-    return content + crc.slice(1,2).toString("hex").padStart(2, '0')
+    return content + crc.slice(1, 2).toString("hex").padStart(2, '0')
   }
 
   static InsertString(

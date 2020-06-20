@@ -1,19 +1,23 @@
 <template>
-  <my-page-manage title="用户状态" :isUser="false">
-    <b-row class="my-5">
-      <b-col>
-        <separated title="节点列表">
-          <b-input v-model="filter" placeholder="输入账号搜索数据" size="sm"></b-input>
-        </separated>
-        <b-table :items="Users" :filter="new RegExp(filter)"  :fields="NodeInfoFields" responsive striped hover show-empty>
-          <template v-slot:cell(creatTime)="row">{{ new Date(row.value).toLocaleDateString()}}</template>
-          <template
-            v-slot:cell(modifyTime)="row"
-          >{{ row.value?new Date(row.value).toLocaleDateString() :''}}</template>
-        </b-table>
-      </b-col>
-    </b-row>
-  </my-page-manage>
+  <b-col>
+    <separated title="用户状态">
+      <b-input v-model="filter" placeholder="输入账号搜索数据" size="sm"></b-input>
+    </separated>
+    <b-table
+      :items="Users"
+      :filter="new RegExp(filter)"
+      :fields="NodeInfoFields"
+      responsive
+      striped
+      hover
+      show-empty
+    >
+      <template v-slot:cell(creatTime)="row">{{ new Date(row.value).toLocaleDateString()}}</template>
+      <template
+        v-slot:cell(modifyTime)="row"
+      >{{ row.value?new Date(row.value).toLocaleDateString() :''}}</template>
+    </b-table>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

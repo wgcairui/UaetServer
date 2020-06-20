@@ -1,6 +1,6 @@
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" sticky>
+    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start">
       <b-navbar-brand>
         <span v-if="back">
           <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="$router.go(-1)">
@@ -57,7 +57,7 @@
         </div>
       </div>
     </b-navbar>
-    <b-container class="mb-5 flex-grow-1 p-5" fluid>
+    <b-container class=" container-h flex-grow-1" fluid>
       <slot />
     </b-container>
     <footer class="mt-auto">
@@ -69,6 +69,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 export default Vue.extend({
+  layout:"manage",
   props: {
     title: {
       default: "Ladis",
@@ -116,13 +117,13 @@ export default Vue.extend({
 });
 </script>
 <style scoped>
-.loginTitle {
-  height: 57px;
-}
 .navbar-dark,
 .navbar-nav,
 .nav-link,
 .dropdown-toggle span {
   color: aliceblue !important;
+}
+.container-h{
+  height: calc(100% - 57px);
 }
 </style>

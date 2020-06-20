@@ -1,26 +1,18 @@
 <template>
-  <my-page-manage title="用户登陆日志">
-    <b-row>
-      <b-col>
-        <separated title="用户登陆日志">
-          <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
-        </separated>
-        <b-form>
-          <my-form label="开始时间:">
-            <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
-          </my-form>
-          <my-form label="结束时间:">
-            <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
-          </my-form>
-        </b-form>
-      </b-col>
-    </b-row>
-    <b-row>
-      <b-col>
-        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading"/>
-      </b-col>
-    </b-row>
-  </my-page-manage>
+  <b-col>
+    <separated title="用户登陆日志">
+      <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
+    </separated>
+    <b-form>
+      <my-form label="开始时间:">
+        <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
+      </my-form>
+      <my-form label="结束时间:">
+        <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
+      </my-form>
+    </b-form>
+    <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading" />
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -35,7 +27,7 @@ export default Vue.extend({
       data: [],
       fields: [
         { key: "user", label: "用户" },
-        { key: "type", label: "类型" },
+        { key: "type", label: "类型" }
       ] as BvTableFieldArray
     };
   },

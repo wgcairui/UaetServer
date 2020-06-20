@@ -1,22 +1,21 @@
 <template>
-  <my-page-manage title="用户状态" :isUser="false">
-    <b-row class="my-5">
-      <b-col>
-        <b-table :items="Users" :fields="NodeInfoFields" responsive striped>
-          <template v-slot:cell(ProtocolSetup)="row">
-            <b-button
-              size="sm"
-              @click="row.toggleDetails"
-              v-if="row.value"
-            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-          </template>
-          <template v-slot:row-details="row">
-            <b-table :items="row.item.ProtocolSetup" :fields="childFields"></b-table>
-          </template>
-        </b-table>
-      </b-col>
-    </b-row>
-  </my-page-manage>
+  <b-col>
+    <separated title="用户状态">
+      <b-input v-model="filter" placeholder="输入账号搜索数据" size="sm"></b-input>
+    </separated>
+    <b-table :items="Users" :fields="NodeInfoFields" responsive striped>
+      <template v-slot:cell(ProtocolSetup)="row">
+        <b-button
+          size="sm"
+          @click="row.toggleDetails"
+          v-if="row.value"
+        >{{row.detailsShowing ? '收起':'展开'}}</b-button>
+      </template>
+      <template v-slot:row-details="row">
+        <b-table :items="row.item.ProtocolSetup" :fields="childFields"></b-table>
+      </template>
+    </b-table>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -25,6 +24,7 @@ import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
     return {
+      filter: this.$route.query.user || "",
       Users: [],
       NodeInfoFields: [
         { key: "user", label: "账号" },

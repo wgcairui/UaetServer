@@ -308,7 +308,7 @@ const resolvers: IResolvers = {
                 // 在线用户
                 const User = {
                     online: CacheClient.CacheSocketidUser.size - 1,
-                    all: await Users.find().count().exec()
+                    all: await Users.countDocuments().exec()
                 }
                 // 在线节点
                 const Node = {

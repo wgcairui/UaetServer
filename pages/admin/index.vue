@@ -1,104 +1,151 @@
 <template>
-  <my-page-manage title="Administrator" :back="false">
-    <b-row>
-      <separated title="Server运行状态"></separated>
-      <b-col></b-col>
-    </b-row>
-    <b-row>
-      <separated title="基础"></separated>
-      <b-col v-for="(link, key) in navItem" :key="key" cols="12" md="3">
-        <b-link :to="link.to" class="text-decoration-none">
-          <b-card class="my-3">
-            <b-card-body>
-              <i class="iconfont ico">{{ link.ico }}</i>
-              <span class="text-dark">{{ link.text }}</span>
-            </b-card-body>
-          </b-card>
-        </b-link>
-      </b-col>
-    </b-row>
-    <b-row>
-      <separated title="Socket"></separated>
-      <b-col v-for="(link, key) in Socket" :key="key" cols="12" md="3">
-        <b-link :to="link.to" class="text-decoration-none">
-          <b-card class="my-3">
-            <b-card-body>
-              <i class="iconfont ico">{{ link.ico }}</i>
-              <span class="text-dark">{{ link.text }}</span>
-            </b-card-body>
-          </b-card>
-        </b-link>
-      </b-col>
-    </b-row>
-    <b-row>
-      <separated title="日志"></separated>
-      <b-col v-for="(link, key) in log" :key="key" cols="12" md="3">
-        <b-link :to="link.to" class="text-decoration-none">
-          <b-card class="my-3">
-            <b-card-body>
-              <i class="iconfont ico">{{ link.ico }}</i>
-              <span class="text-dark">{{ link.text }}</span>
-            </b-card-body>
-          </b-card>
-        </b-link>
-      </b-col>
-    </b-row>
-  </my-page-manage>
+  <b-row class="h-100">
+    <b-col class="overflow-auto h-100">
+      <b-row>
+        <separated title="Server运行状态"></separated>
+        <b-col md="4">
+          <ve-pie :data="state.user" />
+        </b-col>
+        <b-col md="4">
+          <ve-pie :data="state.node" />
+        </b-col>
+        <b-col md="4">
+          <ve-pie :data="state.terminal" />
+        </b-col>
+        <b-col>
+          <ve-line :data="sysinfo" :settings="sysinfoSetting"></ve-line>
+        </b-col>
+      </b-row>
+      <b-row>
+        <separated title="服务器状态"></separated>
+        <b-col>
+          <b-table :items="state.syslist"></b-table>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col>
+          <separated title="节点列表"></separated>
+          <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive>
+            <template v-slot:cell(loadavg)="row">
+              <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
+            </template>
+            <template v-slot:cell(updateTime)="row">{{ new Date(row.value).toLocaleString()}}</template>
+          </b-table>
+        </b-col>
+      </b-row>
+    </b-col>
+  </b-row>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { VeLine, VePie,VeHistogram,VeGauge} from "v-charts";
+import { VeLine, VePie, VeHistogram, VeGauge } from "v-charts";
 interface navi {
   to: { name: string };
   text: string;
   ico: string;
 }
+interface runstate {
+  online: number;
+  all: number;
+}
 export default Vue.extend({
+  components: { VeLine, VePie, VeHistogram, VeGauge },
+
   data() {
     return {
-      navItem: [
-        { to: { name: "admin-node-Node" }, text: "节点状态", ico: "\uEBD8" },
-        {
-          to: { name: "admin-node-Terminal" },
-          text: "终端状态",
-          ico: "\uEB63"
-        },
-        { to: { name: "admin-node-user" }, text: "用户", ico: "\uEB6f" },
-        {
-          to: { name: "admin-node-userSetup" },
-          text: "用户设置",
-          ico: "\uEB66"
-        }
-      ] as navi[],
-      Socket: [
-        { to: { name: "admin-socket-node" }, text: "节点", ico: "\uEB64" },
-        { to: { name: "admin-socket-user" }, text: "用户", ico: "\uEB6f" }
-      ] as navi[],
-      log: [
-        { to: { name: "admin-log-node" }, text: "节点", ico: "\uEB64" },
-        { to: { name: "admin-log-terminal" }, text: "终端", ico: "\uEB23" },
-        { to: { name: "admin-log-sms" }, text: "短信", ico: "\uEB8b" },
-        { to: { name: "admin-log-mail" }, text: "邮件", ico: "\uEB8b" },
-        {
-          to: { name: "admin-log-uartterminaldatatransfinites" },
-          text: "告警",
-          ico: "\uEB68"
-        },
-        {
-          to: { name: "admin-log-userlogins" },
-          text: "用户登陆",
-          ico: "\uEB6b"
-        },
-        {
-          to: { name: "admin-log-userrequsts" },
-          text: "用户请求",
-          ico: "\uEB8c"
-        }
-      ] as navi[],
       //
-      runingState: {}
+      runingState: {},
+      sysinfoSetting: {
+        labelMap: {
+          usemen: "内存使用率",
+          usecpu: "cpu使用率"
+        }
+      },
+      NodeInfo: [],
+      NodeInfoFields: [
+        { key: "NodeName", label: "节点名称" },
+        { key: "totalmem", label: "节点内存" },
+        { key: "freemem", label: "可用内存" },
+        { key: "loadavg", label: "负载(1/5/15min)" },
+        { key: "type", label: "类型" },
+        { key: "uptime", label: "运行时间" },
+        { key: "Connections", label: "终端数" },
+        { key: "updateTime", label: "更新时间" }
+      ]
     };
+  },
+  computed: {
+    state() {
+      const runingState = this.$data.runingState as any;
+      const user = {
+        columns: ["类型", "num"],
+        rows: [] as any[]
+      };
+      //
+      if (runingState?.hasOwnProperty("User")) {
+        const statUser = <runstate>runingState.User;
+        user.rows.push({
+          类型: "在线用户-" + statUser.online,
+          num: statUser.online
+        });
+        user.rows.push({
+          类型: "离线用户-" + (statUser.all - statUser.online),
+          num: statUser.all - statUser.online
+        });
+      }
+      const node = {
+        columns: ["类型", "num"],
+        rows: [] as any[]
+      };
+      if (runingState?.hasOwnProperty("Node")) {
+        const statUser = <runstate>runingState.Node;
+        node.rows.push({
+          类型: "在线节点-" + statUser.online,
+          num: statUser.online
+        });
+        node.rows.push({
+          类型: "离线节点-" + (statUser.all - statUser.online),
+          num: statUser.all - statUser.online
+        });
+      }
+      const terminal = {
+        columns: ["类型", "num"],
+        rows: [] as any[]
+      };
+      if (runingState?.hasOwnProperty("Terminal")) {
+        const statUser = <runstate>runingState.Terminal;
+        terminal.rows.push({
+          类型: "在线终端-" + statUser.online,
+          num: statUser.online
+        });
+        terminal.rows.push({
+          类型: "离线终端-" + (statUser.all - statUser.online),
+          num: statUser.all - statUser.online
+        });
+      }
+
+      const syslist = [];
+      if (runingState?.hasOwnProperty("SysInfo")) {
+        const info = runingState.SysInfo;
+
+        syslist.push(info);
+        let sysinfoArray = this.$data.sysinfoArray as any[];
+        this.$store.commit("addSysInfo", {
+          time: new Date().toLocaleTimeString(),
+          usecpu: info.usecpu,
+          usemen: info.usemen
+        });
+      }
+      return { user, node, terminal, syslist };
+    },
+    sysinfo() {
+      const sysinfoArray = this.$store.state.SysInfos;
+      return {
+        columns: ["time", "usecpu", "usemen"],
+        rows: sysinfoArray
+      };
+    }
   },
   apollo: {
     runingState: {
@@ -108,12 +155,28 @@ export default Vue.extend({
         }
       `,
       pollInterval: 10000
-    }
+    },
+    NodeInfo: gql`
+      {
+        NodeInfo {
+          updateTime
+          hostname
+          totalmem
+          freemem
+          loadavg
+          type
+          uptime
+          NodeName
+          Connections
+          SocketMaps {
+            mac
+            port
+            ip
+            jw
+          }
+        }
+      }
+    `
   }
 });
 </script>
-<style scope>
-.ico {
-  font-size: 28px;
-}
-</style>
