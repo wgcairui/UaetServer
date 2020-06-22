@@ -19,9 +19,10 @@
               :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
               class="text-decoration-none text-dark"
             >
-              <b-card-title :class="link.online?'text-success':''">
+              <b-card-title class=" d-flex align-items-center">
                 <i class="iconfont">&#xec4a;</i>
-                {{ link.name }}
+                {{ link.name }}&nbsp;&nbsp;
+                <b-spinner small :variant="link.online?'success':'warning'" type="grow" />
               </b-card-title>
               <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
             </b-link>

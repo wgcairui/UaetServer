@@ -296,6 +296,9 @@ const typeDefs: DocumentNode = gql`
     Aggregations:[aggregation]
     # 获取后台运行状态
     runingState:JSON
+    # 用户获取终端上下线数据
+    # 获取终端日志
+    userlogterminals(start:Date,end:Date,mac:String):[LogTerminal]
   }
 
   #mutation

@@ -53,6 +53,8 @@ export default class Cache {
   CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
   CacheConstant: Map<string, ProtocolConstantThreshold>
+  // 缓存用户绑定
+  CacheBind: Map<string, BindDevice>
   // 缓存绑定透传设备mac=>user
   CacheBindUart: Map<string, string>
   // 缓存绑定透传设备mac=>user
@@ -86,6 +88,7 @@ export default class Cache {
     this.CacheNodeTerminalOnline = new Set()
     this.CacheConstant = new Map()
     this.CacheTerminalQueryIntructTimeout = new Map()
+    this.CacheBind = new Map()
     this.CacheBindUart = new Map()
     this.CacheBindEt = new Map()
     this.CacheAlarmNum = new Map()
@@ -175,6 +178,7 @@ export default class Cache {
     const res = await UserBindDevice.find().lean<BindDevice>()
     console.log(`加载绑定设备缓存......`);
     res.forEach(el => {
+      this.CacheBind.set(el.user, el)
       el?.UTs.forEach(els => {
         this.CacheBindUart.set(els as string, el.user)
       })

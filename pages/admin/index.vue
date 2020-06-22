@@ -19,18 +19,19 @@
       <b-row>
         <separated title="服务器状态"></separated>
         <b-col>
-          <b-table :items="state.syslist"></b-table>
+          <b-table :items="state.syslist" :fields="sysinfoFields"></b-table>
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <separated title="节点列表"></separated>
-          <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive>
-            <template v-slot:cell(loadavg)="row">
-              <i>{{ row.value.map(el => parseFloat(el.toFixed(2))).join("/ ") }}</i>
-            </template>
-            <template v-slot:cell(updateTime)="row">{{ new Date(row.value).toLocaleString()}}</template>
-          </b-table>
+          <separated title="节点状态"></separated>
+          <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive />
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col>
+          <separated title="终端散布" />
+          <amap id="admin" @ready="mapready"></amap>
         </b-col>
       </b-row>
     </b-col>
@@ -39,7 +40,10 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { VeLine, VePie, VeHistogram, VeGauge } from "v-charts";
+import { VeLine, VePie } from "v-charts";
+import { BvTableFieldArray } from "bootstrap-vue";
+import { Terminal } from "../../server/bin/interface";
+import { gps2AutonaviPosition } from "../../plugins/tools";
 interface navi {
   to: { name: string };
   text: string;
@@ -50,8 +54,7 @@ interface runstate {
   all: number;
 }
 export default Vue.extend({
-  components: { VeLine, VePie, VeHistogram, VeGauge },
-
+  components: { VeLine, VePie },
   data() {
     return {
       //
@@ -67,12 +70,41 @@ export default Vue.extend({
         { key: "NodeName", label: "节点名称" },
         { key: "totalmem", label: "节点内存" },
         { key: "freemem", label: "可用内存" },
-        { key: "loadavg", label: "负载(1/5/15min)" },
+        {
+          key: "loadavg",
+          label: "cpu负载(1/5/15min)",
+          formatter: (value: number[]) =>
+            value.map(el => parseFloat(el.toFixed(2))).join("/ ")
+        },
         { key: "type", label: "类型" },
         { key: "uptime", label: "运行时间" },
         { key: "Connections", label: "终端数" },
-        { key: "updateTime", label: "更新时间" }
-      ]
+        {
+          key: "updateTime",
+          label: "更新时间",
+          formatter: value => new Date(value).toLocaleString()
+        }
+      ] as BvTableFieldArray,
+      sysinfoFields: [
+        { key: "hostname", label: "服务器名" },
+        { key: "totalmem", label: "内存总量" },
+        { key: "freemem", label: "使用内存" },
+        {
+          key: "loadavg",
+          label: "cpu负载(1/5/15min)",
+          formatter: (value: number[]) =>
+            value.map(el => parseFloat(el.toFixed(2))).join("/ ")
+        },
+        { key: "uptime", label: "运行时间" },
+        {
+          key: "version",
+          label: "系统版本",
+          formatter: (value: string) => value.split(" ")[0].replace("#", "")
+        },
+        { key: "usecpu", label: "cpu使用率" },
+        { key: "usemen", label: "内存使用率" }
+      ] as BvTableFieldArray
+      //
     };
   },
   computed: {
@@ -177,6 +209,31 @@ export default Vue.extend({
         }
       }
     `
+  },
+  methods: {
+    async mapready(map: AMap.Map) {
+      console.log(map);
+      console.log(window.AMap);
+      const ter = await this.$apollo.query({
+        query: gql`
+          query Terminals {
+            Terminals {
+              jw
+            }
+          }
+        `
+      });
+      const jws = ter.data.Terminals as Pick<Terminal, "jw">[];
+      const jwsSet = new Set(jws.filter(el => el.jw));
+      jwsSet.forEach(async el => {
+        const position = await gps2AutonaviPosition(el.jw as string, window);
+        map.add(
+          new window.AMap.Marker({
+            position
+          })
+        );
+      });
+    }
   }
 });
 </script>

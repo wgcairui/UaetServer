@@ -2,15 +2,13 @@
   <my-page-manage title="后台监控查询" :back="false" class="h-100">
     <b-row class="h-100">
       <b-col md="2" class="bg-dark d-flex flex-column p-4 text-light">
-        <h5>
-          <b-link to="/admin" class="text-decoration-none text-light">
-            <i>Home</i>
-          </b-link>
-        </h5>
+        <h6>
+          <b-link to="/admin" class="text-decoration-none text-light">Home</b-link>
+        </h6>
         <div v-for="(val,name,key) in nav" :key="key" class="pt-3">
-          <h5>
+          <h6>
             <i>{{name}}</i>
-          </h5>
+          </h6>
           <ul class="p-0">
             <li v-for="(link,key2) in val" :key="link.text+key2" class="my-1">
               <b-link :to="link.to" class="text-decoration-none">

@@ -238,6 +238,13 @@ const resolvers: IResolvers = {
         async logterminals(root, { start, end }: { start: Date, end: Date }) {
             return await LogTerminals.find().where("createdAt").gte(start).lte(end).exec()
         },
+        // 获取终端日志
+        async userlogterminals(root, { start, end, mac }: { start: Date, end: Date, mac: string }, ctx: ApolloCtx) {
+            const UserBindDevice = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs as string[]
+            if (!UserBindDevice || (mac && !UserBindDevice.includes(mac))) return null
+            const types = ['连接', '断开']
+            return await LogTerminals.find({ TerminalMac: mac, type: { $in: types } }).where("createdAt").gte(start).lte(end).exec()
+        },
         // 获取短信日志
         async logsmssends(root, { start, end }: { start: Date, end: Date }) {
             return await LogSmsSend.find().where("createdAt").gte(start).lte(end).exec()

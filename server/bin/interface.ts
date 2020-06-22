@@ -202,7 +202,7 @@ export interface nodeInfo {
 /* 用户信息 */
 export interface UserInfo {
   name?: string;
-  user?: string;
+  user: string;
   userGroup?: string;
   passwd?: string;
   mail?: string;
@@ -421,6 +421,7 @@ export interface logTerminals {
   msg: string
   query: any
   result: any
+  createdAt?: Date
 }
 
 // 聚合设备

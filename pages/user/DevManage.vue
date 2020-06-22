@@ -1,13 +1,7 @@
 <template>
   <my-page-user title="设备管理">
     <b-row class="border-bottom mb-5 px-2">
-      <separated title="透传设备">
-       <!--  <b-button
-          variant="success"
-          size="sm"
-          @click="uartAdd = !uartAdd"
-        >{{ !uartAdd ? "add" : "hide" }}</b-button> -->
-      </separated>
+      <separated title="透传设备"></separated>
       <b-collapse v-model="uartAdd" class="w-100">
         <b-card>
           <b-form>
@@ -46,7 +40,8 @@
         </template>
         <template v-slot:cell(oprate)="row">
           <b-button-group size="sm">
-            <b-button @click="modifyBind(row.item.DevMac)">修改挂载</b-button>
+            <b-button :to="{ name: 'user-addTerminal', query: { DevMac:row.item.DevMac } }">修改挂载</b-button>
+            <b-button :to="{ name: 'user-terminallog', query: { DevMac:row.item.DevMac } }">在线记录</b-button>
             <b-button @click="delUserTerminal('UT', row.item)">删除</b-button>
           </b-button-group>
         </template>
@@ -105,7 +100,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
 import { MessageBoxInputData } from "element-ui/types/message-box";
@@ -136,7 +130,7 @@ export default vue.extend({
       BindDevice: {
         UTs: [],
         ECs: []
-      }
+      },
     };
   },
   computed: {
@@ -171,6 +165,7 @@ export default vue.extend({
     }
   },
   apollo: {
+    
     uart: {
       query: gql`
         query TerminalOnline($DevMac: String) {
@@ -240,7 +235,9 @@ export default vue.extend({
       const key = val.field.key as string;
       const value = val.value as string;
       const DevMac = val.item.DevMac as string;
-      const modifyval = (await MessageBox.prompt("输入新的名称:",{inputValue:value}).catch(e => ({
+      const modifyval = (await MessageBox.prompt("输入新的名称:", {
+        inputValue: value
+      }).catch(e => ({
         value: ""
       }))) as MessageBoxInputData;
       if (!modifyval.value) return;
@@ -260,10 +257,7 @@ export default vue.extend({
       });
       this.$apollo.queries.BindDevice.refetch();
     },
-    // 用户修改挂载设备
-    async modifyBind(DevMac: string) {
-      this.$router.push({ name: "user-addTerminal", query: { DevMac } });
-    },
+
     // 添加绑定设备
     async addUserTerminal(type: string, item: { DevMac: string }) {
       const result = await this.$apollo.mutate({

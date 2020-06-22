@@ -115,7 +115,7 @@ export class NodeSocketIO {
                     new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "断开" })).save()
                 })
                 // Node节点注册事件
-                .on(EVENT_SOCKET.register, (data) => {
+                .on(EVENT_SOCKET.register, (_data) => {
                     // 缓存socket
                     this.Event.Cache.CacheSocket.set(Node.IP, Node.socket)
                     // 根据节点IP获取节点登记信息，节点将根据登记运行程序
@@ -180,7 +180,6 @@ export class NodeSocketIO {
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()
                 })
-
         })
         // 监听Event事件
         this.Event.On("UpdateTerminal", ([ter]) => this._UpdateCache(ter)) //更新terminalhuancun

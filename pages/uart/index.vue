@@ -44,27 +44,19 @@
         </b-jumbotron>
       </b-col>
       <b-col cols="12" md="6" style="min-height:300px">
-        <ve-amap
-          :settings="chartSettings"
-          :tooltip="{ show: true }"
-          :after-set-option-once="afterSet"
-        ></ve-amap>
+        <amap id="terminal1" height="385px" @ready="mapReady" />
       </b-col>
     </b-row>
     <b-row>
       <b-col cols="12">
         <separated title="挂载"></separated>
         <b-card>
-          <!-- <tree
-            :data="Terminals"
-            node-text="name"
-            layout-type="horizontal"
-            class="tree"
-            :radius="6"
-            @clickedNode="treeSelect"
-            @clickedText="treeSelect"
-          />-->
-          <ve-tree :data="chartData" :settings="treeSettings" @click="selectDev" :events="chartEvents"></ve-tree>
+          <ve-tree
+            :data="chartData"
+            :settings="treeSettings"
+            @click="selectDev"
+            :events="chartEvents"
+          ></ve-tree>
         </b-card>
       </b-col>
     </b-row>
@@ -73,14 +65,14 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-// import { tree } from "vued3tree";
 import { Terminal, TerminalMountDevs } from "../../server/bin/interface";
-import { VeAmap, VeTree } from "v-charts";
+import { VeTree } from "v-charts";
 import {
   API_Aamp_gps2autoanvi,
   API_Aamp_local2address,
   API_Aamp_address2local,
-  API_Aamp_ip2local
+  API_Aamp_ip2local,
+  gps2AutonaviPosition
 } from "../../plugins/tools";
 interface selectTree {
   Type: string;
@@ -89,7 +81,7 @@ interface selectTree {
   pid: number;
 }
 export default Vue.extend({
-  components: { VeAmap, VeTree },
+  components: { VeTree },
   data() {
     const label = {
       labelCols: "12",
@@ -97,32 +89,23 @@ export default Vue.extend({
       labelAlignSm: "right"
     };
     return {
-      chartSettings: {
-        key: "2bbc666ac8e6a9d69c2910a7053243b6",
-        v: "1.4.3",
-        amap: {
-          resizeEnable: true,
-          center: [113.975299479167, 29.924395345053],
-          zoom: 15
-        }
-      },
       address: "",
       //
       treeSettings: {
         seriesMap: {
           tree1: {
             symbol: (this as any).treeSysbol, //pin
-            symbolSize: 20,
+            symbolSize: 36,
             label: {
               show: true,
               position: "top",
-              fontSize: 16
+              fontSize: 20
             }
           }
         }
       },
-      chartEvents:{
-        click:(this as any).selectDev
+      chartEvents: {
+        click: (this as any).selectDev
       },
       //
       label,
@@ -210,45 +193,15 @@ export default Vue.extend({
       }
     },
     // 修改map
-    async afterSet(echarts: any) {
-      // 获取页面amap实例
-      const amap = echarts
-        .getModel()
-        .getComponent("amap")
-        .getAMap() as AMap.Map;
+    async mapReady(map: AMap.Map) {
       const terminal = (this as any).Terminals as Terminal;
-
       let position = terminal.jw as AMap.LngLat;
-      // 如果有gps信息则把gps转换为autonavi坐标,否则根据ip获取模糊定位
-      if (position) {
-        const gps = (position as any)
-          .split(",")
-          .map((el: string) => parseFloat(el)) as [number, number];
-        position = await new Promise<AMap.LngLat>(res => {
-          window.AMap.convertFrom(gps, "gps", (stat, result) => {
-            const jws = (result as AMap.convertFrom.Result).locations[0];
-            res(jws);
-          });
-        });
-      } else {
-        const jws = await API_Aamp_ip2local(terminal.ip as string);
-        const gps =
-          typeof jws.rectangle === "string"
-            ? (jws.rectangle
-                .split(";")[0]
-                .split(",")
-                .map(el => parseFloat(el)) as [number, number])
-            : ([0.0, 0.0] as [number, number]);
-        position = await new Promise<AMap.LngLat>(res => {
-          window.AMap.convertFrom(gps, null, (stat, result) => {
-            const jws = (result as AMap.convertFrom.Result).locations[0];
-            res(jws);
-          });
-        });
-      }
-
-      amap.setCenter(position);
-      amap.add(
+      if (position)
+        position = await gps2AutonaviPosition(position as any, window);
+      else position = await API_Aamp_ip2local(terminal.ip as string);
+      map.setCenter(position);
+      map.setZoom(9);
+      map.add(
         new window.AMap.Marker({
           position
         })

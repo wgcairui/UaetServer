@@ -46,9 +46,29 @@ interface AmapResonpAutonavi extends AmapResonp {
   locations: string
 }
 
+// gps字符串转高德point
+export const gps2AutonaviPosition = async (gps: string, window: Window & typeof globalThis) => {
+  const sgps = gps
+    .split(",")
+    .map((el: string) => parseFloat(el)) as [number, number];
+  return await new Promise<AMap.LngLat>(res => {
+    window.AMap.convertFrom(sgps, "gps", (stat, result) => {
+      const jws = (result as AMap.convertFrom.Result).locations[0];
+      res(jws);
+    });
+  });
+}
+
 // ip转gps
-export const API_Aamp_ip2local = (ip: string) => {
-  return get<AmapResonpIP>("ip", { ip })
+export const API_Aamp_ip2local = async (ip: string) => {
+  const data = await get<AmapResonpIP>("ip", { ip })
+  const jw = typeof data.rectangle === "string"
+    ? (data.rectangle
+      .split(";")[0]
+      .split(",")
+      .map(el => parseFloat(el)) as [number, number])
+    : ([0.0, 0.0] as [number, number]);
+  return new AMap.LngLat(...jw)
 }
 
 // 地址转gps
