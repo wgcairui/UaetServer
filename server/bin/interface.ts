@@ -154,6 +154,7 @@ export interface queryResult extends queryObject {
   parse?: queryResultParse
   result?: queryResultArgument[];
   time?: string;
+  useBytes?: number
 }
 export interface IntructQueryResult {
   content: string
@@ -424,6 +425,12 @@ export interface logTerminals {
   createdAt?: Date
 }
 
+// 设备流量使用量
+export interface logTerminaluseBytes {
+  mac: string
+  date: string
+  useBytes: number
+}
 // 聚合设备
 export interface AggregationDev extends TerminalMountDevs {
   DevMac: string
@@ -446,3 +453,4 @@ export interface Aggregation {
   aggregations: AggregationDev[]
   devs: AggregationDevParse[]
 }
+

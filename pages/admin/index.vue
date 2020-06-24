@@ -34,6 +34,14 @@
           <amap id="admin" @ready="mapready"></amap>
         </b-col>
       </b-row>
+      <b-row id="useBtyes">
+        <b-col>
+          <separated title="流量使用">
+            <b-input v-model="BtyeMac" />
+          </separated>
+          <ve-line :data="btyes" />
+        </b-col>
+      </b-row>
     </b-col>
   </b-row>
 </template>
@@ -42,7 +50,7 @@ import Vue from "vue";
 import gql from "graphql-tag";
 import { VeLine, VePie } from "v-charts";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { Terminal } from "../../server/bin/interface";
+import { Terminal, logTerminaluseBytes } from "../../server/bin/interface";
 import { gps2AutonaviPosition } from "../../plugins/tools";
 interface navi {
   to: { name: string };
@@ -103,11 +111,28 @@ export default Vue.extend({
         },
         { key: "usecpu", label: "cpu使用率" },
         { key: "usemen", label: "内存使用率" }
-      ] as BvTableFieldArray
+      ] as BvTableFieldArray,
       //
+      BtyeMac: "",
+      logterminaluseBtyes: [] as logTerminaluseBytes[]
     };
   },
   computed: {
+    btyes() {
+      const logterminaluseBtyes = this.$data
+        .logterminaluseBtyes as logTerminaluseBytes[];
+      const btyes = {
+        columns: ["date", "useBytes"],
+        rows: [] as logTerminaluseBytes[]
+      };
+      if (logterminaluseBtyes) {
+        btyes.rows = logterminaluseBtyes.map(el => {
+          el.useBytes = el.useBytes / 1000;
+          return el;
+        });
+      }
+      return btyes;
+    },
     state() {
       const runingState = this.$data.runingState as any;
       const user = {
@@ -180,6 +205,19 @@ export default Vue.extend({
     }
   },
   apollo: {
+    logterminaluseBtyes: {
+      query: gql`
+        query logterminaluseBtyes($mac: String) {
+          logterminaluseBtyes(mac: $mac)
+        }
+      `,
+      variables() {
+        return { mac: this.$data.BtyeMac };
+      },
+      skip() {
+        return this.$data.BtyeMac === "";
+      }
+    },
     runingState: {
       query: gql`
         query runingState {

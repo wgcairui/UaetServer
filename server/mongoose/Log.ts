@@ -79,6 +79,13 @@ const SchemaDataClean = new Schema({
     NumClientresultcolltion: Number,
     lastDate: Date
 }, { timestamps: true })
+
+// 流量每日使用量
+const SchemaUseBytes = new Schema({
+    mac: String,
+    date: String,
+    useBytes: Number
+})
 export const LogSmsSend = mongoose.model("LogSmsSend", SchemaSmsSend)
 export const LogMailSend = mongoose.model("LogMailSend", SchemaMailSend)
 export const LogUartTerminalDataTransfinite = mongoose.model("LogUartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
@@ -88,3 +95,5 @@ export const LogNodes = mongoose.model("LogNode", SchemaNodes)
 export const LogTerminals = mongoose.model("LogTerminal", SchemaTerminals)
 
 export const LogDataClean = mongoose.model("LogDataClean", SchemaDataClean)
+
+export const LogUseBytes = mongoose.model("LoguseBytes", SchemaUseBytes)

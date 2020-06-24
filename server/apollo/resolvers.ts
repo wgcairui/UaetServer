@@ -17,7 +17,7 @@ import { BcryptDo } from "../util/bcrypt";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 import _ from "lodash"
-import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -286,6 +286,10 @@ const resolvers: IResolvers = {
                 await Cron.CleanUserRequst(cur)
             }
             return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
+        },
+        // 获取设备使用流量
+        async logterminaluseBtyes(root, { mac }, ctx: ApolloCtx) {
+            return await LogUseBytes.find({ mac }).exec()
         },
         // id获取用户聚合设备
         async Aggregation(root, { id }, ctx: ApolloCtx) {
