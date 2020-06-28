@@ -14,7 +14,9 @@ const Config = {
     title: process.env.npm_package_name || "",
     meta: [
       { charset: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0" },
+      { name: 'apple-mobile-web-app-capable', content: 'yes' },
+      { name: 'full-screen', content: 'yes' },
       {
         hid: "description",
         name: "description",
@@ -30,7 +32,7 @@ const Config = {
   /*
    ** Global CSS
    */
-  css: ["~/assets/iconfont.css","~/assets/main.css"],
+  css: ["~/assets/iconfont.css", "~/assets/main.css"],
   /*
    ** Plugins to load before mounting the App
    */

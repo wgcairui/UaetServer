@@ -1,6 +1,19 @@
 <template>
   <nuxt />
 </template>
+<script lang="ts">
+import Vue from "vue";
+export default Vue.extend({
+  
+  mounted() {
+    const html = document.getElementsByTagName("html")[0];
+    console.log(html.style.height);
+
+    // document.getElementsByTagName("html")[0].style.height = window.innerHeight + "px";
+    console.log(window.innerHeight + "px");
+  }
+});
+</script>
 
 <style>
 html {
@@ -13,7 +26,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
-  height: 100%;
+  height: 100vh;
 }
 body,
 #__nuxt,

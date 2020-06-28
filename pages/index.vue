@@ -1,56 +1,55 @@
 <template>
   <my-page-user :back="false">
-    <b-container class="flex-grow-1">
-      <b-row id="uart" class="my-4">
-        <separated title="透传设备">
-          <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
-        </separated>
-        <b-col
-          v-for="(link, key) in uts"
-          :key="key+link.name"
-          cols="12"
-          md="6"
-          class="mt-4"
-          v-b-tooltip.hover
-          :title="`状态:${link.online?'在线':'离线'},IP:${link.ip}`"
-        >
-          <b-card class="shadow">
-            <b-link
-              :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
-              class="text-decoration-none text-dark"
-            >
-              <b-card-title class=" d-flex align-items-center">
-                <i class="iconfont">&#xec4a;</i>
-                {{ link.name }}&nbsp;&nbsp;
-                <b-spinner small :variant="link.online?'success':'warning'" type="grow" />
-              </b-card-title>
-              <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
-            </b-link>
-            <b-card-body class="d-flex flex-row">
-              <i class="iconfont" style="padding-top:7px">&#xec24;</i>
-              <span v-if="link.mountDevs">
-                <b-button
-                  variant="link"
-                  v-for="val in link.mountDevs"
-                  :key="val.mountDev+val.pid"
-                  class="text-dark"
-                  @click="toDev(link.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
-                >
-                  {{
-                  val.pid+"."+val.mountDev
-                  }}
-                </b-button>
-                <b-button
-                  variant="link"
-                  v-if="link.mountDevs.length===0"
-                  :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
-                >Add mountDevs</b-button>
-              </span>
-            </b-card-body>
-          </b-card>
-        </b-col>
-      </b-row>
-      <b-row id="aggregation">
+    <b-row id="uart">
+      <separated title="透传设备">
+        <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
+      </separated>
+      <b-col
+        v-for="(link, key) in uts"
+        :key="key+link.name"
+        cols="12"
+        md="6"
+        class="mt-4"
+        v-b-tooltip.hover
+        :title="`状态:${link.online?'在线':'离线'},IP:${link.ip}`"
+      >
+        <!-- <b-card class="shadow">
+          <b-link
+            :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
+            class="text-decoration-none text-dark"
+          >
+            <b-card-title class="d-flex align-items-center">
+              <i class="iconfont">&#xec4a;</i>
+              {{ link.name }}&nbsp;&nbsp;
+              <b-spinner small :variant="link.online?'success':'warning'" type="grow" />
+            </b-card-title>
+            <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
+          </b-link>
+          <b-card-body class="d-flex flex-row">
+            <i class="iconfont" style="padding-top:7px">&#xec24;</i>
+            <span v-if="link.mountDevs">
+              <b-button
+                variant="link"
+                v-for="val in link.mountDevs"
+                :key="val.mountDev+val.pid"
+                class="text-dark"
+                @click="toDev(link.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
+              >
+                {{
+                val.pid+"."+val.mountDev
+                }}
+              </b-button>
+              <b-button
+                variant="link"
+                v-if="link.mountDevs.length===0"
+                :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
+              >Add mountDevs</b-button>
+            </span>
+          </b-card-body>
+        </b-card> -->
+      </b-col>
+    </b-row>
+    <!-- <b-row id="aggregation">
         <separated title="聚合设备">
           <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
         </separated>
@@ -105,8 +104,8 @@
             >+</b-button>
           </b-card>
         </b-col>
-      </b-row>
-      <!-- <b-row id="ECs">
+    </b-row>-->
+    <!-- <b-row id="ECs">
         <separated title="环控设备" />
         <b-col v-for="(link, key) in BindDevice.ECs" :key="key" cols="12" md="6" class="mt-4">
           <b-link
@@ -126,8 +125,7 @@
             </b-card>
           </b-link>
         </b-col>
-      </b-row>-->
-    </b-container>
+    </b-row>-->
     <template v-slot:footer>
       <div class="mt-auto w-100">
         <b-nav fill class="bg-info">

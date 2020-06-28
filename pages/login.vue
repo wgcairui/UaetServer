@@ -2,28 +2,28 @@
   <b-container fluid class="d-flex flex-column h-100 p-0">
     <b-row name="header" no-gutters>
       <b-col>
-        <header class="d-flex flex-row p-2 shadow-sm">
-          <b-img src="https://www.ladishb.com/logo.png"></b-img>
+        <header class="d-flex flex-row p-2 shadow-sm" style="height:56px">
+          <b-img src="https://www.ladishb.com/logo.png" style="height:40px"></b-img>
           <b-button variant="link" class="ml-auto text-success">English</b-button>
         </header>
       </b-col>
     </b-row>
-    <b-row class="flex-grow-1 login-body d-flex flex-column" no-gutters>
-      <b-row no-gutters class="flex-grow-1">
-        <b-col cols="0" md="6" class="d-flex flex-column align-items-center justify-content-center" style="padding-left: 10%">
-          <span class="mt-n5  	d-none d-md-block d-lg-block" >
+    <b-row class="flex-grow-1 d-flex flex-column " no-gutters>
+      <b-row no-gutters class="flex-grow-1 login-body">
+        <!-- <b-col md="6" class="md-block d-flex align-items-center justify-content-center" style="padding-left: 10%">
+          <span class="mt-n5">
             <h3 class="text-light">物联网ITO监控服务平台</h3>
             <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
           </span>
-        </b-col>
+        </b-col> -->
         <b-col
           ref="loginBody"
           cols="12"
           md="6"
           class="d-flex align-items-center justify-content-center"
         >
-          <b-card class="shadow login p-3">
-            <b-card-body class="d-flex flex-column h-100">
+          <b-card class="shadow login">
+            <b-card-body class="d-flex flex-column">
               <div class="d-flex flex-row mb-3">
                 <h4 class="text-success login-left">登陆</h4>
                 <div class="ml-auto">
@@ -34,7 +34,7 @@
                   >{{$t('zhong-zhi')}}</b-link>
                 </div>
               </div>
-              <b-form class="mx-3 mt-auto">
+              <b-form class="mt-auto">
                 <b-form-group label="账号:" label-for="user" v-bind="label">
                   <b-form-input id="user" v-model.trim="accont.user" placeholder />
                 </b-form-group>
@@ -162,19 +162,25 @@ export default vue.extend({
 a {
   color: black;
 }
-.login {
+/* .login {
   min-width: 50%;
   height: 368px;
-}
+} */
 
-@media screen and (max-width: 568px) {
+@media screen and (max-width: 768px) {
   .login {
-    max-width: 90%;
+    max-width: 95%;
     margin: auto;
     min-width: 80%;
-    height: auto;
+    //max-height: 90%;
   }
 }
+@media (max-width: 768px){
+  .md-block {
+    display: none !important;
+  }
+}
+
 .login-body {
   background-color: #f5f5f6;
   /*  background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg"); */

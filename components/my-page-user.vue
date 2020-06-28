@@ -1,6 +1,6 @@
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" sticky>
+    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" fixed>
       <b-navbar-brand>
         <span v-if="back">
           <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="$router.go(-1)">
@@ -10,105 +10,97 @@
         </span>
         <span class="text-center text-light" style="font-size:1.1rem">{{ title }}</span>
       </b-navbar-brand>
-      <div class="navber-m-2 ml-auto">
-        <div class="navber-m-3 float-right d-inline-flex flex-column head-right">
-          <b-navbar-toggle target="nav-collapse" class="float-right head-btn" />
-          <b-collapse id="nav-collapse" is-nav class="float-rigth mr-1">
-            <!-- Right aligned nav items -->
-            <b-navbar-nav class="ml-auto text-nowrap">
-              <b-nav-dropdown right v-if="isUser">
-                <template v-slot:button-content>
-                  <span>
-                    <i class="iconfont">&#xebd0;</i>设备列表
-                  </span>
-                </template>
-                <b-dropdown-item
-                  v-for="val in mountDev"
-                  :key="val.text"
-                  @click="toDev(val)"
-                >{{val.text}}</b-dropdown-item>
-              </b-nav-dropdown>
-              <b-nav-item v-if="isUser">
-                <span class="text-light text-wrap" v-b-toggle.alarms>
-                  <i class="iconfont">&#xeb68;</i>告警管理
-                </span>
-              </b-nav-item>
-              <b-nav-item :to="{ name: 'user-DevManage' }" v-if="isUser">
-                <span class="text-light text-wrap">
-                  <i class="iconfont">&#xebd8;</i>设备管理
-                </span>
-              </b-nav-item>
 
-              <b-nav-dropdown right>
-                <template v-slot:button-content>
-                  <span>
-                    <i class="iconfont">&#xec0f;</i>langua
-                  </span>
-                </template>
-                <b-dropdown-item>
-                  <i class="iconfont">&#xebe2;</i>中文
-                </b-dropdown-item>
-                <b-dropdown-item>
-                  <i class="iconfont">&#xebe0;</i>En
-                </b-dropdown-item>
-              </b-nav-dropdown>
-              <!-- <b-nav-item>
-              <socket-state />
-            </b-nav-item>
-              -->
-              <b-nav-dropdown right>
-                <template v-slot:button-content>
-                  <span>
-                    <socket-state />
-                    <i class="iconfont">&#xeb8d;</i>
-                    {{ $auth.user }}
-                  </span>
-                </template>
-                <b-dropdown-item :to="{ name: 'user-info' }">
-                  <i class="iconfont">&#xeb6b;</i>用户详情
-                </b-dropdown-item>
-                <b-dropdown-item :to="{ name: 'user-reset' }">
-                  <i class="iconfont">&#xebe3;</i>修改密码
-                </b-dropdown-item>
-                <b-dropdown-divider />
-                <b-dropdown-item @click="logout">
-                  <i class="iconfont">&#xe641;</i>退出登录
-                </b-dropdown-item>
-              </b-nav-dropdown>
-            </b-navbar-nav>
-          </b-collapse>
-        </div>
-      </div>
-      <b-sidebar
-        id="alarms"
-        title="Alarm"
-        right
-        bg-variant="dark"
-        text-variant="light"
-        v-if="isUser"
-      >
-        <b-button
-          variant="link"
-          class="bg-dark text-light text-decoration-none text-center"
-          block
-          :to="{name:'user-AlarmManage'}"
-        >查看所有告警信息</b-button>
-        <b-list-group>
-          <b-list-group-item
-            v-for="(info,key) in Infos"
-            :key="info.time+key"
-            class="bg-dark text-light"
-            :to="{name:'user-AlarmManage',params:info}"
-          >{{info.msg}}</b-list-group-item>
-        </b-list-group>
-      </b-sidebar>
+      <b-nav-toggle target="user-nav" class="m-1">
+        <template v-slot:default="{ expanded }">
+          <b-icon v-if="expanded" icon="chevron-bar-up"></b-icon>
+          <b-icon v-else icon="chevron-bar-down"></b-icon>
+        </template>
+      </b-nav-toggle>
+      <b-collapse id="user-nav" is-nav>
+        <b-navbar-nav class="ml-auto">
+          <b-nav-dropdown right>
+            <template v-slot:button-content>
+              <span>
+                <i class="iconfont">&#xebd0;</i>设备列表
+              </span>
+            </template>
+            <b-dropdown-item
+              v-for="val in mountDev"
+              :key="val.text"
+              @click="toDev(val)"
+            >{{val.text}}</b-dropdown-item>
+          </b-nav-dropdown>
+          <b-nav-item v-if="isUser" v-b-toggle.alarms>
+            <span class="text-light text-wrap">
+              <i class="iconfont">&#xeb68;</i>告警管理
+            </span>
+          </b-nav-item>
+          <b-nav-item :to="{ name: 'user-DevManage' }" v-if="isUser">
+            <span class="text-light text-wrap">
+              <i class="iconfont">&#xebd8;</i>设备管理
+            </span>
+          </b-nav-item>
+
+          <b-nav-dropdown right>
+            <template v-slot:button-content>
+              <span>
+                <i class="iconfont">&#xec0f;</i>langua
+              </span>
+            </template>
+            <b-dropdown-item>
+              <i class="iconfont">&#xebe2;</i>中文
+            </b-dropdown-item>
+            <b-dropdown-item>
+              <i class="iconfont">&#xebe0;</i>En
+            </b-dropdown-item>
+          </b-nav-dropdown>
+          <b-nav-dropdown dropright>
+            <template v-slot:button-content>
+              <span>
+                <!-- <socket-state class="d-sm-block" /> -->
+                <i class="iconfont">&#xeb8d;</i>
+                {{ $auth.user }}
+              </span>
+            </template>
+            <b-dropdown-item :to="{ name: 'user-info' }">
+              <i class="iconfont">&#xeb6b;</i>用户详情
+            </b-dropdown-item>
+            <b-dropdown-item :to="{ name: 'user-reset' }">
+              <i class="iconfont">&#xebe3;</i>修改密码
+            </b-dropdown-item>
+            <b-dropdown-divider />
+            <b-dropdown-item @click="logout">
+              <i class="iconfont">&#xe641;</i>退出登录
+            </b-dropdown-item>
+          </b-nav-dropdown>
+        </b-navbar-nav>
+      </b-collapse>
     </b-navbar>
-    <b-container class="mb-5 flex-grow-1" :fluid="fluid">
+
+    <b-container class="mh-100 overflow-auto user-body" :fluid="fluid">
       <slot />
     </b-container>
+
     <footer class="mt-auto">
       <slot name="footer"></slot>
     </footer>
+    <b-sidebar id="alarms" title="Alarm" right bg-variant="dark" text-variant="light" v-if="isUser">
+      <b-button
+        variant="link"
+        class="bg-dark text-light text-decoration-none text-center"
+        block
+        :to="{name:'user-AlarmManage'}"
+      >查看所有告警信息</b-button>
+      <b-list-group>
+        <b-list-group-item
+          v-for="(info,key) in Infos"
+          :key="info.time+key"
+          class="bg-dark text-light"
+          :to="{name:'user-AlarmManage',params:info}"
+        >{{info.msg}}</b-list-group-item>
+      </b-list-group>
+    </b-sidebar>
   </div>
 </template>
 <script lang="ts">
@@ -263,5 +255,15 @@ export default Vue.extend({
 .nav-link,
 .dropdown-toggle span {
   color: aliceblue !important;
+}
+@media (max-width: 568px) {
+  .navbar {
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+  }
+  .user-body {
+    margin-top: 56px;
+  }
 }
 </style>

@@ -36,8 +36,8 @@
       </b-row>
       <b-row id="useBtyes">
         <b-col>
-          <separated title="流量使用">
-            <b-input v-model="BtyeMac" />
+          <separated title="流量使用(MB)">
+            <b-select :options="cterminals" v-model="BtyeMac" />
           </separated>
           <ve-line :data="btyes" />
         </b-col>
@@ -77,7 +77,7 @@ export default Vue.extend({
       NodeInfoFields: [
         { key: "NodeName", label: "节点名称" },
         { key: "totalmem", label: "节点内存" },
-        { key: "freemem", label: "可用内存" },
+        { key: "freemem", label: "空闲内存" },
         {
           key: "loadavg",
           label: "cpu负载(1/5/15min)",
@@ -96,7 +96,7 @@ export default Vue.extend({
       sysinfoFields: [
         { key: "hostname", label: "服务器名" },
         { key: "totalmem", label: "内存总量" },
-        { key: "freemem", label: "使用内存" },
+        { key: "freemem", label: "空闲内存" },
         {
           key: "loadavg",
           label: "cpu负载(1/5/15min)",
@@ -114,10 +114,21 @@ export default Vue.extend({
       ] as BvTableFieldArray,
       //
       BtyeMac: "",
-      logterminaluseBtyes: [] as logTerminaluseBytes[]
+      logterminaluseBtyes: [] as logTerminaluseBytes[],
+      Terminals: [] as Terminal[]
     };
   },
   computed: {
+    cterminals() {
+      let terminals = this.$data.Terminals as Terminal[];
+      if (terminals) {
+        terminals = terminals.map<any>(el => ({
+          text: el.name,
+          value: el.DevMac
+        }));
+      }
+      return terminals || [];
+    },
     btyes() {
       const logterminaluseBtyes = this.$data
         .logterminaluseBtyes as logTerminaluseBytes[];
@@ -127,7 +138,7 @@ export default Vue.extend({
       };
       if (logterminaluseBtyes) {
         btyes.rows = logterminaluseBtyes.map(el => {
-          el.useBytes = el.useBytes / 1000;
+          el.useBytes = el.useBytes / 1024000;
           return el;
         });
       }
@@ -246,12 +257,20 @@ export default Vue.extend({
           }
         }
       }
-    `
+    `,
+    Terminals: {
+      query: gql`
+        query TerminalsInfo {
+          Terminals {
+            DevMac
+            name
+          }
+        }
+      `
+    }
   },
   methods: {
     async mapready(map: AMap.Map) {
-      console.log(map);
-      console.log(window.AMap);
       const ter = await this.$apollo.query({
         query: gql`
           query Terminals {
