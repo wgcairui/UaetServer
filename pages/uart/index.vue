@@ -1,9 +1,9 @@
 <template>
   <my-page-user :title="'挂载设备:' + DevMac">
-    <b-row>
-      <separated title="透传终端信息"></separated>
+    <b-row class="d-flex">
+      <separated class="col-12" title="透传终端信息"></separated>
       <b-col cols="12" md="6">
-        <b-jumbotron>
+        <b-jumbotron class="m-0">
           <b-form>
             <b-form-group label="模块ID:" v-bind="label">
               <b-form-text class="terminal text-dark">
@@ -43,8 +43,8 @@
           </b-form>
         </b-jumbotron>
       </b-col>
-      <b-col cols="12" md="6" style="min-height:300px">
-        <amap id="terminal1" height="385px" @ready="mapReady" />
+      <b-col cols="12" md="6">
+        <amap id="terminal1" class="h-100" @ready="mapReady" />
       </b-col>
     </b-row>
     <b-row>

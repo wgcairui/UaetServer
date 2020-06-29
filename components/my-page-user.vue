@@ -78,7 +78,7 @@
       </b-collapse>
     </b-navbar>
 
-    <b-container class="h-100 overflow-auto user-body user-content" :fluid="fluid">
+    <b-container class="h-100 overflow-auto user-body" :fluid="fluid" id="user-content">
       <slot />
     </b-container>
 
@@ -265,5 +265,8 @@ export default Vue.extend({
   .user-body {
     margin-top: 56px;
   }
+}
+#user-content::-webkit-scrollbar {
+  display: none;
 }
 </style>

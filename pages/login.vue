@@ -10,12 +10,12 @@
     </b-row>
     <b-row class="flex-grow-1 d-flex flex-column " no-gutters>
       <b-row no-gutters class="flex-grow-1 login-body">
-        <!-- <b-col md="6" class="md-block d-flex align-items-center justify-content-center" style="padding-left: 10%">
+        <b-col md="6" class="md-block d-flex align-items-center justify-content-center" style="padding-left: 10%">
           <span class="mt-n5">
             <h3 class="text-light">物联网ITO监控服务平台</h3>
             <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
           </span>
-        </b-col> -->
+        </b-col>
         <b-col
           ref="loginBody"
           cols="12"
