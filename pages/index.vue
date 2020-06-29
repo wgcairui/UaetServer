@@ -13,7 +13,7 @@
         v-b-tooltip.hover
         :title="`状态:${link.online?'在线':'离线'},IP:${link.ip}`"
       >
-        <!-- <b-card class="shadow">
+        <b-card class="shadow">
           <b-link
             :to="{ name: 'uart', query: { DevMac: link.DevMac } }"
             class="text-decoration-none text-dark"
@@ -46,10 +46,10 @@
               >Add mountDevs</b-button>
             </span>
           </b-card-body>
-        </b-card> -->
+        </b-card>
       </b-col>
     </b-row>
-    <!-- <b-row id="aggregation">
+    <b-row id="aggregation">
         <separated title="聚合设备">
           <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
         </separated>
@@ -104,7 +104,7 @@
             >+</b-button>
           </b-card>
         </b-col>
-    </b-row>-->
+    </b-row>
     <!-- <b-row id="ECs">
         <separated title="环控设备" />
         <b-col v-for="(link, key) in BindDevice.ECs" :key="key" cols="12" md="6" class="mt-4">

@@ -55,7 +55,7 @@
               <i class="iconfont">&#xebe0;</i>En
             </b-dropdown-item>
           </b-nav-dropdown>
-          <b-nav-dropdown dropright>
+          <b-nav-dropdown right>
             <template v-slot:button-content>
               <span>
                 <!-- <socket-state class="d-sm-block" /> -->
@@ -78,7 +78,7 @@
       </b-collapse>
     </b-navbar>
 
-    <b-container class="mh-100 overflow-auto user-body" :fluid="fluid">
+    <b-container class="h-100 overflow-auto user-body user-content" :fluid="fluid">
       <slot />
     </b-container>
 

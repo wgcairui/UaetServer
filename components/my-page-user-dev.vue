@@ -2,9 +2,7 @@
   <my-page-user :title="title">
     <b-row class="m-0">
       <separated :title="query.mountDev">
-        <b v-b-tooltip.hover title="查询耗时">{{Queryarg.useTime}}/</b>
-        <b v-b-tooltip.hover title="查询间隔">{{Queryarg.Interval}}/</b>
-        <b v-b-tooltip.hover title="查询时间">{{Queryarg.queryTime}}</b>
+        <b v-b-tooltip.hover :title="Queryarg.useTime+'/'+Queryarg.Interval">{{Queryarg.queryTime}}</b>
       </separated>
       <slot />
     </b-row>
@@ -122,8 +120,8 @@ export default Vue.extend({
         Interval: 0
       };
       if (Data?.parse) {
-        time.useTime = Data.useTime
-        time.Interval = Data.Interval
+        time.useTime = Data.useTime;
+        time.Interval = Data.Interval;
         time.queryTime = new Date(Data.time).toLocaleString();
         this.$apollo.queries.Data.startPolling(time.Interval);
       }

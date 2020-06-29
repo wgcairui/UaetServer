@@ -9,7 +9,7 @@
         </b-card>
       </b-col>
       <b-col cols="12" md="4" class="m-0 p-0 my-2">
-        <b-card class="mx-2 h-100">
+        <b-card class="h-100">
           <b-card-title>
             电池状态
            

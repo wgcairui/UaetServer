@@ -43,7 +43,7 @@
             <span
               v-for="(val,key) in Object.values(dev.parse)"
               :key="val.name+dev.DevMac+dev.pid+key"
-              class="text-light col-6"
+              class="text-light col-12 col-md-6"
             >
               {{val.name+':'+val.value+(val.unit||'')}}
               <b-spinner
