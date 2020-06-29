@@ -24,7 +24,7 @@
     "@ericblade/quagga2": "^0.0.18",
     "@koa/cors": "^3.0.0",
     "@nuxt/typescript-runtime": "^0.3.9",
-    "@nuxtjs/apollo": "4.0.0-rc19",
+    "@nuxtjs/apollo": "^4.0.1-rc.1",
     "@nuxtjs/auth": "^4.8.5",
     "@nuxtjs/axios": "^5.9.5",
     "@types/node": "^13.7.0",
