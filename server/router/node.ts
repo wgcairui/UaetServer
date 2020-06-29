@@ -29,9 +29,12 @@ export default async (ctx: ParameterizedContext | KoaCtx) => {
         // console.log(WebSocketInfos);
 
         WebSocketInfos.SocketMaps.forEach(el => {
-          ctx.$Event.Cache.CacheNodeTerminalOnline.add(el.mac)
           const { port, ip, jw } = el
-          if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(el.mac)) Terminal.updateOne({ DevMac: el.mac }, { $set: { ip, port, jw } }, { upsert: true })
+          const uptime = new Date().toLocaleString()
+          if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(el.mac)) {
+            Terminal.updateOne({ DevMac: el.mac }, { $set: { ip, port, jw, uptime } }, { upsert: true })
+            ctx.$Event.Cache.CacheNodeTerminalOnline.add(el.mac)
+          }
         })
         //写入运行信息
         const reslut = await NodeRunInfo.updateOne(

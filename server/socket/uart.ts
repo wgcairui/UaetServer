@@ -110,7 +110,7 @@ export class NodeSocketIO {
                     console.log(`${new Date().toLocaleTimeString()}## 节点：${Node.Name}断开连接，清除定时操作`);
                     this.Cache.delete(Node.Name)
                     this.Event.Cache.CacheSocket.delete(Node.IP)
-                    this.Event.Cache.CacheNodeTerminalOnline.delete(Node.IP)
+                    this.Event.Cache.CacheNodeTerminalOnline.clear()
                     // 添加日志
                     new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "断开" })).save()
                 })
