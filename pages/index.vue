@@ -50,60 +50,60 @@
       </b-col>
     </b-row>
     <b-row id="aggregation">
-        <separated title="聚合设备">
-          <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
-        </separated>
-        <b-col cols="12" md="6" class="mt-4" v-for="(link, key) in agg" :key="key+link.name">
-          <b-card class="shadow">
-            <b-link
-              :to="{ name: 'uart-aggregation', query: { id: link.id } }"
-              class="text-decoration-none text-dark"
-            >
-              <b-card-title>
-                <i class="iconfont">&#xeb64;</i>
-                {{ link.name }}
-              </b-card-title>
-              <b-card-sub-title>
-                &nbsp;&nbsp;{{ link.id }}
-                <b-button variant="link" @click.stop.prevent="aggregationTrash(link.id)">
-                  <b-icon-trash></b-icon-trash>
-                </b-button>
-              </b-card-sub-title>
-            </b-link>
-            <b-card-body class="d-flex flex-row">
-              <i class="iconfont" style="padding-top:7px">&#xec24;</i>
-              <span v-if="link.aggregations">
-                <b-button
-                  variant="link"
-                  v-for="val in link.aggregations"
-                  :key="val.mountDev+val.pid"
-                  class="text-dark"
-                  @click="toDev(val.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
-                >
-                  {{
-                  val.mountDev
-                  }}
-                </b-button>
-                <b-button
-                  variant="link"
-                  v-if="link.aggregations.length===0"
-                  :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
-                >Add mountDevs</b-button>
-              </span>
-            </b-card-body>
-          </b-card>
-        </b-col>
-        <b-col cols="12" md="6" class="mt-4">
-          <b-card class="shadow">
-            <b-button
-              block
-              variant="link"
-              class="py-5 text-decoration-none text-center"
-              style=" font-size:2rem;fontWeight:10"
-              v-b-modal.modal-1
-            >+</b-button>
-          </b-card>
-        </b-col>
+      <separated title="聚合设备">
+        <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
+      </separated>
+      <b-col cols="12" md="6" class="mt-4" v-for="(link, key) in agg" :key="key+link.name">
+        <b-card class="shadow">
+          <b-link
+            :to="{ name: 'uart-aggregation', query: { id: link.id } }"
+            class="text-decoration-none text-dark"
+          >
+            <b-card-title>
+              <i class="iconfont">&#xeb64;</i>
+              {{ link.name }}
+            </b-card-title>
+            <b-card-sub-title>
+              &nbsp;&nbsp;{{ link.id }}
+              <b-button variant="link" @click.stop.prevent="aggregationTrash(link.id)">
+                <b-icon-trash></b-icon-trash>
+              </b-button>
+            </b-card-sub-title>
+          </b-link>
+          <b-card-body class="d-flex flex-row">
+            <i class="iconfont" style="padding-top:7px">&#xec24;</i>
+            <span v-if="link.aggregations">
+              <b-button
+                variant="link"
+                v-for="val in link.aggregations"
+                :key="val.mountDev+val.pid"
+                class="text-dark"
+                @click="toDev(val.DevMac,val.pid,val.mountDev,val.protocol,val.Type)"
+              >
+                {{
+                val.mountDev
+                }}
+              </b-button>
+              <b-button
+                variant="link"
+                v-if="link.aggregations.length===0"
+                :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
+              >Add mountDevs</b-button>
+            </span>
+          </b-card-body>
+        </b-card>
+      </b-col>
+      <b-col cols="12" md="6" class="mt-4">
+        <b-card class="shadow">
+          <b-button
+            block
+            variant="link"
+            class="py-5 text-decoration-none text-center"
+            style=" font-size:2rem;fontWeight:10"
+            v-b-modal.modal-1
+          >+</b-button>
+        </b-card>
+      </b-col>
     </b-row>
     <!-- <b-row id="ECs">
         <separated title="环控设备" />

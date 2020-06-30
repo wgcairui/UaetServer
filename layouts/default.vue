@@ -3,16 +3,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-export default Vue.extend({
-  
-  mounted() {
-    const html = document.getElementsByTagName("html")[0];
-    console.log(html.style.height);
-
-    // document.getElementsByTagName("html")[0].style.height = window.innerHeight + "px";
-    console.log(window.innerHeight + "px");
-  }
-});
+export default Vue.extend({});
 </script>
 
 <style>

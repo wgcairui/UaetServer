@@ -32,7 +32,7 @@ export default async (ctx: ParameterizedContext) => {
     case "user":
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");
-        const User: UserInfo = await JwtVerify(token);
+        const User: UserInfo = await JwtVerify(token).catch(err => ctx.throw(400))
         ctx.body = { user: User.name }
       }
       break

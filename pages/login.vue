@@ -87,10 +87,10 @@
 </template>
 
 <script lang="ts">
-import * as uni from "../plugins/uni.webview.1.5.2";
 import vue from "vue";
 import { AES } from "crypto-js";
 export default vue.extend({
+  middleware: "checklogin",
   data() {
     return {
       label: {
@@ -124,17 +124,7 @@ export default vue.extend({
         })
         .then((data: any) => {
           localStorage.setItem("uartserverUser", data.data.user);
-          switch (data.data.userGroup) {
-            case "admin":
-              this.$router.push({ name: "manage" });
-              break;
-            case "root":
-              this.$router.push({ name: "admin" });
-              break;
-            default:
-              this.$router.push("/");
-              break;
-          }
+          this.redit(data.data.userGroup);
         })
         .catch((error: any) => {
           //console.log({ error, keys: Object.keys(error不) });
@@ -154,16 +144,24 @@ export default vue.extend({
             }
           }
         });
+    },
+    redit(userGroup: string) {
+      switch (userGroup) {
+        case "admin":
+          this.$router.push({ name: "manage" });
+          break;
+        case "root":
+          this.$router.push({ name: "admin" });
+          break;
+        default:
+          this.$router.push("/");
+          break;
+      }
     }
   },
   mounted() {
     const user = localStorage.getItem("uartserverUser");
     if (user) this.accont.user = user;
-    uni.getEnv(function(res: any) {
-      uni.navigateTo({
-        url: "/pages/login/login"
-      });
-    });
   }
 });
 </script>
