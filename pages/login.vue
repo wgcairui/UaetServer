@@ -8,9 +8,13 @@
         </header>
       </b-col>
     </b-row>
-    <b-row class="flex-grow-1 d-flex flex-column " no-gutters>
+    <b-row class="flex-grow-1 d-flex flex-column" no-gutters>
       <b-row no-gutters class="flex-grow-1 login-body">
-        <b-col md="6" class="md-block d-flex align-items-center justify-content-center" style="padding-left: 10%">
+        <b-col
+          md="6"
+          class="md-block d-flex align-items-center justify-content-center"
+          style="padding-left: 10%"
+        >
           <span class="mt-n5">
             <h3 class="text-light">物联网ITO监控服务平台</h3>
             <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
@@ -83,6 +87,7 @@
 </template>
 
 <script lang="ts">
+import * as uni from "../plugins/uni.webview.1.5.2";
 import vue from "vue";
 import { AES } from "crypto-js";
 export default vue.extend({
@@ -105,8 +110,7 @@ export default vue.extend({
       // 向服务器请求加密hash
       const data = await this.$axios
         .$get("/api/auth/hash", { params: { user } })
-        .then(el => el)
-        .catch(error => {
+        .catch((error: any) => {
           this.$bvModal.msgBoxOk(error?.response?.data || "流程出错", {
             size: "sm",
             buttonSize: "sm"
@@ -132,7 +136,7 @@ export default vue.extend({
               break;
           }
         })
-        .catch(error => {
+        .catch((error: any) => {
           //console.log({ error, keys: Object.keys(error不) });
           if (!error.response || error.response.status !== 400) {
             this.$bvModal.msgBoxOk("登录遇到未知错误");
@@ -155,6 +159,11 @@ export default vue.extend({
   mounted() {
     const user = localStorage.getItem("uartserverUser");
     if (user) this.accont.user = user;
+    uni.getEnv(function(res: any) {
+      uni.navigateTo({
+        url: "/pages/login/login"
+      });
+    });
   }
 });
 </script>
@@ -175,7 +184,7 @@ a {
     //max-height: 90%;
   }
 }
-@media (max-width: 768px){
+@media (max-width: 768px) {
   .md-block {
     display: none !important;
   }
