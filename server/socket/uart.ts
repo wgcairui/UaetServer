@@ -268,7 +268,7 @@ export class NodeSocketIO {
         if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)) return
         // 判断挂载设备是否在线
         if (!this.Event.Cache.CacheNodeTerminalOnline.has(Query.TerminalMac)) {
-            console.log(`终端设备${Query.TerminalMac} 不在线,取消查询指令`);
+            // console.log(`终端设备${Query.TerminalMac} 不在线,取消查询指令`);
             return
         }
         // 生成时间戳
