@@ -532,8 +532,9 @@ const resolvers: IResolvers = {
         },
         // 添加用户
         async addUser(root, { arg }) {
-            const userStat = await Users.findOne({ user: arg.user });
-            if (userStat) return { ok: 0, msg: "账号有重复,请重新编写账号" };
+            if ( await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
+            if ( await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
+            if ( await Users.findOne({ user: arg.mail })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
             const user = Object.assign(arg, { passwd: await BcryptDo(arg.passwd) }) as UserInfo
             const User = new Users(user);
             return await User.save()
