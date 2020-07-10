@@ -4,7 +4,10 @@
       <b-col>
         <header class="d-flex flex-row p-2 shadow-sm" style="height:56px">
           <b-img src="https://www.ladishb.com/logo.png" style="height:40px"></b-img>
-          <b-button variant="link" class="ml-auto text-success">English</b-button>
+          <span class="ml-auto">
+            <b-button variant="link" to="app">APP</b-button>
+            <b-button variant="link" class=" text-success">English</b-button>
+          </span>
         </header>
       </b-col>
     </b-row>
