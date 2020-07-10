@@ -98,7 +98,7 @@ export default vue.extend({
     return {
       label: {
         labelCols: "12",
-        labelColsSm: "2",
+        labelColsSm: "3",
         labelAlignSm: "right"
       },
       accont: {
