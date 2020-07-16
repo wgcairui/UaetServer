@@ -45,10 +45,10 @@ export default Vue.extend({
         {
           title: "ladis透传平台",
           explain: " 适用于android平台上监控透传模块",
-          plaft: "adroid",
-          version: "1.0",
+          plaft: "android",
+          version: "1.0.1",
           updatetime: "2020/7/10",
-          src: "https://www.ladishb.com/upload/7102020__ladisUart1.0.apk"
+          src: "https://www.ladishb.com/upload/7132020__ladisuart1.0.1.apk"
         }
       ]
     };

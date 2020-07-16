@@ -4,7 +4,7 @@ import io from "socket.io-client"
 import {Context} from "@nuxt/types"
 
 export default (ctx:Context,inject:any) => {
-  const host = process.env.NODE_ENV === "production" ?"http://www.ladishb.com:9010":"http://localhost:9010"
+  const host = process.env.NODE_ENV === "production" ?"https://uart.ladishb.com":"http://localhost:9010"
   // 注册socket
   //const token = localStorage.getItem("auth._token.local")
   /* onst socket = io(host, {
