@@ -107,7 +107,7 @@
 import Vue from "vue";
 import { WebInfo } from "../store/DB";
 import gql from "graphql-tag";
-import { Terminal } from "../server/bin/interface";
+import { Terminal } from "uart";
 export default Vue.extend({
   props: {
     title: {

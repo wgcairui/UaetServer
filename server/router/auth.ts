@@ -1,7 +1,7 @@
 import { JwtSign, JwtVerify } from "../util/Secret";
 import { BcryptCompare } from "../util/bcrypt";
 import { Users } from "../mongoose/user";
-import { KoaCtx, UserInfo } from "../bin/interface";
+import { KoaCtx, UserInfo } from "uart";
 import { ParameterizedContext } from "koa";
 import { AES, enc } from "crypto-js";
 export default async (ctx: ParameterizedContext) => {

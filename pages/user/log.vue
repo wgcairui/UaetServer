@@ -32,7 +32,7 @@
 import Vue from "vue";
 import { getInstance, WebInfo } from "../../store/DB";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
-import { logTerminals } from "../../server/bin/interface";
+import { logTerminals } from "uart";
 import gql from "graphql-tag";
 export default Vue.extend({
   data() {

@@ -164,7 +164,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { BindDevice, Terminal, AggregationDev } from "../server/bin/interface";
+import { BindDevice, Terminal, AggregationDev } from "uart";
 import aggregationVue from "./uart/aggregation.vue";
 export default Vue.extend({
   data() {

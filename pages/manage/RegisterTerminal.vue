@@ -61,7 +61,7 @@ import gql from "graphql-tag";
 import {
   RegisterTerminal,
   ApolloMongoResult
-} from "../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {

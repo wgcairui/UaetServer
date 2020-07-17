@@ -26,7 +26,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { queryResultSave } from "../../server/bin/interface";
+import { queryResultSave } from "uart";
 export default Vue.extend({
   data() {
     const query = this.$route.query;

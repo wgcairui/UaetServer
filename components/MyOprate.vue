@@ -79,7 +79,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { OprateInstruct, ApolloMongoResult } from "../server/bin/interface";
+import { OprateInstruct, ApolloMongoResult } from "uart";
 import gql from "graphql-tag";
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";

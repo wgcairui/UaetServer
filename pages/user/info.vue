@@ -41,7 +41,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { UserInfo, ApolloMongoResult } from "../../server/bin/interface";
+import { UserInfo, ApolloMongoResult } from "uart";
 
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";

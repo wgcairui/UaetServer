@@ -1,7 +1,7 @@
 import { CronJob } from "cron";
 import { LogUartTerminalDataTransfinite, LogDataClean } from "../mongoose/Log";
 import { QueryCursor, Document, Types } from "mongoose";
-import { uartAlarmObject } from "../bin/interface";
+import { uartAlarmObject } from "uart";
 
 // 计数器
 let NumUartterminaldatatransfinites = 0

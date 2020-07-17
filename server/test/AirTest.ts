@@ -1,7 +1,7 @@
-import { queryResult } from "../bin/interface";
+import { queryResult } from "uart";
 import Axios from "axios";
 
-function AriTestData(): queryResult[] {
+function AriTestData(): any[] {
   const timeStamp = Date.now();
   const time = new Date().toLocaleString();
   return [

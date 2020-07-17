@@ -23,7 +23,7 @@ import {
   queryResultSave,
   ProtocolConstantThreshold,
   queryResultArgument
-} from "../../server/bin/interface";
+} from "uart";
 import gql from "graphql-tag";
 import { TerminalResultArrayToJson } from "../../plugins/tools";
 export default Vue.extend({

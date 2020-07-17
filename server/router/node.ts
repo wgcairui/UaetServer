@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { NodeRunInfo } from "../mongoose/node";
 import { ParameterizedContext } from "koa";
-import { nodeInfo, uartData, WebSocketInfo, KoaCtx } from "../bin/interface";
+import { nodeInfo, uartData, WebSocketInfo, KoaCtx } from "uart";
 import { Terminal } from "../mongoose/Terminal";
 import UartDataParsingSave from "../bin/UartDataParsingSave";
 export default async (ctx: ParameterizedContext | KoaCtx) => {

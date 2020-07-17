@@ -1,12 +1,12 @@
 import { ParameterizedContext } from "koa";
-import { Event, eventsName } from "../event/index"
+import { Event, eventsName } from "server/event/index"
 import NodeSocketIO from "server/socket/uart";
 /* protocol */
-export type communicationType = 232 | 485;
-export type protocolType = "ups" | "air" | "em" | "th";
-export type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX" | 'bit2'
+type communicationType = 232 | 485;
+type protocolType = "ups" | "air" | "em" | "th";
+type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX" | 'bit2'
 // apollo server result
-export interface ApolloMongoResult {
+interface ApolloMongoResult {
   msg: string
   ok: number
   n: number
@@ -15,14 +15,14 @@ export interface ApolloMongoResult {
   arg?: any
 }
 // koa ctx
-export interface KoaCtx extends ParameterizedContext {
+interface KoaCtx extends ParameterizedContext {
   $Event: Event
   $SocketUart: NodeSocketIO
 
 }
 
 // apollo ctx
-export interface ApolloCtx extends UserInfo {
+interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
   $SocketUart: NodeSocketIO
@@ -30,7 +30,7 @@ export interface ApolloCtx extends UserInfo {
 }
 
 // 协议指令解析格式化
-export interface protocolInstructFormrize {
+interface protocolInstructFormrize {
   name: string;
   enName?: string;
   regx: string | null;
@@ -39,7 +39,7 @@ export interface protocolInstructFormrize {
   isState: boolean;
 }
 // 协议指令
-export interface protocolInstruct {
+interface protocolInstruct {
   name: string; // 指令名称--GQS
   resultType: characterType;
   shift: boolean;
@@ -50,14 +50,14 @@ export interface protocolInstruct {
   formResize: protocolInstructFormrize[];
 }
 // 协议
-export interface protocol {
+interface protocol {
   Type: communicationType;
   Protocol: string;
   ProtocolType: protocolType;
   instruct: protocolInstruct[];
 }
 // 设备类型
-export interface DevsType {
+interface DevsType {
   Type: string;
   DevModel: string;
   Protocols: {
@@ -66,19 +66,19 @@ export interface DevsType {
   }[];
 }
 // 登记注册终端
-export interface RegisterTerminal {
+interface RegisterTerminal {
   DevMac: string;
   mountNode: string;
 }
 // 终端挂载设备
-export interface TerminalMountDevs {
+interface TerminalMountDevs {
   Type: string
   mountDev: string;
   protocol: string;
   pid: number;
 }
 // 终端
-export interface Terminal extends RegisterTerminal {
+interface Terminal extends RegisterTerminal {
   DevMac: string
   mountNode: string
   name: string;
@@ -88,28 +88,28 @@ export interface Terminal extends RegisterTerminal {
   uptime?: string
   mountDevs: TerminalMountDevs[];
 }
-export interface TerminalMountDevsEX extends TerminalMountDevs {
+interface TerminalMountDevsEX extends TerminalMountDevs {
   NodeIP: string
   NodeName: string
   TerminalMac: string
   Interval: number
 }
 // Node节点
-export interface NodeClient {
+interface NodeClient {
   Name: string;
   IP: string;
   Port: number;
   MaxConnections: number;
 }
 // 用户绑定设备
-export interface BindDevice {
+interface BindDevice {
   user: string
   ECs: string[]
   UTs: (string | Terminal)[]
 }
 
 // Node节点硬件top
-export interface SocketRegisterInfo {
+interface SocketRegisterInfo {
   hostname: string;
   totalmem: string;
   freemem: string;
@@ -125,7 +125,7 @@ export interface SocketRegisterInfo {
   }
 }
 // 对节点发出的协议查询指令
-export interface queryObject {
+interface queryObject {
   mac: string;
   type: number;
   mountDev: string
@@ -137,7 +137,7 @@ export interface queryObject {
   useTime: number
 }
 // 协议查询结果解析存储结构
-export interface queryResultArgument {
+interface queryResultArgument {
   name: string;
   value: any;
   unit: string | null;
@@ -145,18 +145,18 @@ export interface queryResultArgument {
   alarm?: boolean
 }
 //
-export interface queryResultParse extends Object {
+interface queryResultParse extends Object {
   [x: string]: queryResultArgument | any
 }
 //协议查询结果
-export interface queryResult extends queryObject {
+interface queryResult extends queryObject {
   contents: IntructQueryResult[]
   parse?: queryResultParse
   result?: queryResultArgument[];
   time?: string;
   useBytes?: number
 }
-export interface IntructQueryResult {
+interface IntructQueryResult {
   content: string
   buffer: {
     data: number[];
@@ -164,31 +164,31 @@ export interface IntructQueryResult {
   };
 }
 //
-export interface timelog {
+interface timelog {
   content: string,
   num: number
 }
 
 // UartData数据
-export interface uartData extends NodeClient {
+interface uartData extends NodeClient {
   data: queryResult[]
 }
 
 // 透传 api 数据 
-export interface socketNetInfo {
+interface socketNetInfo {
   ip: string;
   port: number;
   mac: string;
   jw: string;
 }
 // 节点websocket透传信息
-export interface WebSocketInfo {
+interface WebSocketInfo {
   NodeName: string;
   Connections: number | Error;
   SocketMaps: socketNetInfo[];
 }
 // 节点上传信息
-export interface nodeInfo {
+interface nodeInfo {
   hostname: string;
   totalmem: string;
   freemem: string;
@@ -200,8 +200,12 @@ export interface nodeInfo {
   version: string
 }
 
+type registerType="wx"|"web"|"app"
+
 /* 用户信息 */
-export interface UserInfo {
+interface UserInfo {
+  avantar?: string
+  userId:string
   name?: string;
   user: string;
   userGroup?: string;
@@ -213,9 +217,11 @@ export interface UserInfo {
   modifyTime?: Date;
   address?: string;
   status?: boolean;
+  // 注册类型
+  rgtype:registerType
 }
 
-export interface KoaSocketOpts {
+interface KoaSocketOpts {
   namespace?: string | null;
   hidden?: boolean;
   ioOptions?: SocketIO.ServerOptions;
@@ -223,7 +229,7 @@ export interface KoaSocketOpts {
 
 // 设备协议参数-常量
 // 空调
-export interface DevConstant_Air {
+interface DevConstant_Air {
   //热通道温度
   HeatChannelTemperature: string;
   HeatChannelHumidity: string;
@@ -244,8 +250,8 @@ export interface DevConstant_Air {
   Humidification: string;
 }
 // EM
-export interface DevConstant_EM { }
-export interface DevConstant_Ups {
+interface DevConstant_EM { }
+interface DevConstant_Ups {
   UPSModels: string
   BatteryTemperature: string
   ResidualCapacity: string
@@ -253,23 +259,23 @@ export interface DevConstant_Ups {
   OutputFrequency: string
   OutputLoad: string
 }
-export interface DevConstant_TH {
+interface DevConstant_TH {
   Temperature: string;
   Humidity: string;
 }
-export interface DevConstant extends DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups { }
+interface DevConstant extends DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups { }
 // 协议参数阀值
-export interface Threshold {
+interface Threshold {
   name: string
   min: number
   max: number
 }
 // 协议参数告警状态
-export interface ConstantAlarmStat extends queryResultArgument {
+interface ConstantAlarmStat extends queryResultArgument {
   alarmStat: number[]
 }
 // 协议操作指令
-export interface OprateInstruct {
+interface OprateInstruct {
   name: string
   value: string
   bl: number
@@ -277,7 +283,7 @@ export interface OprateInstruct {
   readme: string
 }
 // 协议参数-常量参数阀值
-export interface ProtocolConstantThreshold {
+interface ProtocolConstantThreshold {
   Protocol: string,
   ProtocolType: string,
   Constant: DevConstant
@@ -287,7 +293,7 @@ export interface ProtocolConstantThreshold {
   OprateInstruct: OprateInstruct[]
 }
 // 用户自定义配置
-export interface userSetup {
+interface userSetup {
   user: string
   tels: string[]
   mails: string[]
@@ -296,7 +302,7 @@ export interface userSetup {
   ThresholdMap: Map<string, Map<string, Threshold>>
 }
 // 协议解析结果集
-export interface queryResultSave {
+interface queryResultSave {
   mac: string
   pid: number
   timeStamp: number
@@ -306,16 +312,16 @@ export interface queryResultSave {
   useTime: number,
   time: string
 }
-export type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate" | "AlarmStat"
+type ConstantThresholdType = "Threshold" | "Constant" | "ShowTag" | "Oprate" | "AlarmStat"
 // 操作指令查询对象
-export interface instructQueryArg extends queryResultArgument {
+interface instructQueryArg extends queryResultArgument {
   DevMac: string
   pid: number,
   mountDev: string
   protocol: string
 }
 // 操作指令请求对象
-export interface instructQuery {
+interface instructQuery {
   protocol: string
   DevMac: string
   pid: number
@@ -327,7 +333,7 @@ export interface instructQuery {
 }
 
 // 透传设备告警对象
-export interface uartAlarmObject {
+interface uartAlarmObject {
   type: eventsName
   mac: string
   pid: number
@@ -339,7 +345,7 @@ export interface uartAlarmObject {
 
 // 单条发送短信
 type UartAlarmType = "透传设备下线提醒" | "透传设备上线提醒" | '透传设备告警'
-export interface smsUartAlarm {
+interface smsUartAlarm {
   user: string
   tel: string
   name: string
@@ -350,7 +356,7 @@ export interface smsUartAlarm {
 }
 // LOG 日志
 // 短信发送
-export interface logSmsSend {
+interface logSmsSend {
   tels: string[]
   sendParams: {
     RegionId: string
@@ -368,7 +374,7 @@ export interface logSmsSend {
   Error?: any
 }
 // 邮件
-export interface mailResponse {
+interface mailResponse {
   accepted: string[]
   rejected: string[],
   envelopeTime: number
@@ -379,7 +385,7 @@ export interface mailResponse {
   messageId: string
 }
 
-export interface logMailSend {
+interface logMailSend {
   mails: string[]
   sendParams: {
     from: string
@@ -391,7 +397,7 @@ export interface logMailSend {
   Error?: any
 }
 // 操作请求
-export interface logUserRequst {
+interface logUserRequst {
   user: string,
   userGroup: string,
   type: string,
@@ -399,14 +405,14 @@ export interface logUserRequst {
 }
 type logLogins = "用户登陆" | '用户登出' | '用户注册' | "用户重置密码" | "用户修改信息"
 // 用户登陆登出请求
-export interface logUserLogins {
+interface logUserLogins {
   user: string,
   type: logLogins,
   msg: string
 }
 // 节点连接断开等事件
 type logNodesType = "连接" | "断开" | "非法连接请求" | "TcpServer启动失败" | "告警"
-export interface logNodes {
+interface logNodes {
   ID: string
   IP: string
   Name: string
@@ -414,7 +420,7 @@ export interface logNodes {
 }
 // 终端连接
 type logTerminalsType = "连接" | "断开" | "查询超时" | "查询恢复" | "操作设备" | "操作设备结果"
-export interface logTerminals {
+interface logTerminals {
   NodeIP: string
   NodeName: string
   TerminalMac: string
@@ -426,18 +432,18 @@ export interface logTerminals {
 }
 
 // 设备流量使用量
-export interface logTerminaluseBytes {
+interface logTerminaluseBytes {
   mac: string
   date: string
   useBytes: number
 }
 // 聚合设备
-export interface AggregationDev extends TerminalMountDevs {
+interface AggregationDev extends TerminalMountDevs {
   DevMac: string
   name: string
   online: boolean
 }
-export interface AggregationDevParse {
+interface AggregationDevParse {
   pid: number,
   DevMac: string,
   name: string,
@@ -446,7 +452,7 @@ export interface AggregationDevParse {
   protocol: string,
   parse: { [x: string]: queryResultArgument }
 }
-export interface Aggregation {
+interface Aggregation {
   user: string
   id: string
   name: string
@@ -454,3 +460,15 @@ export interface Aggregation {
   devs: AggregationDevParse[]
 }
 
+
+// wx
+interface wxRequest{
+  errcode?:number
+  errmsg?:string
+}
+
+interface wxRequestCode2Session extends wxRequest{
+  openid:string
+  session_key:string
+  unionid: string
+}

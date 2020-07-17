@@ -17,7 +17,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { protocol } from "../../../server/bin/interface";
+import { protocol } from "uart";
 interface tags {
   name: string;
   show: boolean;

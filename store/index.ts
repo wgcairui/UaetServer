@@ -1,7 +1,7 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
 import { Context } from "@nuxt/types"
 import { WebInfo, getInstance } from "./DB"
-import { queryResultArgument, nodeInfo } from '../server/bin/interface'
+import { queryResultArgument, nodeInfo } from 'uart'
 import { BvToast } from 'bootstrap-vue'
 
 // 获取state返回值类型

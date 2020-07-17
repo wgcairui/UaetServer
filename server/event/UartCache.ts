@@ -15,7 +15,7 @@ import {
   BindDevice,
   userSetup,
   TerminalMountDevsEX
-} from "../bin/interface";
+} from "uart";
 import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { UserBindDevice, UserAlarmSetup } from "../mongoose/user";

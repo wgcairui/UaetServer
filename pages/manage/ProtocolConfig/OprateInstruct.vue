@@ -51,7 +51,7 @@ import {
   OprateInstruct,
   protocolType,
   ConstantThresholdType
-} from "../../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {

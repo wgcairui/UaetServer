@@ -18,7 +18,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { logSmsSend } from "../../../server/bin/interface";
+import { logSmsSend } from "uart";
 export default Vue.extend({
   data() {
     return {

@@ -1,6 +1,6 @@
 import Event from "../event/index";
 import Tool from "./tool";
-import { protocolInstruct, queryResult, queryResultArgument, protocol } from "../bin/interface";
+import { protocolInstruct, queryResult, queryResultArgument, protocol } from "uart";
 
 export default async (R: queryResult) => {
   // 保存查询的查询时间

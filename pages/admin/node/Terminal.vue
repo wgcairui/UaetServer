@@ -23,7 +23,7 @@
 import Vue from "vue";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
-import { Terminal } from "../../../server/bin/interface";
+import { Terminal } from "uart";
 export default Vue.extend({
   data() {
     return {

@@ -53,7 +53,7 @@ import {
   userSetup,
   Threshold,
   ConstantThresholdType
-} from "../../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 interface tags {
   name: string;

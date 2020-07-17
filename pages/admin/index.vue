@@ -50,7 +50,7 @@ import Vue from "vue";
 import gql from "graphql-tag";
 import { VeLine, VePie } from "v-charts";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { Terminal, logTerminaluseBytes } from "../../server/bin/interface";
+import { Terminal, logTerminaluseBytes } from "uart";
 import { gps2AutonaviPosition } from "../../plugins/tools";
 interface navi {
   to: { name: string };

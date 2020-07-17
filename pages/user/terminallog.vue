@@ -20,7 +20,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { VeLine } from "v-charts";
-import { logTerminals } from "../../server/bin/interface";
+import { logTerminals } from "uart";
 export default Vue.extend({
   components: { VeLine },
   data() {

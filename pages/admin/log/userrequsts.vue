@@ -31,7 +31,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { logUserRequst } from "../../../server/bin/interface";
+import { logUserRequst } from "uart";
 export default Vue.extend({
   data() {
     return {

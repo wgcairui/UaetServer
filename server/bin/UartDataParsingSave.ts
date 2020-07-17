@@ -1,8 +1,8 @@
-import { queryResult, queryResultArgument } from "./interface";
 import ProtocolPares from "../util/ProtocolPares";
 import { TerminalClientResults, TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 import { LogUseBytes } from "../mongoose/Log";
+import { queryResult, queryResultArgument } from "uart";
 
 export default async (queryResultArray: queryResult[]) => {
 

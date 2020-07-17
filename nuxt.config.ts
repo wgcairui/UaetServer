@@ -1,6 +1,8 @@
 import { Configuration } from "@nuxt/types"
 const isProd = process.env.NODE_ENV === "production"
 const Config = {
+  //
+  telemetry: false,
   mode: "spa",
   // mode: "universal",
   server: {

@@ -49,7 +49,7 @@ import {
   queryResultArgument,
   protocol,
   ConstantAlarmStat
-} from "../../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {

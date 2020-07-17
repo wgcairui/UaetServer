@@ -109,7 +109,7 @@ import {
   Terminal,
   TerminalMountDevs,
   RegisterTerminal
-} from "../../server/bin/interface";
+} from "uart";
 import deepmerge from "deepmerge";
 type OprateMode =
   | "addTerminal"

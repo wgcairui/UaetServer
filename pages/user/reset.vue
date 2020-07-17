@@ -24,7 +24,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { ApolloMongoResult } from "../../server/bin/interface";
+import { ApolloMongoResult } from "uart";
 
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";

@@ -33,7 +33,7 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { protocol, DevsType } from "../../server/bin/interface";
+import { protocol, DevsType } from "uart";
 
 export default vue.extend({
   data() {

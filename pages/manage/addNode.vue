@@ -29,7 +29,7 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { NodeClient } from "../../server/bin/interface";
+import { NodeClient } from "uart";
 
 export default vue.extend({
   data() {

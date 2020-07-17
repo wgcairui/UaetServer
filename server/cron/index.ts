@@ -2,8 +2,8 @@ import { CronJob } from "cron";
 import Event from "../event/index";
 import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst } from "../mongoose/Log";
 import { QueryCursor, Document, Types } from "mongoose";
-import { uartAlarmObject, logUserRequst, queryResult } from "../bin/interface";
 import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
+import { uartAlarmObject, logUserRequst, queryResult } from "uart";
 
 // 计数器
 let NumUartterminaldatatransfinites = 0

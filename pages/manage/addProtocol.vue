@@ -147,7 +147,7 @@ import {
   protocolInstructFormrize,
   protocol,
   protocolInstruct
-} from "../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 
 export default vue.extend({

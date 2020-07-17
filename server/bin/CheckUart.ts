@@ -1,9 +1,9 @@
-import { queryResult, queryResultArgument, uartAlarmObject, userSetup, Threshold, queryResultParse, ProtocolConstantThreshold } from "./interface";
 import Event from "../event/index";
 import _ from "lodash";
 import { SendUartAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
 import unitCache from "../util/unitCache";
+import { queryResult, userSetup, queryResultParse, ProtocolConstantThreshold, queryResultArgument, uartAlarmObject,Threshold } from "uart";
 
 export default (query: queryResult) => {
   // 获取mac绑定的用户

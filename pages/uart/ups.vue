@@ -38,7 +38,7 @@ import {
   ProtocolConstantThreshold,
   queryResultArgument,
   instructQueryArg
-} from "../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 export default Vue.extend({

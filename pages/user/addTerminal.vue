@@ -64,7 +64,7 @@ import {
   Terminal,
   TerminalMountDevs,
   RegisterTerminal
-} from "../../server/bin/interface";
+} from "uart";
 import deepmerge from "deepmerge";
 export default vue.extend({
   data() {

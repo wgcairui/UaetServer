@@ -65,7 +65,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { Terminal, TerminalMountDevs } from "../../server/bin/interface";
+import { Terminal, TerminalMountDevs } from "uart";
 import { VeTree } from "v-charts";
 import {
   API_Aamp_gps2autoanvi,

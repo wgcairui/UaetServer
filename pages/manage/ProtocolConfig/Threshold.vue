@@ -56,7 +56,7 @@ import {
   DevConstant_TH,
   protocolType,
   Threshold
-} from "../../../server/bin/interface";
+} from "uart";
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;

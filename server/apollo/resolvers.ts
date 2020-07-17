@@ -1,27 +1,18 @@
 import { IResolvers } from "apollo-server-koa";
-
 import { NodeClient, NodeRunInfo, TerminalClientResultSingle, TerminalClientResult, TerminalClientResults } from "../mongoose/node";
-
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
-
 import { Terminal, RegisterTerminal } from "../mongoose/Terminal";
-
 import { EcTerminal } from "../mongoose/EnvironmentalControl";
-
 import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongoose/user";
-
-import { queryResult, queryResultArgument, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, BindDevice, ApolloCtx, Threshold, ConstantThresholdType, queryResultSave, TerminalMountDevs, protocol, protocolInstruct, instructQuery, instructQueryArg, OprateInstruct, userSetup, UserInfo, logUserRequst, logUserLogins, ApolloMongoResult, Terminal as terminal, Aggregation, AggregationDev, ProtocolConstantThreshold } from "../bin/interface";
-
 import { BcryptDo } from "../util/bcrypt";
-
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
-
 import _ from "lodash"
 import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
+import {protocol,Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev } from "uart";
 
 const resolvers: IResolvers = {
     Query: {
@@ -68,9 +59,9 @@ const resolvers: IResolvers = {
         },
         // 检索在线的终端
         async TerminalOnline(root, { DevMac }, ctx: ApolloCtx) {
-            const terminal = await Terminal.findOne({ DevMac }).lean() as terminal
-            if (!terminal) return null
-            if (ctx.$Event.Cache.CacheNodeTerminalOnline.has(DevMac)) return terminal
+            const terminals = await Terminal.findOne({ DevMac }).lean() as terminal
+            if (!terminals) return null
+            if (ctx.$Event.Cache.CacheNodeTerminalOnline.has(DevMac)) return terminals
             else return null
             //return await Terminal.findOne({ DevMac });
         },
@@ -217,18 +208,23 @@ const resolvers: IResolvers = {
         },
         // 获取socket node状态
         getSocketNode(root, arg, ctx: ApolloCtx) {
-            const TimeOutMonutDev = Array.from(ctx.$Event.Cache.TimeOutMonutDev)
+            const TimeOutMonutDev = Array.from(ctx.$Event.Cache.TimeOutMonutDev) as string[]
             return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline).map(el => {
                 const reg = new RegExp("^" + el)
                 return {
                     terminal: el,
-                    TimeOutMonutDev: TimeOutMonutDev.filter(el2 => reg.test(el2))
+                    TimeOutMonutDev: TimeOutMonutDev.filter(el2 => reg.test(el2)) as any
                 }
             })
         },
         // 获取socket user状态
         getUserNode(root, arg, ctx: ApolloCtx) {
-            return Array.from(ctx.$Event.ClientCache.CacheUserSocketids.entries()).map(el => ({ user: el[0], set: Array.from(el[1]) }))
+            const userids = [] as {user:string,set:string[]}[]
+            ctx.$Event.ClientCache.CacheUserSocketids.forEach((val,key)=>{
+                const set = Array.from(val) as any[]
+                userids.push({user:key,set})
+            })
+            return userids
         },
         // 获取节点日志
         async lognodes(root, { start, end }: { start: Date, end: Date }) {

@@ -22,7 +22,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { ApolloMongoResult } from "../server/bin/interface";
+import { ApolloMongoResult } from "uart";
 export default Vue.extend({
   props: {
     id: {

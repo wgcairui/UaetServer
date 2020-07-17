@@ -1,6 +1,6 @@
 import { crc16modbus } from "crc";
 import os from "os";
-import { nodeInfo } from "../bin/interface";
+import { nodeInfo } from "uart";
 export default class Tool {
   static NodeInfo(): nodeInfo {
     const hostname: string = os.hostname();
@@ -40,17 +40,6 @@ export default class Tool {
     return content + crc.slice(1, 2).toString("hex").padStart(2, '0')
   }
 
-  static InsertString(
-    t: { length: number; substr: (arg0: number, arg1: any) => void },
-    c: string,
-    n: any
-  ) {
-    const r = [];
-    for (let i = 0; i * 2 < t.length; i++) {
-      r.push(t.substr(i * 2, n));
-    }
-    return r.join(c);
-  }
   // 填充字符串数据
   static FillString(
     t: string | Buffer,

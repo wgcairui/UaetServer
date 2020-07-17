@@ -69,7 +69,7 @@ import {
   ProtocolConstantThreshold,
   DevConstant_Air,
   queryResultSave
-} from "../../server/bin/interface";
+} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 type airHM =
   /*  | "HeatChannelTemperature"

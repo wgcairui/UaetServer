@@ -111,7 +111,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { protocol, protocolInstruct } from "../../server/bin/interface";
+import { protocol, protocolInstruct } from "uart";
 export default Vue.extend({
   data() {
     let Protocols: protocol[] = [];

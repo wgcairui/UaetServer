@@ -1,7 +1,7 @@
 /* app端用api */
 import { ParameterizedContext } from "koa";
 import { JwtVerify, JwtSign } from "../util/Secret";
-import { UserInfo, KoaCtx, ApolloMongoResult, userSetup, logUserLogins } from "../bin/interface";
+import { UserInfo, KoaCtx, ApolloMongoResult, userSetup, logUserLogins } from "uart";
 import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
 import { Users, UserAlarmSetup } from "../mongoose/user";
 import { BcryptDo } from "../util/bcrypt";
@@ -62,7 +62,7 @@ export default async (Ctx: ParameterizedContext) => {
               const mailStat = await Users.findOne({ user: body.mail });
               ctx.assert(!mailStat,400,"邮箱账号有重复,请重新填写邮箱")
               //
-              const user = Object.assign(body, { passwd: await BcryptDo(body.passwd) }) as UserInfo
+              const user = Object.assign(body, { passwd: await BcryptDo(body.passwd) },{rgtype:"app"}) as UserInfo
               const User = new Users(user);
               ctx.body = await User.save()
                   .then(() => {

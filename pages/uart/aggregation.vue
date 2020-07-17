@@ -65,7 +65,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { Aggregation, AggregationDevParse } from "../../server/bin/interface";
+import { Aggregation, AggregationDevParse } from "uart";
 export default Vue.extend({
   data() {
     return {
