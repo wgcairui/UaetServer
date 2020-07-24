@@ -6,18 +6,12 @@
         <b-card>
           <b-form>
             <my-form label="属性:">
-              <b-form-select v-model="State" :options="items"></b-form-select>
+              <b-form-select v-model="State" :options="items" multiple></b-form-select>
             </my-form>
             <my-form label="正常值:">
               <b-form-select v-model="State.alarmStat" :options="itemAlarm" multiple></b-form-select>
             </my-form>
-            <b-button
-              size="sm"
-              block
-              variant="info"
-              @click="addState(State)"
-              :disabled="State.name === ''"
-            >add</b-button>
+            <b-button size="sm" block variant="info" @click="addState(State)">add</b-button>
           </b-form>
         </b-card>
       </b-col>
@@ -45,11 +39,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import {
-  queryResultArgument,
-  protocol,
-  ConstantAlarmStat
-} from "uart";
+import { queryResultArgument, protocol, ConstantAlarmStat } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
@@ -61,7 +51,7 @@ export default Vue.extend({
       //
       addModal: true,
       State: {
-        name: "",
+        name: [],
         value: "",
         unit: "{0:正常,1:报警}",
         alarmStat: [0]
@@ -150,12 +140,18 @@ export default Vue.extend({
       const obj = Object.assign({}, ...arr);
       return item.alarmStat.map(el => obj[el]);
     },
-    addState(State: ConstantAlarmStat) {
+    addState(State: any) {
       const AlarmStats = this.States;
-      const n = AlarmStats.findIndex(el => el.name === State.name);
+      ((State.name as any) as string[]).forEach(name => {
+        const n = AlarmStats.findIndex(el => el.name === name);
+        if (n === -1) {
+          AlarmStats.push(Object.assign(State, { name }));
+        } else AlarmStats[n] = State;
+      });
+      /* const n = AlarmStats.findIndex(el => el.name === State.name);
       if (n === -1) {
         AlarmStats.push(State);
-      } else AlarmStats[n] = State;
+      } else AlarmStats[n] = State; */
     },
     deleteState(data: any) {
       const { item, index }: { item: ConstantAlarmStat; index: number } = data;

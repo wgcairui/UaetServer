@@ -197,7 +197,7 @@ export class NodeSocketIO {
         Terminals.forEach(Terminal => {
             Terminal.mountDevs.forEach(mountDev => {
                 const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 1000 }, mountDev) as Required<TerminalMountDevsEX>
+                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 2000 }, mountDev) as Required<TerminalMountDevsEX>
                 TerminalMountDev.set(Terminal.DevMac + mountDev.pid, mount)
             })
         })

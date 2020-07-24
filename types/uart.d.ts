@@ -180,6 +180,7 @@ interface socketNetInfo {
   port: number;
   mac: string;
   jw: string;
+  stat:Boolean
 }
 // 节点websocket透传信息
 interface WebSocketInfo {

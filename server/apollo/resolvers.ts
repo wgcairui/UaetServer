@@ -142,7 +142,7 @@ const resolvers: IResolvers = {
                     .sort("-timeStamp")
                     .limit(100).lean() as any;
             } else {
-                const start = new Date(datatime);
+                const start = new Date(datatime + " 00:00:00");
                 const end = new Date(datatime + " 23:59:59");
                 result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
                     .where("timeStamp")

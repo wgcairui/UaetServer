@@ -26,14 +26,12 @@ export default async (ctx: ParameterizedContext | KoaCtx) => {
         // 节点websocket运行信息
         const WebSocketInfos: WebSocketInfo = body.WebSocketInfos
         // 设备port jw
-        // console.log(WebSocketInfos);
-
         WebSocketInfos.SocketMaps.forEach(el => {
-          const { port, ip, jw } = el
+          const { port, ip, jw, mac, stat} = el
           const uptime = new Date().toLocaleString()
-          if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(el.mac)) {
-            Terminal.updateOne({ DevMac: el.mac }, { $set: { ip, port, jw, uptime } }, { upsert: true })
-            ctx.$Event.Cache.CacheNodeTerminalOnline.add(el.mac)
+          if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(mac)) {
+            Terminal.updateOne({ DevMac: mac }, { $set: { ip, port, jw, stat, uptime } }, { upsert: true }).exec()
+            ctx.$Event.Cache.CacheNodeTerminalOnline.add(mac)
           }
         })
         //写入运行信息
@@ -41,7 +39,7 @@ export default async (ctx: ParameterizedContext | KoaCtx) => {
           { NodeName: WebSocketInfos.NodeName },
           { $set: { ...WebSocketInfos, ...NodeInfo, updateTime: body.updateTime } },
           { upsert: true }
-        )
+        ).exec()
         ctx.body = reslut
       }
       break;
