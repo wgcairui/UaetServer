@@ -1,13 +1,20 @@
 import { ParameterizedContext } from "koa";
 import axios, { AxiosResponse } from "axios";
 import { Users } from "../mongoose/user";
-import { KoaCtx, wxRequestCode2Session, UserInfo, ApolloMongoResult } from "uart";
+import {
+  KoaCtx,
+  wxRequestCode2Session,
+  UserInfo,
+  ApolloMongoResult
+} from "uart";
+import { WXBizDataCrypt } from "../util/wxUtil";
 const wxSecret = require("../key/wxSecret.json");
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type;
+  const ClientCache = ctx.$Event.ClientCache;
 
   switch (type) {
     // 微信登录
@@ -25,12 +32,14 @@ export default async (Ctx: ParameterizedContext) => {
         // 包含错误
         ctx.assert(!wxGetseesion.data.errcode, 401, wxGetseesion.data.errmsg);
         const { openid, session_key } = wxGetseesion.data;
+        // 存储session
+        ClientCache.CacheWXSession.set(openid, session_key);
         // 检查openid是否为已注册用户
-        const user = await Users.findOne({ user: openid }).lean()  as UserInfo
+        const user = (await Users.findOne({ user: openid }).lean()) as UserInfo;
         if (user) {
           ctx.body = {
             ok: 1,
-            arg: { user:user.user,userGroup:user.userGroup }
+            arg: { user: user.user, userGroup: user.userGroup }
           } as ApolloMongoResult;
         } else {
           ctx.body = {
@@ -39,6 +48,20 @@ export default async (Ctx: ParameterizedContext) => {
             arg: { openid }
           } as ApolloMongoResult;
         }
+      }
+      break;
+    // 解密手机号码
+    case "getphonenumber":
+      {
+        const { encryptedData, iv, appid } = body;
+        // 获取用户最近的seesionKey     
+        const session_key = ClientCache.CacheWXSession.get(appid);
+        ctx.assert(session_key, 400, "appid is nologin");
+        const Crypt = new WXBizDataCrypt(session_key as string);
+        ctx.body = {
+          ok: 1,
+          arg: Crypt.decryptData(encryptedData, iv)
+        } as ApolloMongoResult;
       }
       break;
   }

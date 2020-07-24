@@ -10,11 +10,14 @@ export default class ClientCache {
     CacheUserSocketids: Map<string, Set<string>>
     // socketID->user
     CacheSocketidUser:Map<string,string>
+    // 微信登录seesion
+    CacheWXSession:Map<string,string>
     constructor() {
         this.CacheUserValidationCode = new Map()
         this.CacheUserJurisdiction = new Map()
         this.CacheUserLoginHash = new Map()
         this.CacheUserSocketids = new Map()
         this.CacheSocketidUser = new Map()
+        this.CacheWXSession = new Map()
     }
 }

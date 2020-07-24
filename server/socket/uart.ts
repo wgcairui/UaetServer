@@ -72,7 +72,7 @@ export class NodeSocketIO {
                     }
                 })
             })
-            console.log(`更新Query查询缓存间隔时间`);
+            console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
             // 清空查询计数数组
             this.Event.Cache.QueryTerminaluseTime.forEach(el => el = [])
         }, 60000 * 10)
