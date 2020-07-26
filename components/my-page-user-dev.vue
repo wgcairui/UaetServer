@@ -226,7 +226,7 @@ export default Vue.extend({
       variables(){
         return{
           mac:this.query.DevMac,
-          pid:this.query.pid
+          pid:String(this.query.pid)
         }
       },
       pollInterval:10000
@@ -250,7 +250,7 @@ export default Vue.extend({
         `,
         variables:{
           mac:query.DevMac,
-          pid:query.pid
+          pid:String(query.pid)
         }
       })
       this.$bvModal.msgBoxOk("重置完成",{title:"msg"})
