@@ -6,6 +6,8 @@ import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, Term
 import tool from "../util/tool";
 import { DefaultContext } from "koa";
 import { LogNodes, LogTerminals } from "../mongoose/Log";
+import { SendUartAlarm } from "../util/SMS";
+import { getDtuInfo } from "../util/util";
 
 export interface socketArgument {
     ID: string
@@ -53,28 +55,46 @@ export class NodeSocketIO {
         this._Interval()
         this._updateQueryInterval()
     }
-    // 每10分钟更新每个设备查询间隔
+    // 每10分钟更新每个设备查询间隔,检查设备离线超时
     private _updateQueryInterval() {
         setInterval(() => {
-            this.Cache.forEach(el => {
-                el.forEach((terEX, hash) => {
-                    const useTimeArray = this.Event.Cache.QueryTerminaluseTime.get(hash) as number[]
-                    const len = useTimeArray.length
-                    const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
-                    const maxTime = Math.max(...yxuseTimeArray)
-                    // 如果查询最大值大于1秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-                    if (maxTime && maxTime < 1001) {
-                        terEX.Interval = 1000
-                    } else {
-                        const maxTimeString = String(maxTime)
-                        const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
-                        terEX.Interval = Number(han) > 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
+            // 迭代查询缓存，检查每个挂载设备的指令耗时数组(往后60个采样)，采用其最大值+500ms,
+            {
+                this.Cache.forEach(el => {
+                    el.forEach((terEX, hash) => {
+                        const useTimeArray = this.Event.Cache.QueryTerminaluseTime.get(hash) as number[]
+                        const len = useTimeArray.length
+                        const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
+                        const maxTime = Math.max(...yxuseTimeArray)
+                        // 如果查询最大值大于1秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
+                        if (maxTime && maxTime < 1001) {
+                            terEX.Interval = 2000
+                        } else {
+                            const maxTimeString = String(maxTime)
+                            const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
+                            terEX.Interval = Number(han) > 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
+                        }
+                    })
+                })
+                console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
+                // 清空查询计数数组
+                this.Event.Cache.QueryTerminaluseTime.forEach(el => el = [])
+            }
+            // 迭代所有掉线设备记录，如果掉线时长超过10min，触发短信告警
+            {
+                const DTUOfflineTime = this.Event.Cache.DTUOfflineTime
+                const date = Date.now() // 当前时间
+                DTUOfflineTime.forEach((time,mac)=>{
+                    if(date-time.getTime() > 60000 * 10){
+                        const info = getDtuInfo(mac)
+                        if(info && info.userInfo.tels?.length > 0){
+                            const {terminalInfo:{name},userInfo:{tels,user}} = info
+                            SendUartAlarm({name:user,tel:tels.join(","),user,devname:name,type:"透传设备下线提醒",})
+                            DTUOfflineTime.delete(mac)
+                        }
                     }
                 })
-            })
-            console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
-            // 清空查询计数数组
-            this.Event.Cache.QueryTerminaluseTime.forEach(el => el = [])
+            }
         }, 60000 * 10)
     }
 
@@ -142,22 +162,29 @@ export class NodeSocketIO {
                 })
                 // 节点终端设备上线
                 .on(EVENT_TCP.terminalOn, (data: string | string[]) => {
+                    const date = new Date()
                     if (Array.isArray(data)) {
-                        data.forEach(el => this.Event.Cache.CacheNodeTerminalOnline.add(el))
-                        console.info(`${new Date().toLocaleTimeString()}##模块:/${data.join("|")}/ 已上线`);
+                        data.forEach(el => {
+                            this.Event.Cache.CacheNodeTerminalOnline.add(el)
+                            this.Event.Cache.DTUOfflineTime.delete(el)
+                        })
+                        console.info(`${date.toLocaleTimeString()}##模块:/${data.join("|")}/ 已上线`);
                     } else {
                         this.Event.Cache.CacheNodeTerminalOnline.add(data)
-                        console.info(`${new Date().toLocaleTimeString()}##模块:${data} 已上线`);
+                        this.Event.Cache.DTUOfflineTime.delete(data)
+                        console.info(`${date.toLocaleTimeString()}##模块:${data} 已上线`);
                         // 添加日志
                         new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
                     }
                 })
                 // 节点终端设备掉线
-                .on(EVENT_TCP.terminalOff, data => {
-                    this.Event.Cache.CacheNodeTerminalOnline.delete(data)
-                    console.error(`${new Date().toLocaleTimeString()}##模块:${data} 已离线`);
+                .on(EVENT_TCP.terminalOff, (mac:string) => {
+                    this.Event.Cache.CacheNodeTerminalOnline.delete(mac)
+                    const date = new Date()
+                    this.Event.Cache.DTUOfflineTime.set(mac,date)
+                    console.error(`${date.toLocaleTimeString()}##模块:${mac} 已离线`);
                     // 添加日志
-                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "断开" } as logTerminals).save()
+                    new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: mac, type: "断开" } as logTerminals).save()
                     // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 设备挂载节点查询超时
@@ -170,8 +197,15 @@ export class NodeSocketIO {
                         const QueryTerminal = this.Cache.get(Node.Name)?.get(hash) as TerminalMountDevsEX
                         // 查询间隔大于30s,加入到离线列表
                         if (QueryTerminal) {
-                            if (QueryTerminal.Interval >= 1000 * 10) {
+                            if (QueryTerminal.Interval > 3000 * 10) {
                                 this.Event.Cache.TimeOutMonutDev.add(hash)
+                                // 短信告警
+                                const info = getDtuInfo(Query.mac)
+                                if(info && info.userInfo.tels?.length > 0){
+                                    const {terminalInfo:{name,mountDevs},userInfo:{user,tels}} = info
+                                    const dev = mountDevs.find(el=>el.pid === Query.pid) as TerminalMountDevs
+                                    SendUartAlarm({user,name:user,type:'透传设备告警',air:dev.mountDev,event:'查询超时',tel:tels.join(","),devname:name})
+                                }
                             } else {
                                 QueryTerminal.Interval = QueryTerminal?.Interval ? QueryTerminal.Interval + 500 : 1000
                             }

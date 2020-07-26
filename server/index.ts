@@ -88,7 +88,7 @@ attachNuxt(app).then(result => {
   // http监听
   Http.listen(port, host, undefined, () => {
     consola.ready({
-      message: `HTTP Server listening on http://${host}:${port}`,
+      message: `HTTP Server listening on http://localhost:${port}`,
       badge: true
     });
   });

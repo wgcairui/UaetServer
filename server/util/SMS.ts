@@ -52,7 +52,6 @@ export const SendUartAlarm = async (query: smsUartAlarm) => {
         TemplateParam
     }
     return SendSms(params)
-
 }
 
 export const SendValidation = (tel: string, code: string) => {

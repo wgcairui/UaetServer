@@ -17,7 +17,10 @@
             <b-card>
               <b-form>
                 <my-form label="属性:">
-                  <b-form-select v-model="Thresholds.name" :options="items.ShowTags.map(el=>el.name)"></b-form-select>
+                  <b-form-select
+                    v-model="Thresholds.name"
+                    :options="items.ShowTags.map(el=>el.name)"
+                  ></b-form-select>
                 </my-form>
                 <my-form label="最小值:">
                   <b-form-input type="number" v-model="Thresholds.min"></b-form-input>
@@ -36,8 +39,31 @@
               </b-table>
             </b-card>
           </b-tab>
-          <!-- Constant 
-          <b-tab title="Constant"></b-tab>-->
+          <!-- Constant -->
+          <b-tab title="参数状态">
+            <b-list-group>
+              <b-list-group-item
+                v-for="(row,key) in AlarmStatItems"
+                :key="key+'12098'"
+                class="d-flex"
+              >
+                <span>{{row.name}}</span>
+                <div class="ml-auto">
+                  <label v-for="(val,key) in row.show" :key="key" class="mx-1">
+                    <input
+                      class
+                      name="Fruit"
+                      :checked="row.alarmStat.includes(val.value)"
+                      type="checkbox"
+                      :value="val.value"
+                      @change="StateAlarmSelects(row,val.value)"
+                    />
+                    {{val.text}}
+                  </label>
+                </div>
+              </b-list-group-item>
+            </b-list-group>
+          </b-tab>
         </b-tabs>
       </b-col>
     </b-row>
@@ -52,7 +78,8 @@ import {
   ProtocolConstantThreshold,
   userSetup,
   Threshold,
-  ConstantThresholdType
+  ConstantThresholdType,
+  ConstantAlarmStat
 } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 interface tags {
@@ -83,12 +110,17 @@ export default Vue.extend({
         { key: "name", label: "名称" },
         { key: "show", label: "显示" }
       ] as BvTableFieldArray,
+      fieldsAlarmStat: [
+        { key: "name", label: "名称" },
+        { key: "show", label: "勾选正常状态" }
+      ] as BvTableFieldArray,
       DevConstant: {} as Pick<
         ProtocolConstantThreshold,
-        "ProtocolType" | "ShowTag" | "Threshold"
+        "ProtocolType" | "ShowTag" | "Threshold" | "AlarmStat"
       >,
       //
-      userSetup: {} as ProtocolConstantThreshold
+      userSetup: {} as ProtocolConstantThreshold,
+      ProtocolSingle: null
     };
   },
   computed: {
@@ -119,20 +151,86 @@ export default Vue.extend({
           });
         }
         Thresholds = Array.from(ThresholdMap.values());
-        console.log(Thresholds);
-        
       }
+      // 参数状态
+
       return { ShowTags, Thresholds };
+    },
+    // 参数状态
+    AlarmStatItems() {
+      const DevConstant = this.$data.DevConstant as ProtocolConstantThreshold;
+      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      const userSetup = this.userSetup;
+      let result: any[] = [];
+      // 如果协议单例存在
+      if (ProtocolSingle) {
+        // 转换系统和用户的配置为Map，如果未定义则填入空数组
+        //console.log(DevConstant?.AlarmStat);
+        
+        const MapSys = new Map(
+          DevConstant?.AlarmStat
+            ? DevConstant.AlarmStat.map(el => [el.name, el])
+            : []
+        );
+        const MapUser = new Map(
+          userSetup?.AlarmStat
+            ? userSetup.AlarmStat.map(el => [el.name, el])
+            : []
+        );
+        let i = 0;
+        // 迭代协议参数值，取出状态值，把unit转为obj，如果参数有定义监控则写入监控，优先使用用户定义
+        result = ProtocolSingle.instruct
+          .map(el => {
+            return el.formResize
+              .filter(el2 => el2.isState)
+              .map(el3 => {
+                const show = (<string>el3.unit)
+                  .replace(/(\{|\}| )/g, "")
+                  .split(",")
+                  .map(el4 => el4.split(":"))
+                  .map(el5 => ({ text: el5[1], value: Number(el5[0]) }));
+                const alarmStat =
+                  MapUser.get(el3.name)?.alarmStat ||
+                  MapSys.get(el3.name)?.alarmStat;
+                return {
+                  name: el3.name,
+                  show,
+                  alarmStat: Array.from(new Set(alarmStat || []))
+                };
+              });
+          })
+          .flat();
+      }
+      return result;
     }
   },
   //
   apollo: {
+    ProtocolSingle: {
+      query: gql`
+        query getProtocol($Protocol: String) {
+          ProtocolSingle: Protocol(Protocol: $Protocol) {
+            instruct {
+              formResize
+            }
+          }
+        }
+      `,
+      variables() {
+        return { Protocol: this.$data.protocol };
+      }
+    },
     DevConstant: {
       query: gql`
         query getDevConstant($Protocol: String) {
           DevConstant: getDevConstant(Protocol: $Protocol) {
             ShowTag
             Threshold
+            AlarmStat {
+              name
+              unit
+              alarmStat
+            }
           }
         }
       `,
@@ -147,6 +245,11 @@ export default Vue.extend({
           userSetup: getUserDevConstant(Protocol: $Protocol) {
             ShowTag
             Threshold
+            AlarmStat {
+              name
+              unit
+              alarmStat
+            }
           }
         }
       `,
@@ -170,9 +273,25 @@ export default Vue.extend({
       }
       this.pushThreshold(Array.from(ShowTag), "ShowTag");
     },
+    // 添加删除showtags
+    async StateAlarmSelects(item: ConstantAlarmStat, value: number) {
+      const StatSet = new Set(item.alarmStat);
+      if (StatSet.has(value)) {
+        StatSet.delete(value);
+      } else {
+        StatSet.add(value);
+      }
+      item.alarmStat = Array.from(StatSet);
+
+      const AlarmStat = this.AlarmStatItems;
+      this.pushThreshold(
+        AlarmStat,
+        "AlarmStat"
+      );
+    },
     // 添加阀值
     addThreshold() {
-      const Threshold = JSON.parse(JSON.stringify(this.Thresholds))
+      const Threshold = JSON.parse(JSON.stringify(this.Thresholds));
       let data = [Threshold] as Threshold[];
       if (this.DevConstant?.Threshold) {
         const ThresholdMap = new Map(
@@ -183,7 +302,7 @@ export default Vue.extend({
       }
       this.pushThreshold(data, "Threshold");
     },
-
+    // 删除阈值
     deleteThreshold(Threshold: Threshold) {
       const ThresholdMap = new Map(
         this.DevConstant.Threshold.map(el => [el.name, el])
@@ -192,6 +311,7 @@ export default Vue.extend({
       const data = Array.from(ThresholdMap.values());
       this.pushThreshold(data, "Threshold");
     },
+    // 统一提交配置
     async pushThreshold(
       arg: Threshold[] | string[],
       type: ConstantThresholdType
@@ -223,7 +343,7 @@ export default Vue.extend({
           ProtocolType: ""
         }
       });
-      this.$apollo.queries.userSetup.refetch({ Protocol: this.$data.protocol })
+      // this.$apollo.queries.userSetup.refetch({ Protocol: this.$data.protocol });
     }
   }
 });

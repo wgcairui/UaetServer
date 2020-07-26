@@ -338,6 +338,10 @@ const resolvers: IResolvers = {
                 return { User, Node, Terminal, Protocol, TimeOutMonutDev, events, SysInfo }
             }
             else return null
+        },
+        // 检查挂载设备是否在超时列表中
+        checkDevTimeOut(root,{mac,pid}:{mac:string,pid:string},ctx:ApolloCtx){
+            return ctx.$Event.Cache.TimeOutMonutDev.has(mac+pid)
         }
     },
 
@@ -751,6 +755,9 @@ const resolvers: IResolvers = {
                 case "ShowTag":
                     Up = { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) }
                     break
+                    case "AlarmStat":
+                    Up = { "ProtocolSetup.$.AlarmStat": arg }
+                    break
                 case "Oprate":
                     Up = { OprateInstruct: arg }
                     break
@@ -759,7 +766,7 @@ const resolvers: IResolvers = {
             if (!isNull) {
                 await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
             }
-            console.log({ isNull, user: ctx.user });
+            // console.log({ isNull, user: ctx.user });
 
             const result = await UserAlarmSetup.updateOne(
                 { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
@@ -836,6 +843,11 @@ const resolvers: IResolvers = {
         async deleteAggregation(root, { id }, ctx: ApolloCtx) {
             const result = await UserAggregation.deleteOne({ user: ctx.user, id })
             return result
+        },
+        // 重置设备超时状态
+        refreshDevTimeOut(root,{mac,pid}:{mac:string,pid:string},ctx:ApolloCtx){
+            ctx.$Event.Cache.TimeOutMonutDev.delete(mac+pid)
+            return {ok:1} as ApolloMongoResult
         }
     },
 

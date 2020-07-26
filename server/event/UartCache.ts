@@ -73,6 +73,8 @@ export default class Cache {
   CacheAlarmSendNum: Map<string, number>
   // 设备超时列表
   TimeOutMonutDev: Set<string>
+  // DTU设备下线时间
+  DTUOfflineTime:Map<string,Date>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events
@@ -98,6 +100,7 @@ export default class Cache {
     this.TimeOutMonutDev = new Set()
     this.CacheParseUnit = new Map()
     this.CacheAlarmSendNum = new Map()
+    this.DTUOfflineTime = new Map()
   }
   //
   async start(): Promise<void> {
@@ -189,17 +192,17 @@ export default class Cache {
     const res = await UserAlarmSetup.find().lean<userSetup>()
     console.log(`加载用户个性化配置......`);
     this.CacheUserSetup = new Map(res.map(el => {
-      // 如果用户没有自定义告警阀值,生成空map
-      if (el.ProtocolSetup) {
-        el.ProtocolSetupMap = new Map(el.ProtocolSetup.map(els => [els.Protocol, els]))
-        el.ThresholdMap = new Map(el.ProtocolSetup.map(els => {
-          const ThresholdMap = new Map(els.Threshold.map(ela => [ela.name, ela]))
-          return [els.Protocol, ThresholdMap]
-        }))
-      } else {
-        el.ProtocolSetupMap = new Map()
-        el.ThresholdMap = new Map()
-      }
+      // 如果用户没有自定义告警阀值,生成空map   
+      el.ProtocolSetupMap = new Map()
+      el.ThresholdMap = new Map()
+      el.AlarmStateMap = new Map()
+      //
+      el.ProtocolSetup.forEach(els=>{
+        el.ProtocolSetupMap.set(els.Protocol,els)
+        el.ThresholdMap.set(els.Protocol,els.Threshold?new Map(els.Threshold.map(ela => [ela.name, ela])):new Map())
+        el.AlarmStateMap.set(els.Protocol,els.AlarmStat?new Map(els.AlarmStat.map(ela=>[ela.name,ela])):new Map())
+      })        
+      
       return [el.user, el]
     }))
   }

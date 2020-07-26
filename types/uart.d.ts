@@ -301,6 +301,7 @@ interface userSetup {
   ProtocolSetup: ProtocolConstantThreshold[]
   ProtocolSetupMap: Map<string, ProtocolConstantThreshold>
   ThresholdMap: Map<string, Map<string, Threshold>>
+  AlarmStateMap:Map<string,Map<string,ConstantAlarmStat>>
 }
 // 协议解析结果集
 interface queryResultSave {

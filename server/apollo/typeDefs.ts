@@ -301,6 +301,8 @@ const typeDefs: DocumentNode = gql`
     # 用户获取终端上下线数据
     # 获取终端日志
     userlogterminals(start:Date,end:Date,mac:String):[LogTerminal]
+    # 检查挂载设备是否在超时列表
+    checkDevTimeOut(mac:String,pid:String):Boolean
   }
 
   #mutation
@@ -364,6 +366,8 @@ const typeDefs: DocumentNode = gql`
     #添加聚合设备
     addAggregation(name:String,aggs:JSON):result
     deleteAggregation(id:String):result
+    # 重置挂在设备超时状态
+    refreshDevTimeOut(mac:String,pid:String):result
   }
 
   # Subscription

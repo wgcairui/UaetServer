@@ -12,6 +12,7 @@
         <b-button-group size="sm" class="m-2">
           <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">快捷指令</b-button>
           <b-button variant="info" :to="{name:'uart-setup',query:query}">用户配置</b-button>
+          <b-button v-if="devTimeOut" variant="info" @click="refreshDev(query)">超时重置</b-button>
         </b-button-group>
       </separated>
       <b-overlay :show="$apollo.loading" class="w-100 px-2">
@@ -82,7 +83,9 @@ export default Vue.extend({
         { key: "name", label: "变量" },
         { key: "value", label: "值" },
         { key: "oprate", label: "操作" }
-      ] as BvTableFieldArray
+      ] as BvTableFieldArray,
+      // 设备是否在超时状态
+      devTimeOut:false
     };
   },
   //
@@ -212,6 +215,21 @@ export default Vue.extend({
       result: function(data) {
         this.$emit("constant", data.data.DevConstant);
       }
+    },
+    // 设备超时状态
+    devTimeOut:{
+      query:gql`
+      query checkDevTimeOut($mac:String,$pid:String){
+        devTimeOut:checkDevTimeOut(mac:$mac,pid:$pid)
+      }
+      `,
+      variables(){
+        return{
+          mac:this.query.DevMac,
+          pid:this.query.pid
+        }
+      },
+      pollInterval:10000
     }
   },
   methods: {
@@ -219,6 +237,23 @@ export default Vue.extend({
       if (!item || type !== "row") return;
       if (item.alarm) return "table-danger";
       return;
+    },
+    async refreshDev(query:any){
+      console.log(query);
+      const result = await this.$apollo.mutate({
+        mutation:gql`
+        mutation refreshDevTimeOut($mac:String,$pid:String){
+          refreshDevTimeOut(mac:$mac,pid:$pid){
+            ok
+          }
+        }
+        `,
+        variables:{
+          mac:query.DevMac,
+          pid:query.pid
+        }
+      })
+      this.$bvModal.msgBoxOk("重置完成",{title:"msg"})
     }
   }
 });

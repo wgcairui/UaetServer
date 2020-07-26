@@ -6,12 +6,12 @@
         <b-card>
           <b-form>
             <my-form label="属性:">
-              <b-form-select v-model="State" :options="items" multiple></b-form-select>
+              <b-form-select v-model="selectNames" :options="items" multiple></b-form-select>
             </my-form>
             <my-form label="正常值:">
               <b-form-select v-model="State.alarmStat" :options="itemAlarm" multiple></b-form-select>
             </my-form>
-            <b-button size="sm" block variant="info" @click="addState(State)">add</b-button>
+            <b-button size="sm" block variant="info" @click="addState(selectNames)">add</b-button>
           </b-form>
         </b-card>
       </b-col>
@@ -51,11 +51,12 @@ export default Vue.extend({
       //
       addModal: true,
       State: {
-        name: [],
+        name: "",
         value: "",
         unit: "{0:正常,1:报警}",
         alarmStat: [0]
       },
+      selectNames:[] as ConstantAlarmStat[],
       States: [] as ConstantAlarmStat[],
       StatesFields: [
         "name",
@@ -89,7 +90,7 @@ export default Vue.extend({
       return result;
     },
     itemAlarm() {
-      const value = this.$data.State;
+      const value = this.$data.selectNames[0] || this.$data.State;
       return (<string>value.unit)
         .replace(/(\{|\}| )/g, "")
         .split(",")
@@ -140,13 +141,15 @@ export default Vue.extend({
       const obj = Object.assign({}, ...arr);
       return item.alarmStat.map(el => obj[el]);
     },
-    addState(State: any) {
+    addState(selectNames: ConstantAlarmStat[]) {
       const AlarmStats = this.States;
-      ((State.name as any) as string[]).forEach(name => {
-        const n = AlarmStats.findIndex(el => el.name === name);
+      const State = this.State
+      selectNames.forEach(S => {
+        const n = AlarmStats.findIndex(el => el.name === S.name);
+        S.alarmStat = State.alarmStat
         if (n === -1) {
-          AlarmStats.push(Object.assign(State, { name }));
-        } else AlarmStats[n] = State;
+          AlarmStats.push(S);
+        } else AlarmStats[n] = S;
       });
       /* const n = AlarmStats.findIndex(el => el.name === State.name);
       if (n === -1) {
@@ -197,7 +200,7 @@ export default Vue.extend({
               variant: "info",
               title: "Info"
             });
-            this.$apollo.queries.AlarmStats.refetch();
+            this.$apollo.queries.States.refetch();
           }
         });
     }
