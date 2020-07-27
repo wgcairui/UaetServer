@@ -846,7 +846,12 @@ const resolvers: IResolvers = {
         },
         // 重置设备超时状态
         refreshDevTimeOut(root,{mac,pid}:{mac:string,pid:string},ctx:ApolloCtx){
+            // 重置uart查询间隔
+            // const terminal = ctx.$Event.Cache.CacheTerminal.get(mac) as terminal
+            // ctx.$SocketUart._UpdateCache(terminal)
+            // 清楚超时记录
             ctx.$Event.Cache.TimeOutMonutDev.delete(mac+pid)
+            // console.log({timeOut:ctx.$Event.Cache.TimeOutMonutDev});
             return {ok:1} as ApolloMongoResult
         }
     },

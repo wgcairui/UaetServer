@@ -1,7 +1,7 @@
 export default {
   runArg: {
     Query: {
-      Inteltime: 1000
+      Interval: 2000
     }
   }
 };

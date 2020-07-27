@@ -9,6 +9,8 @@ import { LogNodes, LogTerminals } from "../mongoose/Log";
 import { SendUartAlarm } from "../util/SMS";
 import { getDtuInfo } from "../util/util";
 
+import config from "../config";
+
 export interface socketArgument {
     ID: string
     IP: string
@@ -68,7 +70,7 @@ export class NodeSocketIO {
                         const maxTime = Math.max(...yxuseTimeArray)
                         // 如果查询最大值大于1秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
                         if (maxTime && maxTime < 1001) {
-                            terEX.Interval = 2000
+                            terEX.Interval = config.runArg.Query.Interval
                         } else {
                             const maxTimeString = String(maxTime)
                             const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
@@ -193,21 +195,22 @@ export class NodeSocketIO {
                     // 查询间隔大于30s,加入到离线列表
                     // 如果超时次数>=10,加500ms
                     if (timeOut >= 10) {
-                        console.log(`${hash} 查询超时:${timeOut}`);
                         const QueryTerminal = this.Cache.get(Node.Name)?.get(hash) as TerminalMountDevsEX
+                        console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                         // 查询间隔大于30s,加入到离线列表
                         if (QueryTerminal) {
-                            if (QueryTerminal.Interval > 3000 * 10) {
+                            if (QueryTerminal.Interval > 1000 * 10 && !this.Event.Cache.TimeOutMonutDev.has(hash)) {
                                 this.Event.Cache.TimeOutMonutDev.add(hash)
                                 // 短信告警
                                 const info = getDtuInfo(Query.mac)
                                 if(info && info.userInfo.tels?.length > 0){
                                     const {terminalInfo:{name,mountDevs},userInfo:{user,tels}} = info
                                     const dev = mountDevs.find(el=>el.pid === Query.pid) as TerminalMountDevs
-                                    SendUartAlarm({user,name:user,type:'透传设备告警',air:dev.mountDev,event:'查询超时',tel:tels.join(","),devname:name})
+                                    SendUartAlarm({user,name:user,type:'透传设备告警',air:dev.mountDev,event:'设备查询超时',tel:tels.join(","),devname:name})
+                                    QueryTerminal.Interval = config.runArg.Query.Interval
                                 }
                             } else {
-                                QueryTerminal.Interval = QueryTerminal?.Interval ? QueryTerminal.Interval + 500 : 1000
+                                QueryTerminal.Interval = QueryTerminal?.Interval ? QueryTerminal.Interval + 500 : config.runArg.Query.Interval
                             }
                         }
                     }
@@ -231,7 +234,7 @@ export class NodeSocketIO {
         Terminals.forEach(Terminal => {
             Terminal.mountDevs.forEach(mountDev => {
                 const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: 2000 }, mountDev) as Required<TerminalMountDevsEX>
+                    ({ NodeName: Node.Name, NodeIP: Node.IP, TerminalMac: Terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<TerminalMountDevsEX>
                 TerminalMountDev.set(Terminal.DevMac + mountDev.pid, mount)
             })
         })
@@ -259,7 +262,7 @@ export class NodeSocketIO {
                 Object.assign(nodeTerminals.get(hash) as TerminalMountDevsEX, el)
             } else {
                 const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-                    ({ NodeName: terminal.mountNode, NodeIP: this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP, TerminalMac: terminal.DevMac, Interval: 1000 }, el) as Required<TerminalMountDevsEX>
+                    ({ NodeName: terminal.mountNode, NodeIP: this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP, TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, el) as Required<TerminalMountDevsEX>
                 nodeTerminals.set(hash, mount)
             }
         })
@@ -299,7 +302,10 @@ export class NodeSocketIO {
     // 发送查询指令
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
-        if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)) return
+        if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)){
+            console.log(`终端设备:${Query.TerminalMac+Query.pid} 查询超时,取消查询指令`);
+            return
+        }
         // 判断挂载设备是否在线
         if (!this.Event.Cache.CacheNodeTerminalOnline.has(Query.TerminalMac)) {
             // console.log(`终端设备${Query.TerminalMac} 不在线,取消查询指令`);
