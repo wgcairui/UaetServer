@@ -3,7 +3,7 @@ import Tool from "./tool";
 import { protocolInstruct, queryResult, queryResultArgument, protocol } from "uart";
 
 export default async (R: queryResult) => {
-  // 保存查询的查询时间
+  // 保存查询的查询时间，间隔10min重新计算查询间隔
   Event.Cache.QueryTerminaluseTime.get(R.mac + R.pid)?.push(R.useTime)
   // 结果集数组
   const IntructResult = R.contents;
@@ -18,7 +18,7 @@ export default async (R: queryResult) => {
     case 232:
       {
         R.result = IntructResult
-          .filter(el => InstructMap.has(el.content))
+          .filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
           .map(el => {
             const data = el.buffer.data;
             // 解析规则
@@ -40,6 +40,7 @@ export default async (R: queryResult) => {
     case 485:
       {
         switch (true) {
+          // 已HX开头的海信空调非标协议处理程序
           case /(^HX.*)/.test(R.protocol):
             R.result = IntructResult
               .filter(el => el.buffer.data[0] === 85 && InstructMap.has(el.content.slice(4, el.content.length - 2)))
@@ -61,7 +62,7 @@ export default async (R: queryResult) => {
               })
               .flat()
             break
-
+          // 标准modbus协议
           default:
             // 比较查询和结果的功能码是否一致
             R.result = IntructResult
