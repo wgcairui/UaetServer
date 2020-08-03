@@ -69,6 +69,8 @@ export default class Cache {
   QueryTerminaluseTime: Map<string, number[]>
   // 序列化参数单位解析
   CacheParseUnit: Map<string, { [x in number]: string }>
+  // 序列化参数regx解析
+  CacheParseRegx: Map<string,[number,number]>
   // 每个手机号发送告警的次数
   CacheAlarmSendNum: Map<string, number>
   // 设备超时列表
@@ -103,6 +105,7 @@ export default class Cache {
     this.QueryTerminaluseTime = new Map()
     this.TimeOutMonutDev = new Set()
     this.CacheParseUnit = new Map()
+    this.CacheParseRegx = new Map()
     this.CacheAlarmSendNum = new Map()
     this.DTUOfflineTime = new Map()
     this.TimeOutMonutDevINstruct = new Map()
@@ -123,7 +126,11 @@ export default class Cache {
   async RefreshCacheProtocol() {
     const res: protocol[] = await DeviceProtocol.find().lean()
     console.log(`加载协议缓存......`);
-    this.CacheProtocol = new Map(res.map(el => [el.Protocol, el]))
+    const res1 = res.map(el=>{
+      el.instruct = el.instruct.filter(el1=>el1.isUse)
+      return el
+    })
+    this.CacheProtocol = new Map(res1.map(el => [el.Protocol, el]))
   }
   //
   async RefreshCacheDevType() {

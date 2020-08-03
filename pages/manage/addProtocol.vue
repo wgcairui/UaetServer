@@ -175,6 +175,9 @@ export default vue.extend({
       //
       instructItemsFields: [
         { key: "name", label: "名称" },
+        {key: "isUse",label: "启用",formatter(val){
+          return val?"启用":"禁用"
+        }},
         { key: "resultType", label: "结果集" },
         { key: "shift", label: "字符去头" },
         { key: "shiftNum", label: "去头数" },
@@ -277,6 +280,7 @@ export default vue.extend({
             Protocol
             ProtocolType
             instruct {
+              isUse
               name
               resultType
               shift

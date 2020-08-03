@@ -30,7 +30,10 @@ const SchemaProtocols = new Schema({
     new Schema(
       {
         name: String, // 指令名称--GQS
-        isUse: Boolean,
+        isUse: {
+          type:Boolean,
+          default:true
+        },
         resultType: {
           type: String,
           enum: ["utf8", "hex", "float", "short", "int","HX",'bit2']
