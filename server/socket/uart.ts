@@ -23,6 +23,7 @@ const EVENT_TCP = {
     terminalOff: 'terminalOff', // 终端设备下线
     terminalMountDevTimeOut: 'terminalMountDevTimeOut', // 设备挂载节点查询超时
     terminalMountDevTimeOutRestore: 'terminalMountDevTimeOutRestore', // 设备挂载节点查询超时
+    instructTimeOut:'instructTimeOut', // 设备指令超时
 
 }
 const EVENT_SOCKET = {
@@ -188,6 +189,19 @@ export class NodeSocketIO {
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: mac, type: "断开" } as logTerminals).save()
                     // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
+                })
+                // 设备指令超时
+                .on(EVENT_TCP.instructTimeOut,({mac,instruct}:{mac:string,instruct:string[]})=>{
+                    //console.log({mac,instruct});
+                    /* const TimeOutMonutDevINstruct = this.Event.Cache.TimeOutMonutDevINstruct
+                    const TimeOutMonutDevINstructSet = this.Event.Cache.TimeOutMonutDevINstructSet
+                    if(!TimeOutMonutDevINstruct.has(mac)){
+                        TimeOutMonutDevINstruct.set(mac,new Map())
+                    }
+                    const instructs = <Map<string, number>>TimeOutMonutDevINstruct.get(mac)
+                    instruct.forEach(el=>{
+                        if()
+                    }) */
                 })
                 // 设备挂载节点查询超时
                 .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult, timeOut: number) => {

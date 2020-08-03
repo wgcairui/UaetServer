@@ -48,6 +48,8 @@ interface protocolInstruct {
   popNum: number;
   resize: string;
   formResize: protocolInstructFormrize[];
+  // 加入指令是否启用
+  isUse:boolean
 }
 // 协议
 interface protocol {

@@ -75,6 +75,10 @@ export default class Cache {
   TimeOutMonutDev: Set<string>
   // DTU设备下线时间
   DTUOfflineTime:Map<string,Date>
+  // DTU下挂载的设备指令超时, mac[instruct,num]
+  TimeOutMonutDevINstruct:Map<string,Map<string,number>>
+  // DTU下挂载的设备指令超时Set
+  TimeOutMonutDevINstructSet:Set<string>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events
@@ -101,6 +105,8 @@ export default class Cache {
     this.CacheParseUnit = new Map()
     this.CacheAlarmSendNum = new Map()
     this.DTUOfflineTime = new Map()
+    this.TimeOutMonutDevINstruct = new Map()
+    this.TimeOutMonutDevINstructSet = new Set()
   }
   //
   async start(): Promise<void> {

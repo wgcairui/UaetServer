@@ -77,6 +77,9 @@
               <!--   <b-form-group v-bind="forGroup" :disabled="!instruct.addModel">
                
               </b-form-group>-->
+              <my-form label="指令是否启用:">
+                <b-form-checkbox v-model="instruct.isUse" class="py-2 mr-3"></b-form-checkbox>
+              </my-form>
               <my-form label="结果集:">
                 <b-form-select
                   v-model="instruct.resultType"
@@ -91,7 +94,7 @@
                   >{{ instruct.shiftNum }}</b-form-checkbox>
                   <b-form-input
                     type="range"
-                    max="5"
+                    max="100"
                     min="0"
                     v-model="instruct.shiftNum"
                     v-if="instruct.shift"
@@ -103,7 +106,7 @@
                   <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">{{ instruct.popNum }}</b-form-checkbox>
                   <b-form-input
                     type="range"
-                    max="10"
+                    max="100"
                     min="0"
                     v-model="instruct.popNum"
                     v-if="instruct.pop"
@@ -141,13 +144,8 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { parseJsonToJson } from "../../plugins/tools";
 import deepmerge from "deepmerge";
-import {
-  protocolInstructFormrize,
-  protocol,
-  protocolInstruct
-} from "uart";
+import { protocolInstructFormrize, protocol, protocolInstruct } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 
 export default vue.extend({
@@ -165,11 +163,12 @@ export default vue.extend({
         name: "",
         resultType: "hex",
         shift: false,
-        shiftNum: 1,
+        shiftNum: 0,
         pop: false,
-        popNum: 1,
+        popNum: 0,
         resize: "",
-        addModel: true
+        addModel: true,
+        isUse: true
       },
       // 指令集
       instructItems: [] as protocol[],
@@ -232,9 +231,27 @@ export default vue.extend({
     } */
   },
   watch: {
-    //检测到"/"，字符自动换行
+    // 检测到"/"，字符自动换行
     "instruct.resize": function(newVal) {
       if (newVal.endsWith("/")) this.$data.instruct.resize += "\n";
+    },
+    // 检测类型以去除头尾
+    "accont.Type": function(newVal) {
+      const instruct = this.instruct;
+      switch (newVal) {
+        case 485:
+          instruct.shift = true;
+          instruct.pop = true;
+          instruct.shiftNum = 3;
+          instruct.popNum = 2;
+          break;
+        case 232:
+          instruct.shift = true;
+          instruct.pop = true;
+          instruct.shiftNum = 1;
+          instruct.popNum = 1;
+          break;
+      }
     },
     // 监测协议是否重复，重复之后填充input
     apolloProtocol: function(newVal: protocol) {
