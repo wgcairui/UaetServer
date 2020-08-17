@@ -21,7 +21,7 @@
             <b-table :items="line.simulate" :fields="fields" :tbody-tr-class="rowClass" class>
               <template v-slot:cell(value)="row">
                 <b class="value">
-                  <b-badge>{{row.value}}</b-badge>
+                  <b-badge>{{parseFloat(row.value)}}</b-badge>
                 </b>
                 <span>{{row.item.unit}}</span>
               </template>

@@ -33,6 +33,8 @@ export default async (ctx: ParameterizedContext) => {
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");
         const User: UserInfo = await JwtVerify(token).catch(err => ctx.throw(400))
+        console.log({token,User});
+        
         ctx.body = { user: User.name }
       }
       break

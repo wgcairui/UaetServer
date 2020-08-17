@@ -35,6 +35,7 @@ export default async (Ctx: ParameterizedContext) => {
           });
         // 包含错误
         ctx.assert(!wxGetseesion.data.errcode, 401, wxGetseesion.data.errmsg);
+        // 正确的话返回sessionkey
         const { openid, session_key } = wxGetseesion.data;
         // 存储session
         ClientCache.CacheWXSession.set(openid, session_key);
@@ -82,7 +83,8 @@ export default async (Ctx: ParameterizedContext) => {
         const userStat = await Users.findOne({ userId: data.appid });
         ctx.assert(!userStat, 400, "账号有重复,此微信账号已绑定");
         //
-        const telStat = await Users.findOne({ $or:[{tel:data.tel},{mail:data.mail}] });
+        // const telStat = await Users.findOne({ $or:[{tel:data.tel},{mail:data.mail}] });
+        const telStat = await Users.findOne({tel:data.tel},{mail:data.mail});
         ctx.assert(!telStat, 400, "手机或邮箱号重复,请重新填写");
         //
         const user = Object.assign(

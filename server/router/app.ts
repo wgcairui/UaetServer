@@ -59,9 +59,9 @@ export default async (Ctx: ParameterizedContext) => {
               const telStat = await Users.findOne({ user: body.tel });
               ctx.assert(!telStat,400,"手机号码有重复,请重新填写号码")
               //
-              const mailStat = await Users.findOne({ user: body.mail });
+              /* const mailStat = await Users.findOne({ user: body.mail });
               ctx.assert(!mailStat,400,"邮箱账号有重复,请重新填写邮箱")
-              //
+              // */
               const user = Object.assign(body, { passwd: await BcryptDo(body.passwd) },{rgtype:"app"}) as UserInfo
               const User = new Users(user);
               ctx.body = await User.save()
@@ -110,13 +110,6 @@ export default async (Ctx: ParameterizedContext) => {
           } else {
             ctx.body =  { ok: 0, msg: '没有校验码,请重新获取' } as ApolloMongoResult
           }
-        }
-        break
-        // 微信登录
-        case "wxlogin":
-        {
-          
-
         }
         break
 
