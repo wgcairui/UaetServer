@@ -317,7 +317,7 @@ export class NodeSocketIO {
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
         if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)){
-            console.log(`终端设备:${Query.TerminalMac+Query.pid} 查询超时,取消查询指令`);
+            // console.log(`终端设备:${Query.TerminalMac+Query.pid} 查询超时,取消查询指令`);
             return
         }
         // 判断挂载设备是否在线

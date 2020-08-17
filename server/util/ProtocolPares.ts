@@ -88,6 +88,12 @@ export default async (R: queryResult) => {
                       // 把结果字段中的10进制转换为2进制,翻转后补0至8位,代表modbus线圈状态
                       // https://blog.csdn.net/qq_26093511/article/details/58628270
                       // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
+                      /* 
+                        1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
+                        2,把连续的几个数组拼接起来，转换为数字
+                        例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
+                        [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
+                      */
                       const bit2Array = data.map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
                       buf = bit2Array
                     }

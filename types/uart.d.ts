@@ -207,7 +207,7 @@ type registerType="wx"|"web"|"app"
 
 /* 用户信息 */
 interface UserInfo {
-  avantar?: string
+  avanter?: string
   userId:string
   name?: string;
   user: string;

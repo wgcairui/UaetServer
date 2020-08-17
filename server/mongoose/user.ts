@@ -5,7 +5,7 @@ import { Schema_DevConstant } from "./DeviceParameterConstant";
 
 // 用户信息
 const Schema_Users = new Schema({
-  avantar:String,
+  avanter:String,
   rgtype:{
     type:String,
     enum:['wx','web','app'],

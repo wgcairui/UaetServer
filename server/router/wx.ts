@@ -1,13 +1,17 @@
 import { ParameterizedContext } from "koa";
 import axios, { AxiosResponse } from "axios";
-import { Users } from "../mongoose/user";
+import { Users, UserAlarmSetup } from "../mongoose/user";
 import {
   KoaCtx,
   wxRequestCode2Session,
   UserInfo,
-  ApolloMongoResult
+  ApolloMongoResult,
+  userSetup,
+  logUserLogins
 } from "uart";
 import { WXBizDataCrypt } from "../util/wxUtil";
+import { BcryptDo } from "../util/bcrypt";
+import { LogUserLogins } from "../mongoose/Log";
 const wxSecret = require("../key/wxSecret.json");
 
 export default async (Ctx: ParameterizedContext) => {
@@ -35,7 +39,7 @@ export default async (Ctx: ParameterizedContext) => {
         // 存储session
         ClientCache.CacheWXSession.set(openid, session_key);
         // 检查openid是否为已注册用户
-        const user = (await Users.findOne({ user: openid }).lean()) as UserInfo;
+        const user = (await Users.findOne({ userId: openid }).lean()) as UserInfo;
         if (user) {
           ctx.body = {
             ok: 1,
@@ -54,7 +58,7 @@ export default async (Ctx: ParameterizedContext) => {
     case "getphonenumber":
       {
         const { encryptedData, iv, appid } = body;
-        // 获取用户最近的seesionKey     
+        // 获取用户最近的seesionKey
         const session_key = ClientCache.CacheWXSession.get(appid);
         ctx.assert(session_key, 400, "appid is nologin");
         const Crypt = new WXBizDataCrypt(session_key as string);
@@ -62,6 +66,49 @@ export default async (Ctx: ParameterizedContext) => {
           ok: 1,
           arg: Crypt.decryptData(encryptedData, iv)
         } as ApolloMongoResult;
+      }
+      break;
+    // 微信用户注册
+    case "register":
+      {
+        const data: {
+          appid: string;
+          user: string;
+          name: string;
+          tel: string;
+          mail: string;
+          avanter: string;
+        } = body;
+        const userStat = await Users.findOne({ userId: data.appid });
+        ctx.assert(!userStat, 400, "账号有重复,此微信账号已绑定");
+        //
+        const telStat = await Users.findOne({ $or:[{tel:data.tel},{mail:data.mail}] });
+        ctx.assert(!telStat, 400, "手机或邮箱号重复,请重新填写");
+        //
+        const user = Object.assign(
+          body,
+          {userId: data.appid},
+          { passwd: await BcryptDo(data.appid) },
+          { rgtype: "wx" }
+        ) as UserInfo;
+        const User = new Users(user);
+        ctx.body = await User.save()
+          .then(() => {
+            // 生成用户新的自定义配置
+            const setup: Partial<userSetup> = {
+              user: user.user,
+              tels: user.tel ? [String(user.tel)] : [],
+              mails: user.mail ? [user.mail] : []
+            };
+            new UserAlarmSetup(setup).save();
+            // 添加日志记录
+            new LogUserLogins({
+              user: user.user,
+              type: "用户注册"
+            } as logUserLogins).save();
+            return { ok: 1, msg: "账号注册成功" };
+          })
+          .catch(e => console.log(e));
       }
       break;
   }
