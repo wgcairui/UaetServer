@@ -157,6 +157,7 @@ export default vue.extend({
           this.$router.push({ name: "admin" });
           break;
         default:
+          // console.log({userGroup,token:this.$auth.getToken("local")});
           this.$router.push("/");
           break;
       }

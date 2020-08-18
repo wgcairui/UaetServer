@@ -1,5 +1,5 @@
 <template>
-  <my-page-user :title="title">
+  <div>
     <b-row class="m-0">
       <separated :title="query.mountDev">
         <b v-b-tooltip.hover :title="Queryarg.useTime+'/'+Queryarg.Interval">{{Queryarg.queryTime}}</b>
@@ -11,7 +11,7 @@
       <separated title="模拟量">
         <b-button-group size="sm" class="m-2">
           <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">快捷指令</b-button>
-          <b-button variant="info" :to="{name:'uart-setup',query:query}">用户配置</b-button>
+          <b-button variant="info" :to="{name:'main-setup',query:query}">用户配置</b-button>
           <b-button v-if="devTimeOut" variant="info" @click="refreshDev(query)">超时重置</b-button>
         </b-button-group>
       </separated>
@@ -48,7 +48,7 @@
     </b-row>
 
     <my-oprate :query="query" id="OprateInstructMode"></my-oprate>
-  </my-page-user>
+  </div>
 </template>
 <script lang="ts">
 import Vue from "vue";

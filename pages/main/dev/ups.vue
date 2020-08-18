@@ -1,5 +1,5 @@
 <template>
-  <my-page-user-dev title="ups" :query="query" v-on:data="onData" v-on:constant="onConstant">
+  <my-page-user-dev2 title="ups" :query="query" v-on:data="onData" v-on:constant="onConstant">
     <template>
       <b-col cols="12" md="8" class="m-0 p-0 my-2">
         <b-card :sub-title="betty_model.name">
@@ -28,7 +28,7 @@
         </b-card>
       </b-col>
     </template>
-  </my-page-user-dev>
+  </my-page-user-dev2>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -43,16 +43,16 @@ import gql from "graphql-tag";
 export default Vue.extend({
   data() {
     const map = {
-        在线模式: require("../../assets/image/ups3.gif"),
-        旁路模式: require("../../assets/image/ups2.gif"),
-        通电模式: require("../../assets/image/ups.gif"),
-        待机模式: require("../../assets/image/ups.gif"),
-        电池模式: require("../../assets/image/ups1.gif"),
-        电池测试模式: require("../../assets/image/ups.gif"),
-        故障模式: require("../../assets/image/ups.gif"),
-        ECO节能模式: require("../../assets/image/ups.gif"),
-        恒频模式: require("../../assets/image/ups.gif"),
-        关机模式: require("../../assets/image/ups.gif")
+        在线模式: require("~/assets/image/ups3.gif"),
+        旁路模式: require("~/assets/image/ups2.gif"),
+        通电模式: require("~/assets/image/ups.gif"),
+        待机模式: require("~/assets/image/ups.gif"),
+        电池模式: require("~/assets/image/ups1.gif"),
+        电池测试模式: require("~/assets/image/ups.gif"),
+        故障模式: require("~/assets/image/ups.gif"),
+        ECO节能模式: require("~/assets/image/ups.gif"),
+        恒频模式: require("~/assets/image/ups.gif"),
+        关机模式: require("~/assets/image/ups.gif")
       };
     // const { mountDev, pid, protocol, DevMac } = this.$route.query;
     return {

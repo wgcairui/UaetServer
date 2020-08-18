@@ -31,7 +31,7 @@
               <b-form-input type="tel" id="tel" v-model.trim="accont.tel" :state="telStat" />
             </b-form-group>
             <b-form-group label="邮箱:" label-for="mail" v-bind="label">
-              <b-form-input type="mail" id="mail" v-model.trim="accont.mail" :state="mailStat" />
+              <b-form-input type="mail" id="mail" v-model.trim="accont.mail"/>
             </b-form-group>
             <b-form-group label="组织:" label-for="company" v-bind="label">
               <b-form-input id="company" v-model.trim="accont.company" />
@@ -88,10 +88,6 @@ export default Vue.extend({
     telStat() {
       const mailReg = /^1(3|4|5|7|8)\d{9}$/;
       return mailReg.test(this.$data.accont.tel);
-    },
-    mailStat() {
-      const mailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
-      return mailReg.test(this.$data.accont.mail);
     }
   },
   apollo: {
@@ -115,8 +111,7 @@ export default Vue.extend({
       if (
         !this.userStat ||
         !this.passwdStat ||
-        !this.passwd2Stat ||
-        !this.mailStat
+        !this.passwd2Stat
       ) {
         this.$bvModal.msgBoxOk("输入的参数格式错误");
       } else {
@@ -131,7 +126,7 @@ export default Vue.extend({
               }
             `,
             variables: {
-              arg: { name, user, passwd, tel, mail, company }
+              arg: { name:name || user, user, passwd, tel, mail, company }
             }
           })
           .then(({ data }) => {

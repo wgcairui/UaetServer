@@ -25,7 +25,7 @@ export default async (ctx: ParameterizedContext) => {
         // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
         if (u && pwStat) {
           (ctx as KoaCtx).$Event.ClientCache.CacheUserLoginHash.delete(user)
-          ctx.body = { token: await JwtSign(u), user: u.user, name: u.name, userGroup: u.userGroup };
+          ctx.body = { token: await JwtSign(u), user: u.user, name: u.name || u.user, userGroup: u.userGroup };
         }
         break;
       }
@@ -33,9 +33,7 @@ export default async (ctx: ParameterizedContext) => {
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");
         const User: UserInfo = await JwtVerify(token).catch(err => ctx.throw(400))
-        console.log({token,User});
-        
-        ctx.body = { user: User.name }
+        ctx.body = { user: User.name || User.user }
       }
       break
     case "userGroup":

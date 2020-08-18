@@ -6,6 +6,7 @@ import separated from "../components/separated.vue"
 import MyHead from "../components/MyHead.vue"
 import MyPageUser from "../components/my-page-user.vue"
 import MyPageUserDev from "../components/my-page-user-dev.vue"
+import MyPageUserDev2 from "../components/my-page-user-dev2.vue"
 import MyPageManage from "../components/my-page-manage.vue"
 //
 import MyTableLog from "../components/my-table-log.vue"
@@ -24,6 +25,7 @@ Vue.component("my-oprate", MyOprate)
 Vue.component("my-form", MyForm)
 Vue.component("my-page-user", MyPageUser)
 Vue.component("my-page-user-dev", MyPageUserDev)
+Vue.component("my-page-user-dev2", MyPageUserDev2)
 Vue.component("my-page-manage", MyPageManage)
 
 Vue.component("socket-state", SocketState)

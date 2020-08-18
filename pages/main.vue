@@ -2,13 +2,7 @@
   <div class="h-100 w-100 d-flex flex-column">
     <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" fixed>
       <b-navbar-brand>
-        <span v-if="back">
-          <b-button variant="link" class="m-0 p-0 text-decoration-none" @click="$router.go(-1)">
-            <i class="iconfont text-light">&#xe641;</i>
-          </b-button>
-          <span class="text-light">|</span>
-        </span>
-        <span class="text-center text-light" style="font-size:1.1rem">{{ title }}</span>
+        <span class="text-center text-light" style="font-size:1.1rem">LADS</span>
       </b-navbar-brand>
 
       <b-nav-toggle target="user-nav" class="m-1">
@@ -31,12 +25,12 @@
               @click="toDev(val)"
             >{{val.text}}</b-dropdown-item>
           </b-nav-dropdown>
-          <b-nav-item v-if="isUser" v-b-toggle.alarms>
+          <b-nav-item v-b-toggle.alarms>
             <span class="text-light text-wrap">
               <i class="iconfont">&#xeb68;</i>告警管理
             </span>
           </b-nav-item>
-          <b-nav-item :to="{ name: 'user-DevManage' }" v-if="isUser">
+          <b-nav-item :to="{ name: 'user-DevManage' }">
             <span class="text-light text-wrap">
               <i class="iconfont">&#xebd8;</i>设备管理
             </span>
@@ -78,14 +72,14 @@
       </b-collapse>
     </b-navbar>
 
-    <b-container class="h-100 overflow-auto user-body" :fluid="fluid" id="user-content">
-      <slot />
+    <b-container class="h-100 overflow-auto user-body" id="user-content">
+      <nuxt-child :key="key"/>
     </b-container>
 
     <footer class="mt-auto">
       <slot name="footer"></slot>
     </footer>
-    <b-sidebar id="alarms" title="Alarm" right bg-variant="dark" text-variant="light" v-if="isUser">
+    <b-sidebar id="alarms" title="Alarm" right bg-variant="dark" text-variant="light">
       <b-button
         variant="link"
         class="bg-dark text-light text-decoration-none text-center"
@@ -109,24 +103,6 @@ import { WebInfo } from "../store/DB";
 import gql from "graphql-tag";
 import { Terminal } from "uart";
 export default Vue.extend({
-  props: {
-    title: {
-      default: "Ladis",
-      type: String
-    },
-    back: {
-      default: true,
-      type: Boolean
-    },
-    isUser: {
-      default: true,
-      type: Boolean
-    },
-    fluid: {
-      default: false,
-      type: Boolean
-    }
-  },
   data() {
     return {
       BindDevice: {
@@ -136,6 +112,9 @@ export default Vue.extend({
     };
   },
   computed: {
+      key(){
+          return this.$route.fullPath
+      },
     Infos() {
       return ((this.$store as any).state.Infos as WebInfo[]) || [];
     },
@@ -174,16 +153,16 @@ export default Vue.extend({
       };
       switch (val.type) {
         case "温湿度":
-          this.$router.push({ name: "uart-th", query });
+          this.$router.push({ name: "main-dev-th", query });
           break;
         case "空调":
-          this.$router.push({ name: "uart-air", query });
+          this.$router.push({ name: "main-dev-air", query });
           break;
         case "电量仪":
-          this.$router.push({ name: "uart-em", query });
+          this.$router.push({ name: "main-dev-em", query });
           break;
         case "UPS":
-          this.$router.push({ name: "uart-ups", query });
+          this.$router.push({ name: "main-dev-ups", query });
           break;
       }
     },
@@ -239,7 +218,7 @@ export default Vue.extend({
             this.$router.push({ name: "admin" });
             break;
           default:
-            this.$router.push("/");
+            this.$router.push({name:"main"});
             break;
         }
       });
