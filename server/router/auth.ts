@@ -39,7 +39,9 @@ export default async (ctx: ParameterizedContext) => {
     case "userGroup":
       {
         const token = ctx.cookies.get("auth._token.local");
-        if (token && token === "false") ctx.body = { userGroup: "guest" };
+        console.log({token});
+        
+        if (!token || token === "false") ctx.body = { userGroup: "guest" };
         else {
           const user: UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
           ctx.body = { userGroup: user.userGroup };
