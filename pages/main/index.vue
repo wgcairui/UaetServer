@@ -15,7 +15,7 @@
       >
         <b-card class="shadow">
           <b-link
-            :to="{ name: 'main-uart', query: { DevMac: link.DevMac } }"
+            :to="{ name: 'main-terminal', query: { DevMac: link.DevMac } }"
             class="text-decoration-none text-dark"
           >
             <b-card-title class="d-flex align-items-center">
@@ -23,7 +23,7 @@
               {{ link.name }}&nbsp;&nbsp;
               <b-spinner small :variant="link.online?'success':'warning'" type="grow" />
             </b-card-title>
-            <b-card-sub-title>&nbsp;&nbsp;{{ link.DevMac }}</b-card-sub-title>
+            <b-card-sub-title>&nbsp;&nbsp;Mac:{{ link.DevMac }}</b-card-sub-title>
           </b-link>
           <b-card-body class="d-flex flex-row">
             <i class="iconfont" style="padding-top:7px">&#xec24;</i>
@@ -42,21 +42,21 @@
               <b-button
                 variant="link"
                 v-if="link.mountDevs.length===0"
-                :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
+                :to="{name:'main-addTerminal',query: { DevMac: link.DevMac }}"
               >Add mountDevs</b-button>
             </span>
           </b-card-body>
         </b-card>
       </b-col>
     </b-row>
-    <b-row id="aggregation">
+    <b-row id="aggregation" class="mt-5">
       <separated title="聚合设备">
         <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
       </separated>
       <b-col cols="12" md="6" class="mt-4" v-for="(link, key) in agg" :key="key+link.name">
         <b-card class="shadow">
           <b-link
-            :to="{ name: 'uart-aggregation', query: { id: link.id } }"
+            :to="{ name: 'main-aggregation', query: { id: link.id } }"
             class="text-decoration-none text-dark"
           >
             <b-card-title>
@@ -87,7 +87,7 @@
               <b-button
                 variant="link"
                 v-if="link.aggregations.length===0"
-                :to="{name:'user-addTerminal',query: { DevMac: link.DevMac }}"
+                :to="{name:'main-addTerminal',query: { DevMac: link.DevMac }}"
               >Add mountDevs</b-button>
             </span>
           </b-card-body>
@@ -165,13 +165,10 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BindDevice, Terminal, AggregationDev } from "uart";
-import aggregationVue from "./uart/aggregation.vue";
 export default Vue.extend({
   data() {
     return {
       BindDevice: {
-        UTs: [],
-        ECs: [],
         AGG: [],
         user: ""
       },
@@ -183,21 +180,17 @@ export default Vue.extend({
   },
   computed: {
     uts() {
-      const uts = this.$data.BindDevice.UTs as Terminal[];
+      const uts = this.$store.state.BindDevice.UTs as Terminal[];
       const uartFilter = this.$data.uartFilter as string;
       if (!uartFilter) return uts;
       const regex = new RegExp(uartFilter);
       return uts.filter(el => uartFilter && regex.test(JSON.stringify(el)));
     },
     aggOption() {
-      const uts = this.$data.BindDevice.UTs as Terminal[];
-      const aggOpt = uts
-        .map(el => {
-          return el.mountDevs.map(el2 => ({
-            text: `${el.name}-${el2.pid}-${el2.mountDev}`,
-            value: { DevMac: el.DevMac, name: el.name, ...el2 }
-          }));
-        })
+      const uts = this.$store.state.BindDevice.UTs as Terminal[];
+      const aggOpt = uts.map(el => {
+        return el.mountDevs.map(el2 => ({ text: `${el.name}-${el2.pid}-${el2.mountDev}`, value: { DevMac: el.DevMac, name: el.name, ...el2 } }));
+      })
         .flat();
       return aggOpt;
     },
@@ -216,18 +209,6 @@ export default Vue.extend({
       query: gql`
         query getUserBindDevice {
           BindDevice {
-            UTs {
-              DevMac
-              name
-              online
-              ip
-              mountDevs {
-                Type
-                mountDev
-                protocol
-                pid
-              }
-            }
             AGG {
               name
               id
@@ -240,57 +221,22 @@ export default Vue.extend({
                 pid
               }
             }
-            ECs {
-              ECid
-              name
-              model
-            }
           }
         }
-      `,
-      result: function(data) {
-        const BindDevice = data.data.BindDevice as BindDevice;
-        if (
-          !BindDevice ||
-          (BindDevice.UTs.length === 0 && BindDevice.ECs.length === 0)
-        )
-          this.$router.push("/user/DevManage");
-      }
+      `
     }
   },
   methods: {
-    toDev(
-      DevMac: string,
-      pid: string,
-      mountDev: string,
-      protocol: string,
-      Type: string
-    ) {
+    toDev(DevMac: string, pid: string, mountDev: string, protocol: string, Type: string) {
       const query = { DevMac, pid, mountDev, protocol };
-      switch (Type) {
-        case "温湿度":
-          this.$router.push({ name: "main-dev-th", query });
-          break;
-        case "空调":
-          this.$router.push({ name: "main-dev-air", query });
-          break;
-        case "电量仪":
-          this.$router.push({ name: "main-dev-em", query });
-          break;
-        case "UPS":
-          this.$router.push({ name: "main-dev-ups", query });
-          break;
-      }
+      this.$router.push({ name: "main-device", query });
     },
     // 添加虚拟聚合设备
     async addAggregation() {
       const aggDevices = this.aggSelects;
       const aggName = this.aggName;
       const msg = aggDevices.map(el => el.mountDev).join(",");
-      const isOk = await this.$bvModal.msgBoxConfirm(
-        `是否选择 ${msg} 创建聚合设备:${aggName}`,
-        { buttonSize: "sm", okTitle: "确定!", centered: true }
-      );
+      const isOk = await this.$bvModal.msgBoxConfirm(`是否选择 ${msg} 创建聚合设备:${aggName}`, { buttonSize: "sm", okTitle: "确定!", centered: true });
       if (isOk) {
         const result = await this.$apollo.mutate({
           mutation: gql`
@@ -308,10 +254,7 @@ export default Vue.extend({
     },
     async aggregationTrash(id: string) {
       const isOk = await this.$bvModal.msgBoxConfirm("是否删除聚合设备:" + id, {
-        buttonSize: "sm",
-        okTitle: "确定!",
-        okVariant: "info",
-        centered: true
+        buttonSize: "sm", okTitle: "确定!", okVariant: "info", centered: true
       });
       if (isOk) {
         const result = await this.$apollo.mutate({

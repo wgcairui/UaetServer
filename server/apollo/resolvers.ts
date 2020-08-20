@@ -96,6 +96,11 @@ const resolvers: IResolvers = {
             //
             Bind.UTs = Bind.UTs.map((el: any) => {
                 el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
+                if(el.online){
+                    el.mountDevs.forEach((element:any) => {
+                        element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac+element.pid)
+                    });
+                }
                 return el
             })
             return Bind;

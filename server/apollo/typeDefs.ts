@@ -50,6 +50,7 @@ const typeDefs: DocumentNode = gql`
   # 终端挂载的设备类型
   type MountDev {
     Type:String
+    online: Boolean
     mountDev: String
     protocol: String
     pid: Int

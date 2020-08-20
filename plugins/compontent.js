@@ -1,6 +1,7 @@
 import Vue from "vue"
 import VeLine from "v-charts/lib/line.common"
 import { IconsPlugin } from "bootstrap-vue"
+/* 
 import SocketState from "../components/SocketState.vue"
 import separated from "../components/separated.vue"
 import MyHead from "../components/MyHead.vue"
@@ -15,10 +16,12 @@ import MyForm from "../components/MyForm.vue"
 import MyOprate from "../components/MyOprate.vue"
 
 import SmsValidation from "../components/SmsValidation.vue"
-import Amap from "../components/amap.vue"
+import Amap from "../components/amap.vue" */
 
 // Amap
 Vue.use(IconsPlugin)
+Vue.component("ve-line", VeLine)
+/* 
 Vue.component("sms-validation", SmsValidation)
 Vue.component("my-table-log", MyTableLog)
 Vue.component("my-oprate", MyOprate)
@@ -31,5 +34,5 @@ Vue.component("my-page-manage", MyPageManage)
 Vue.component("socket-state", SocketState)
 Vue.component("my-head", MyHead)
 Vue.component("separated", separated)
-Vue.component("ve-line", VeLine)
-Vue.component("amap", Amap)
+
+Vue.component("amap", Amap) */

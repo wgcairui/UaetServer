@@ -75,6 +75,7 @@ interface RegisterTerminal {
 // 终端挂载设备
 interface TerminalMountDevs {
   Type: string
+  online?:boolean
   mountDev: string;
   protocol: string;
   pid: number;
@@ -82,6 +83,7 @@ interface TerminalMountDevs {
 // 终端
 interface Terminal extends RegisterTerminal {
   DevMac: string
+  online?:boolean
   mountNode: string
   name: string;
   ip?: string

@@ -5,8 +5,8 @@
         <header class="d-flex flex-row p-2 shadow-sm" style="height:56px">
           <b-img src="https://www.ladishb.com/logo.png" style="height:40px"></b-img>
           <span class="ml-auto">
-            <b-button variant="link" to="app">APP</b-button>
-            <b-button variant="link" class=" text-success">English</b-button>
+            <b-button variant="link" to="/user/app">APP</b-button>
+            <!-- <b-button variant="link" class="text-success">English</b-button> -->
           </span>
         </header>
       </b-col>
@@ -63,7 +63,7 @@
           </b-card>
         </b-col>
       </b-row>
-      <b-row class="mt-auto" no-gutters>
+      <b-row class="mt-auto bg-footer" no-gutters>
         <b-col>
           <footer class="d-flex align-items-center px-3 py-1 flex-md-row">
             <b-link
@@ -111,26 +111,15 @@ export default vue.extend({
     async login_submit() {
       const { user, passwd } = this.$data.accont;
       // 向服务器请求加密hash
-      const data = await this.$axios
-        .$get("/api/auth/hash", { params: { user } })
-        .catch((error: any) => {
-          this.$bvModal.msgBoxOk(error?.response?.data || "流程出错", {
-            size: "sm",
-            buttonSize: "sm"
-          });
-        });
+      const data = await this.$axios.$get("/api/auth/hash", { params: { user } }).catch((error: any) => { this.$bvModal.msgBoxOk(error?.response?.data || "流程出错", { size: "sm", buttonSize: "sm" }); });
       //
       if (!data?.hash || !passwd) return;
-      this.$auth
-        .loginWith("local", {
-          data: { user, passwd: AES.encrypt(passwd, data.hash).toString() }
-        })
+      this.$auth.loginWith("local", { data: { user, passwd: AES.encrypt(passwd, data.hash).toString() } })
         .then((data: any) => {
           localStorage.setItem("uartserverUser", data.data.user);
-          this.redit(data.data.userGroup);
+          //this.redit(data.data.userGroup);
         })
         .catch((error: any) => {
-          //console.log({ error, keys: Object.keys(error不) });
           if (!error.response || error.response.status !== 400) {
             this.$bvModal.msgBoxOk("登录遇到未知错误");
             return;
@@ -147,20 +136,6 @@ export default vue.extend({
             }
           }
         });
-    },
-    redit(userGroup: string) {
-      switch (userGroup) {
-        case "admin":
-          this.$router.push({ name: "manage" });
-          break;
-        case "root":
-          this.$router.push({ name: "admin" });
-          break;
-        default:
-          // console.log({userGroup,token:this.$auth.getToken("local")});
-          this.$router.push("/");
-          break;
-      }
     }
   },
   mounted() {
@@ -198,5 +173,8 @@ a {
   background-image: url("../assets/backgrounpImg.jpg");
   background-size: contain;
   /* background-blend-mode:luminosity */
+}
+.bg-footer{
+  background-color: #cad7e0
 }
 </style>

@@ -2,7 +2,7 @@ import { Configuration } from "@nuxt/types"
 const isProd = process.env.NODE_ENV === "production"
 const Config = {
   //
-  telemetry: false,
+  telemetry: true,
   mode: "spa",
   // mode: "universal",
   server: {
@@ -42,6 +42,7 @@ const Config = {
     { src: "~/plugins/vue-socket.io-extended.ts", ssr: false },
     "~/plugins/compontent.js"
   ],
+  components:true,
   /*
    ** Nuxt.js dev-modules
    */
@@ -133,7 +134,7 @@ const Config = {
       login: "/login",
       logout: "/login",
       // callback: '/admin/edit',
-      home: false
+      home: "/main"
     }
   },
   // Give apollo module options
@@ -171,7 +172,7 @@ const Config = {
     /*
      ** You can extend webpack config here
      */
-    extend(config, ctx) {
+    extend(config: any, ctx: { isDev: any; isClient: any }) {
       // Run ESLint on save
       if (ctx.isDev && ctx.isClient) {
         (config as any).module.rules.push({
@@ -184,7 +185,7 @@ const Config = {
     }
   },
   router: {
-    middleware: ["auth", 'checkSocketIO']
+    middleware: ["auth", 'checkSocketIO',"CheckUserGroup"]
   },
   typescript: {
     typeCheck: {

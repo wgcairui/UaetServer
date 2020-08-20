@@ -39,18 +39,16 @@ export default async (ctx: ParameterizedContext) => {
     case "userGroup":
       {
         const token = ctx.cookies.get("auth._token.local");
-        // 没有token则检查body，注册和重置页面的请求则通过
-        if (token && token === "false") ctx.assert("", 400, "no token");
-        // 解构token
-        const user: UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
-        ctx.body = { userGroup: user.userGroup };
+        if (token && token === "false") ctx.body = { userGroup: "guest" };
+        else {
+          const user: UserInfo = await JwtVerify((<string>token).replace("bearer%20", ""));
+          ctx.body = { userGroup: user.userGroup };
+        }
       }
       break;
     case "logout":
       {
-        ctx.body = await new Promise(resolve => {
-          resolve({ state: "logout success" });
-        });
+        ctx.body = await new Promise(resolve => { resolve({ state: "logout success" }); });
       }
       break;
     // 用户登陆提供给用户的加密hash

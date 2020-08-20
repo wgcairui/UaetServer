@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex flex-column w-100">
     <b-container fluid class="flex-grow-1 d-flex flex-column">
-      <b-row no-gutters class="py-2">
+      <!-- <b-row no-gutters class="py-2">
         <b-col cols="4" class="text-center p-0">
           <switch-quantity title="烟感" />
         </b-col>
@@ -11,7 +11,7 @@
         <b-col cols="4" class="text-center p-0">
           <switch-quantity title="门禁" />
         </b-col>
-      </b-row>
+      </b-row> -->
       <b-row
         no-gutters
         class="flex-grow-1 alarm-content py-3 mh-100 overflow-hidden"
@@ -93,12 +93,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue"
-import switchQuantity from "../../components/switchQuantity.vue"
-
 export default Vue.extend({
-  components: {
-    switchQuantity
-  },
   data() {
     return {
       ECid: this.$route.query.ECid

@@ -1,19 +1,21 @@
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="info" class="align-items-start" fixed>
+    <b-navbar toggleable="lg" type="dark" variant="dark" class="align-items-start" fixed>
       <b-navbar-brand>
-        <span class="text-center text-light" style="font-size:1.1rem">LADS</span>
+        <nuxt-link to="/main">
+          <span class="text-center text-light" style="font-size:1.4rem">LADS</span>
+        </nuxt-link>
       </b-navbar-brand>
 
       <b-nav-toggle target="user-nav" class="m-1">
-        <template v-slot:default="{ expanded }">
+        <!-- <template v-slot:default="{ expanded }">
           <b-icon v-if="expanded" icon="chevron-bar-up"></b-icon>
           <b-icon v-else icon="chevron-bar-down"></b-icon>
-        </template>
+        </template>-->
       </b-nav-toggle>
       <b-collapse id="user-nav" is-nav>
         <b-navbar-nav class="ml-auto">
-          <b-nav-dropdown right>
+          <b-nav-dropdown split right>
             <template v-slot:button-content>
               <span>
                 <i class="iconfont">&#xebd0;</i>设备列表
@@ -23,14 +25,19 @@
               v-for="val in mountDev"
               :key="val.text"
               @click="toDev(val)"
-            >{{val.text}}</b-dropdown-item>
+              v-b-tooltip.hover
+              :title="val.remark"
+            >
+              {{val.text}}
+              <b-spinner small :variant="val.state" type="grow" />
+            </b-dropdown-item>
           </b-nav-dropdown>
           <b-nav-item v-b-toggle.alarms>
             <span class="text-light text-wrap">
               <i class="iconfont">&#xeb68;</i>告警管理
             </span>
           </b-nav-item>
-          <b-nav-item :to="{ name: 'user-DevManage' }">
+          <b-nav-item :to="{ name: 'main-DevManage' }">
             <span class="text-light text-wrap">
               <i class="iconfont">&#xebd8;</i>设备管理
             </span>
@@ -57,7 +64,7 @@
                 {{ $auth.user }}
               </span>
             </template>
-            <b-dropdown-item :to="{ name: 'user-info' }">
+            <b-dropdown-item :to="{ name: 'main-userInfo' }">
               <i class="iconfont">&#xeb6b;</i>用户详情
             </b-dropdown-item>
             <b-dropdown-item :to="{ name: 'user-reset' }">
@@ -73,25 +80,22 @@
     </b-navbar>
 
     <b-container class="h-100 overflow-auto user-body" id="user-content">
-      <nuxt-child :key="key"/>
+      <nuxt-child :key="key" />
     </b-container>
 
-    <footer class="mt-auto">
-      <slot name="footer"></slot>
-    </footer>
-    <b-sidebar id="alarms" title="Alarm" right bg-variant="dark" text-variant="light">
+    <b-sidebar id="alarms" title="告警" right bg-variant="dark" text-variant="light">
       <b-button
         variant="link"
         class="bg-dark text-light text-decoration-none text-center"
         block
-        :to="{name:'user-AlarmManage'}"
+        :to="{name:'main-AlarmManage'}"
       >查看所有告警信息</b-button>
       <b-list-group>
         <b-list-group-item
           v-for="(info,key) in Infos"
           :key="info.time+key"
           class="bg-dark text-light"
-          :to="{name:'user-AlarmManage',params:info}"
+          :to="{name:'main-AlarmManage',params:info}"
         >{{info.msg}}</b-list-group-item>
       </b-list-group>
     </b-sidebar>
@@ -103,6 +107,10 @@ import { WebInfo } from "../store/DB";
 import gql from "graphql-tag";
 import { Terminal } from "uart";
 export default Vue.extend({
+  beforeRouteUpdate(to, from, next) {
+    // console.log({ to, from, next });
+    next()
+  },
   data() {
     return {
       BindDevice: {
@@ -112,59 +120,50 @@ export default Vue.extend({
     };
   },
   computed: {
-      key(){
-          return this.$route.fullPath
-      },
+    key() {
+      return this.$route.fullPath
+    },
     Infos() {
       return ((this.$store as any).state.Infos as WebInfo[]) || [];
     },
     mountDev() {
       const terminals = (this as any).BindDevice?.UTs as Terminal[];
-      return terminals
-        ? terminals
-            .filter(el => el.mountDevs)
-            .map(el => {
-              return el.mountDevs.map(els => ({
+      let result: any[] = [];
+      if (terminals) {
+        result = terminals.filter(el => el.mountDevs)
+          .map(el => {
+            let state = 'success'
+            let remark = '设备在线'
+            if (!el.online) {
+              state = "warning"
+              remark = "DTU离线"
+            }
+            return el.mountDevs.map(els => {
+              if (state !== "warning" && !els.online) {
+                state = "danger"
+                remark = "设备超时"
+              }
+              return {
                 DevMac: el.DevMac,
                 pid: els.pid,
+                state,
+                remark,
                 mountDev: els.mountDev,
                 protocol: els.protocol,
                 type: els.Type,
                 text: `${el.name}-${els.pid}-${els.mountDev}`
-              }));
-            })
-            .flat()
-        : [];
+              }
+            });
+          })
+          .flat()
+      }
+      return result
     }
   },
   methods: {
-    toDev(val: {
-      DevMac: string;
-      pid: number;
-      mountDev: string;
-      protocol: string;
-      type: string;
-    }) {
-      const query = {
-        DevMac: val.DevMac,
-        pid: String(val.pid),
-        mountDev: val.mountDev,
-        protocol: val.protocol
-      };
-      switch (val.type) {
-        case "温湿度":
-          this.$router.push({ name: "main-dev-th", query });
-          break;
-        case "空调":
-          this.$router.push({ name: "main-dev-air", query });
-          break;
-        case "电量仪":
-          this.$router.push({ name: "main-dev-em", query });
-          break;
-        case "UPS":
-          this.$router.push({ name: "main-dev-ups", query });
-          break;
-      }
+    toDev(val: { DevMac: string; pid: number; mountDev: string; protocol: string; type: string; }) {
+      const query = { DevMac: val.DevMac, pid: String(val.pid), mountDev: val.mountDev, protocol: val.protocol };
+      this.$router.push({ name: "main-device", query });
     },
     logout() {
       this.$socket.disconnect();
@@ -179,8 +178,11 @@ export default Vue.extend({
             UTs {
               DevMac
               name
+              online
+              ip
               mountDevs {
                 Type
+                online
                 mountDev
                 protocol
                 pid
@@ -193,35 +195,15 @@ export default Vue.extend({
             }
           }
         }
-      `
+      `,
+      pollInterval: 10000,
+      result: function ({ data }) {
+        // console.log(data.BindDevice);
+        const BindDevice = data.BindDevice
+        if (!BindDevice || BindDevice.UTs?.length === 0) this.$router.push({ name: "main-DevManage" });
+        this.$store.commit("updateBindDev", data.BindDevice)
+      }
     }
-  },
-  beforeCreate() {
-    this.$apollo
-      .query({
-        query: gql`
-          {
-            userGroup
-          }
-        `
-      })
-      .then(el => {
-        const userGroup = el.data.userGroup;
-        const name = this.$route.name as string;
-        // console.log({ userGroup, name });
-        if (userGroup === "user" && /(^index|^uart*|^user*)/.test(name)) return;
-        switch (userGroup) {
-          case "admin":
-            this.$router.push({ name: "manage" });
-            break;
-          case "root":
-            this.$router.push({ name: "admin" });
-            break;
-          default:
-            this.$router.push({name:"main"});
-            break;
-        }
-      });
   }
 });
 </script>

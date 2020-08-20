@@ -17,7 +17,11 @@ export const state = () => ({
     type: "SYS"
   } as WebInfo,
   Infos: [] as WebInfo[],
-  SysInfos: [] as nodeInfo[]
+  SysInfos: [] as nodeInfo[],
+  BindDevice: {
+    UTs: [],
+    ECs: []
+  }
 })
 
 export const getters: GetterTree<RootState, RootState> = {
@@ -47,6 +51,10 @@ export const getters: GetterTree<RootState, RootState> = {
 
 */
 export const mutations: MutationTree<RootState> = {
+  // 更新用户绑定设备
+  updateBindDev(state,payload){
+    state.BindDevice = payload
+  },
   addSysInfo(state, payload) {
     state.SysInfos.push(payload)
   },
