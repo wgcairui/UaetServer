@@ -12,7 +12,7 @@ import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
-import {protocol,Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev } from "uart";
+import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev } from "uart";
 
 const resolvers: IResolvers = {
     Query: {
@@ -96,9 +96,9 @@ const resolvers: IResolvers = {
             //
             Bind.UTs = Bind.UTs.map((el: any) => {
                 el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
-                if(el.online){
-                    el.mountDevs.forEach((element:any) => {
-                        element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac+element.pid)
+                if (el.online) {
+                    el.mountDevs.forEach((element: any) => {
+                        element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
                     });
                 }
                 return el
@@ -224,10 +224,10 @@ const resolvers: IResolvers = {
         },
         // 获取socket user状态
         getUserNode(root, arg, ctx: ApolloCtx) {
-            const userids = [] as {user:string,set:string[]}[]
-            ctx.$Event.ClientCache.CacheUserSocketids.forEach((val,key)=>{
+            const userids = [] as { user: string, set: string[] }[]
+            ctx.$Event.ClientCache.CacheUserSocketids.forEach((val, key) => {
                 const set = Array.from(val) as any[]
-                userids.push({user:key,set})
+                userids.push({ user: key, set })
             })
             return userids
         },
@@ -345,8 +345,10 @@ const resolvers: IResolvers = {
             else return null
         },
         // 检查挂载设备是否在超时列表中
-        checkDevTimeOut(root,{mac,pid}:{mac:string,pid:string},ctx:ApolloCtx){
-            return ctx.$Event.Cache.TimeOutMonutDev.has(mac+pid)
+        checkDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx: ApolloCtx) {
+            if (!ctx.$Event.Cache.CacheNodeTerminalOnline.has(mac)) return 'DTUOFF'
+            if (ctx.$Event.Cache.TimeOutMonutDev.has(mac + pid)) return 'TimeOut'
+            return 'online'
         }
     },
 
@@ -537,9 +539,9 @@ const resolvers: IResolvers = {
         },
         // 添加用户
         async addUser(root, { arg }) {
-            if ( await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
-            if ( await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
-            if ( await Users.findOne({ user: arg.mail })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
+            if (await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
+            if (await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
+            if (await Users.findOne({ user: arg.mail })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
             const user = Object.assign(arg, { passwd: await BcryptDo(arg.passwd) }) as UserInfo
             const User = new Users(user);
             return await User.save()
@@ -760,7 +762,7 @@ const resolvers: IResolvers = {
                 case "ShowTag":
                     Up = { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) }
                     break
-                    case "AlarmStat":
+                case "AlarmStat":
                     Up = { "ProtocolSetup.$.AlarmStat": arg }
                     break
                 case "Oprate":
@@ -850,14 +852,14 @@ const resolvers: IResolvers = {
             return result
         },
         // 重置设备超时状态
-        refreshDevTimeOut(root,{mac,pid}:{mac:string,pid:string},ctx:ApolloCtx){
+        refreshDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx: ApolloCtx) {
             // 重置uart查询间隔
             // const terminal = ctx.$Event.Cache.CacheTerminal.get(mac) as terminal
             // ctx.$SocketUart._UpdateCache(terminal)
             // 清楚超时记录
-            ctx.$Event.Cache.TimeOutMonutDev.delete(mac+pid)
+            ctx.$Event.Cache.TimeOutMonutDev.delete(mac + pid)
             // console.log({timeOut:ctx.$Event.Cache.TimeOutMonutDev});
-            return {ok:1} as ApolloMongoResult
+            return { ok: 1 } as ApolloMongoResult
         }
     },
 

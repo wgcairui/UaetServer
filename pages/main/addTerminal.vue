@@ -1,58 +1,60 @@
 <template>
-  <b-row>
-    <separated title="查询设备"></separated>
-    <b-col>
-      <b-table stacked :items="TerminalItem" :fields="TerminalsFields">
-        <template v-slot:cell(oprate)>
-          <b-button-group size="sm">
-            <b-button variant="info" @click="$bvModal.show('Maddterminal')">添加挂载设备</b-button>
-          </b-button-group>
-        </template>
-      </b-table>
-      <b-table-lite
-        striped
-        borderless
-        hover
-        :items="Terminal?Terminal.mountDevs:[]"
-        :fields="mountDevsFields"
+  <b-col xl="9" cols="12">
+    <b-row>
+      <separated title="查询设备"></separated>
+      <b-col>
+        <b-table stacked :items="TerminalItem" :fields="TerminalsFields">
+          <template v-slot:cell(oprate)>
+            <b-button-group size="sm">
+              <b-button variant="info" @click="$bvModal.show('Maddterminal')">添加挂载设备</b-button>
+            </b-button-group>
+          </template>
+        </b-table>
+        <b-table-lite
+          striped
+          borderless
+          hover
+          :items="Terminal?Terminal.mountDevs:[]"
+          :fields="mountDevsFields"
+        >
+          <template v-slot:cell(oprate)="row1">
+            <b-button size="sm" @click="delTerminalMountDev(row1.item)">删除</b-button>
+          </template>
+        </b-table-lite>
+      </b-col>
+      <b-modal
+        id="Maddterminal"
+        title="添加终端挂载设备"
+        hide-footer
+        size="lg"
+        hide-header-close
+        header-bg-variant="dark"
+        header-text-variant="light"
+        centered
       >
-        <template v-slot:cell(oprate)="row1">
-          <b-button size="sm" @click="delTerminalMountDev(row1.item)">删除</b-button>
-        </template>
-      </b-table-lite>
-    </b-col>
-    <b-modal
-      id="Maddterminal"
-      title="添加终端挂载设备"
-      hide-footer
-      size="lg"
-      hide-header-close
-      header-bg-variant="dark"
-      header-text-variant="light"
-      centered
-    >
-      <b-form class="p-5">
-        <my-form label="设备地址:">
-          <b-form-spinbutton v-model="accont.pid" min="0" max="254"></b-form-spinbutton>
-        </my-form>
-        <my-form label="挂载设备类型:">
-          <b-form-select v-model="accont.Type" :options="['UPS', '空调', '电量仪', '温湿度']" />
-        </my-form>
-        <my-form label="挂载设备:">
-          <b-form-select v-model="accont.mountDev" :options="SelectDevtype.DevType" />
-        </my-form>
-        <my-form label="协议类型:">
-          <b-form-select
-            v-model="accont.protocol"
-            :options="
+        <b-form class="p-5">
+          <my-form label="设备地址:">
+            <b-form-spinbutton v-model="accont.pid" min="0" max="254"></b-form-spinbutton>
+          </my-form>
+          <my-form label="挂载设备类型:">
+            <b-form-select v-model="accont.Type" :options="['UPS', '空调', '电量仪', '温湿度']" />
+          </my-form>
+          <my-form label="挂载设备:">
+            <b-form-select v-model="accont.mountDev" :options="SelectDevtype.DevType" />
+          </my-form>
+          <my-form label="协议类型:">
+            <b-form-select
+              v-model="accont.protocol"
+              :options="
                         SelectDevtype.Protocols.get(accont.mountDev) || []
                       "
-          />
-        </my-form>
-        <b-button block @click="addTerminal()" variant="info">Add</b-button>
-      </b-form>
-    </b-modal>
-  </b-row>
+            />
+          </my-form>
+          <b-button block @click="addTerminal()" variant="info">Add</b-button>
+        </b-form>
+      </b-modal>
+    </b-row>
+  </b-col>
 </template>
 <script lang="ts">
 import vue from "vue";

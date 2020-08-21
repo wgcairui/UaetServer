@@ -1,52 +1,53 @@
 <template>
-  <b-row class="border-bottom mb-5 px-2">
-    <separated title="透传设备"></separated>
-    <b-collapse v-model="uartAdd" class="w-100">
-      <b-card>
-        <b-form>
-          <my-form label="设备Mac:">
-            <b-input-group>
-              <b-form-input v-model="DevMac" trim />
-              <b-input-group-append>
-                <b-button>检索</b-button>
-              </b-input-group-append>
-            </b-input-group>
-          </my-form>
-        </b-form>
-        <b-collapse v-model="uartTable">
-          <b-table-lite stacked :items="uart" :fields="uartField">
-            <template v-slot:cell(mountDevs)="row">
-              <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
-            </template>
-            <template v-slot:cell(oprate)="row">
-              <b-button
-                v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
-                size="sm"
-                disabled
-              >已绑定</b-button>
-              <b-button v-else size="sm" @click="addUserTerminal('UT', row.item)">绑定设备</b-button>
-            </template>
-          </b-table-lite>
-        </b-collapse>
-      </b-card>
-    </b-collapse>
-    <b-table-lite :items="items.UTs" :fields="uartField" responsive>
-      <template v-slot:cell(name)="row">
-        <b-button variant="link" class="p-0 m-0" @click="modifyTerminalInfo(row)">{{row.value}}</b-button>
-      </template>
-      <template v-slot:cell(mountDevs)="row">
-        <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
-      </template>
-      <template v-slot:cell(oprate)="row">
-        <b-button-group size="sm">
-          <b-button :to="{ name: 'main-addTerminal', query: { DevMac:row.item.DevMac } }">修改挂载</b-button>
-          <b-button :to="{ name: 'main-terminallog', query: { DevMac:row.item.DevMac } }">在线记录</b-button>
-          <b-button @click="delUserTerminal('UT', row.item)">删除</b-button>
-        </b-button-group>
-      </template>
-    </b-table-lite>
-  </b-row>
-  <!-- <b-row>
+  <b-col xl="9" cols="12">
+    <b-row class="border-bottom mb-5 px-2">
+      <separated title="透传设备"></separated>
+      <b-collapse v-model="uartAdd" class="w-100">
+        <b-card>
+          <b-form>
+            <my-form label="设备Mac:">
+              <b-input-group>
+                <b-form-input v-model="DevMac" trim />
+                <b-input-group-append>
+                  <b-button>检索</b-button>
+                </b-input-group-append>
+              </b-input-group>
+            </my-form>
+          </b-form>
+          <b-collapse v-model="uartTable">
+            <b-table-lite stacked :items="uart" :fields="uartField">
+              <template v-slot:cell(mountDevs)="row">
+                <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
+              </template>
+              <template v-slot:cell(oprate)="row">
+                <b-button
+                  v-if="BindDevice.UTs.some(el => el.DevMac === DevMac)"
+                  size="sm"
+                  disabled
+                >已绑定</b-button>
+                <b-button v-else size="sm" @click="addUserTerminal('UT', row.item)">绑定设备</b-button>
+              </template>
+            </b-table-lite>
+          </b-collapse>
+        </b-card>
+      </b-collapse>
+      <b-table-lite :items="items.UTs" :fields="uartField" responsive>
+        <template v-slot:cell(name)="row">
+          <b-button variant="link" class="p-0 m-0" @click="modifyTerminalInfo(row)">{{row.value}}</b-button>
+        </template>
+        <template v-slot:cell(mountDevs)="row">
+          <i v-if="row.value !== ''">{{ row.value.map(el => el.mountDev) }}</i>
+        </template>
+        <template v-slot:cell(oprate)="row">
+          <b-button-group size="sm">
+            <b-button :to="{ name: 'main-addTerminal', query: { DevMac:row.item.DevMac } }">修改挂载</b-button>
+            <b-button :to="{ name: 'main-terminallog', query: { DevMac:row.item.DevMac } }">在线记录</b-button>
+            <b-button @click="delUserTerminal('UT', row.item)">删除</b-button>
+          </b-button-group>
+        </template>
+      </b-table-lite>
+    </b-row>
+    <!-- <b-row>
         <separated title="环控设备">
           <b-button variant="success" size="sm" @click="ecAdd = !ecAdd">
             {{ !ecAdd ? "add" : "hide" }}
@@ -93,7 +94,8 @@
             </b-button>
           </template>
         </b-table-lite>
-  </b-row>-->
+    </b-row>-->
+  </b-col>
 </template>
 <script lang="ts">
 import vue from "vue";

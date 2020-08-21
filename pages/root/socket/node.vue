@@ -5,7 +5,7 @@
     </separated>
     <b-table :items="node" :fields="fields">
       <template v-slot:cell(terminal)="row">
-        <b-link :to="{name:'admin-node-Terminal',query:{DevMac:row.value}}">{{row.value}}</b-link>
+        <b-link :to="{name:'root-node-Terminal',query:{DevMac:row.value}}">{{row.value}}</b-link>
       </template>
     </b-table>
   </b-col>

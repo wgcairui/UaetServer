@@ -304,7 +304,7 @@ const typeDefs: DocumentNode = gql`
     # 获取终端日志
     userlogterminals(start:Date,end:Date,mac:String):[LogTerminal]
     # 检查挂载设备是否在超时列表
-    checkDevTimeOut(mac:String,pid:String):Boolean
+    checkDevTimeOut(mac:String,pid:String):String
   }
 
   #mutation

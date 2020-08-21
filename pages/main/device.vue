@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <b-col xl="9" cols="12">
     <b-row class="m-0">
       <separated :title="query.mountDev">
         <b
@@ -20,7 +20,7 @@
         <b-button-group size="sm" class="m-2">
           <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">快捷指令</b-button>
           <b-button variant="info" :to="{ name: 'main-protocolSetup', query: query }">用户配置</b-button>
-          <b-button v-if="devTimeOut" variant="info" @click="refreshDev(query)">超时重置</b-button>
+          <b-button v-if="devTimeOut === 'TimeOut'" variant="info" @click="refreshDev(query)">超时重置</b-button>
         </b-button-group>
       </separated>
       <b-overlay :show="$apollo.loading" class="w-100 px-2">
@@ -52,11 +52,11 @@
       </b-overlay>
     </b-row>
     <my-oprate :query="query" id="OprateInstructMode"></my-oprate>
-  </div>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { queryResultSave, ProtocolConstantThreshold, queryResultArgument } from "uart";
+import { queryResultSave, ProtocolConstantThreshold, queryResultArgument, PageQuery } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 export default Vue.extend({
@@ -78,6 +78,10 @@ export default Vue.extend({
   /* 
   使用watchQuery属性可以监听参数字符串的更改。 如果定义的字符串发生变化，将调用所有组件方法(asyncData, fetch, validate, layout, ...)。 为了提高性能，默认情况下禁用。
   */
+  validate({ query }: { query: PageQuery }) {
+    if (query.DevMac) return true
+    else throw new Error("请求参数缺失")
+  },
   watchQuery: true,
   async asyncData({ app, query }) {
     const client = app.apolloProvider.defaultClient;
@@ -137,7 +141,7 @@ export default Vue.extend({
       // 模拟量
       const simulate: queryResultArgument[] = [];
       const Data = this.Data as queryResultSave;
-      const ShowTags = this.ShowTags as string[];
+      const ShowTags = this.$data.ShowTags as string[];
       if (Data?.parse) {
         const parse = Object.values(Data.parse)
         const result = ShowTags.length > 0 ? parse.filter(el => ShowTags.includes(el.name)) : parse
@@ -153,7 +157,7 @@ export default Vue.extend({
     },
     // 查询耗时和查询间隔
     Queryarg() {
-      const Data = this.Data as queryResultSave;
+      const Data = this.$data.Data as queryResultSave;
       const time = { queryTime: "", useTime: 0, Interval: 0 };
       if (Data?.parse) {
         time.useTime = Data.useTime;
@@ -197,7 +201,19 @@ export default Vue.extend({
       variables() {
         return { mac: this.$data.query.DevMac, pid: String(this.$data.query.pid) };
       },
-      pollInterval: 30000
+      pollInterval: 30000,
+      result: function ({ data }) {
+        switch (data.devTimeOut) {
+          case "DTUOFF":
+          case "TimeOut":
+            this.$apollo.queries.Data.stopPolling()
+            break
+          default:
+            console.log(data.devTimeOut);
+            this.$apollo.queries.Data.startPolling()
+            break
+        }
+      }
     }
   },
   methods: {

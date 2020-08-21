@@ -1,30 +1,28 @@
 <template>
-  <b-row>
-    <b-col>
-      <b-tabs pills class="my-3">
-        <b-tab title="设备运行日志">
-          <b-table :items="terminals" :fields="fieldsTerminal" responsive striped>
-            <template v-slot:cell(query)="row">
-              <b-button
-                size="sm"
-                @click="row.toggleDetails"
-                v-if="row.value"
-              >{{row.detailsShowing ? '收起':'展开'}}</b-button>
-            </template>
-            <template v-slot:row-details="row">
-              <b-card>
-                <p>请求参数:{{row.item.query}}</p>
-                <p>请求结果:{{row.item.result}}</p>
-              </b-card>
-            </template>
-          </b-table>
-        </b-tab>
-        <b-tab title="infos">
-          <b-table :items="infos" :fields="fields"></b-table>
-        </b-tab>
-      </b-tabs>
-    </b-col>
-  </b-row>
+  <b-col xl="9" cols="12">
+    <b-tabs pills class="my-3">
+      <b-tab title="设备运行日志">
+        <b-table :items="terminals" :fields="fieldsTerminal" responsive striped>
+          <template v-slot:cell(query)="row">
+            <b-button
+              size="sm"
+              @click="row.toggleDetails"
+              v-if="row.value"
+            >{{row.detailsShowing ? '收起':'展开'}}</b-button>
+          </template>
+          <template v-slot:row-details="row">
+            <b-card>
+              <p>请求参数:{{row.item.query}}</p>
+              <p>请求结果:{{row.item.result}}</p>
+            </b-card>
+          </template>
+        </b-table>
+      </b-tab>
+      <b-tab title="infos">
+        <b-table :items="infos" :fields="fields"></b-table>
+      </b-tab>
+    </b-tabs>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

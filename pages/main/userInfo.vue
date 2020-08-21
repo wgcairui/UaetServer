@@ -1,40 +1,38 @@
 <template>
-  <b-row>
-    <b-col>
-      <b-row>
-        <separated title="详情">
-          <b-button variant="link" class="text-decoration-none">
-            <i class="iconfont">&#xeb71;</i>修改信息
-          </b-button>
-        </separated>
-        <b-col>
-          <!-- <b-table-lite stacked :items="user" :fields="userField" /> -->
-          <div v-for="i in userField" :key="i.key">
-            <my-form :label="i.label">
-              <b-form-text @click="modifyUserInfo(i,user[i.key])">
-                <strong style="font-size:16px">{{user[i.key]}}</strong>
-              </b-form-text>
-            </my-form>
-            <span></span>
-          </div>
-        </b-col>
-      </b-row>
-      <b-row>
-        <separated title="告警配置" />
-        <b-col>
-          <b-form>
-            <my-form label="告警短信号码:">
-              <b-form-tags placeholder="输入号码回车" v-model="userSetup.tels"></b-form-tags>
-            </my-form>
-            <my-form label="告警邮件邮箱:">
-              <b-form-tags placeholder="输入邮箱回车" v-model="userSetup.mails"></b-form-tags>
-            </my-form>
-            <b-button class="float-right" variant="info" @click="saveAlarmConnect">保存</b-button>
-          </b-form>
-        </b-col>
-      </b-row>
-    </b-col>
-  </b-row>
+  <b-col xl="9" cols="12">
+    <b-row>
+      <separated title="详情">
+        <b-button variant="link" class="text-decoration-none">
+          <i class="iconfont">&#xeb71;</i>修改信息
+        </b-button>
+      </separated>
+      <b-col>
+        <!-- <b-table-lite stacked :items="user" :fields="userField" /> -->
+        <div v-for="i in userField" :key="i.key">
+          <my-form :label="i.label">
+            <b-form-text @click="modifyUserInfo(i,user[i.key])">
+              <strong style="font-size:16px">{{user[i.key]}}</strong>
+            </b-form-text>
+          </my-form>
+          <span></span>
+        </div>
+      </b-col>
+    </b-row>
+    <b-row>
+      <separated title="告警配置" />
+      <b-col>
+        <b-form>
+          <my-form label="告警短信号码:">
+            <b-form-tags placeholder="输入号码回车" v-model="userSetup.tels"></b-form-tags>
+          </my-form>
+          <my-form label="告警邮件邮箱:">
+            <b-form-tags placeholder="输入邮箱回车" v-model="userSetup.mails"></b-form-tags>
+          </my-form>
+          <b-button class="float-right" variant="info" @click="saveAlarmConnect">保存</b-button>
+        </b-form>
+      </b-col>
+    </b-row>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

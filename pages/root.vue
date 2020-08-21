@@ -49,7 +49,7 @@
       </div>
     </b-navbar>
     <b-container class="container-h flex-grow-1" fluid>
-      <b-row class="h-100">
+      <b-row class="h-100 border-top">
         <b-col md="2" class="bg-dark d-flex flex-column p-4 text-light">
           <h6>
             <b-link to="/root" class="text-decoration-none text-light">Home</b-link>

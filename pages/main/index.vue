@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-5">
+  <b-col xl="9" cols="12">
     <b-row id="uart">
       <separated title="透传设备">
         <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
@@ -159,7 +159,7 @@
         <b-button block :disabled="!aggName" size="sm" @click="addAggregation">创建</b-button>
       </b-form>
     </b-modal>
-  </div>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

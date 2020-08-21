@@ -1,5 +1,5 @@
 <template>
-  <div class="d-md-flex flex-column h-100">
+  <b-col xl="9" cols="12">
     <b-row id="img" class="flex-grow-1 aggregation d-none d-sm-block">
       <b-col class="p-5">
         <div
@@ -58,7 +58,7 @@
         </div>
       </b-col>
     </b-row>
-  </div>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

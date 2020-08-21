@@ -1,18 +1,16 @@
 <template>
-  <b-row>
-    <b-col>
-      <separated title="终端日志" />
-      <b-form>
-        <my-form label="开始时间:">
-          <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
-        </my-form>
-        <my-form label="结束时间:">
-          <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
-        </my-form>
-      </b-form>
-      <ve-line :data="lines" :settings="chartSettings"></ve-line>
-    </b-col>
-  </b-row>
+  <b-col xl="9" cols="12">
+    <separated title="终端日志" />
+    <b-form>
+      <my-form label="开始时间:">
+        <b-form-datepicker v-model="start" locale="zh" size="sm" :max="end"></b-form-datepicker>
+      </my-form>
+      <my-form label="结束时间:">
+        <b-form-datepicker v-model="end" locale="zh" size="sm" :max="new Date()"></b-form-datepicker>
+      </my-form>
+    </b-form>
+    <ve-line :data="lines" :settings="chartSettings"></ve-line>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

@@ -29,6 +29,14 @@ interface ApolloCtx extends UserInfo {
   $token: string
 }
 
+// page auery
+interface PageQuery {
+  DevMac: String,
+  pid: String,
+  mountDev: String,
+  protocol: String
+}
+
 // 协议指令解析格式化
 interface protocolInstructFormrize {
   name: string;
@@ -49,7 +57,7 @@ interface protocolInstruct {
   resize: string;
   formResize: protocolInstructFormrize[];
   // 加入指令是否启用
-  isUse:boolean
+  isUse: boolean
 }
 // 协议
 interface protocol {
@@ -75,7 +83,7 @@ interface RegisterTerminal {
 // 终端挂载设备
 interface TerminalMountDevs {
   Type: string
-  online?:boolean
+  online?: boolean
   mountDev: string;
   protocol: string;
   pid: number;
@@ -83,7 +91,7 @@ interface TerminalMountDevs {
 // 终端
 interface Terminal extends RegisterTerminal {
   DevMac: string
-  online?:boolean
+  online?: boolean
   mountNode: string
   name: string;
   ip?: string
@@ -184,7 +192,7 @@ interface socketNetInfo {
   port: number;
   mac: string;
   jw: string;
-  stat:Boolean
+  stat: Boolean
 }
 // 节点websocket透传信息
 interface WebSocketInfo {
@@ -205,12 +213,12 @@ interface nodeInfo {
   version: string
 }
 
-type registerType="wx"|"web"|"app"
+type registerType = "wx" | "web" | "app"
 
 /* 用户信息 */
 interface UserInfo {
   avanter?: string
-  userId:string
+  userId: string
   name?: string;
   user: string;
   userGroup?: string;
@@ -223,7 +231,7 @@ interface UserInfo {
   address?: string;
   status?: boolean;
   // 注册类型
-  rgtype:registerType
+  rgtype: registerType
 }
 
 interface KoaSocketOpts {
@@ -305,7 +313,7 @@ interface userSetup {
   ProtocolSetup: ProtocolConstantThreshold[]
   ProtocolSetupMap: Map<string, ProtocolConstantThreshold>
   ThresholdMap: Map<string, Map<string, Threshold>>
-  AlarmStateMap:Map<string,Map<string,ConstantAlarmStat>>
+  AlarmStateMap: Map<string, Map<string, ConstantAlarmStat>>
 }
 // 协议解析结果集
 interface queryResultSave {
@@ -468,13 +476,13 @@ interface Aggregation {
 
 
 // wx
-interface wxRequest{
-  errcode?:number
-  errmsg?:string
+interface wxRequest {
+  errcode?: number
+  errmsg?: string
 }
 
-interface wxRequestCode2Session extends wxRequest{
-  openid:string
-  session_key:string
+interface wxRequestCode2Session extends wxRequest {
+  openid: string
+  session_key: string
   unionid: string
 }

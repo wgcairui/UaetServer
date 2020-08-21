@@ -15,12 +15,17 @@
       <b-row no-gutters class="flex-grow-1 login-body">
         <b-col
           md="6"
-          class="md-block d-flex align-items-center justify-content-center"
-          style="padding-left: 10%"
+          cols="0"
+          class="md-block d-flex flex-column  justify-content-center"
+          style="padding-left: 20%"
         >
-          <span class="mt-n5">
-            <h3 class="text-light">物联网ITO监控服务平台</h3>
+          <span>
+            <h3 class=" text-light">物联网ITO监控服务平台</h3>
             <p class="text-light">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
+          </span>
+          <span>
+            <b-img-lazy src="~/static/app.png" class=" w-50 d-block"></b-img-lazy>
+            <b>android-APP v1.0.1</b>
           </span>
         </b-col>
         <b-col
@@ -169,10 +174,11 @@ a {
 
 .login-body {
   background-color: #f5f5f6;
-  /*  background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg"); */
+  //background-image: url("https://img.alicdn.com/tfs/TB14xWackxz61VjSZFrXXXeLFXa-2400-1120.jpg");
   background-image: url("../assets/backgrounpImg.jpg");
   background-size: contain;
   /* background-blend-mode:luminosity */
+  background-blend-mode: color-burn;
 }
 .bg-footer{
   background-color: #cad7e0

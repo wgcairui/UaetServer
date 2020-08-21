@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <b-col xl="9" cols="12">
     <b-row class="d-flex">
       <separated class="col-12" title="透传终端信息"></separated>
       <b-col cols="12" md="6">
@@ -60,14 +60,14 @@
         </b-card>
       </b-col>
     </b-row>
-  </div>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
 import { Terminal, TerminalMountDevs } from "uart";
 import { VeTree } from "v-charts";
-import {  API_Aamp_gps2autoanvi,  API_Aamp_local2address,  API_Aamp_address2local,  API_Aamp_ip2local,  gps2AutonaviPosition} from "../../plugins/tools";
+import { API_Aamp_gps2autoanvi, API_Aamp_local2address, API_Aamp_address2local, API_Aamp_ip2local, gps2AutonaviPosition } from "../../plugins/tools";
 interface selectTree {
   Type: string;
   mountDev: string;
@@ -131,7 +131,7 @@ export default Vue.extend({
           }
         }
       `,
-      variables: {        DevMac      }
+      variables: { DevMac }
     });
     let Terminal: Terminal = data.Terminal;
     // 构建tree对象
@@ -185,7 +185,7 @@ export default Vue.extend({
     async mapReady(map: AMap.Map) {
       const terminal = (this as any).Terminals as Terminal;
       let position = terminal.jw as AMap.LngLat;
-      
+
       if (position) position = await gps2AutonaviPosition(position as any, window);
       else position = await API_Aamp_ip2local(terminal.ip as string);
       /* {

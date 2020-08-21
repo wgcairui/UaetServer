@@ -1,78 +1,72 @@
 <template>
-  <b-row>
-    <b-col>
-      <separated title="添加透传终端自定义配置"></separated>
-      <b-tabs justified>
-        <!-- ShowTag -->
-        <b-tab title="显示参数">
-          <label class="m-3">
-            <h5>Tips:</h5>
-            <b>勾选的参数会显示在设备状态列表中,默认全部显示</b>
-          </label>
-          <b-table :items="items.ShowTags" :fields="fieldsSHowTag" selectable select-mode="multi">
-            <template v-slot:cell(show)="row">
-              <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
-            </template>
-          </b-table>
-        </b-tab>
-        <!-- Threshold -->
-        <b-tab title="参数限值">
-          <label class="m-3">
-            <h5>Tips:</h5>
-            <b>设备运行的参数值超出设定的最大值或最小值将会触发告警</b>
-          </label>
-          <b-form>
-            <my-form label="属性:">
-              <b-form-select v-model="Thresholds.name" :options="items.ShowTags.map(el=>el.name)"></b-form-select>
-            </my-form>
-            <my-form label="最小值:">
-              <b-form-input type="number" v-model="Thresholds.min"></b-form-input>
-            </my-form>
-            <my-form label="最大值:">
-              <b-form-input type="number" v-model="Thresholds.max"></b-form-input>
-            </my-form>
-            <b-button size="sm" block variant="info" @click="addThreshold">添加</b-button>
-          </b-form>
-          <b-table :items="items.Thresholds" :fields="ThresholdsFields">
-            <template v-slot:cell(oprate)="data">
-              <b-button-group size="sm">
-                <b-button @click="deleteThreshold(data.item)">删除</b-button>
-              </b-button-group>
-            </template>
-          </b-table>
-        </b-tab>
-        <!-- Constant -->
-        <b-tab title="参数状态">
-          <label class="m-3">
-            <h5>Tips:</h5>
-            <b>设备运行的参数值不在选中的状态将会触发告警</b>
-          </label>
-          <b-list-group>
-            <b-list-group-item
-              v-for="(row,key) in AlarmStatItems"
-              :key="key+'12098'"
-              class="d-flex"
-            >
-              <span>{{row.name}}</span>
-              <div class="ml-auto">
-                <label v-for="(val,key) in row.show" :key="key" class="mx-1">
-                  <input
-                    class
-                    name="Fruit"
-                    :checked="row.alarmStat.includes(val.value)"
-                    type="checkbox"
-                    :value="val.value"
-                    @change="StateAlarmSelects(row,val.value)"
-                  />
-                  {{val.text}}
-                </label>
-              </div>
-            </b-list-group-item>
-          </b-list-group>
-        </b-tab>
-      </b-tabs>
-    </b-col>
-  </b-row>
+  <b-col xl="9" cols="12">
+    <separated title="添加透传终端自定义配置"></separated>
+    <b-tabs justified>
+      <!-- ShowTag -->
+      <b-tab title="显示参数">
+        <label class="m-3">
+          <h5>Tips:</h5>
+          <b>勾选的参数会显示在设备状态列表中,默认全部显示</b>
+        </label>
+        <b-table :items="items.ShowTags" :fields="fieldsSHowTag" selectable select-mode="multi">
+          <template v-slot:cell(show)="row">
+            <b-form-checkbox v-model="row.value" @change="selects(row.item)"></b-form-checkbox>
+          </template>
+        </b-table>
+      </b-tab>
+      <!-- Threshold -->
+      <b-tab title="参数限值">
+        <label class="m-3">
+          <h5>Tips:</h5>
+          <b>设备运行的参数值超出设定的最大值或最小值将会触发告警</b>
+        </label>
+        <b-form>
+          <my-form label="属性:">
+            <b-form-select v-model="Thresholds.name" :options="items.ShowTags.map(el=>el.name)"></b-form-select>
+          </my-form>
+          <my-form label="最小值:">
+            <b-form-input type="number" v-model="Thresholds.min"></b-form-input>
+          </my-form>
+          <my-form label="最大值:">
+            <b-form-input type="number" v-model="Thresholds.max"></b-form-input>
+          </my-form>
+          <b-button size="sm" block variant="info" @click="addThreshold">添加</b-button>
+        </b-form>
+        <b-table :items="items.Thresholds" :fields="ThresholdsFields">
+          <template v-slot:cell(oprate)="data">
+            <b-button-group size="sm">
+              <b-button @click="deleteThreshold(data.item)">删除</b-button>
+            </b-button-group>
+          </template>
+        </b-table>
+      </b-tab>
+      <!-- Constant -->
+      <b-tab title="参数状态">
+        <label class="m-3">
+          <h5>Tips:</h5>
+          <b>设备运行的参数值不在选中的状态将会触发告警</b>
+        </label>
+        <b-list-group>
+          <b-list-group-item v-for="(row,key) in AlarmStatItems" :key="key+'12098'" class="d-flex">
+            <span>{{row.name}}</span>
+            <div class="ml-auto">
+              <label v-for="(val,key) in row.show" :key="key" class="mx-1">
+                <input
+                  class
+                  name="Fruit"
+                  :checked="row.alarmStat.includes(val.value)"
+                  type="checkbox"
+                  :value="val.value"
+                  @change="StateAlarmSelects(row,val.value)"
+                />
+                {{val.text}}
+              </label>
+            </div>
+          </b-list-group-item>
+        </b-list-group>
+      </b-tab>
+    </b-tabs>
+  </b-col>
 </template>
 <script lang="ts">
 import Vue from "vue";

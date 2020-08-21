@@ -1,18 +1,12 @@
 <template>
-  <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="dark" class="align-items-start" fixed>
+  <b-container fluid class="h-100 p-0">
+    <b-navbar toggleable="lg" type="dark" variant="dark" class="align-items-start" sticky>
       <b-navbar-brand>
         <nuxt-link to="/main">
           <span class="text-center text-light" style="font-size:1.4rem">LADS</span>
         </nuxt-link>
       </b-navbar-brand>
-
-      <b-nav-toggle target="user-nav" class="m-1">
-        <!-- <template v-slot:default="{ expanded }">
-          <b-icon v-if="expanded" icon="chevron-bar-up"></b-icon>
-          <b-icon v-else icon="chevron-bar-down"></b-icon>
-        </template>-->
-      </b-nav-toggle>
+      <b-nav-toggle target="user-nav" class="m-1"></b-nav-toggle>
       <b-collapse id="user-nav" is-nav>
         <b-navbar-nav class="ml-auto">
           <b-nav-dropdown split right>
@@ -59,7 +53,6 @@
           <b-nav-dropdown right>
             <template v-slot:button-content>
               <span>
-                <!-- <socket-state class="d-sm-block" /> -->
                 <i class="iconfont">&#xeb8d;</i>
                 {{ $auth.user }}
               </span>
@@ -78,11 +71,10 @@
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-
-    <b-container class="h-100 overflow-auto user-body" id="user-content">
-      <nuxt-child :key="key" />
-    </b-container>
-
+    <b-row class="body-row" no-gutters>
+      <nuxt-child :key="key" class="h-100 overflow-auto user-content p-4"/>
+      
+    </b-row>
     <b-sidebar id="alarms" title="告警" right bg-variant="dark" text-variant="light">
       <b-button
         variant="link"
@@ -99,7 +91,16 @@
         >{{info.msg}}</b-list-group-item>
       </b-list-group>
     </b-sidebar>
-  </div>
+  </b-container>
+  <!-- <div class="h-100 w-100 d-flex flex-column">
+    
+    
+    <b-container class="h-100">
+      
+    </b-container>
+    
+    
+  </div>-->
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -208,9 +209,6 @@ export default Vue.extend({
 });
 </script>
 <style scoped>
-.loginTitle {
-  height: 57px;
-}
 .navbar-dark,
 .navbar-nav,
 .nav-link,
@@ -224,25 +222,28 @@ export default Vue.extend({
     z-index: 1000;
   }
   .user-body {
-    margin-top: 56px;
+    margin-top: 65px;
   }
+}
+.body-row {
+  height: calc(100% - 59px);
 }
 /* 
 HTML 滚动条样式修改
 https://www.cnblogs.com/polly-ling/p/9875112.html
 */
-#user-content::-webkit-scrollbar {
+.user-content::-webkit-scrollbar {
   /* display: none; */
   width: 6px; /*高宽分别对应横竖滚动条的尺寸*/
   height: 1px;
 }
-#user-content::-webkit-scrollbar-thumb {
+.user-content::-webkit-scrollbar-thumb {
   /*滚动条里面小方块*/
   border-radius: 10px;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
   background: #ada9a9;
 }
-#user-content::-webkit-scrollbar-track {
+.user-content::-webkit-scrollbar-track {
   /*滚动条里面轨道*/
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
