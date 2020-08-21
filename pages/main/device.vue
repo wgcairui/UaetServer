@@ -187,10 +187,8 @@ export default Vue.extend({
         const { pid, DevMac } = this.$data.query;
         return { pid: parseInt(pid), DevMac };
       },
-      // fetchPolicy: "network-only",
       pollInterval: 2000
     },
-
     // 设备超时状态
     devTimeOut: {
       query: gql`
@@ -205,8 +203,12 @@ export default Vue.extend({
       result: function ({ data }) {
         switch (data.devTimeOut) {
           case "DTUOFF":
+            this.$apollo.queries.Data.stopPolling()
+            this.$bvModal.msgBoxOk("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电",{buttonSize:'sm'})
+            break
           case "TimeOut":
             this.$apollo.queries.Data.stopPolling()
+            this.$bvModal.msgBoxOk("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确")
             break
           default:
             console.log(data.devTimeOut);
