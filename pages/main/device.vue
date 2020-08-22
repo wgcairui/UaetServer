@@ -59,6 +59,7 @@ import Vue from "vue";
 import { queryResultSave, ProtocolConstantThreshold, queryResultArgument, PageQuery } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
+import { MessageBox } from "element-ui";
 export default Vue.extend({
   data() {
     return {
@@ -204,11 +205,13 @@ export default Vue.extend({
         switch (data.devTimeOut) {
           case "DTUOFF":
             this.$apollo.queries.Data.stopPolling()
-            this.$bvModal.msgBoxOk("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电",{buttonSize:'sm'})
+            //this.$bvModal.msgBoxOk("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电",{buttonSize:'sm'})
+            MessageBox.alert("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电","error")
             break
           case "TimeOut":
             this.$apollo.queries.Data.stopPolling()
-            this.$bvModal.msgBoxOk("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确")
+            //this.$bvModal.msgBoxOk("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确")
+            MessageBox.alert("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确","error")
             break
           default:
             console.log(data.devTimeOut);

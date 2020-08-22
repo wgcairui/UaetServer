@@ -188,17 +188,12 @@ const Config = {
   router: {
     middleware: ["auth", 'checkSocketIO',"CheckUserGroup"],
     extendRoutes(routes, resolve){
-      
       const mainIndex = routes.findIndex(r=>r.path === '/main')
       const indexIndex = routes[mainIndex].children?.findIndex(r=>r.name === 'main') as number
       const child = (routes[mainIndex].children as NuxtRouteConfig[])[indexIndex];
-      console.log({mainIndex:routes[mainIndex].children,child});
-      
       (child.components as any) = {
-        
         default:child.component as any,
         left:resolve(__dirname,'pages/main/mainLeft.vue')
-       
       }
       child.chunkNames = {
         default:'pages/main/index',

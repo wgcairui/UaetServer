@@ -190,8 +190,8 @@ export default class Cache {
     this.CacheConstant = new Map(res.map(el => [el.Protocol, el]))
   }
   //
-  async RefreshCacheBind() {
-    const res = await UserBindDevice.find().lean<BindDevice>()
+  async RefreshCacheBind(user?:string) {
+    const res = await UserBindDevice.find(user?{user}:{}).lean<BindDevice>()
     console.log(`加载绑定设备缓存......`);
     res.forEach(el => {
       this.CacheBind.set(el.user, el)

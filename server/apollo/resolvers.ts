@@ -268,8 +268,21 @@ const resolvers: IResolvers = {
                 ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
                     if (val === ctx.user) BindDevs.push(key)
                 })
-                const result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end).lean()
-                return result.reverse()
+                //let result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end).lean()
+                const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end)
+                const logCurCount = await logCur.countDocuments()
+
+                if (logCurCount > 0) {
+                    console.log({ logCurCount });
+
+                    if (logCurCount > 200) {
+                        return await logCur.find().sort("-timeStamp").limit(200).exec()
+                    } else {
+                        return await logCur.find().exec()
+                    }
+                } else {
+                    return await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(50).lean()
+                }
             } else {
                 return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
             }
@@ -568,52 +581,64 @@ const resolvers: IResolvers = {
             return await Users.updateOne({ user: ctx.user }, { $set: arg })
         },
         // 添加用户绑定终端
-        async addUserTerminal(root, { type, id }, ctx: { user: any }) {
+        async addUserTerminal(root, { type, id }, ctx: ApolloCtx) {
             switch (type) {
                 case "UT":
                     {
                         const isBind = await UserBindDevice.findOne({ UTs: id }).exec()
                         if (isBind) {
                             return { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
-                        } else
-                            return await UserBindDevice.updateOne(
+                        } else {
+                            const result = await UserBindDevice.updateOne(
                                 { user: ctx.user },
                                 { $addToSet: { UTs: id } },
                                 { upsert: true }
                             );
+                            ctx.$Event.Cache.RefreshCacheBind()
+                            return result
+                        }
+
                     }
                 case "EC":
                     {
                         const isBind = await UserBindDevice.findOne({ "ECS": id })
                         if (isBind) {
                             return { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
-                        } else
-                            return await UserBindDevice.updateOne(
+                        } else {
+                            const res = await UserBindDevice.updateOne(
                                 { user: ctx.user },
                                 { $addToSet: { ECs: id } },
                                 { upsert: true }
                             );
+                            ctx.$Event.Cache.RefreshCacheBind()
+                            return res
+                        }
                     }
             }
         },
         // 添加用户绑定终端
-        async delUserTerminal(root, { type, id }, ctx: { user: any }) {
+        async delUserTerminal(root, { type, id }, ctx: ApolloCtx) {
             switch (type) {
                 case "UT":
                     {
-                        return await UserBindDevice.updateOne(
+                        const res = await UserBindDevice.updateOne(
                             { user: ctx.user },
                             { $pull: { UTs: id } },
                             { upsert: true }
                         );
+                        ctx.$Event.Cache.CacheBindUart.delete(id)
+                        ctx.$Event.Cache.RefreshCacheBind()
+                        return res
                     }
                 case "EC":
                     {
-                        return await UserBindDevice.updateOne(
+                        const res = await UserBindDevice.updateOne(
                             { user: ctx.user },
                             { $pull: { ECs: id } },
                             { upsert: true }
                         );
+                        ctx.$Event.Cache.RefreshCacheBind()
+                        return res
                     }
             }
         },

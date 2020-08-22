@@ -73,7 +73,7 @@
     </b-navbar>
     <b-row class="body-row" no-gutters>
       <nuxt-child :key="key" class="h-100 overflow-auto user-content p-4"/>
-      
+      <nuxt-child name="left" class="h-100 overflow-auto user-content p-4"/>
     </b-row>
     <b-sidebar id="alarms" title="告警" right bg-variant="dark" text-variant="light">
       <b-button
@@ -92,15 +92,6 @@
       </b-list-group>
     </b-sidebar>
   </b-container>
-  <!-- <div class="h-100 w-100 d-flex flex-column">
-    
-    
-    <b-container class="h-100">
-      
-    </b-container>
-    
-    
-  </div>-->
 </template>
 <script lang="ts">
 import Vue from "vue";
