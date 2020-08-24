@@ -2,7 +2,7 @@
   <b-col xl="9" cols="12">
     <b-row>
       <b-col>
-        <separated title="设备告警日志">
+        <separated title="设备告警日志" back>
           <div class="d-flex">
             <b-button
               size="sm"
@@ -25,45 +25,38 @@
     </b-row>
     <b-row>
       <b-col>
-        <!-- <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
-          <template v-slot:cell(isOk)="data">
-            <b-button>确认</b-button>
+        <b-table
+          id="my-table"
+          :items="items"
+          :per-page="perPage"
+          :current-page="currentPage"
+          :fields="fields"
+          :filter="filter"
+          hover
+          :busy="$apollo.loading"
+          responsive
+        >
+          <template v-slot:table-busy>
+            <div class="text-center text-danger my-2">
+              <b-spinner class="align-middle"></b-spinner>
+              <strong>Loading...</strong>
+            </div>
           </template>
-        </my-table-log>-->
-        <div>
-          <b-table
-            id="my-table"
-            :items="data"
-            :per-page="perPage"
-            :current-page="currentPage"
-            :fields="fields"
-            :filter="new RegExp(filter)"
-            hover
-            :busy="$apollo.loading"
-            responsive
-          >
-            <template v-slot:table-busy>
-              <div class="text-center text-danger my-2">
-                <b-spinner class="align-middle"></b-spinner>
-                <strong>Loading...</strong>
-              </div>
-            </template>
-            <template v-slot:cell(isOk)="data">
-              <b-button v-if="!data.value" size="sm" @click="confrimAlarm(data.item._id)">确认</b-button>
-              <b-badge v-else>已确认</b-badge>
-            </template>
-            <slot></slot>
-          </b-table>
-          <b-pagination
-            v-if="data.length>10"
-            pills
-            align="center"
-            v-model="currentPage"
-            :total-rows="data.length"
-            :per-page="perPage"
-            aria-controls="my-table"
-          ></b-pagination>
-        </div>
+          <template v-slot:cell(isOk)="data">
+            <b-button v-if="!data.value" size="sm" @click="confrimAlarm(data.item._id)">确认</b-button>
+            <b-badge v-else>已确认</b-badge>
+          </template>
+          <slot></slot>
+        </b-table>
+        <b-pagination
+          v-if="items.length>10"
+          pills
+          align="center"
+          v-model="currentPage"
+          :total-rows="items.length"
+          :per-page="perPage"
+          aria-controls="my-table"
+        ></b-pagination>
       </b-col>
     </b-row>
   </b-col>
@@ -83,7 +76,7 @@ export default Vue.extend({
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
 
       filter: this.$route.params.msg || "",
-      data: [],
+      items: [],
       fields: [
         { key: "mac", label: "终端" },
         { key: "pid", label: "地址码" },
@@ -98,16 +91,16 @@ export default Vue.extend({
     };
   },
   apollo: {
-    data: {
+    items: {
       query: gql`
         query loguartterminaldatatransfinites($start: Date, $end: Date) {
-          data: loguartterminaldatatransfinites(start: $start, end: $end)
+          items: loguartterminaldatatransfinites(start: $start, end: $end)
         }
       `,
       variables() {
-        return { start: this.$data.start, end: this.$data.end };
+        return { start: this.start, end: this.end };
       },
-      update: ({ data }: { data: uartAlarmObject[] }) => data.map(el => {
+      update: ({ items }: { items: uartAlarmObject[] }) => items.map(el => {
         if (!el.isOk) {
           return Object.assign({ _rowVariant: 'danger' }, el)
         } else {
@@ -129,7 +122,7 @@ export default Vue.extend({
         variables: { id: _id }
       })
       console.log(result);
-      this.$apollo.queries.data.refetch()
+      this.$apollo.queries.items.refetch()
 
     }
   }

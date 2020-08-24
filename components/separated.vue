@@ -2,8 +2,8 @@
   <b-col cols="12" class="border-bottom my-2 px-3 d-md-flex justify-content-center flex-row">
     <div class=" my-1">
       <span v-show="back" @click="backto">
-        <i class="el-icon-back" />
-        <span class="text-dark mx-2">|</span>
+        <b-icon-caret-left-fill/>
+        <span class="text-dark ">|</span>
       </span>
       <b>{{ title }}</b>
     </div>
@@ -23,7 +23,7 @@ export default {
     },
     back: {
       type: Boolean,
-      default: false
+      default: true
     }
   },
 

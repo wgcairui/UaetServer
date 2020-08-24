@@ -2,7 +2,7 @@
   <b-row class="h-100">
     <b-col class="overflow-auto h-100">
       <b-row>
-        <separated title="Server运行状态"></separated>
+        <separated title="Server运行状态" :back="false"></separated>
         <b-col md="4">
           <ve-pie :data="state.user" />
         </b-col>
@@ -17,26 +17,28 @@
         </b-col>
       </b-row>
       <b-row>
-        <separated title="服务器状态"></separated>
+        <separated title="服务器状态" :back="false"></separated>
         <b-col>
           <b-table :items="state.syslist" :fields="sysinfoFields"></b-table>
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <separated title="节点状态"></separated>
+          <separated title="节点状态" :back="false"></separated>
           <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive />
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <separated title="终端散布" />
+          <separated title="终端散布" :back="false">
+            <b>{{Terminals.length}}</b>
+          </separated>
           <amap id="admin" @ready="mapready"></amap>
         </b-col>
       </b-row>
       <b-row id="useBtyes">
         <b-col>
-          <separated title="流量使用(MB)">
+          <separated title="流量使用(MB)" :back="false">
             <b-select :options="cterminals" v-model="BtyeMac" />
           </separated>
           <ve-line :data="btyes" />
@@ -95,6 +97,8 @@ export default Vue.extend({
       ] as BvTableFieldArray,
       sysinfoFields: [
         { key: "hostname", label: "服务器名" },
+        { key: "usecpu", label: "cpu使用率" },
+        { key: "usemen", label: "内存使用率" },
         { key: "totalmem", label: "内存总量" },
         { key: "freemem", label: "空闲内存" },
         {
@@ -108,9 +112,7 @@ export default Vue.extend({
           key: "version",
           label: "系统版本",
           formatter: (value: string) => value.split(" ")[0].replace("#", "")
-        },
-        { key: "usecpu", label: "cpu使用率" },
-        { key: "usemen", label: "内存使用率" }
+        }
       ] as BvTableFieldArray,
       //
       BtyeMac: "",

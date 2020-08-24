@@ -188,7 +188,7 @@ export default Vue.extend({
         const { pid, DevMac } = this.$data.query;
         return { pid: parseInt(pid), DevMac };
       },
-      pollInterval: 2000
+      pollInterval: 5000
     },
     // 设备超时状态
     devTimeOut: {

@@ -23,7 +23,7 @@ const EVENT_TCP = {
     terminalOff: 'terminalOff', // 终端设备下线
     terminalMountDevTimeOut: 'terminalMountDevTimeOut', // 设备挂载节点查询超时
     terminalMountDevTimeOutRestore: 'terminalMountDevTimeOutRestore', // 设备挂载节点查询超时
-    instructTimeOut:'instructTimeOut', // 设备指令超时
+    instructTimeOut: 'instructTimeOut', // 设备指令超时
 
 }
 const EVENT_SOCKET = {
@@ -87,12 +87,12 @@ export class NodeSocketIO {
             {
                 const DTUOfflineTime = this.Event.Cache.DTUOfflineTime
                 const date = Date.now() // 当前时间
-                DTUOfflineTime.forEach((time,mac)=>{
-                    if(date-time.getTime() > 60000 * 10){
+                DTUOfflineTime.forEach((time, mac) => {
+                    if (date - time.getTime() > 60000 * 10) {
                         const info = getDtuInfo(mac)
-                        if(info && info.userInfo.tels?.length > 0){
-                            const {terminalInfo:{name},userInfo:{tels,user}} = info
-                            SendUartAlarm({name:user,tel:tels.join(","),user,devname:name,type:"透传设备下线提醒",})
+                        if (info && info.userInfo.tels?.length > 0) {
+                            const { terminalInfo: { name }, userInfo: { tels, user } } = info
+                            SendUartAlarm({ name: user, tel: tels.join(","), user, devname: name, type: "透传设备下线提醒", })
                             DTUOfflineTime.delete(mac)
                         }
                     }
@@ -181,17 +181,17 @@ export class NodeSocketIO {
                     }
                 })
                 // 节点终端设备掉线
-                .on(EVENT_TCP.terminalOff, (mac:string) => {
+                .on(EVENT_TCP.terminalOff, (mac: string) => {
                     this.Event.Cache.CacheNodeTerminalOnline.delete(mac)
                     const date = new Date()
-                    this.Event.Cache.DTUOfflineTime.set(mac,date)
+                    this.Event.Cache.DTUOfflineTime.set(mac, date)
                     console.error(`${date.toLocaleTimeString()}##模块:${mac} 已离线`);
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: mac, type: "断开" } as logTerminals).save()
                     // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 设备指令超时
-                .on(EVENT_TCP.instructTimeOut,({mac,instruct}:{mac:string,instruct:string[]})=>{
+                .on(EVENT_TCP.instructTimeOut, ({ mac, instruct }: { mac: string, instruct: string[] }) => {
                     //console.log({mac,instruct});
                     /* const TimeOutMonutDevINstruct = this.Event.Cache.TimeOutMonutDevINstruct
                     const TimeOutMonutDevINstructSet = this.Event.Cache.TimeOutMonutDevINstructSet
@@ -213,14 +213,15 @@ export class NodeSocketIO {
                         console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                         // 查询间隔大于30s,加入到离线列表
                         if (QueryTerminal) {
+
                             if (QueryTerminal.Interval > 1000 * 10 && !this.Event.Cache.TimeOutMonutDev.has(hash)) {
                                 this.Event.Cache.TimeOutMonutDev.add(hash)
                                 // 短信告警
                                 const info = getDtuInfo(Query.mac)
-                                if(info && info.userInfo.tels?.length > 0){
-                                    const {terminalInfo:{name,mountDevs},userInfo:{user,tels}} = info
-                                    const dev = mountDevs.find(el=>el.pid === Query.pid) as TerminalMountDevs
-                                    SendUartAlarm({user,name:user,type:'透传设备告警',air:dev.mountDev,event:'设备查询超时',tel:tels.join(","),devname:name})
+                                if (info && info.userInfo.tels?.length > 0) {
+                                    const { terminalInfo: { name, mountDevs }, userInfo: { user, tels } } = info
+                                    const dev = mountDevs.find(el => el.pid === Query.pid) as TerminalMountDevs
+                                    SendUartAlarm({ user, name: user, type: '透传设备告警', air: dev.mountDev, event: '设备查询超时', tel: tels.join(","), devname: name })
                                     QueryTerminal.Interval = config.runArg.Query.Interval
                                 }
                             } else {
@@ -316,7 +317,7 @@ export class NodeSocketIO {
     // 发送查询指令
     private _SendQueryIntruct(Query: TerminalMountDevsEX) {
         // 判断挂载设备是否包含在超时列表中
-        if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)){
+        if (this.Event.Cache.TimeOutMonutDev.has(Query.TerminalMac + Query.pid)) {
             // console.log(`终端设备:${Query.TerminalMac+Query.pid} 查询超时,取消查询指令`);
             return
         }
@@ -406,6 +407,29 @@ export class NodeSocketIO {
         })
         // 添加日志
         new LogTerminals({ NodeIP: NodeIP, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result } as logTerminals).save()
+        return result
+    }
+
+    // 下发操作指令到DTU
+    public async OprateDTU(Query: instructQuery) {
+        // 在在线设备中查找
+        const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
+        const NodeIP = this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
+        // console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
+        const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
+            // 不在线则跳出
+            if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
+            // 取出socket
+            const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
+            if (!Socket) resolve({ ok: 0, msg: '设备不在线' })
+            Query.content = '+++AT+' + Query.content
+            // 创建一次性监听，监听来自Node节点指令查询操作结果            
+            Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
+            // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
+            setTimeout(() => {
+                resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
+            }, 6000);
+        })
         return result
     }
 }

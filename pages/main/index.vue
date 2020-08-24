@@ -1,7 +1,7 @@
 <template>
   <b-col xl="9" cols="12">
     <b-row id="uart">
-      <separated title="透传设备">
+      <separated title="透传设备" :back="false">
         <b-input v-model="uartFilter" placeholder="搜索数据" size="sm"></b-input>
       </separated>
       <b-col
@@ -50,7 +50,7 @@
       </b-col>
     </b-row>
     <b-row id="aggregation" class="mt-5">
-      <separated title="聚合设备">
+      <separated title="聚合设备" :back="false">
         <b-input v-model="aggregationFilter" placeholder="搜索数据" size="sm"></b-input>
       </separated>
       <b-col cols="12" md="6" class="mt-4" v-for="(link, key) in agg" :key="key+link.name">
