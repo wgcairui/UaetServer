@@ -1,5 +1,5 @@
 <template>
-  <b-container fluid class="h-100 p-0">
+  <b-container fluid class="h-100 p-0 d-flex flex-column">
     <b-navbar toggleable="lg" type="dark" variant="dark" class="align-items-start" sticky>
       <b-navbar-brand>
         <nuxt-link to="/main">
@@ -71,10 +71,6 @@
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
-    <b-row class="body-row" no-gutters>
-      <nuxt-child :key="key" class="h-100 overflow-auto user-content p-4"/>
-      <nuxt-child name="left" class="h-100 overflow-auto user-content p-4"/>
-    </b-row>
     <b-sidebar id="alarms" title="告警" right bg-variant="dark" text-variant="light">
       <b-button
         variant="link"
@@ -91,6 +87,26 @@
         >{{info.msg}}</b-list-group-item>
       </b-list-group>
     </b-sidebar>
+    <b-row class="body-row flex-grow-1 user-body" no-gutters>
+      <nuxt-child :key="key" class="h-100 overflow-auto user-content p-4" />
+      <b-col cols="0" xl="3" class="h-100 overflow-auto user-content p-4 	d-none d-xl-block">
+        <h5>
+          <b>最新告警信息</b>
+        </h5>
+        <b-list-group>
+          <b-list-group-item
+            v-for="val in alarm"
+            :key="val._id"
+            v-b-tooltip.hover
+            :title="new Date(val.timeStamp).toLocaleString()"
+            :to="{name:'main-AlarmManage',params:{msg:val.msg}}"
+          >
+            {{`${val.mac}/${val.pid}/${val.devName||''}${val.msg}`}}
+            <b-badge v-if="!val.isOk" class=" float-right">未确认</b-badge>
+          </b-list-group-item>
+        </b-list-group>
+      </b-col>
+    </b-row>
   </b-container>
 </template>
 <script lang="ts">
@@ -108,7 +124,8 @@ export default Vue.extend({
       BindDevice: {
         UTs: [],
         ECs: []
-      }
+      },
+      alarm: []
     };
   },
   computed: {
@@ -195,6 +212,15 @@ export default Vue.extend({
         if (!BindDevice || BindDevice.UTs?.length === 0) this.$router.push({ name: "main-DevManage" });
         this.$store.commit("updateBindDev", data.BindDevice)
       }
+    },
+    alarm: {
+      query: gql`
+        query loguartterminaldatatransfinites($start: Date, $end: Date) {
+          alarm: loguartterminaldatatransfinites(start: $start, end: $end)
+        }
+      `,
+      variables: { start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00", end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59" },
+      pollInterval: 60000
     }
   }
 });
@@ -218,6 +244,7 @@ export default Vue.extend({
 }
 .body-row {
   height: calc(100% - 59px);
+  
 }
 /* 
 HTML 滚动条样式修改

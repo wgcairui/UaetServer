@@ -12,7 +12,8 @@ import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
-import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev } from "uart";
+import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev, uartAlarmObject } from "uart";
+import { getUserBindDev } from "../util/util";
 
 const resolvers: IResolvers = {
     Query: {
@@ -264,25 +265,28 @@ const resolvers: IResolvers = {
             }
             if (ctx.userGroup === "user") {
                 //获取用户绑定设备列表
-                const BindDevs: string[] = []
-                ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
+                const BindDevs: string[] = getUserBindDev(ctx.user)
+                /* ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
                     if (val === ctx.user) BindDevs.push(key)
-                })
+                }) */
                 //let result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end).lean()
                 const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end)
                 const logCurCount = await logCur.countDocuments()
-
+                let result = [] as uartAlarmObject[]
                 if (logCurCount > 0) {
-                    console.log({ logCurCount });
-
                     if (logCurCount > 200) {
-                        return await logCur.find().sort("-timeStamp").limit(200).exec()
+                        result = await logCur.find().sort("-timeStamp").limit(200).lean()
                     } else {
-                        return await logCur.find().exec()
+                        result = await logCur.find().lean()
                     }
                 } else {
-                    return await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(50).lean()
+                    result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(50).lean()
                 }
+                const terminalMaps = ctx.$Event.Cache.CacheTerminal
+                return result.map(el => {
+                    el.mac = terminalMaps.get(el.mac)?.name || el.mac
+                    return el
+                })
             } else {
                 return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
             }
@@ -885,6 +889,18 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.TimeOutMonutDev.delete(mac + pid)
             // console.log({timeOut:ctx.$Event.Cache.TimeOutMonutDev});
             return { ok: 1 } as ApolloMongoResult
+        },
+        // 确认用户告警
+        async confrimAlarm(root, { id }, ctx: ApolloCtx) {
+            const BindDevs: string[] = getUserBindDev(ctx.user)
+            if (id) {
+                const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as uartAlarmObject
+                if (BindDevs.includes(doc.mac)) {
+                    return await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }).exec()
+                } else return { ok: 0 } as ApolloMongoResult
+            } else {
+                return await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
+            }
         }
     },
 

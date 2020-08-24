@@ -350,11 +350,13 @@ interface instructQuery {
 interface uartAlarmObject {
   type: eventsName
   mac: string
+  devName: string
   pid: number
   protocol: string
   tag: string
   timeStamp: number
   msg: string
+  isOk?: boolean
 }
 
 // 单条发送短信

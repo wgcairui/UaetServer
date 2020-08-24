@@ -370,6 +370,8 @@ const typeDefs: DocumentNode = gql`
     deleteAggregation(id:String):result
     # 重置挂在设备超时状态
     refreshDevTimeOut(mac:String,pid:String):result
+    # 确认用户告警
+    confrimAlarm(id:String):result
   }
 
   # Subscription

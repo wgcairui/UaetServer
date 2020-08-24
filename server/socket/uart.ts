@@ -69,13 +69,13 @@ export class NodeSocketIO {
                         const len = useTimeArray.length
                         const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
                         const maxTime = Math.max(...yxuseTimeArray)
-                        // 如果查询最大值大于1秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-                        if (maxTime && maxTime < 1001) {
+                        // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
+                        if (maxTime && maxTime < config.runArg.Query.Interval) {
                             terEX.Interval = config.runArg.Query.Interval
                         } else {
                             const maxTimeString = String(maxTime)
                             const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
-                            terEX.Interval = Number(han) > 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
+                            terEX.Interval = Number(han) >= 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
                         }
                     })
                 })

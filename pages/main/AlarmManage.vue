@@ -3,7 +3,15 @@
     <b-row>
       <b-col>
         <separated title="设备告警日志">
-          <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
+          <div class="d-flex">
+            <b-button
+              size="sm"
+              variant="success"
+              class="text-nowrap mr-1"
+              @click="confrimAlarm('')"
+            >全部确认</b-button>
+            <b-input v-model="filter" placeholder="搜索数据" size="sm"></b-input>
+          </div>
         </separated>
         <b-form>
           <my-form label="开始时间:">
@@ -17,7 +25,45 @@
     </b-row>
     <b-row>
       <b-col>
-        <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading" />
+        <!-- <my-table-log :items="data" :fields="fields" :filter="filter" :busy="$apollo.loading">
+          <template v-slot:cell(isOk)="data">
+            <b-button>确认</b-button>
+          </template>
+        </my-table-log>-->
+        <div>
+          <b-table
+            id="my-table"
+            :items="data"
+            :per-page="perPage"
+            :current-page="currentPage"
+            :fields="fields"
+            :filter="new RegExp(filter)"
+            hover
+            :busy="$apollo.loading"
+            responsive
+          >
+            <template v-slot:table-busy>
+              <div class="text-center text-danger my-2">
+                <b-spinner class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </template>
+            <template v-slot:cell(isOk)="data">
+              <b-button v-if="!data.value" size="sm" @click="confrimAlarm(data.item._id)">确认</b-button>
+              <b-badge v-else>已确认</b-badge>
+            </template>
+            <slot></slot>
+          </b-table>
+          <b-pagination
+            v-if="data.length>10"
+            pills
+            align="center"
+            v-model="currentPage"
+            :total-rows="data.length"
+            :per-page="perPage"
+            aria-controls="my-table"
+          ></b-pagination>
+        </div>
       </b-col>
     </b-row>
   </b-col>
@@ -26,9 +72,13 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { uartAlarmObject } from "uart";
 export default Vue.extend({
   data() {
     return {
+      perPage: 10,
+      currentPage: 1,
+
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
 
@@ -37,9 +87,13 @@ export default Vue.extend({
       fields: [
         { key: "mac", label: "终端" },
         { key: "pid", label: "地址码" },
-        { key: "protocol", label: "协议" },
+        { key: "devName", label: "设备" },
         { key: "tag", label: "标签" },
-        { key: "msg", label: "消息" }
+        { key: "msg", label: "消息" },
+        {
+          key: "timeStamp", label: "时间", formatter: data => new Date(data).toLocaleString(), sortable: true
+        },
+        { key: 'isOk', label: '状态' }
       ] as BvTableFieldArray
     };
   },
@@ -52,11 +106,32 @@ export default Vue.extend({
       `,
       variables() {
         return { start: this.$data.start, end: this.$data.end };
-      }
+      },
+      update: ({ data }: { data: uartAlarmObject[] }) => data.map(el => {
+        if (!el.isOk) {
+          return Object.assign({ _rowVariant: 'danger' }, el)
+        } else {
+          return el
+        }
+      })
     }
-  },/* 
-  mounted() {
-    this.$apollo.queries.data.refetch()
-  } */
+  },
+  methods: {
+    async confrimAlarm(_id?: string) {
+      const result = await this.$apollo.mutate({
+        mutation: gql`
+        mutation confrimAlarm($id:String){
+          confrimAlarm(id:$id){
+            ok
+          }
+        }
+        `,
+        variables: { id: _id }
+      })
+      console.log(result);
+      this.$apollo.queries.data.refetch()
+
+    }
+  }
 });
 </script>

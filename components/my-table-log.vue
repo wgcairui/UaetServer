@@ -18,7 +18,7 @@
         </div>
       </template>
       <template v-slot:cell(ids)="row">{{(currentPage*10-10)+(row.index+1)}}</template>
-      <slot/>
+      <slot></slot>
     </b-table>
     <b-pagination
       v-if="item.length>10"
@@ -60,23 +60,24 @@ export default Vue.extend({
     };
   },
   computed: {
-    item(){
+    item() {
       const items = this.items as any[]
       return items.reverse()
     },
-    cfilter(){
+    cfilter() {
       let filter = this.filter as string
       const patrn = /[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘'，。、]/im;
-      return [...filter].map(el=>patrn.test(el)?'\\'+el:el).join('')
+      return [...filter].map(el => patrn.test(el) ? '\\' + el : el).join('')
     },
     cfields() {
       const fields = this.fields as BvTableFieldArray;
-      fields.unshift({ key: "ids", label: "id" });
+      fields.unshift({ key: "ids", label: "id", sortable: true });
       fields.push({
         key: "createdAt",
         label: "时间",
-        formatter: data => new Date(data).toLocaleString()
-      });      
+        formatter: data => new Date(data).toLocaleString(),
+        sortable: true
+      });
       return fields
     }
   }

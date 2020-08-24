@@ -34,11 +34,13 @@ const SchemaMailSend = new Schema({
 const SchemaUartTerminalDataTransfinite = new Schema({
     type: String,
     mac: String,
+    devName: String,
     pid: Number,
     protocol: String,
     timeStamp: Number,
     tag: String,
     msg: String,
+    isOk: { type: Boolean, default: false }
 }, { timestamps: true })
 // 记录用户的所有操作
 const SchemaUserRequst = new Schema({

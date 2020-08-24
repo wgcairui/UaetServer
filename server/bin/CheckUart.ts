@@ -3,16 +3,7 @@ import _ from "lodash";
 import { SendUartAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
 import unitCache from "../util/unitCache";
-import {
-  queryResult,
-  userSetup,
-  queryResultParse,
-  ProtocolConstantThreshold,
-  queryResultArgument,
-  uartAlarmObject,
-  Threshold,
-  ConstantAlarmStat
-} from "uart";
+import { queryResult, userSetup, queryResultParse, ProtocolConstantThreshold, queryResultArgument, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
 export default (query: queryResult) => {
   // 获取mac绑定的用户
@@ -24,15 +15,11 @@ export default (query: queryResult) => {
     // 结果集
     const parse = query.parse as queryResultParse;
     // 协议参数阀值,状态
-    const Constant = Event.Cache.CacheConstant.get(
-      query.protocol
-    ) as ProtocolConstantThreshold;
+    const Constant = Event.Cache.CacheConstant.get(query.protocol) as ProtocolConstantThreshold;
 
     // 获取协议参数阀值缓存
     {
-      let Threshold = _.has(Constant, "Threshold")
-        ? _.cloneDeep(Constant.Threshold)
-        : [];
+      let Threshold = _.has(Constant, "Threshold") ? _.cloneDeep(Constant.Threshold) : [];
       // 获取用户协议配置
       const UserThreshold = UserSetup.ThresholdMap.get(query.protocol);
       // 合并配置
@@ -46,11 +33,7 @@ export default (query: queryResult) => {
         });
         // 检查用户配置，是否包含系统默认配置没有的设置
         const keys: string[] = Threshold.map(el => el.name);
-        Threshold.push(
-          ...Array.from(UserThreshold.values()).filter(
-            el => !keys.includes(el.name)
-          )
-        );
+        Threshold.push(...Array.from(UserThreshold.values()).filter(el => !keys.includes(el.name)));
       }
       // 迭代规则
       Threshold.forEach(el => {
@@ -72,13 +55,11 @@ export default (query: queryResult) => {
         }
       });
     }
- // 检查参数状态
+    // 检查参数状态
     {
-      let AlarmStat = _.has(Constant, "AlarmStat")
-        ? _.cloneDeep(Constant.AlarmStat)
-        : [];
-        // 获取用户协议配置
-      const UserAlarmStat= UserSetup.AlarmStateMap.get(query.protocol);
+      let AlarmStat = _.has(Constant, "AlarmStat") ? _.cloneDeep(Constant.AlarmStat) : [];
+      // 获取用户协议配置
+      const UserAlarmStat = UserSetup.AlarmStateMap.get(query.protocol);
       // 合并配置
       // 先检查系统配置，是否有用户设置覆盖
       if (UserAlarmStat) {
@@ -90,11 +71,7 @@ export default (query: queryResult) => {
         });
         // 检查用户配置，是否包含系统默认配置没有的设置
         const keys: string[] = AlarmStat.map(el => el.name);
-        AlarmStat.push(
-          ...Array.from(UserAlarmStat.values()).filter(
-            el => !keys.includes(el.name)
-          )
-        );
+        AlarmStat.push(...Array.from(UserAlarmStat.values()).filter(el => !keys.includes(el.name)));
       }
       // 迭代每条状态值
       AlarmStat.forEach(el => {
@@ -102,9 +79,7 @@ export default (query: queryResult) => {
           const parseArgument = parse[el.name] as queryResultArgument;
           if (!el.alarmStat.includes(parseInt(parseArgument.value))) {
             parseArgument.alarm = true;
-            const alarmMsg = `:${parseArgument.name}[${
-              unitCache(parseArgument.unit as string)[parseArgument.value]
-            }]`;
+            const alarmMsg = `:${parseArgument.name}[${unitCache(parseArgument.unit as string)[parseArgument.value]}]`;
             sendSmsAlarm(query, alarmMsg, UserSetup, parseArgument);
           }
         }
@@ -115,12 +90,7 @@ export default (query: queryResult) => {
 };
 // 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日（如您是在发短信通知时提示业务限流，建议根据以上业务调整接口调用时间）
 // 发送告警推送,短信,邮件
-async function sendSmsAlarm(
-  query: queryResult,
-  event: string,
-  UserSetup: userSetup,
-  parseArgument: queryResultArgument
-) {
+async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSetup, parseArgument: queryResultArgument) {
   // 创建tag
   const tag = query.mac + query.pid + parseArgument.name;
   // 缓存告警记录
@@ -131,23 +101,12 @@ async function sendSmsAlarm(
     if (n === 20) {
       // 是否有邮件
       if (UserSetup.mails.length > 0) {
-        SendMailAlarm(
-          UserSetup.mails,
-          `尊敬的${UserSetup.user},您的透传设备${query.mac}挂载的${
-            query.mountDev
-          }于${new Date().toLocaleString()}发生异常,异常事件` + event
-        );
+        SendMailAlarm(UserSetup.mails, `尊敬的${UserSetup.user},您的DTU${query.mac}挂载的${query.mountDev}于${new Date().toLocaleString()}告警,关键词` + event);
       }
       // 检查是否有告警手机号
       if (UserSetup.tels.length > 0) {
         const result = await SendUartAlarm({
-          user: UserSetup.user,
-          type: "透传设备告警",
-          tel: UserSetup.tels.join(","),
-          name: UserSetup.user,
-          devname: query.mac,
-          air: query.mountDev,
-          event
+          user: UserSetup.user, type: "透传设备告警", tel: UserSetup.tels.join(","), name: UserSetup.user, devname: query.mac, air: query.mountDev, event
         });
       }
       // 构造告警信息
@@ -155,6 +114,7 @@ async function sendSmsAlarm(
         type: "UartTerminalDataTransfinite",
         mac: query.mac,
         pid: query.pid,
+        devName: query.mountDev,
         protocol: query.protocol,
         timeStamp: query.timeStamp,
         tag: parseArgument.name,

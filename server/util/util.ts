@@ -17,3 +17,12 @@ export const getDtuInfo = (DevMac: string) => {
     return false;
   }
 };
+
+// 获取用户绑定设备
+export const getUserBindDev = (user: string) => {
+  const BindDevs: string[] = []
+  Event.Cache.CacheBindUart.forEach((val, key) => {
+    if (val === user) BindDevs.push(key)
+  })
+  return BindDevs
+}
