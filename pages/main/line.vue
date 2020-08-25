@@ -15,7 +15,7 @@
     </b-row>
     <b-row>
       <b-col>
-        <separated title="折线图">{{ line.dates }}</separated>
+        <separated title="折线图" :back='false'>{{ line.dates }}</separated>
         <b-overlay :show="$apollo.loading">
           <ve-line :data="line.chartData" />
         </b-overlay>
@@ -41,7 +41,7 @@ export default Vue.extend({
   },
   computed: {
     line() {
-      const name = this.$data.select.value as string;
+      const name = this.select.value as string;
       const Data = this.Data;
       const chartData = { columns: ["time", name], rows: [] as { [x: string]: any }[] };
       let dates = "";
@@ -70,8 +70,8 @@ export default Vue.extend({
         }
       `,
       variables() {
-        const { pid, DevMac } = this.$data.query;
-        return { pid: parseInt(pid), name: this.$data.select.value, DevMac, datatime: this.$data.datetime };
+        const { pid, DevMac } = this.query;
+        return { pid: parseInt(pid), name: this.select.value, DevMac, datatime: this.datetime };
       },
       fetchPolicy: "network-only",
       pollInterval: 10 * 1000
@@ -85,7 +85,7 @@ export default Vue.extend({
         }
       `,
       variables() {
-        return { Protocol: this.$data.query.protocol };
+        return { Protocol: this.query.protocol };
       },
       update: data => data.ShowTag.ShowTag
     }

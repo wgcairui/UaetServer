@@ -12,7 +12,7 @@ import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
-import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev, uartAlarmObject } from "uart";
+import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev, uartAlarmObject, DTUoprate } from "uart";
 import { getUserBindDev } from "../util/util";
 
 const resolvers: IResolvers = {
@@ -144,9 +144,7 @@ const resolvers: IResolvers = {
             let result: queryResultSave[]
             // 如果没有日期参数,默认检索最新的100条数据
             if (datatime === "") {
-                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
-                    .sort("-timeStamp")
-                    .limit(100).lean() as any;
+                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").limit(100).lean() as any;
             } else {
                 const start = new Date(datatime + " 00:00:00");
                 const end = new Date(datatime + " 23:59:59");
@@ -162,7 +160,7 @@ const resolvers: IResolvers = {
             //console.log({len,length:result.length});
             const resultChunk = _.chunk(result, len < 10 ? 10 : len)
             // 遍历切块,刷选出指定字段的结果集,
-            return resultChunk.map(el => {
+            const res = resultChunk.map(el => {
                 // 刷选切块,如果值相同则抛弃
                 let def: queryResultSave = el[0]
                 //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
@@ -174,6 +172,7 @@ const resolvers: IResolvers = {
                     return pre
                 }, [def])
             }).flat()
+            return res
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx: ApolloCtx) {
@@ -725,7 +724,7 @@ const resolvers: IResolvers = {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
-                // return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
+                return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
             }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
@@ -754,6 +753,22 @@ const resolvers: IResolvers = {
             const result = await ctx.$SocketUart.InstructQuery(Query)
             return result
         },
+
+        //  固定发送DTU AT指令
+        async Send_DTU_AT_InstructSet(root, { DevMac, content }: { DevMac: string, content: string }, ctx: ApolloCtx) {
+            // 验证客户是否校验过权限
+            if (ctx.userGroup !== 'root') return { ok: 4, msg: "权限校验失败,请校验身份" } as ApolloMongoResult
+            // 获取协议指令
+            // 携带事件名称，触发指令查询
+            const Query: DTUoprate = {
+                DevMac,
+                events: 'QueryAT' + Date.now() + DevMac,
+                content: '+++AT+' + content
+            }
+            const result = await ctx.$SocketUart.OprateDTU(Query)
+            return result
+        },
+
         // 设置用户自定义设置(联系方式)
         async setUserSetupContact(root, { tels, mails }: { tels: string[], mails: string[] }, ctx: ApolloCtx) {
             const result = await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { tels: tels || [ctx.tel], mails: mails || [ctx.mail] } }, { upsert: true })

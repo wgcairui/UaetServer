@@ -488,3 +488,12 @@ interface wxRequestCode2Session extends wxRequest {
   session_key: string
   unionid: string
 }
+
+type AT = 'Z' | 'VER' | 'UART=1' | 'LOCATE=1' | 'IMEI' | 'ICCID' | 'IMSI'
+// 操作指令请求对象
+interface DTUoprate {
+  DevMac: string
+  events: string
+  content: AT | string
+  result?: string
+}

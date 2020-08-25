@@ -355,6 +355,8 @@ const typeDefs: DocumentNode = gql`
     addDevConstent(Protocol: String, ProtocolType: String,type:String arg: JSON): result
     # 自定义发送设备操作指令
     SendProcotolInstruct(arg:JSON,value:[Int]):result
+    #
+    Send_DTU_AT_InstructSet(DevMac:String,content:String):result
     # 固定发送设备操作指令
     SendProcotolInstructSet(query:JSON,item:JSON):result
     # 设置用户自定义设置(联系方式)
@@ -372,6 +374,7 @@ const typeDefs: DocumentNode = gql`
     refreshDevTimeOut(mac:String,pid:String):result
     # 确认用户告警
     confrimAlarm(id:String):result
+
   }
 
   # Subscription

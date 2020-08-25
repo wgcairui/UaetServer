@@ -95,6 +95,11 @@ export default Vue.extend({
             to: { name: "root-node-userSetup" },
             text: "用户设置",
             ico: "\uEB66"
+          },
+          {
+            to: { name: "root-AT" },
+            text: "DTU调试",
+            ico: "\uEC63"
           }
         ] as navi[],
         Socket: [

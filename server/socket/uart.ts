@@ -1,7 +1,7 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals } from "uart";
+import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate } from "uart";
 
 import tool from "../util/tool";
 import { DefaultContext } from "koa";
@@ -411,7 +411,7 @@ export class NodeSocketIO {
     }
 
     // 下发操作指令到DTU
-    public async OprateDTU(Query: instructQuery) {
+    public async OprateDTU(Query: DTUoprate) {
         // 在在线设备中查找
         const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
         const NodeIP = this.Event.Cache.CacheNodeName.get(terminal.mountNode)?.IP as string
