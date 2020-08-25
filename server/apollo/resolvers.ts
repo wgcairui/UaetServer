@@ -763,7 +763,7 @@ const resolvers: IResolvers = {
             const Query: DTUoprate = {
                 DevMac,
                 events: 'QueryAT' + Date.now() + DevMac,
-                content: '+++AT+' + content
+                content
             }
             const result = await ctx.$SocketUart.OprateDTU(Query)
             return result

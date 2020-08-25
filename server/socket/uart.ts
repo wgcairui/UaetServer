@@ -37,6 +37,7 @@ const EVENT_SOCKET = {
 
 const EVENT_SERVER = {
     'instructQuery': 'instructQuery', // 操作设备状态指令
+    'DTUoprate': 'DTUoprate' // DTU AT指令
 }
 
 export class NodeSocketIO {
@@ -424,7 +425,7 @@ export class NodeSocketIO {
             if (!Socket) resolve({ ok: 0, msg: '设备不在线' })
             Query.content = '+++AT+' + Query.content
             // 创建一次性监听，监听来自Node节点指令查询操作结果            
-            Socket.once(Query.events, resolve).emit(EVENT_SERVER.instructQuery, Query)
+            Socket.once(Query.events, resolve).emit(EVENT_SERVER.DTUoprate, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
             setTimeout(() => {
                 resolve({ ok: 0, msg: 'Node节点无响应，请检查设备状态信息是否变更' })
