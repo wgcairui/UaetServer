@@ -163,8 +163,10 @@ export default Vue.extend({
       if (Data?.parse) {
         time.useTime = Data.useTime;
         time.Interval = Data.Interval;
-        time.queryTime = new Date(Data.time).toLocaleString();
-        this.$apollo.queries.Data.startPolling(time.Interval);
+        time.queryTime = Data.time//new Date(Data.time).toLocaleString();
+        /* this.$apollo.queries.Data.setOptions({
+          pollInterval: time.Interval
+        }) */
       }
       return time;
     }
@@ -206,12 +208,12 @@ export default Vue.extend({
           case "DTUOFF":
             this.$apollo.queries.Data.stopPolling()
             //this.$bvModal.msgBoxOk("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电",{buttonSize:'sm'})
-            MessageBox.alert("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电","error")
+            MessageBox.alert("DTU模块设备不在线,数据不是最新的,请检查DTU设备是否断电", "error")
             break
           case "TimeOut":
             this.$apollo.queries.Data.stopPolling()
             //this.$bvModal.msgBoxOk("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确")
-            MessageBox.alert("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确","error")
+            MessageBox.alert("设备查询指令超时,数据不是最新的,请检查设备是否运行和线缆是否连接正确", "error")
             break
           default:
             console.log(data.devTimeOut);

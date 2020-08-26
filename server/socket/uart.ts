@@ -180,6 +180,8 @@ export class NodeSocketIO {
                         // 添加日志
                         new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
                     }
+                    // 删除超时列表mac
+                    // const mountDevs = 
                 })
                 // 节点终端设备掉线
                 .on(EVENT_TCP.terminalOff, (mac: string) => {
@@ -385,7 +387,7 @@ export class NodeSocketIO {
         // console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
-            if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
+            if (!NodeIP) resolve({ ok: 0, msg: '设备所在节点不在线' })
             // 取出查询间隔
             Query.Interval = this.Cache.get(terminal.mountNode)?.get(Query.DevMac + Query.pid)?.Interval || 20000
             // 取出socket
@@ -419,11 +421,11 @@ export class NodeSocketIO {
         // console.log({ map: this.Event.Cache.CacheNodeTerminalOnline, NodeIP, Query });
         const result = await new Promise<Partial<ApolloMongoResult>>((resolve) => {
             // 不在线则跳出
-            if (!NodeIP) resolve({ ok: 0, msg: '设备不在线' })
+            if (!NodeIP) resolve({ ok: 0, msg: '设备所在节点不在线' })
             // 取出socket
             const Socket = this.Event.Cache.CacheSocket.get(NodeIP) as IO.Socket
             if (!Socket) resolve({ ok: 0, msg: '设备不在线' })
-            Query.content = '+++AT+' + Query.content
+            // Query.content = '+++AT+' + Query.content
             // 创建一次性监听，监听来自Node节点指令查询操作结果            
             Socket.once(Query.events, resolve).emit(EVENT_SERVER.DTUoprate, Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏

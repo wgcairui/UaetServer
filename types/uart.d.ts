@@ -95,8 +95,10 @@ interface Terminal extends RegisterTerminal {
   mountNode: string
   name: string;
   ip?: string
-  prto?: number
+  port?: number
   jw?: string | AMap.LngLat;
+  uart?: string
+  AT?: boolean
   uptime?: string
   mountDevs: TerminalMountDevs[];
 }
@@ -192,7 +194,8 @@ interface socketNetInfo {
   port: number;
   mac: string;
   jw: string;
-  stat: Boolean
+  uart: string
+  AT: boolean
 }
 // 节点websocket透传信息
 interface WebSocketInfo {

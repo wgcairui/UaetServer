@@ -21,23 +21,19 @@ export default async (ctx: ParameterizedContext | KoaCtx) => {
     // 透传运行数据上传接口
     case "RunData":
       {
-        // 节点主机运行信息
-        const NodeInfo: nodeInfo = body.NodeInfo
-        // 节点websocket运行信息
-        const WebSocketInfos: WebSocketInfo = body.WebSocketInfos
+        const { NodeInfo, WebSocketInfos, updateTime }: { NodeInfo: nodeInfo, WebSocketInfos: WebSocketInfo, updateTime: string } = body
         // 设备port jw
         WebSocketInfos.SocketMaps.forEach(el => {
-          const { port, ip, jw, mac, stat} = el
-          const uptime = new Date().toLocaleString()
+          const { port, ip, jw, mac, uart, AT } = el
           if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(mac)) {
-            Terminal.updateOne({ DevMac: mac }, { $set: { ip, port, jw, stat, uptime } }, { upsert: true }).exec()
+            Terminal.updateOne({ DevMac: mac }, { $set: { ip, port, jw, uart, AT, uptime: updateTime } }, { upsert: true }).exec()
             ctx.$Event.Cache.CacheNodeTerminalOnline.add(mac)
           }
         })
         //写入运行信息
         const reslut = await NodeRunInfo.updateOne(
           { NodeName: WebSocketInfos.NodeName },
-          { $set: { ...WebSocketInfos, ...NodeInfo, updateTime: body.updateTime } },
+          { $set: { ...WebSocketInfos, ...NodeInfo, updateTime: updateTime } },
           { upsert: true }
         ).exec()
         ctx.body = reslut

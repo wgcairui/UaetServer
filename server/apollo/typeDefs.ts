@@ -83,6 +83,8 @@ const typeDefs: DocumentNode = gql`
     ip:String
     port:Int
     jw:String
+    uart: String
+    AT: Boolean
     uptime: String
     online: Boolean
     mountNode: String

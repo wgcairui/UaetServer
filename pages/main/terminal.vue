@@ -26,6 +26,13 @@
                 }}
               </b-form-text>
             </b-form-group>
+            <b-form-group label="通讯参数:" v-bind="label">
+              <b-form-text class="terminal text-dark">
+                {{
+                Terminals.uart
+                }}
+              </b-form-text>
+            </b-form-group>
             <b-form-group label="GPS定位:" v-bind="label">
               <b-form-text class="terminal text-dark">{{ Terminals.jw || '没有gps信息时以IP模糊定位'}}</b-form-text>
             </b-form-group>
@@ -33,12 +40,11 @@
               <b-form-text class="terminal text-dark">{{address}}</b-form-text>
             </b-form-group>
             <b-form-group label="在线状态:" v-bind="label">
-              <b-form-checkbox
-                switch
-                v-model="devState"
-                size="lg"
-                button-variant="success"
-              >{{devState?'在线':'离线'}}</b-form-checkbox>
+              <b-icon-toggle-on v-if="devState" variant="success" font-scale="2" class="mt-1"></b-icon-toggle-on>
+              <b-icon-toggle-off v-else font-scale="2" class="mt-1"></b-icon-toggle-off>
+            </b-form-group>
+            <b-form-group label="更新时间:" v-bind="label">
+              <b-form-text class="terminal text-dark">{{Terminals.uptime}}</b-form-text>
             </b-form-group>
           </b-form>
         </b-jumbotron>
@@ -119,6 +125,8 @@ export default Vue.extend({
             ip
             port
             jw
+            uart
+            AT
             uptime
             mountNode
             mountDevs {

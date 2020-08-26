@@ -89,7 +89,7 @@
     </b-sidebar>
     <b-row class="body-row flex-grow-1 user-body" no-gutters>
       <nuxt-child :key="key" class="h-100 overflow-auto user-content p-4" />
-      <b-col cols="0" xl="3" class="h-100 overflow-auto user-content p-4 	d-none d-xl-block">
+      <b-col cols="0" xl="3" class="h-100 overflow-auto user-content p-4 d-none d-xl-block">
         <h5>
           <b>最新告警信息</b>
         </h5>
@@ -102,7 +102,7 @@
             :to="{name:'main-AlarmManage',params:{msg:val.msg}}"
           >
             {{`${val.mac}/${val.pid}/${val.devName||''}${val.msg}`}}
-            <b-badge v-if="!val.isOk" class=" float-right">未确认</b-badge>
+            <b-badge v-if="!val.isOk" class="float-right">未确认</b-badge>
           </b-list-group-item>
         </b-list-group>
       </b-col>
@@ -115,10 +115,7 @@ import { WebInfo } from "../store/DB";
 import gql from "graphql-tag";
 import { Terminal } from "uart";
 export default Vue.extend({
-  beforeRouteUpdate(to, from, next) {
-    // console.log({ to, from, next });
-    next()
-  },
+  scrollToTop: true,
   data() {
     return {
       BindDevice: {
@@ -244,7 +241,6 @@ export default Vue.extend({
 }
 .body-row {
   height: calc(100% - 59px);
-  
 }
 /* 
 HTML 滚动条样式修改
