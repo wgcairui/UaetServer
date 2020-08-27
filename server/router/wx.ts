@@ -84,12 +84,12 @@ export default async (Ctx: ParameterizedContext) => {
         ctx.assert(!userStat, 400, "账号有重复,此微信账号已绑定");
         //
         // const telStat = await Users.findOne({ $or:[{tel:data.tel},{mail:data.mail}] });
-        const telStat = await Users.findOne({tel:data.tel},{mail:data.mail});
+        const telStat = await Users.findOne({ tel: data.tel }, { mail: data.mail });
         ctx.assert(!telStat, 400, "手机或邮箱号重复,请重新填写");
         //
         const user = Object.assign(
           body,
-          {userId: data.appid},
+          { userId: data.appid },
           { passwd: await BcryptDo(data.appid) },
           { rgtype: "wx" }
         ) as UserInfo;
@@ -108,6 +108,7 @@ export default async (Ctx: ParameterizedContext) => {
               user: user.user,
               type: "用户注册"
             } as logUserLogins).save();
+            ctx.$Event.Cache.RefreshCacheUser(user.user)
             return { ok: 1, msg: "账号注册成功" };
           })
           .catch(e => console.log(e));

@@ -197,7 +197,15 @@ export class NodeSocketIO {
                         // 如果超时次数>10和短信发送状态为false
                         if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                             this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
-                            SmsDTUDevTimeOut(Query, '超时')
+                            const a =  SmsDTUDevTimeOut(Query, '超时')
+                            /* console.log({a});
+                            if(a){
+                                a.then(res=>{
+                                    console.log({res});
+                                    
+                                }).catch(e=>console.log({e})
+                                )
+                            } */
                         }
                         // 添加日志
                         new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: Query.mac, type: "查询超时", query: Query } as logTerminals).save()

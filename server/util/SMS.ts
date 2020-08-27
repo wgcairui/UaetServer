@@ -114,9 +114,9 @@ export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复')
         const time = new Date()
         const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
         const TemplateParam = JSON.stringify({
-            name: info.userInfo.user,
+            name: info.user.name || info.user.user,
             DTU: info.terminalInfo.name,
-            address: Query.pid,
+            pid: Query.pid,
             devname: Query.mountDev,
             time: d,
             event
@@ -140,9 +140,9 @@ export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
         const time = new Date()
         const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
         const TemplateParam = JSON.stringify({
-            name: info.userInfo.user,
+            name: info.user.name,
             DTU: info.terminalInfo.name,
-            address: Query.pid,
+            pid: Query.pid,
             devname: Query.mountDev,
             time: d,
             remind
@@ -166,7 +166,7 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
         const time = new Date()
         const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
         const TemplateParam = JSON.stringify({
-            name: info.userInfo.user,
+            name: info.user.name,
             DTU: info.terminalInfo.name,
             time: d,
             event

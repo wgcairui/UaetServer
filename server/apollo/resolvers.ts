@@ -431,13 +431,13 @@ const resolvers: IResolvers = {
                 { $set: { ProtocolType, instruct } },
                 { upsert: true }
             );
-            await ctx.$Event.Cache.RefreshCacheProtocol();
+            await ctx.$Event.Cache.RefreshCacheProtocol(Protocol);
             return result;
         },
         // 删除协议
         async deleteProtocol(root, { Protocol }, ctx: ApolloCtx) {
             const result = await DeviceProtocol.deleteOne({ Protocol });
-            await ctx.$Event.Cache.RefreshCacheProtocol();
+            await ctx.$Event.Cache.CacheProtocol.delete(Protocol)
             return result;
         },
         // 添加设备类型
@@ -448,13 +448,13 @@ const resolvers: IResolvers = {
                 { $set: { Protocols } },
                 { upsert: true }
             );
-            await ctx.$Event.Cache.RefreshCacheDevType();
+            await ctx.$Event.Cache.RefreshCacheDevType(DevModel);
             return result;
         },
         // 添加设备类型
         async deleteDevModel(root, { DevModel }, ctx: ApolloCtx) {
             const result = await DevsType.deleteOne({ DevModel });
-            await ctx.$Event.Cache.RefreshCacheDevType();
+            await ctx.$Event.Cache.CacheDevsType.delete(DevModel)
             return result;
         },
         // 添加登记设备
@@ -469,7 +469,7 @@ const resolvers: IResolvers = {
             return result;
         },
         // 删除登记设备 
-        async deleteRegisterTerminal(root, { DevMac }) {
+        async deleteRegisterTerminal(root, { DevMac }, ctx: ApolloCtx) {
             // 如果没有被绑定则删除
             const terminal = await UserBindDevice.findOne({ "UTS": DevMac })
             if (terminal) {
@@ -479,8 +479,11 @@ const resolvers: IResolvers = {
                 await TerminalClientResults.deleteMany({ mac: DevMac }).exec()
                 await TerminalClientResultSingle.deleteMany({ mac: DevMac }).exec()
                 await Terminal.deleteOne({ DevMac }).exec()
+                await LogUartTerminalDataTransfinite.deleteMany({ mac: DevMac }).exec()
+                await LogTerminals.deleteMany({ TerminalMac: DevMac }).exec()
+                await LogUseBytes.deleteMany({ mac: DevMac }).exec()
                 const result = await RegisterTerminal.deleteOne({ DevMac })
-                //await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+                ctx.$Event.Cache.CacheTerminal.delete(DevMac)
                 return result
             }
         },
@@ -520,7 +523,7 @@ const resolvers: IResolvers = {
                 await LogTerminals.deleteMany({ TerminalMac: DevMac }).exec()
                 await LogUseBytes.deleteMany({ mac: DevMac }).exec()
                 const result = await RegisterTerminal.deleteOne({ DevMac })
-                await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+                ctx.$Event.Cache.CacheTerminal.delete(DevMac)
                 return result
             }
         },
@@ -558,7 +561,7 @@ const resolvers: IResolvers = {
             return result
         },
         // 添加用户
-        async addUser(root, { arg }) {
+        async addUser(root, { arg }, ctx: ApolloCtx) {
             if (await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
             if (await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
             if (await Users.findOne({ user: arg.mail })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
@@ -572,6 +575,9 @@ const resolvers: IResolvers = {
                         tels: user.tel ? [String(user.tel)] : [],
                         mails: user.mail ? [user.mail] : []
                     }
+                    // 
+                    ctx.$Event.Cache.RefreshCacheUser(user.user)
+                    ctx.$Event.Cache.RefreshCacheUserSetup(user.user)
                     new UserAlarmSetup(setup).save()
                     // 添加日志记录
                     new LogUserLogins({ user: user.user, type: '用户注册' } as logUserLogins).save()
@@ -585,7 +591,9 @@ const resolvers: IResolvers = {
             if (keys.includes('user')) return { ok: 0, msg: '不能修改用户名' } as ApolloMongoResult
             if (keys.includes('userGroup') && ctx.userGroup !== 'root') return { ok: 0, msg: '权限校验失败' } as ApolloMongoResult
             if (keys.some(el => arg[el].length > 50)) return { ok: 0, msg: '参数值过长' } as ApolloMongoResult
-            return await Users.updateOne({ user: ctx.user }, { $set: arg })
+            const res = await Users.updateOne({ user: ctx.user }, { $set: arg })
+            ctx.$Event.Cache.RefreshCacheUser(ctx.user)
+            return res
         },
         // 添加用户绑定终端
         async addUserTerminal(root, { type, id }, ctx: ApolloCtx) {
@@ -601,7 +609,7 @@ const resolvers: IResolvers = {
                                 { $addToSet: { UTs: id } },
                                 { upsert: true }
                             );
-                            ctx.$Event.Cache.RefreshCacheBind()
+                            ctx.$Event.Cache.RefreshCacheBind(ctx.user)
                             return result
                         }
 
@@ -617,7 +625,7 @@ const resolvers: IResolvers = {
                                 { $addToSet: { ECs: id } },
                                 { upsert: true }
                             );
-                            ctx.$Event.Cache.RefreshCacheBind()
+                            ctx.$Event.Cache.RefreshCacheBind(ctx.user)
                             return res
                         }
                     }
@@ -634,7 +642,7 @@ const resolvers: IResolvers = {
                             { upsert: true }
                         );
                         ctx.$Event.Cache.CacheBindUart.delete(id)
-                        ctx.$Event.Cache.RefreshCacheBind()
+                        ctx.$Event.Cache.RefreshCacheBind(ctx.user)
                         return res
                     }
                 case "EC":
@@ -644,7 +652,7 @@ const resolvers: IResolvers = {
                             { $pull: { ECs: id } },
                             { upsert: true }
                         );
-                        ctx.$Event.Cache.RefreshCacheBind()
+                        ctx.$Event.Cache.RefreshCacheBind(ctx.user)
                         return res
                     }
             }
@@ -694,7 +702,7 @@ const resolvers: IResolvers = {
                 { $set: Up },
                 { upsert: true }
             )
-            ctx.$Event.Cache.RefreshCacheConstant()
+            ctx.$Event.Cache.RefreshCacheConstant(Protocol)
             return result;
         },
         //  固定发送设备操作指令
@@ -750,7 +758,7 @@ const resolvers: IResolvers = {
         // 设置用户自定义设置(联系方式)
         async setUserSetupContact(root, { tels, mails }: { tels: string[], mails: string[] }, ctx: ApolloCtx) {
             const result = await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { tels: tels || [ctx.tel], mails: mails || [ctx.mail] } }, { upsert: true })
-            ctx.$Event.Cache.RefreshCacheUserSetup()
+            ctx.$Event.Cache.RefreshCacheUserSetup(ctx.user)
             return result
         },
         // 设置用户自定义设置(协议配置)
@@ -802,7 +810,7 @@ const resolvers: IResolvers = {
                 { $set: Up },
                 { upsert: true }
             )
-            ctx.$Event.Cache.RefreshCacheUserSetup()
+            ctx.$Event.Cache.RefreshCacheUserSetup(ctx.user)
             return result;
         },
         // 发送验证码
