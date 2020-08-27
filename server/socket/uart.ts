@@ -22,7 +22,6 @@ const EVENT_TCP = {
     terminalOn: 'terminalOn', // 终端设备上线
     terminalOff: 'terminalOff', // 终端设备下线
     terminalMountDevTimeOut: 'terminalMountDevTimeOut', // 设备挂载节点查询超时
-    terminalMountDevTimeOutRestore: 'terminalMountDevTimeOutRestore', // 设备挂载节点查询超时
     instructTimeOut: 'instructTimeOut', // 设备指令超时
 
 }
@@ -69,14 +68,12 @@ export class NodeSocketIO {
                         const useTimeArray = this.Event.Cache.QueryTerminaluseTime.get(hash) as number[]
                         const len = useTimeArray.length
                         const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
-                        const maxTime = Math.max(...yxuseTimeArray)
+                        const maxTime = Math.max(...yxuseTimeArray) || 4000
                         // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-                        if (maxTime && maxTime < config.runArg.Query.Interval) {
-                            terEX.Interval = config.runArg.Query.Interval
-                        } else {
-                            const maxTimeString = String(maxTime)
-                            const han = maxTimeString.slice(maxTimeString.length - 3, maxTimeString.length)
-                            terEX.Interval = Number(han) >= 500 ? Number(maxTimeString.replace(han, '500')) : Number(maxTimeString.replace(han, '000'))
+                        if (maxTime < config.runArg.Query.Interval) terEX.Interval = config.runArg.Query.Interval
+                        else {
+                            const round = Math.round(maxTime / 1000) * 1000
+                            terEX.Interval = round - maxTime > 500 ? round + 500 : round
                         }
                     })
                 })
@@ -134,7 +131,8 @@ export class NodeSocketIO {
                     console.log(`${new Date().toLocaleTimeString()}## 节点：${Node.Name}断开连接，清除定时操作`);
                     this.Cache.delete(Node.Name)
                     this.Event.Cache.CacheSocket.delete(Node.IP)
-                    this.Event.Cache.CacheNodeTerminalOnline.clear()
+                    const terminalNames = Array.from(this.Event.Cache.CacheNodeTerminal.get(Node.Name)?.keys() || [])
+                    terminalNames.forEach(terminal => this.Event.Cache.CacheNodeTerminalOnline.delete(terminal))
                     // 添加日志
                     new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "断开" })).save()
                 })
@@ -146,7 +144,6 @@ export class NodeSocketIO {
                     const Info = <NodeClient>this.Event.Cache.CacheNode.get(Node.IP);
                     // 发送节点注册信息
                     Node.socket.emit(EVENT_SOCKET.registerSuccess, Info);
-
                 })
                 // 节点注册成功,初始化设备列表缓存
                 .on(EVENT_SOCKET.ready, () => {
@@ -167,31 +164,22 @@ export class NodeSocketIO {
                 // 节点终端设备上线
                 .on(EVENT_TCP.terminalOn, (data: string | string[]) => {
                     const date = new Date()
-                    if (Array.isArray(data)) {
-                        data.forEach(el => {
-                            this.Event.Cache.CacheNodeTerminalOnline.add(el)
-                            this.Event.Cache.DTUOfflineTime.delete(el)
-                        })
-                        console.info(`${date.toLocaleTimeString()}##模块:/${data.join("|")}/ 已上线`);
-                    } else {
-                        this.Event.Cache.CacheNodeTerminalOnline.add(data)
-                        this.Event.Cache.DTUOfflineTime.delete(data)
-                        console.info(`${date.toLocaleTimeString()}##模块:${data} 已上线`);
-                        // 添加日志
-                        new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data, type: "连接" } as logTerminals).save()
-                    }
-                    // 删除超时列表mac
-                    // const mountDevs = 
+                    if (!Array.isArray(data)) data = [data]
+                    else new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data[0], type: "连接" } as logTerminals).save()
+                    data.forEach(el => {
+                        this.Event.Cache.CacheNodeTerminalOnline.add(el)
+                        this.Event.Cache.DTUOfflineTime.delete(el)
+                    })
+                    console.info(`${date.toLocaleTimeString()}##${Node.Name} DTU:/${data.join("|")}/ 已上线`);
                 })
                 // 节点终端设备掉线
                 .on(EVENT_TCP.terminalOff, (mac: string) => {
                     this.Event.Cache.CacheNodeTerminalOnline.delete(mac)
                     const date = new Date()
                     this.Event.Cache.DTUOfflineTime.set(mac, date)
-                    console.error(`${date.toLocaleTimeString()}##模块:${mac} 已离线`);
+                    console.error(`${date.toLocaleTimeString()}##${Node.Name} DTU:${mac} 已离线`);
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: mac, type: "断开" } as logTerminals).save()
-                    // console.log({Node,stat:'offline',cache:this.Event.Cache.CacheNodeTerminalOnline});
                 })
                 // 设备指令超时
                 .on(EVENT_TCP.instructTimeOut, ({ mac, instruct }: { mac: string, instruct: string[] }) => {
@@ -210,8 +198,8 @@ export class NodeSocketIO {
                 .on(EVENT_TCP.terminalMountDevTimeOut, (Query: queryResult, timeOut: number) => {
                     const hash = Query.mac + Query.pid
                     // 查询间隔大于30s,加入到离线列表
-                    // 如果超时次数>=10,加500ms
-                    if (timeOut >= 10) {
+                    // 如果超时次数>10,加500ms
+                    if (timeOut > 10) {
                         const QueryTerminal = this.Cache.get(Node.Name)?.get(hash) as TerminalMountDevsEX
                         console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                         // 查询间隔大于30s,加入到离线列表
