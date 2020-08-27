@@ -18,7 +18,13 @@
 
           <div class="p-3">
             <separated title="快捷指令" :back="false"></separated>
-            <b-button variant="success" v-for="val in at" :key="val.text" class="m-3" @click="setAT(val.value)">{{val.text}}</b-button>
+            <b-button
+              variant="success"
+              v-for="val in at"
+              :key="val.text"
+              class="m-3"
+              @click="setAT(val.value)"
+            >{{val.text}}</b-button>
           </div>
           <b-button @click="OprateAT" block size="sm" :disabled="!DevMac || !AT">执行</b-button>
         </b-col>
@@ -42,7 +48,7 @@ export default Vue.extend({
   data() {
     return {
       Terminals: [],
-      DevMac: '',
+      DevMac: this.$route.query.mac || '',
       AT: 'VER',
       msg: [],
       label: true,

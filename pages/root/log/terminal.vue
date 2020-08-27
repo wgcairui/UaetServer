@@ -18,19 +18,24 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { queryResult } from "uart";
 export default Vue.extend({
   data() {
     return {
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
-      filter: "" as string,
+      filter: this.$route.query.mac || "" as string,
       data: [],
       fields: [
         { key: "NodeIP", label: "节点" },
         { key: "NodeName", label: "节点名称" },
         { key: "type", label: "类型" },
         { key: "TerminalMac", label: "终端ID" },
-        { key: "query", label: "请求" }
+        {
+          key: "query", label: "请求",
+          formatter: (data: queryResult) =>
+            data ? `设备:${data.mountDev},协议:${data.protocol},类型:${data.type},Pid:${data.pid},查询耗时:${data.useTime}` : ''
+        }
       ] as BvTableFieldArray
     };
   },

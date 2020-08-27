@@ -1,6 +1,6 @@
 import Event from "../event/index";
 import _ from "lodash";
-import { SendUartAlarm } from "../util/SMS";
+import { SendUartAlarm, SmsDTUDevAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
 import unitCache from "../util/unitCache";
 import { queryResult, userSetup, queryResultParse, ProtocolConstantThreshold, queryResultArgument, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
@@ -105,9 +105,7 @@ async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSe
       }
       // 检查是否有告警手机号
       if (UserSetup.tels.length > 0) {
-        const result = await SendUartAlarm({
-          user: UserSetup.user, type: "透传设备告警", tel: UserSetup.tels.join(","), name: UserSetup.user, devname: query.mac, air: query.mountDev, event
-        });
+        SmsDTUDevAlarm(query, event)
       }
       // 构造告警信息
       const data: uartAlarmObject = {

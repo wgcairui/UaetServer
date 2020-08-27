@@ -33,7 +33,7 @@
     </b-navbar>
     <b-container class="container-h flex-grow-1" fluid>
       <b-row class="h-100 border-top">
-        <b-col md="2" class="bg-dark d-flex flex-column p-4 text-light">
+        <b-col md="1" class="bg-dark d-flex flex-column p-4 text-light">
           <h6>
             <b-link to="/root" class="text-decoration-none text-light">Home</b-link>
           </h6>
@@ -53,7 +53,7 @@
             </ul>
           </div>
         </b-col>
-        <b-col md="10" class="overflow-auto h-100">
+        <b-col md="11" class="overflow-auto h-100">
           <b-card>
             <nuxt-child></nuxt-child>
           </b-card>

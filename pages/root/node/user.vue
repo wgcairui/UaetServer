@@ -12,10 +12,11 @@
       hover
       show-empty
     >
-      <template v-slot:cell(creatTime)="row">{{ new Date(row.value).toLocaleDateString()}}</template>
-      <template
-        v-slot:cell(modifyTime)="row"
-      >{{ row.value?new Date(row.value).toLocaleDateString() :''}}</template>
+      <template v-slot:cell(oprate)="row">
+        <b-button-group size="sm">
+          <b-button :to="{name:'root-log-userlogins',query:{user:row.item.user}}">日志</b-button>
+        </b-button-group>
+      </template>
     </b-table>
   </b-col>
 </template>
@@ -35,10 +36,10 @@ export default Vue.extend({
         { key: "userGroup", label: "用户组" },
         { key: "mail", label: "邮箱" },
         { key: "tel", label: "电话" },
-        { key: "creatTime", label: "创建时间" },
-        { key: "modifyTime", label: "修改时间" },
+        { key: "creatTime", label: "创建时间", formatter: date => new Date(date).toLocaleString() },
+        { key: "modifyTime", label: "修改时间", formatter: date => new Date(date).toLocaleString() },
         { key: "address", label: "登陆IP" },
-        { key: "status", label: "启用状态" }
+        { key: 'oprate', label: '操作' }
       ] as BvTableFieldArray
     };
   },

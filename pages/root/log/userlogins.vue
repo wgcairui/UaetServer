@@ -23,11 +23,12 @@ export default Vue.extend({
     return {
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
-      filter: "" as string,
+      filter: this.$route.query.user ||"" as string,
       data: [],
       fields: [
         { key: "user", label: "用户" },
-        { key: "type", label: "类型" }
+        { key: "type", label: "类型" },
+        { key: "address", label: "登陆IP" },
       ] as BvTableFieldArray
     };
   },

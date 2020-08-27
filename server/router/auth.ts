@@ -1,9 +1,10 @@
 import { JwtSign, JwtVerify } from "../util/Secret";
 import { BcryptCompare } from "../util/bcrypt";
 import { Users } from "../mongoose/user";
-import { KoaCtx, UserInfo } from "uart";
+import { KoaCtx, UserInfo, logUserLogins } from "uart";
 import { ParameterizedContext } from "koa";
 import { AES, enc } from "crypto-js";
+import { LogUserLogins } from "../mongoose/Log";
 export default async (ctx: ParameterizedContext) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body
   const type = ctx.params.type;
@@ -25,6 +26,8 @@ export default async (ctx: ParameterizedContext) => {
         // if (!BcryptCompare(passwd, u.passwd)) ctx.throw(400, "passwdError");
         if (u && pwStat) {
           (ctx as KoaCtx).$Event.ClientCache.CacheUserLoginHash.delete(user)
+          Users.updateOne({ $or: [{ user }, { mail: user }] }, { $set: { modifyTime: new Date(), address: ctx.ip } }).exec()
+          new LogUserLogins({ user: u.user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
           ctx.body = { token: await JwtSign(u), user: u.user, name: u.name || u.user, userGroup: u.userGroup };
         }
         break;

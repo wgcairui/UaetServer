@@ -10,6 +10,8 @@
       hover
       :busy="busy"
       responsive
+      small
+      no-border-collapse 
     >
       <template v-slot:table-busy>
         <div class="text-center text-danger my-2">

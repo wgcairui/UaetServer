@@ -74,8 +74,6 @@ export default class webClientSocketIO {
             this.CacheUserSocketids.set(Node.User, new Set([Node.ID]))
             console.log(`user:${Node.User}@单点登录,登录ID：%${Node.ID}`);
         }
-        // 记录日志
-        new LogUserLogins({ user: Node.User, type: '用户登陆' } as logUserLogins).save()
         // 发送效验成功事件        
         Node.socket.to(Node.User).emit("valdationSuccess", { user: Node.User })
     }
@@ -97,7 +95,5 @@ export default class webClientSocketIO {
             Node.socket.to(Node.User).emit("logout", { ID: Node.ID, IP: Node.IP })
             console.log(`用户@${Node.User} 多端登录已1离线，在线数:${size - 1}`);
         }
-        // 记录日志
-        new LogUserLogins({ user: Node.User, type: '用户登出' } as logUserLogins).save()
     }
 }

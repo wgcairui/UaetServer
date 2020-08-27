@@ -70,17 +70,19 @@ export default class Cache {
   // 序列化参数单位解析
   CacheParseUnit: Map<string, { [x in number]: string }>
   // 序列化参数regx解析
-  CacheParseRegx: Map<string,[number,number]>
+  CacheParseRegx: Map<string, [number, number]>
   // 每个手机号发送告警的次数
   CacheAlarmSendNum: Map<string, number>
   // 设备超时列表
   TimeOutMonutDev: Set<string>
+  // 查询超时告警发送模式 hash state
+  TimeOutMonutDevSmsSend: Map<string, boolean>
   // DTU设备下线时间
-  DTUOfflineTime:Map<string,Date>
+  DTUOfflineTime: Map<string, Date>
   // DTU下挂载的设备指令超时, mac[instruct,num]
-  TimeOutMonutDevINstruct:Map<string,Map<string,number>>
+  TimeOutMonutDevINstruct: Map<string, Map<string, number>>
   // DTU下挂载的设备指令超时Set
-  TimeOutMonutDevINstructSet:Set<string>
+  TimeOutMonutDevINstructSet: Set<string>
   private Events: event;
   constructor(Events: event) {
     this.Events = Events
@@ -104,6 +106,7 @@ export default class Cache {
     this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
     this.TimeOutMonutDev = new Set()
+    this.TimeOutMonutDevSmsSend = new Map()
     this.CacheParseUnit = new Map()
     this.CacheParseRegx = new Map()
     this.CacheAlarmSendNum = new Map()
@@ -126,8 +129,8 @@ export default class Cache {
   async RefreshCacheProtocol() {
     const res: protocol[] = await DeviceProtocol.find().lean()
     console.log(`加载协议缓存......`);
-    const res1 = res.map(el=>{
-      el.instruct = el.instruct.filter(el1=>el1.isUse)
+    const res1 = res.map(el => {
+      el.instruct = el.instruct.filter(el1 => el1.isUse)
       return el
     })
     this.CacheProtocol = new Map(res1.map(el => [el.Protocol, el]))
@@ -190,8 +193,8 @@ export default class Cache {
     this.CacheConstant = new Map(res.map(el => [el.Protocol, el]))
   }
   //
-  async RefreshCacheBind(user?:string) {
-    const res = await UserBindDevice.find(user?{user}:{}).lean<BindDevice>()
+  async RefreshCacheBind(user?: string) {
+    const res = await UserBindDevice.find(user ? { user } : {}).lean<BindDevice>()
     console.log(`加载绑定设备缓存......`);
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
@@ -210,12 +213,12 @@ export default class Cache {
       el.ThresholdMap = new Map()
       el.AlarmStateMap = new Map()
       //
-      el.ProtocolSetup.forEach(els=>{
-        el.ProtocolSetupMap.set(els.Protocol,els)
-        el.ThresholdMap.set(els.Protocol,els.Threshold?new Map(els.Threshold.map(ela => [ela.name, ela])):new Map())
-        el.AlarmStateMap.set(els.Protocol,els.AlarmStat?new Map(els.AlarmStat.map(ela=>[ela.name,ela])):new Map())
-      })        
-      
+      el.ProtocolSetup.forEach(els => {
+        el.ProtocolSetupMap.set(els.Protocol, els)
+        el.ThresholdMap.set(els.Protocol, els.Threshold ? new Map(els.Threshold.map(ela => [ela.name, ela])) : new Map())
+        el.AlarmStateMap.set(els.Protocol, els.AlarmStat ? new Map(els.AlarmStat.map(ela => [ela.name, ela])) : new Map())
+      })
+
       return [el.user, el]
     }))
   }

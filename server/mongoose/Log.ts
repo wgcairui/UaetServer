@@ -53,6 +53,7 @@ const SchemaUserRequst = new Schema({
 const SchemaUserLogins = new Schema({
     user: String,
     type: String,
+    address: String,
     msg: String
 }, { timestamps: true })
 // 节点事件

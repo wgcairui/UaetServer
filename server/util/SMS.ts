@@ -1,7 +1,8 @@
 import core from "@alicloud/pop-core"
 import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
-import { logSmsSend, smsUartAlarm, ApolloMongoResult } from "uart";
+import { logSmsSend, smsUartAlarm, ApolloMongoResult, queryResult, TerminalMountDevs } from "uart";
+import { getDtuInfo } from "./util";
 const key = require("../key/aliSms.json")
 
 interface SmsResult {
@@ -103,4 +104,80 @@ const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
         })
     }
     return result
+}
+
+// 发送设备超时下线
+export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复') => {
+    const info = getDtuInfo(Query.mac)
+    if (info && info.userInfo.tels?.length > 0) {
+        // 时间参数,长度限制20字节
+        const time = new Date()
+        const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+        const TemplateParam = JSON.stringify({
+            name: info.userInfo.user,
+            DTU: info.terminalInfo.name,
+            address: Query.pid,
+            devname: Query.mountDev,
+            time: d,
+            event
+        })
+        const params: params = {
+            "RegionId": "cn-hangzhou",
+            "PhoneNumbers": info.userInfo.tels.join(','),
+            "SignName": "雷迪司科技湖北有限公司",
+            "TemplateCode": 'SMS_200701321',
+            TemplateParam
+        }
+        return SendSms(params)
+    } else return false
+}
+
+// 发送DTU挂载设备告警
+export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
+    const info = getDtuInfo(Query.mac)
+    if (info && info.userInfo.tels?.length > 0) {
+        // 时间参数,长度限制20字节
+        const time = new Date()
+        const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+        const TemplateParam = JSON.stringify({
+            name: info.userInfo.user,
+            DTU: info.terminalInfo.name,
+            address: Query.pid,
+            devname: Query.mountDev,
+            time: d,
+            remind
+        })
+        const params: params = {
+            "RegionId": "cn-hangzhou",
+            "PhoneNumbers": info.userInfo.tels.join(','),
+            "SignName": "雷迪司科技湖北有限公司",
+            "TemplateCode": 'SMS_200701342',
+            TemplateParam
+        }
+        return SendSms(params)
+    } else return false
+}
+
+// 发送设备超时下线
+export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
+    const info = getDtuInfo(mac)
+    if (info && info.userInfo.tels?.length > 0) {
+        // 时间参数,长度限制20字节
+        const time = new Date()
+        const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+        const TemplateParam = JSON.stringify({
+            name: info.userInfo.user,
+            DTU: info.terminalInfo.name,
+            time: d,
+            event
+        })
+        const params: params = {
+            "RegionId": "cn-hangzhou",
+            "PhoneNumbers": info.userInfo.tels.join(','),
+            "SignName": "雷迪司科技湖北有限公司",
+            "TemplateCode": 'SMS_200691431',
+            TemplateParam
+        }
+        return SendSms(params)
+    } else return false
 }

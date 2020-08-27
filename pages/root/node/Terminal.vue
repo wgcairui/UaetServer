@@ -5,11 +5,10 @@
     </separated>
     <b-table responsive :items="Terminals" :filter="new RegExp(filter)" :fields="fields" hover>
       <template v-slot:cell(mountDevs)="row">
-        <b-button
-          size="sm"
-          @click="row.toggleDetails"
-          v-if="row.value"
-        >{{row.detailsShowing ? '收起':'展开'}}</b-button>
+        <b-button-group size="sm">
+          <b-button @click="row.toggleDetails" v-if="row.value">{{row.detailsShowing ? '收起':'展开'}}</b-button>
+          <b-button :to="{name:'root-AT',query:{mac:row.item.DevMac}}">AT调试</b-button>
+        </b-button-group>
       </template>
       <template v-slot:row-details="row">
         <b-card>
@@ -33,9 +32,12 @@ export default Vue.extend({
         { key: "name", label: "别名" },
         { key: "DevMac", label: "设备ID" },
         { key: "mountNode", label: "挂载节点", sortable: true },
-        { key: "ip", label: "上线IP" },
-        { key: "jw", label: "上线地址" },
-        { key: "uptime", label: "上线时间" },
+        { key: "ip", label: "IP" },
+        { key: 'port', label: 'Port' },
+        { key: "jw", label: "GPS" },
+        { key: 'uart', label: '通讯参数' },
+        { key: 'AT', label: '调试支持' },
+        { key: "uptime", label: "更新时间" },
         { key: "mountDevs", label: "挂载设备" }
       ] as BvTableFieldArray,
       childFields: [
@@ -56,6 +58,7 @@ export default Vue.extend({
             ip
             port
             jw
+            AT
             uptime
             mountNode
             mountDevs {

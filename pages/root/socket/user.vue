@@ -7,6 +7,11 @@
       <template v-slot:cell(user)="row">
         <b-link :to="{name:'admin-node-user',query:{user:row.value}}">{{row.value}}</b-link>
       </template>
+      <template v-slot:cell(oprate)="row">
+        <b-button-group size="sm">
+          <b-button :to="{name:'root-log-userlogins',query:{user:row.item.user}}">日志</b-button>
+        </b-button-group>
+      </template>
     </b-table>
   </b-col>
 </template>
@@ -21,7 +26,8 @@ export default Vue.extend({
       user: [],
       fields: [
         { key: "user", label: "用户" },
-        { key: "set", label: "在线数" }
+        { key: "set", label: "在线数" },
+        { key: 'oprate', label: '操作' }
       ] as BvTableFieldArray
     };
   },

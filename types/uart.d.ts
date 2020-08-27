@@ -427,6 +427,7 @@ type logLogins = "用户登陆" | '用户登出' | '用户注册' | "用户重�
 interface logUserLogins {
   user: string,
   type: logLogins,
+  address: string
   msg: string
 }
 // 节点连接断开等事件

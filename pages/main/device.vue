@@ -1,6 +1,6 @@
 <template>
   <b-col xl="9" cols="12">
-    <b-row class="m-0">
+    <b-row class="m-0 mb-5">
       <separated :title="query.mountDev">
         <b
           v-b-tooltip.hover
@@ -16,7 +16,7 @@
     </b-row>
 
     <b-row>
-      <separated title="模拟量">
+      <separated title="设备值" :back="false">
         <b-button-group size="sm" class="m-2">
           <b-button variant="info" @click="$bvModal.show('OprateInstructMode')">快捷指令</b-button>
           <b-button variant="info" :to="{ name: 'main-protocolSetup', query: query }">用户配置</b-button>

@@ -213,12 +213,16 @@ const resolvers: IResolvers = {
         },
         // 获取socket node状态
         getSocketNode(root, arg, ctx: ApolloCtx) {
-            const TimeOutMonutDev = Array.from(ctx.$Event.Cache.TimeOutMonutDev) as string[]
+            const TimeOutMonutDevs = Array.from(ctx.$Event.Cache.TimeOutMonutDev) as string[]
             return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline).map(el => {
                 const reg = new RegExp("^" + el)
+                const ter = ctx.$Event.Cache.CacheTerminal.get(el) as terminal
+                const temp = TimeOutMonutDevs.filter(el2 => reg.test(el2))
+                const TimeOutMonutDev = ter.mountDevs.filter(els => temp.includes(ter.DevMac + els.pid))
                 return {
                     terminal: el,
-                    TimeOutMonutDev: TimeOutMonutDev.filter(el2 => reg.test(el2)) as any
+                    name: ter.name,
+                    TimeOutMonutDev
                 }
             })
         },
@@ -503,9 +507,6 @@ const resolvers: IResolvers = {
         },
         // 删除终端信息
         async deleteTerminal(root, { DevMac }, ctx: ApolloCtx) {
-            /* const result = await Terminal.deleteOne({ DevMac });
-            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
-            return result; */
             // 如果没有被绑定则删除
             const terminal = await UserBindDevice.findOne({ "UTS": DevMac })
             if (terminal) {
@@ -515,6 +516,9 @@ const resolvers: IResolvers = {
                 await TerminalClientResults.deleteMany({ mac: DevMac }).exec()
                 await TerminalClientResultSingle.deleteMany({ mac: DevMac }).exec()
                 await Terminal.deleteOne({ DevMac }).exec()
+                await LogUartTerminalDataTransfinite.deleteMany({ mac: DevMac }).exec()
+                await LogTerminals.deleteMany({ TerminalMac: DevMac }).exec()
+                await LogUseBytes.deleteMany({ mac: DevMac }).exec()
                 const result = await RegisterTerminal.deleteOne({ DevMac })
                 await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
                 return result
@@ -693,32 +697,6 @@ const resolvers: IResolvers = {
             ctx.$Event.Cache.RefreshCacheConstant()
             return result;
         },
-        /* // 发送设备协议指令
-        async SendProcotolInstruct(root, { arg, value }: { arg: instructQueryArg, value: number[] }, ctx: ApolloCtx) {
-            // 获取协议指令
-            const protocol = ctx.$Event.Cache.CacheProtocol.get(arg.protocol) as protocol
-            // 获取条协议指令开始位置
-            const instruct = protocol.instruct.find(el => el.resize.split('\n').some(el2 => el2.includes(arg.name) && el2.includes(arg.unit as string))) as protocolInstruct
-
-            // 查询指=指令
-            const instructstart = parseInt(instruct.name.slice(4, 6))
-            // 获取参数在字符的位置
-            const instructlen = parseInt(instruct.formResize.find(el => el.name === arg.name)?.regx?.split('-')[0] as string)
-            // 参数在寄存器实际的位置
-            const add = instructstart + instructlen === 1 ? instructlen : (instructlen + 1) / 2
-            // 拼接为数组
-            const instructArr = [5, 0, add, ...value]
-            // 携带事件名称，触发指令查询
-            const Query: instructQuery = {
-                DevMac: arg.DevMac,
-                pid: arg.pid,
-                type: protocol.Type,
-                events: 'oprate' + Date.now() + arg.DevMac,
-                content: Buffer.from(instructArr).toString('hex')
-            }
-            const result = await ctx.$SocketUart.InstructQuery(Query)
-            return result
-        }, */
         //  固定发送设备操作指令
         async SendProcotolInstructSet(root, { query, item }: { query: instructQueryArg, item: OprateInstruct }, ctx: ApolloCtx) {
             // 验证客户是否校验过权限
@@ -897,11 +875,9 @@ const resolvers: IResolvers = {
         },
         // 重置设备超时状态
         refreshDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx: ApolloCtx) {
-            // 重置uart查询间隔
-            // const terminal = ctx.$Event.Cache.CacheTerminal.get(mac) as terminal
-            // ctx.$SocketUart._UpdateCache(terminal)
+            ctx.$Event.emit('ResetTimeOutMonutDev', mac, pid)
             // 清楚超时记录
-            ctx.$Event.Cache.TimeOutMonutDev.delete(mac + pid)
+            //ctx.$Event.Cache.TimeOutMonutDev.delete(mac + pid)
             // console.log({timeOut:ctx.$Event.Cache.TimeOutMonutDev});
             return { ok: 1 } as ApolloMongoResult
         },

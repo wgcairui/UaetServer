@@ -53,7 +53,7 @@ import gql from "graphql-tag";
 import { VeLine, VePie } from "v-charts";
 import { BvTableFieldArray } from "bootstrap-vue";
 import { Terminal, logTerminaluseBytes } from "uart";
-import { gps2AutonaviPosition } from "../../plugins/tools";
+import { gps2AutonaviPosition, API_Aamp_ip2local } from "../../plugins/tools";
 interface navi {
   to: { name: string };
   text: string;
@@ -278,14 +278,16 @@ export default Vue.extend({
           query Terminals {
             Terminals {
               jw
+              ip
             }
           }
         `
       });
       const jws = ter.data.Terminals as Pick<Terminal, "jw">[];
-      const jwsSet = new Set(jws.filter(el => el.jw));
+      const jwsSet = new Set(jws)//.filter(el => el.jw));
       jwsSet.forEach(async el => {
-        const position = await gps2AutonaviPosition(el.jw as string, window);
+        const position = el.jw && /[1-9]/.test(el.jw) ? await gps2AutonaviPosition(el.jw as string, window) : await API_Aamp_ip2local(el.ip as string);
+        // console.log({ el, position });
         map.add(
           new window.AMap.Marker({
             position

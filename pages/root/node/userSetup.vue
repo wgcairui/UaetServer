@@ -8,11 +8,11 @@
         <b-button
           size="sm"
           @click="row.toggleDetails"
-          v-if="row.value"
+          v-if="row.value && row.value.length > 0"
         >{{row.detailsShowing ? '收起':'展开'}}</b-button>
       </template>
       <template v-slot:row-details="row">
-        <b-table :items="row.item.ProtocolSetup" :fields="childFields"></b-table>
+        <b-table :items="row.item.ProtocolSetup" :fields="childFields" stacked></b-table>
       </template>
     </b-table>
   </b-col>
@@ -28,15 +28,16 @@ export default Vue.extend({
       Users: [],
       NodeInfoFields: [
         { key: "user", label: "账号" },
-        { key: "tels", label: "告警号码" },
-        { key: "mails", label: "告警邮箱" },
+        { key: "tels", label: "告警号码", formatter: tels => tels.join(",") },
+        { key: "mails", label: "告警邮箱", formatter: tels => tels.join(",") },
         { key: "ProtocolSetup", label: "协议配置" }
       ] as BvTableFieldArray,
       childFields: [
         { key: "Protocol", label: "协议" },
-        { key: "ProtocolType", label: "类型" },
-        { key: "Threshold", label: "阀值" },
-        { key: "ShowTag", label: "显示标签" }
+        {
+          key: "Threshold", label: "阀值", formatter: data => data.map(el => `${el.name}:${el.min}-${el.max}`).join(",")
+        },
+        { key: "ShowTag", label: "显示标签", formatter: data => data.join(",") }
       ] as BvTableFieldArray
     };
   },
