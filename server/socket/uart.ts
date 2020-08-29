@@ -1,13 +1,12 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, timelog, queryResult, TerminalMountDevs, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate } from "uart";
+import { NodeClient, Terminal, protocol, queryObject, queryResult, TerminalMountDevs, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate } from "uart";
 
 import tool from "../util/tool";
 import { DefaultContext } from "koa";
 import { LogNodes, LogTerminals } from "../mongoose/Log";
 import { SmsDTU, SmsDTUDevTimeOut } from "../util/SMS";
-import { getDtuInfo } from "../util/util";
 
 import config from "../config";
 
@@ -93,6 +92,16 @@ export class NodeSocketIO {
                     }
                 })
             }
+            {
+                const DTUOnlineTime = this.Event.Cache.DTUOnlineTime
+                const date = Date.now() // 当前时间
+                DTUOnlineTime.forEach((time, mac) => {
+                    if (date - time.getTime() > 60000 * 10) {
+                        DTUOnlineTime.delete(mac)
+                        SmsDTU(mac, '恢复上线')
+                    }
+                })
+            }
         }, 60000 * 10)
     }
 
@@ -159,7 +168,7 @@ export class NodeSocketIO {
                     new LogNodes(Object.assign<socketArgument, Partial<logNodes>>(Node, { type: "告警" })).save()
                 })
                 // 节点终端设备上线
-                .on(EVENT_TCP.terminalOn, (data: string | string[]) => {
+                .on(EVENT_TCP.terminalOn, (data: string | string[], reline?: boolean) => {
                     const date = new Date()
                     if (!Array.isArray(data)) data = [data]
                     else new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: data[0], type: "连接" } as logTerminals).save()
@@ -167,14 +176,19 @@ export class NodeSocketIO {
                         this.Event.Cache.CacheNodeTerminalOnline.add(el)
                         this.Event.Cache.DTUOfflineTime.delete(el)
                     })
+                    // 如果是重连，加入缓存
+                    if (reline) {
+                        this.Event.Cache.DTUOnlineTime.set(data[0], date)
+                    }
                     console.info(`${date.toLocaleTimeString()}##${Node.Name} DTU:/${data.join("|")}/ 已上线`);
                 })
                 // 节点终端设备掉线
-                .on(EVENT_TCP.terminalOff, (mac: string) => {
+                .on(EVENT_TCP.terminalOff, (mac: string, active: boolean) => {
                     this.Event.Cache.CacheNodeTerminalOnline.delete(mac)
                     const date = new Date()
+                    this.Event.Cache.DTUOnlineTime.delete(mac)
                     this.Event.Cache.DTUOfflineTime.set(mac, date)
-                    console.error(`${date.toLocaleTimeString()}##${Node.Name} DTU:${mac} 已离线`);
+                    console.error(`${date.toLocaleTimeString()}##${Node.Name} DTU:${mac} 已${active ? '主动' : '被动'}离线`);
                     // 添加日志
                     new LogTerminals({ NodeIP: Node.IP, NodeName: Node.Name, TerminalMac: mac, type: "断开" } as logTerminals).save()
                 })
@@ -197,7 +211,7 @@ export class NodeSocketIO {
                         // 如果超时次数>10和短信发送状态为false
                         if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                             this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
-                            const a =  SmsDTUDevTimeOut(Query, '超时')
+                            const a = SmsDTUDevTimeOut(Query, '超时')
                             /* console.log({a});
                             if(a){
                                 a.then(res=>{

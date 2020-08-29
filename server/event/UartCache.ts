@@ -82,6 +82,8 @@ export default class Cache {
   TimeOutMonutDevSmsSend: Map<string, boolean>
   // DTU设备下线时间
   DTUOfflineTime: Map<string, Date>
+  //
+  DTUOnlineTime: Map<string, Date>
   // DTU下挂载的设备指令超时, mac[instruct,num]
   TimeOutMonutDevINstruct: Map<string, Map<string, number>>
   // DTU下挂载的设备指令超时Set
@@ -115,6 +117,7 @@ export default class Cache {
     this.CacheParseRegx = new Map()
     this.CacheAlarmSendNum = new Map()
     this.DTUOfflineTime = new Map()
+    this.DTUOnlineTime = new Map()
     this.TimeOutMonutDevINstruct = new Map()
     this.TimeOutMonutDevINstructSet = new Set()
   }
