@@ -137,7 +137,7 @@ export default Vue.extend({
           .flat();
       }
       return result;
-    }
+    },
     itemAlarm() {
       const value = this.$data.selectNames[0] || this.$data.State;
       return (<string>value.unit)

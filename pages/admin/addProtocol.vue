@@ -179,7 +179,7 @@ export default vue.extend({
         popNum: 0,
         resize: "",
         addModel: true,
-        isUse: true
+        isUse: true,
         isSplit: true
       },
       // 指令集
