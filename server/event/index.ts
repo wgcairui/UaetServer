@@ -2,23 +2,21 @@ import EventEmitter from "events";
 import Cache from "./UartCache";
 import ClientCache from "./ClientCache"
 import { DefaultContext } from "koa";
-import { Socket } from "socket.io";
-import { LogUartTerminalDataTransfinite } from "../mongoose/Log";
-export interface socketData {
-  IP: string;
-  socket: Socket;
-  data: any;
-}
-// UartTerminalOnline  终端上线
-// UartTerminalOff  终端下线
-// UartTerminalDataTransfinite 终端超时
-// UartTerminalDataTransfiniteReset' 终端超时恢复
-// "UpdateTerminal" 终端更新
-// 'QueryIntervalLow'  终端返回数据数目有差异
-export type eventsName = 'UartTerminalOnline' | 'UartTerminalOff' | 'UartTerminalDataTransfinite' | 'UartTerminalDataTransfiniteReset' | "UpdateTerminal" | 'QueryIntervalLow'
+import { Server } from "http";
+import { LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins } from "../mongoose/Log";
+import { TerminalMountDevsEX, TerminalMountDevs, queryResult, uartAlarmObject, logLogins, logNodes, logTerminals, logUserRequst, ApolloMongoResult, instructQuery, DTUoprate } from "uart";
+import config from "../config";
+import { SmsDTUDevTimeOut, SmsDTU } from "../util/SMS";
+import NodeSocketIO from "../socket/uart";
+import webClientSocketIO from "../socket/webClient";
+
+type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
+
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
   ClientCache: ClientCache
+  uartSocket?: NodeSocketIO
+  clientSocket?: webClientSocketIO
   constructor() {
     super();
     // Node节点,透传协议，设备...缓存
@@ -27,42 +25,191 @@ export class Event extends EventEmitter.EventEmitter {
     this.ClientCache = new ClientCache()
     // start Query,加载数据缓存
     this.Cache.start()
-    this.listen()
-    this.writelog()
+    this.setMaxListeners(29)
+      .on("error", console.error);
 
   }
   // 挂载监听到koa ctx
   attach(app: DefaultContext) {
     app.context.$Event = this;
+    setInterval(() => {
+      {
+        if (this.uartSocket) {
+          // 迭代查询缓存，检查每个挂载设备的指令耗时数组(往后60个采样)，采用其最大值+500ms,
+          this.uartSocket.CacheSocket.forEach(node => {
+            node.cache.forEach((terEX, hash) => {
+              if (this.Cache.TimeOutMonutDev.has(hash)) return
+              const useTimeArray = this.Cache.QueryTerminaluseTime.get(hash) as number[]
+              const len = useTimeArray.length
+              const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
+              const maxTime = Math.max(...yxuseTimeArray) || 4000
+              // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
+              if (maxTime < config.runArg.Query.Interval) terEX.Interval = config.runArg.Query.Interval
+              else {
+                const round = Math.round(maxTime / 1000) * 1000
+                terEX.Interval = round - maxTime > 500 ? round + 500 : round
+              }
+            })
+          })
+          console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
+          // 清空查询计数数组
+          this.Cache.QueryTerminaluseTime.forEach(el => el = [])
+        }
+      }
+      // 迭代所有掉线设备记录，如果掉线时长超过10min，触发短信告警
+      {
+        const DTUOfflineTime = this.Cache.DTUOfflineTime
+        const date = Date.now() // 当前时间
+        DTUOfflineTime.forEach((time, mac) => {
+          if (date - time.getTime() > 60000 * 10) {
+            DTUOfflineTime.delete(mac)
+            SmsDTU(mac, '离线')
+          }
+        })
+      }
+      {
+        const DTUOnlineTime = this.Cache.DTUOnlineTime
+        const date = Date.now() // 当前时间
+        DTUOnlineTime.forEach((time, mac) => {
+          if (date - time.getTime() > 60000 * 10) {
+            DTUOnlineTime.delete(mac)
+            SmsDTU(mac, '恢复上线')
+          }
+        })
+      }
+    }, 60000 * 10)
   }
 
-  // 监听事件
-  private listen() {
-    this.setMaxListeners(29)
-      .on("event", () => { })
-      .on("error", console.error)
+  // 初始化socket监听
+  CreateSocketServer(Http: Server) {
+    // Node_Socket节点挂载
+    this.uartSocket = new NodeSocketIO(Http, { path: "/Node" })
+    console.info(`Socket Server(namespace:/Node) runing`)
+    //WebClient_SocketServer挂载
+    this.clientSocket = new webClientSocketIO(Http, { path: "/WebClient" })
+    console.info(`Socket Server(namespace:/WebClient) runing`)
   }
-  // 创建自定义触发事件
-  Emit(event: eventsName, ...args: any[]) {
-    super.emit(event, args)
-  }
-  // 创建自定义触发事件
-  On(event: eventsName, listener: (...args: any[]) => void) {
-    return super.on(event, listener)
-  }
-  // 监听事件,记录为日志
-  writelog() {
-    // 设备参数超限
-    this.On("UartTerminalDataTransfinite", ([data]) => {
-      new LogUartTerminalDataTransfinite(data).save()
-    })
-      // 设备上下线
-      .On("UartTerminalOff", data => {
 
+  // 发送设备操作指令查询
+  DTU_OprateInstruct(Query: instructQuery) {
+    if (this.uartSocket) {
+      return this.uartSocket.InstructQuery(Query)
+    } else {
+      return new Promise<Partial<ApolloMongoResult>>(resolve => {
+        resolve({ ok: 0, msg: '节点Socket服务器未运行' })
       })
-      .On("UartTerminalOnline", data => {
+    }
+  }
 
+  // 发送设备DTU AT查询指令
+  DTU_ATInstruct(Query: DTUoprate) {
+    if (this.uartSocket) {
+      return this.uartSocket.OprateDTU(Query)
+    } else {
+      return new Promise<Partial<ApolloMongoResult>>(resolve => {
+        resolve({ ok: 0, msg: '节点Socket服务器未运行' })
       })
+    }
+  }
+
+  // 单位缓存
+  GetUnit(unit: string) {
+    const Cache = this.Cache.CacheParseUnit
+    const unitCache = Cache.get(unit)
+    if (unitCache) return unitCache
+    else {
+      const arr = unit
+        .replace(/(\{|\}| )/g, "")
+        .split(",")
+        .map(el => el.split(":"))
+        .map(el => ({ [el[0]]: el[1] }));
+      Cache.set(unit, Object.assign({}, ...arr))
+      return Cache.get(unit) as { [x in string]: string }
+    }
+  }
+
+  // 更新设备查询日志
+  UpdateTerminal(mac: string) {
+    const terminal = this.Cache.CacheTerminal.get(mac)
+    if (terminal) {
+      console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
+      // 获取设备绑定节点的map
+      const nodeTerminals = this.uartSocket?.CacheSocket.get(terminal.mountNode)
+      if (nodeTerminals) {
+        terminal.mountDevs.forEach(mountDev => {
+          const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
+            ({ TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<TerminalMountDevsEX>
+          nodeTerminals.cache.set(terminal.DevMac + mountDev.pid, mount)
+        })
+      }
+    } else {
+      // 如果缓存没有这个终端，遍历所有，删除匹配的缓存
+      const Regexs = new RegExp("^" + mac)
+      if (this.uartSocket) {
+        this.uartSocket.CacheSocket.forEach(client => {
+          client.cache.forEach((v, key) => {
+            if (Regexs.test(key)) client.cache.delete(key)
+          })
+        })
+      }
+    }
+
+  }
+
+  // 重置设备超时查询
+  ResetTimeOutMonutDev(mac: string, pid: number) {
+    const terminal = this.Cache.CacheTerminal.get(mac)
+    if (terminal && this.uartSocket) {
+      const mountDev = this.uartSocket.CacheSocket.get(terminal.mountNode)?.cache.get(mac + pid)
+      if (mountDev) {
+        mountDev.Interval = config.runArg.Query.Interval
+      }
+    }
+  }
+
+  // // 解析设备请求结果,检查设备是否是超时设备,是的话取消超时,发送短信提醒 send ProtocolPares
+  QuerySuccess(Query: queryResult) {
+    const hash = Query.mac + Query.pid
+    if (this.Cache.TimeOutMonutDev.has(hash)) {
+      this.Cache.TimeOutMonutDev.delete(hash)
+      // 如果短信发送记录为true,发送超时恢复短信提醒
+      if (this.Cache.TimeOutMonutDevSmsSend.get(hash)) {
+        console.log({ Query, mas: 'terminal恢复' });
+        SmsDTUDevTimeOut(Query, '恢复')
+        this.Cache.TimeOutMonutDevSmsSend.set(hash, false)
+      }
+    }
+  }
+
+  // 触发客户端告警提醒事件
+  SendUserAlarm(alarm: { mac: string, msg: string }) {
+    if (this.clientSocket) {
+      this.clientSocket.SendUserAlarm(alarm)
+    }
+  }
+
+  // 保存日志
+  savelog<T extends uartAlarmObject | logLogins | logNodes | logTerminals | logUserRequst>(event: eventsName, body: T) {
+    switch (event) {
+      case 'DataTransfinite':
+        this.SendUserAlarm(<uartAlarmObject>body)
+        new LogUartTerminalDataTransfinite(body).save()
+        break
+      case 'terminal':
+        this.SendUserAlarm({ mac: (<logTerminals>body).TerminalMac, msg: (<logTerminals>body).type })
+        //const {} = <logNodes>body
+        new LogTerminals(body).save()
+        break
+      case 'request':
+        new LogUserRequst(body).save()
+        break
+      case "node":
+        new LogNodes(body).save()
+        break
+      case "login":
+        new LogUserLogins(body).save()
+        break
+    }
   }
 }
 

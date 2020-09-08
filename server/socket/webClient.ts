@@ -1,10 +1,9 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { UserInfo, uartAlarmObject, logUserLogins } from "uart";
+import { UserInfo } from "uart";
 import { JwtVerify } from "../util/Secret";
-import { parseToken } from "../util/util";
-import { LogUserLogins } from "../mongoose/Log";
+import { parseToken, getDtuInfo } from "../util/util";
 
 interface socketArgument {
     IP: string
@@ -24,8 +23,6 @@ export default class webClientSocketIO {
         this.Event = Event
         this.CacheUserSocketids = this.Event.ClientCache.CacheUserSocketids
         this.CacheSocketidUser = this.Event.ClientCache.CacheSocketidUser
-    }
-    start() {
         // middleware
         // 每个socket连接会有query.token,检查token是否合法
         this.io.use((socket, next) => {
@@ -48,12 +45,10 @@ export default class webClientSocketIO {
             //为每个socket注册事件
             socket.on("disconnect", () => this._disconnect(Node))
         })
-        // 监听Event事件
-        Event.On("UartTerminalDataTransfinite", (data) => {
-            const Obj = data[0] as uartAlarmObject
-            const user = Event.Cache.CacheBindUart.get(Obj.mac) as string
-            this.io.to(user).emit("UartTerminalDataTransfinite", Obj.msg)
-        })
+    }
+    SendUserAlarm(alarm: { mac: string, msg: string }) {
+        const { user } = getDtuInfo(alarm.mac)
+        this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
     }
     // 缓存socket
     private _connect(Node: socketArgument) {
@@ -63,7 +58,7 @@ export default class webClientSocketIO {
         // 加入房间
         Node.socket.join(Node.User)
         // 判断是否多端登录
-        const isUser = this.CacheUserSocketids.has(Node.User)
+        /* const isUser = this.CacheUserSocketids.has(Node.User)
         if (isUser) {
             const socketIds = <Set<string>>this.CacheUserSocketids.get(Node.User)
             socketIds.add(Node.ID)
@@ -73,7 +68,7 @@ export default class webClientSocketIO {
         } else {
             this.CacheUserSocketids.set(Node.User, new Set([Node.ID]))
             console.log(`user:${Node.User}@单点登录,登录ID：%${Node.ID}`);
-        }
+        } */
         // 发送效验成功事件        
         Node.socket.to(Node.User).emit("valdationSuccess", { user: Node.User })
     }
@@ -84,7 +79,7 @@ export default class webClientSocketIO {
         Node.socket.disconnect()
         this.CacheSocketidUser.delete(Node.ID)
         // 获取用户数组列表
-        const userSocketids = <Set<string>>this.CacheUserSocketids.get(Node.User)
+        /* const userSocketids = <Set<string>>this.CacheUserSocketids.get(Node.User)
         const size = userSocketids.size
         if (size < 2) {
             this.CacheUserSocketids.delete(Node.User)
@@ -94,6 +89,6 @@ export default class webClientSocketIO {
             // room 发送离线信息
             Node.socket.to(Node.User).emit("logout", { ID: Node.ID, IP: Node.IP })
             console.log(`用户@${Node.User} 多端登录已1离线，在线数:${size - 1}`);
-        }
+        } */
     }
 }

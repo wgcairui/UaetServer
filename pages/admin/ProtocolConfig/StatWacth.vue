@@ -6,13 +6,39 @@
           <separated title="添加参数状态"></separated>
           <b-card>
             <b-form>
-              <my-form label="属性:">
+              <!-- <my-form label="属性:">
                 <b-form-select v-model="selectNames" :options="items" multiple></b-form-select>
               </my-form>
               <my-form label="正常值:">
                 <b-form-select v-model="State.alarmStat" :options="itemAlarm" multiple></b-form-select>
               </my-form>
-              <b-button size="sm" block variant="info" @click="addState(selectNames)">add</b-button>
+              <b-button size="sm" block variant="info" @click="addState(selectNames)">add</b-button>-->
+              <label class="m-3">
+                <h5>Tips:</h5>
+                <b>设备运行的参数值不在选中的状态将会触发告警</b>
+              </label>
+              <b-list-group>
+                <b-list-group-item
+                  v-for="(row,key) in AlarmStatItems"
+                  :key="key+'12098'"
+                  class="d-flex"
+                >
+                  <span>{{row.name}}</span>
+                  <div class="ml-auto">
+                    <label v-for="(val,key) in row.show" :key="key" class="mx-1">
+                      <input
+                        class
+                        name="Fruit"
+                        :checked="row.alarmStat.includes(val.value)"
+                        type="checkbox"
+                        :value="val.value"
+                        @change="StateAlarmSelects(row,val.value)"
+                      />
+                      {{val.text}}
+                    </label>
+                  </div>
+                </b-list-group-item>
+              </b-list-group>
             </b-form>
           </b-card>
         </b-col>
@@ -80,6 +106,38 @@ export default Vue.extend({
       }
       return result;
     },
+    // 参数状态
+    AlarmStatItems() {
+      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      const DevConstant = this.States
+      let result: any[] = [];
+      // 如果协议单例存在
+      if (ProtocolSingle) {
+        // 转换系统和用户的配置为Map，如果未定义则填入空数组
+        const MapSys = new Map(DevConstant?.AlarmStat ? DevConstant.AlarmStat.map(el => [el.name, el]) : []);
+        // 迭代协议参数值，取出状态值，把unit转为obj，如果参数有定义监控则写入监控，优先使用用户定义
+        result = ProtocolSingle.instruct
+          .map(el => {
+            return el.formResize
+              .filter(el2 => el2.isState)
+              .map(el3 => {
+                const show = (<string>el3.unit)
+                  .replace(/(\{|\}| )/g, "")
+                  .split(",")
+                  .map(el4 => el4.split(":"))
+                  .map(el5 => ({ text: el5[1], value: Number(el5[0]) }));
+                const alarmStat = MapSys.get(el3.name)?.alarmStat;
+                return {
+                  name: el3.name,
+                  show,
+                  alarmStat: Array.from(new Set(alarmStat || []))
+                };
+              });
+          })
+          .flat();
+      }
+      return result;
+    }
     itemAlarm() {
       const value = this.$data.selectNames[0] || this.$data.State;
       return (<string>value.unit)

@@ -4,8 +4,6 @@ import { protocolInstruct, queryResult, queryResultArgument, protocol } from "ua
 import CacheParseRegx from "../util/regxCache"
 
 export default async (R: queryResult) => {
-  // 设备请求结果,发送设备正常查询
-  Event.emit('QuerySuccess',R)
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
   // if (R.content.length !== R.contents.length) Event.Emit("QueryIntervalLow", R)
   // 保存查询的查询时间，间隔10min重新计算查询间隔
@@ -30,7 +28,10 @@ export default async (R: queryResult) => {
             const parseStr = Buffer.from(data)
               .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? data.length - instructs.popNum : data.length)
               .replace(/(#)/g, "")
-              .split(" ");
+              // 如果是utf8,分隔符为' '
+              .split(instructs.isSplit ? " " : "");
+            console.log({ parseStr });
+
             return instructs.formResize.map(el2 => {
               const [start] = CacheParseRegx(el2.regx as string)// (el2.regx?.split("-") as string[]).map(el => parseInt(el));
               return { name: el2.name, value: parseStr[start - 1], unit: el2.unit } as queryResultArgument;
@@ -137,6 +138,10 @@ export default async (R: queryResult) => {
         }
       }
       break;
+  }
+  if (R.result && R.result.length > 0) {
+    // 设备请求结果,发送设备正常查询
+    Event.QuerySuccess(R)
   }
   return R;
 };

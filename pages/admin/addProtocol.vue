@@ -114,6 +114,9 @@
                     >2</b-form-input>
                   </b-input-group>
                 </my-form>
+                <my-form label="是否有分隔符:">
+                  <b-form-checkbox v-model="instruct.isSplit" class="py-2 mr-3"></b-form-checkbox>
+                </my-form>
                 <my-form label="解析规则:">
                   <b-form-textarea
                     rows="1"
@@ -177,6 +180,7 @@ export default vue.extend({
         resize: "",
         addModel: true,
         isUse: true
+        isSplit: true
       },
       // 指令集
       instructItems: [] as protocol[],

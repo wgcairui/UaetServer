@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 /* 
-数据执行器部分，加载协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
+数据执行器部分，更新协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
 */
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
 import { Terminal } from "../mongoose/Terminal";
@@ -44,8 +44,6 @@ export default class Cache {
   CacheNode: Map<string, nodeClient>;
   // Node节点缓存name=>nodeclient
   CacheNodeName: Map<string, nodeClient>;
-  // 缓存所有Socket连接,IP=>socket
-  CacheSocket: Map<string, Socket>
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   //CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备ip->terminal
@@ -67,11 +65,11 @@ export default class Cache {
   // 缓存用户配置 user=>setup
   CacheUserSetup: Map<string, userSetup>
   // 用户uart挂载终端缓存
-  QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
+  // QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
   QueryTerminaluseTime: Map<string, number[]>
   // 序列化参数单位解析
-  CacheParseUnit: Map<string, { [x in number]: string }>
+  CacheParseUnit: Map<string, { [x in string]: string }>
   // 序列化参数regx解析
   CacheParseRegx: Map<string, [number, number]>
   // 每个手机号发送告警的次数
@@ -89,6 +87,7 @@ export default class Cache {
   // DTU下挂载的设备指令超时Set
   TimeOutMonutDevINstructSet: Set<string>
   private Events: event;
+  CacheSocket: any;
   constructor(Events: event) {
     this.Events = Events
     // 缓存
@@ -98,7 +97,6 @@ export default class Cache {
     this.CacheNodeTerminal = new Map();
     this.CacheNode = new Map();
     this.CacheNodeName = new Map()
-    this.CacheSocket = new Map()
     //this.CacheQueryNode = new Map()
     this.CacheNodeTerminalOnline = new Set()
     this.CacheConstant = new Map()
@@ -109,7 +107,7 @@ export default class Cache {
     this.CacheAlarmNum = new Map()
     this.CacheUser = new Map()
     this.CacheUserSetup = new Map()
-    this.QueryTerminal = new Map()
+    //this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
     this.TimeOutMonutDev = new Set()
     this.TimeOutMonutDevSmsSend = new Map()
@@ -135,19 +133,22 @@ export default class Cache {
 
   // 
   async RefreshCacheProtocol(protocol?: string) {
-    const res: protocol[] = await DeviceProtocol.find(protocol ? { protocol } : {}).lean()
-    console.log(`加载协议缓存......`);
+    const res: protocol[] = await DeviceProtocol.find(protocol ? { Protocol: protocol } : {}).lean()
+    console.log(`更新协议缓存......`);
     res.map(el => {
       el.instruct = el.instruct.filter(el1 => el1.isUse)
       return el
     }).forEach(el => {
       this.CacheProtocol.set(el.Protocol, el)
     })
+    if (res.length === 0 && protocol) {
+      this.CacheProtocol.delete(protocol)
+    }
   }
   //
   async RefreshCacheDevType(DevModel?: string) {
     const res: devsType[] = await DevsType.find(DevModel ? { DevModel } : {}).lean()
-    console.log(`加载设备型号缓存......`);
+    console.log(`更新设备型号缓存......`);
     res.forEach(el => {
       this.CacheDevsType.set(el.DevModel, el)
     })
@@ -155,7 +156,7 @@ export default class Cache {
   //
   async RefreshCacheNode() {
     const res: nodeClient[] = await NodeClient.find().lean()
-    console.log(`加载节点缓存......`);
+    console.log(`更新节点缓存......`);
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
     this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
     this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
@@ -163,7 +164,7 @@ export default class Cache {
   //
   async RefreshCacheTerminal(DevMac?: string) {
     const res: terminal[] = await Terminal.find(DevMac ? { DevMac } : {}).lean()
-    console.log(`加载4g终端缓存......`)
+    console.log(`更新4g终端缓存......`)
     res.forEach(el => {
       if (!el.mountDevs) el.mountDevs = []
       this.CacheTerminal.set(el.DevMac, el)
@@ -172,32 +173,30 @@ export default class Cache {
         this.QueryTerminaluseTime.set(el.DevMac + el2.pid, [])
       })
     })
+    if (res.length == 0 && DevMac) {
+      this.CacheTerminal.delete(DevMac)
+    }
     // 如果有Mac参数,更新超时指令查询
     if (DevMac) {
-      // 如果超时指令包含devmac,删除
-      /* if (this.CacheTerminalQueryIntructTimeout.has(terminal.mountNode)) {
-        const CacheTerminalQueryIntructTimeout = this.CacheTerminalQueryIntructTimeout.get(terminal.mountNode)
-        CacheTerminalQueryIntructTimeout?.forEach(el => {
-          const Reg = new RegExp(`^${DevMac}`)
-          if (Reg.test(el)) CacheTerminalQueryIntructTimeout.delete(el)
-        })
-      } */
       // 触发终端更新事件
-      this.Events.Emit("UpdateTerminal", this.CacheTerminal.get(DevMac) as terminal)
+      this.Events.UpdateTerminal(DevMac)
     }
   }
   //
   async RefreshCacheConstant(protocol?: string) {
-    const res = await DevConstant.find(protocol ? { protocol } : {}).lean<ProtocolConstantThreshold>()
-    console.log(`加载协议常量缓存......`);
+    const res = await DevConstant.find(protocol ? { Protocol: protocol } : {}).lean<ProtocolConstantThreshold>()
+    console.log(`更新协议常量缓存......`);
     res.forEach(el => {
       this.CacheConstant.set(el.Protocol, el)
     })
+    if (res.length === 0 && protocol) {
+      this.CacheConstant.delete(protocol)
+    }
   }
   //
   async RefreshCacheBind(user?: string) {
     const res = await UserBindDevice.find(user ? { user } : {}).lean<BindDevice>()
-    console.log(`加载绑定设备缓存......`);
+    console.log(`更新绑定设备缓存......`);
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
       el?.UTs.forEach(els => {
@@ -207,7 +206,7 @@ export default class Cache {
   }
   //
   async RefreshCacheUser(user?: string) {
-    console.log(`加载用户信息缓存......`);
+    console.log(`更新用户信息缓存......`);
     const users = await Users.find(user ? { user } : {}).lean<UserInfo>()
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
@@ -216,7 +215,7 @@ export default class Cache {
   //
   async RefreshCacheUserSetup(user?: string) {
     const res = await UserAlarmSetup.find(user ? { user } : {}).lean<userSetup>()
-    console.log(`加载用户个性化配置......`);
+    console.log(`更新用户个性化配置......`);
     res.forEach(el => {
       // 如果用户没有自定义告警阀值,生成空map   
       el.ProtocolSetupMap = new Map()

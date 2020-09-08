@@ -736,7 +736,7 @@ const resolvers: IResolvers = {
                 events: 'oprate' + Date.now() + query.DevMac,
                 content: item.value
             }
-            const result = await ctx.$SocketUart.InstructQuery(Query)
+            const result = await ctx.$Event.DTU_OprateInstruct(Query)
             return result
         },
 
@@ -751,7 +751,7 @@ const resolvers: IResolvers = {
                 events: 'QueryAT' + Date.now() + DevMac,
                 content
             }
-            const result = await ctx.$SocketUart.OprateDTU(Query)
+            const result = await ctx.$Event.DTU_ATInstruct(Query)
             return result
         },
 
@@ -883,10 +883,7 @@ const resolvers: IResolvers = {
         },
         // 重置设备超时状态
         refreshDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx: ApolloCtx) {
-            ctx.$Event.emit('ResetTimeOutMonutDev', mac, pid)
-            // 清楚超时记录
-            //ctx.$Event.Cache.TimeOutMonutDev.delete(mac + pid)
-            // console.log({timeOut:ctx.$Event.Cache.TimeOutMonutDev});
+            ctx.$Event.ResetTimeOutMonutDev(mac, parseInt(pid))
             return { ok: 1 } as ApolloMongoResult
         },
         // 确认用户告警

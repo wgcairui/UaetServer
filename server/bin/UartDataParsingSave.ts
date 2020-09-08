@@ -14,7 +14,7 @@ export default async (queryResultArray: queryResult[]) => {
         const UartData = queryResultArray.reverse()
         // 解析结果
         const ParseData = await Promise.all(UartData.map(el => ProtocolPares(el)))
-            .then(el => el.filter(el2 => el2.result?.length as number > 0))
+        //    .then(el => el.filter(el2 => el2.result?.length as number > 0))
         // 保存解析后的数据
         TerminalClientResult.insertMany(ParseData);
         // 保存单例数据库
@@ -23,19 +23,20 @@ export default async (queryResultArray: queryResult[]) => {
         ParseData.forEach(data => {
             const ID = data.mac + data.pid
             // 如果数据重复,抛弃旧数据
-            if (MacID.has(ID)) return
-            MacID.add(ID)
-            // 把结果转换为对象
-            data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[])
-            // 把数据发给检查器,检查数据是否有故障,保存数据单例
-            const checkData = CheckUart(data)
-            // console.log({checkData});
-            //保存对象
-            TerminalClientResultSingle.updateOne(
-                { mac: checkData.mac, pid: checkData.pid },
-                checkData,
-                { upsert: true }
-            ).exec()
+            if (!MacID.has(ID)) {
+                MacID.add(ID)
+                // 把结果转换为对象
+                data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[])
+                // 把数据发给检查器,检查数据是否有故障,保存数据单例
+                const checkData = CheckUart(data)
+                // console.log({checkData});
+                //保存对象
+                TerminalClientResultSingle.updateOne(
+                    { mac: checkData.mac, pid: checkData.pid },
+                    checkData,
+                    { upsert: true }
+                ).exec()
+            }
         })
     }
 }

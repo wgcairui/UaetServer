@@ -25,7 +25,7 @@ export default new ApolloServer({
     // token不合法则报错
     if (!user || !user.user) throw new Error("you must be logged in");
     // 保存所有的操作日志
-    new LogUserRequst({ user: user.user, userGroup: user.userGroup, type: apolloRequest.operationName, argument: apolloRequest.variables } as logUserRequst).save()
+    ctx.$Event.savelog<logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
     return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token };
   }
 });

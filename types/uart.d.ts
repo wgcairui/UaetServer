@@ -1,5 +1,5 @@
 import { ParameterizedContext } from "koa";
-import { Event, eventsName } from "server/event/index"
+import { Event } from "server/event/index"
 import NodeSocketIO from "server/socket/uart";
 /* protocol */
 type communicationType = 232 | 485;
@@ -17,15 +17,12 @@ interface ApolloMongoResult {
 // koa ctx
 interface KoaCtx extends ParameterizedContext {
   $Event: Event
-  $SocketUart: NodeSocketIO
-
 }
 
 // apollo ctx
 interface ApolloCtx extends UserInfo {
   loggedIn: boolean
   $Event: Event
-  $SocketUart: NodeSocketIO
   $token: string
 }
 
@@ -54,6 +51,7 @@ interface protocolInstruct {
   shiftNum: number;
   pop: boolean;
   popNum: number;
+  isSplit: boolean
   resize: string;
   formResize: protocolInstructFormrize[];
   // 加入指令是否启用
@@ -103,8 +101,6 @@ interface Terminal extends RegisterTerminal {
   mountDevs: TerminalMountDevs[];
 }
 interface TerminalMountDevsEX extends TerminalMountDevs {
-  NodeIP: string
-  NodeName: string
   TerminalMac: string
   Interval: number
 }
@@ -159,8 +155,8 @@ interface queryResultArgument {
   alarm?: boolean
 }
 //
-interface queryResultParse extends Object {
-  [x: string]: queryResultArgument | any
+interface queryResultParse {
+  [x: string]: queryResultArgument
 }
 //协议查询结果
 interface queryResult extends queryObject {
@@ -288,7 +284,7 @@ interface Threshold {
 }
 // 协议参数告警状态
 interface ConstantAlarmStat extends queryResultArgument {
-  alarmStat: number[]
+  alarmStat: string[]
 }
 // 协议操作指令
 interface OprateInstruct {
@@ -351,7 +347,6 @@ interface instructQuery {
 
 // 透传设备告警对象
 interface uartAlarmObject {
-  type: eventsName
   mac: string
   devName: string
   pid: number
@@ -439,15 +434,15 @@ interface logNodes {
   type: logNodesType
 }
 // 终端连接
-type logTerminalsType = "连接" | "断开" | "查询超时" | "查询恢复" | "操作设备" | "操作设备结果"
+type logTerminalsType = "连接" | "断开" | "查询超时" | "查询恢复" | "操作设备" | "操作设备结果" | 'DTU操作'
 interface logTerminals {
   NodeIP: string
   NodeName: string
   TerminalMac: string
   type: logTerminalsType
-  msg: string
-  query: any
-  result: any
+  msg?: string
+  query?: any
+  result?: any
   createdAt?: Date
 }
 

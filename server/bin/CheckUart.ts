@@ -1,8 +1,7 @@
 import Event from "../event/index";
 import _ from "lodash";
-import { SendUartAlarm, SmsDTUDevAlarm } from "../util/SMS";
+import { SmsDTUDevAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
-import unitCache from "../util/unitCache";
 import { queryResult, userSetup, queryResultParse, ProtocolConstantThreshold, queryResultArgument, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
 export default (query: queryResult) => {
@@ -16,74 +15,40 @@ export default (query: queryResult) => {
     const parse = query.parse as queryResultParse;
     // 协议参数阀值,状态
     const Constant = Event.Cache.CacheConstant.get(query.protocol) as ProtocolConstantThreshold;
-
     // 获取协议参数阀值缓存
     {
-      let Threshold = _.has(Constant, "Threshold") ? _.cloneDeep(Constant.Threshold) : [];
       // 获取用户协议配置
-      const UserThreshold = UserSetup.ThresholdMap.get(query.protocol);
-      // 合并配置
-      // 先检查系统配置，是否有用户设置覆盖
-      if (UserThreshold) {
-        // 迭代系统默认配置,如果用户有相同的配置则覆盖系统设置
-        Threshold = Threshold.map(el => {
-          if (UserThreshold.has(el.name))
-            return UserThreshold.get(el.name) as Threshold;
-          else return el;
-        });
-        // 检查用户配置，是否包含系统默认配置没有的设置
-        const keys: string[] = Threshold.map(el => el.name);
-        Threshold.push(...Array.from(UserThreshold.values()).filter(el => !keys.includes(el.name)));
-      }
-      // 迭代规则
-      Threshold.forEach(el => {
-        // 检测结果对象中是否含有告警规则name
-        if (parse.hasOwnProperty(el.name)) {
-          // 解析后的参数字节
-          const parseArgument = parse[el.name] as queryResultArgument;
-          // 实际值
-          const val = parseFloat(parseArgument.value);
-          // 比较大小,交给短信&邮件处理程序,如果参数没有超限,查看告警缓存缓存
-          if (val < el.min || val > el.max) {
-            parseArgument.alarm = true;
-            const alarmMsg = `:${parseArgument.name}超限[${parseArgument.value}]`;
-            sendSmsAlarm(query, alarmMsg, UserSetup, parseArgument);
-          } /*  else {
-            const alarmMsg = `${query.mountDev}:${parseArgument.name}超限已恢复,实际值${parseArgument.value}`
-            sendAlarmReset(query, alarmMsg, UserSetup, parseArgument)
-          } */
+      const UserThreshold: Map<string, Threshold> = UserSetup.ThresholdMap.get(query.protocol) || new Map();
+      // 迭代系统默认配置,如果用户有相同的配置则覆盖系统设置
+      (Constant.Threshold || []).forEach(ther => {
+        //if(UserThreshold.has(ther.name)) ther = UserThreshold.get(ther.name) as Threshold
+        if (!UserThreshold.has(ther.name)) UserThreshold.set(ther.name, ther)
+      })
+      //
+      UserThreshold.forEach(({ name, max, min }, key) => {
+        if (parse && parse?.hasOwnProperty(key)) {
+          const argumentVal = parseInt(parse[key].value)
+          if (argumentVal > max || argumentVal < min) {
+            parse[key].alarm = true
+            sendSmsAlarm(query, `${name}超限[${argumentVal}]`, UserSetup, parse[key])
+          }
         }
-      });
+      })
     }
     // 检查参数状态
     {
-      let AlarmStat = _.has(Constant, "AlarmStat") ? _.cloneDeep(Constant.AlarmStat) : [];
       // 获取用户协议配置
-      const UserAlarmStat = UserSetup.AlarmStateMap.get(query.protocol);
+      const UserAlarmStat: Map<string, ConstantAlarmStat> = UserSetup.AlarmStateMap.get(query.protocol) || new Map();
       // 合并配置
-      // 先检查系统配置，是否有用户设置覆盖
-      if (UserAlarmStat) {
-        // 迭代系统默认配置,如果用户有相同的配置则覆盖系统设置
-        AlarmStat = AlarmStat.map(el => {
-          if (UserAlarmStat.has(el.name))
-            return UserAlarmStat.get(el.name) as ConstantAlarmStat;
-          else return el;
-        });
-        // 检查用户配置，是否包含系统默认配置没有的设置
-        const keys: string[] = AlarmStat.map(el => el.name);
-        AlarmStat.push(...Array.from(UserAlarmStat.values()).filter(el => !keys.includes(el.name)));
-      }
-      // 迭代每条状态值
-      AlarmStat.forEach(el => {
-        if (parse.hasOwnProperty(el.name)) {
-          const parseArgument = parse[el.name] as queryResultArgument;
-          if (!el.alarmStat.includes(parseInt(parseArgument.value))) {
-            parseArgument.alarm = true;
-            const alarmMsg = `:${parseArgument.name}[${unitCache(parseArgument.unit as string)[parseArgument.value]}]`;
-            sendSmsAlarm(query, alarmMsg, UserSetup, parseArgument);
-          }
+      (Constant.AlarmStat || []).forEach(ant => {
+        if (!UserAlarmStat.has(ant.name)) UserAlarmStat.set(ant.name, ant)
+      })
+      UserAlarmStat.forEach((ant, key) => {
+        if (parse.hasOwnProperty(ant.name) && !_.compact(ant.alarmStat).includes(parse[key].value)) {
+          parse[key].alarm = true
+          sendSmsAlarm(query, `${ant.name}[${Event.GetUnit(<string>parse[key].unit)[parse[key].value]}]`, UserSetup, parse[key]);
         }
-      });
+      })
     }
   }
   return query;
@@ -107,9 +72,8 @@ async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSe
       if (UserSetup.tels.length > 0) {
         SmsDTUDevAlarm(query, event)
       }
-      // 构造告警信息
-      const data: uartAlarmObject = {
-        type: "UartTerminalDataTransfinite",
+      // 保存为日志
+      Event.savelog<uartAlarmObject>('DataTransfinite', {
         mac: query.mac,
         pid: query.pid,
         devName: query.mountDev,
@@ -117,53 +81,16 @@ async function sendSmsAlarm(query: queryResult, event: string, UserSetup: userSe
         timeStamp: query.timeStamp,
         tag: parseArgument.name,
         msg: event
-      };
-      // 发送事件，socket发送用户
-      Event.Emit("UartTerminalDataTransfinite", data);
+      })
     }
   } else Event.Cache.CacheAlarmNum.set(tag, 0);
 }
-/*
-// 发送告警恢复推送,短信,邮件
-async function sendAlarmReset(query: queryResult, event: string, UserSetup: userSetup, parseArgument: queryResultArgument) {
-  // 创建tag
-  const tag = query.mac + query.pid + parseArgument.name;
-  // 检查缓存告警记录,如果没有记录则不处理
-  if (Event.Cache.CacheAlarmNum.has(tag)) {
-    // 清除记录
-    Event.Cache.CacheAlarmNum.delete(tag)
-    // 发送推送事件
-    // 构造告警信息
-    const data: uartAlarmObject = {
-      type: "UartTerminalDataTransfiniteReset",
-      mac: query.mac,
-      pid: query.pid,
-      protocol: query.protocol,
-      timeStamp: query.timeStamp,
-      tag: parseArgument.name,
-      msg: event
-    };
-    // 发送事件，socket发送用户
-    Event.Emit("UartTerminalDataTransfinite", data);
-    //
-    // 检查是否有告警手机号
-    if (UserSetup.tels.length > 0) {
-      await SendUartAlarm({
-        user: UserSetup.user,
-        type: "透传设备告警",
-        tel: UserSetup.tels.join(','),
-        name: UserSetup.user,
-        devname: query.mac,
-        air: query.mountDev,
-        event: data.msg
-      });
-    }
-    //
-    if (UserSetup.mails.length > 0) {
-      UserSetup.mails.forEach(mail => {
-        // SendAlarmEvent(mail, data.msg)
-      })
-    }
+
+
+function checkUPS(Query:queryResult){
+  if(Query.type === 232){
+    Query.contents.forEach(el=>{
+      el.content
+    })
   }
 }
- */
