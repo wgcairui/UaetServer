@@ -25,6 +25,7 @@ const typeDefs: DocumentNode = gql`
   # tool协议详细指令
   type ProtocolInstruct {
     isUse: Boolean
+    isSplit: Boolean
     name: String
     resultType: String
     shift: Boolean

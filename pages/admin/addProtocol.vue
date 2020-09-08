@@ -188,6 +188,7 @@ export default vue.extend({
       instructItemsFields: [
         { key: "name", label: "名称" },
         { key: "isUse", label: "启用", formatter(val) { return val ? "启用" : "禁用" } },
+        { key: 'isSplit', label: "分隔符", formatter(val) { return val ? "启用" : "禁用" } },
         { key: "resultType", label: "结果集" },
         { key: "shift", label: "字符去头" },
         { key: "shiftNum", label: "去头数" },
@@ -250,12 +251,16 @@ export default vue.extend({
           instruct.pop = true;
           instruct.shiftNum = 3;
           instruct.popNum = 2;
+          instruct.isSplit = false
+          instruct.resultType = 'hex'
           break;
         case 232:
           instruct.shift = true;
           instruct.pop = true;
           instruct.shiftNum = 1;
           instruct.popNum = 1;
+          instruct.isSplit = true
+          instruct.resultType = 'utf8'
           break;
       }
     },
@@ -284,6 +289,7 @@ export default vue.extend({
             ProtocolType
             instruct {
               isUse
+              isSplit
               name
               resultType
               shift

@@ -43,23 +43,6 @@
           </b-card>
         </b-col>
       </b-row>
-      <b-row>
-        <b-col>
-          <separated title="全部参数状态"></separated>
-          <b-card>
-            <b-table-lite :items="States" :fields="StatesFields">
-              <template v-slot:cell(oprate)="data">
-                <b-button-group size="sm">
-                  <b-button @click="deleteState(data)">删除</b-button>
-                </b-button-group>
-              </template>
-            </b-table-lite>
-            <div class="text-center">
-              <b-button block size="sm" @click="pushState(States)">提交</b-button>
-            </div>
-          </b-card>
-        </b-col>
-      </b-row>
     </b-col>
   </b-row>
 </template>
@@ -89,7 +72,7 @@ export default Vue.extend({
     };
   },
   computed: {
-    items() {
+    /* items() {
       const ProtocolSingle: protocol = this.$data.ProtocolSingle;
       const States = this.States;
       const names = States.map(el => el.name);
@@ -105,7 +88,7 @@ export default Vue.extend({
         }).flat();
       }
       return result;
-    },
+    }, */
     // 参数状态
     AlarmStatItems() {
       const ProtocolSingle: protocol = this.$data.ProtocolSingle;
@@ -114,7 +97,9 @@ export default Vue.extend({
       // 如果协议单例存在
       if (ProtocolSingle) {
         // 转换系统和用户的配置为Map，如果未定义则填入空数组
-        const MapSys = new Map(DevConstant?.AlarmStat ? DevConstant.AlarmStat.map(el => [el.name, el]) : []);
+        const MapSys = new Map(DevConstant ? DevConstant.map(el => [el.name, el]) : []);
+        //console.log({a:this.States,MapSys});
+
         // 迭代协议参数值，取出状态值，把unit转为obj，如果参数有定义监控则写入监控，优先使用用户定义
         result = ProtocolSingle.instruct
           .map(el => {
@@ -136,6 +121,8 @@ export default Vue.extend({
           })
           .flat();
       }
+      //console.log(result);
+
       return result;
     },
     itemAlarm() {
@@ -189,58 +176,101 @@ export default Vue.extend({
       const obj = Object.assign({}, ...arr);
       return item.alarmStat.map(el => obj[el]);
     },
-    addState(selectNames: ConstantAlarmStat[]) {
-      const AlarmStats = this.States;
-      const State = this.State
-      selectNames.forEach(S => {
-        const n = AlarmStats.findIndex(el => el.name === S.name);
-        S.alarmStat = State.alarmStat
-        if (n === -1) {
-          AlarmStats.push(S);
-        } else AlarmStats[n] = S;
-      });
-      /* const n = AlarmStats.findIndex(el => el.name === State.name);
-      if (n === -1) {
-        AlarmStats.push(State);
-      } else AlarmStats[n] = State; */
+    async StateAlarmSelects(item: ConstantAlarmStat, value: number) {
+      const StatSet = new Set(item.alarmStat);
+      if (StatSet.has(value)) {
+        StatSet.delete(value);
+      } else {
+        StatSet.add(value);
+      }
+      item.alarmStat = Array.from(StatSet);
+
+      const AlarmStat = this.AlarmStatItems;
+      this.pushThreshold(AlarmStat, "AlarmStat");
     },
-    deleteState(data: any) {
-      const { item, index }: { item: ConstantAlarmStat; index: number } = data;
-      this.States.splice(index, 1);
-    },
-    pushState(AlarmStats: ConstantAlarmStat[]) {
-      const { ProtocolType, Protocol }: { ProtocolType: string; Protocol: string } = this.$data as any;
-      this.$apollo.mutate({
+    // 统一提交配置
+    async pushThreshold(
+      arg: Threshold[] | string[],
+      type: ConstantThresholdType
+    ) {
+      const isOk = await this.$apollo.mutate({
         mutation: gql`
-            mutation addDevConstent(
-              $Protocol: String
-              $ProtocolType: String
-              $type: String
-              $arg: JSON
+          mutation addDevConstent(
+            $Protocol: String
+            $ProtocolType: String
+            $type: String
+            $arg: JSON
+          ) {
+            addDevConstent(
+              Protocol: $Protocol
+              ProtocolType: $ProtocolType
+              type: $type
+              arg: $arg
             ) {
-              addDevConstent(
-                Protocol: $Protocol
-                ProtocolType: $ProtocolType
-                type: $type
-                arg: $arg
-              ) {
-                ok
-                msg
-                upserted
-              }
+              ok
+              msg
+              upserted
             }
-          `,
-        variables: { arg: AlarmStats, Protocol, type: "AlarmStat", ProtocolType }
-      })
-        .then((res: any) => {
-          const ok = res.data.addDevConstent.ok;
-          if (ok > 0) {
-            this.$bvToast.toast("配置success", { variant: "info", title: "Info" });
-            this.$apollo.queries.States.refetch();
           }
-        });
+        `,
+        variables: {
+          arg,
+          Protocol: this.Protocol,
+          type,
+          ProtocolType: this.ProtocolType
+        }
+      });
+      this.$apollo.queries.States.refetch();
     }
   }
+  /* addState(selectNames: ConstantAlarmStat[]) {
+    const AlarmStats = this.States;
+    const State = this.State
+    selectNames.forEach(S => {
+      const n = AlarmStats.findIndex(el => el.name === S.name);
+      S.alarmStat = State.alarmStat
+      if (n === -1) {
+        AlarmStats.push(S);
+      } else AlarmStats[n] = S;
+    });
+  },
+  deleteState(data: any) {
+    const { item, index }: { item: ConstantAlarmStat; index: number } = data;
+    this.States.splice(index, 1);
+  },
+  pushState(AlarmStats: ConstantAlarmStat[]) {
+    const { ProtocolType, Protocol }: { ProtocolType: string; Protocol: string } = this.$data as any;
+    this.$apollo.mutate({
+      mutation: gql`
+          mutation addDevConstent(
+            $Protocol: String
+            $ProtocolType: String
+            $type: String
+            $arg: JSON
+          ) {
+            addDevConstent(
+              Protocol: $Protocol
+              ProtocolType: $ProtocolType
+              type: $type
+              arg: $arg
+            ) {
+              ok
+              msg
+              upserted
+            }
+          }
+        `,
+      variables: { arg: AlarmStats, Protocol, type: "AlarmStat", ProtocolType }
+    })
+      .then((res: any) => {
+        const ok = res.data.addDevConstent.ok;
+        if (ok > 0) {
+          this.$bvToast.toast("配置success", { variant: "info", title: "Info" });
+          this.$apollo.queries.States.refetch();
+        }
+      });
+  }
+} */
 });
 </script>
 
