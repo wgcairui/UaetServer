@@ -192,6 +192,7 @@ interface socketNetInfo {
   jw: string;
   uart: string
   AT: boolean
+  ICCID: string
 }
 // 节点websocket透传信息
 interface WebSocketInfo {

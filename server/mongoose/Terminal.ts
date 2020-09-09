@@ -12,6 +12,7 @@ const SchemaTerminal = new Schema({
   port: Number,
   jw: String,
   uart: String,
+  ICCID: String,
   AT: Boolean,
   uptime: { type: String, default: new Date().toLocaleString() },
   mountNode: { type: String, required: true },

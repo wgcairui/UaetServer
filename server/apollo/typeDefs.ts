@@ -86,6 +86,7 @@ const typeDefs: DocumentNode = gql`
     jw:String
     uart: String
     AT: Boolean
+    ICCID: String
     uptime: String
     online: Boolean
     mountNode: String

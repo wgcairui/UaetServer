@@ -289,7 +289,7 @@ const resolvers: IResolvers = {
                 return result.map(el => {
                     el.mac = terminalMaps.get(el.mac)?.name || el.mac
                     return el
-                })
+                }).reverse()
             } else {
                 return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
             }

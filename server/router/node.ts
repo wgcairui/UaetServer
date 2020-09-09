@@ -24,9 +24,9 @@ export default async (ctx: ParameterizedContext | KoaCtx) => {
         const { NodeInfo, WebSocketInfos, updateTime }: { NodeInfo: nodeInfo, WebSocketInfos: WebSocketInfo, updateTime: string } = body
         // 设备port jw
         WebSocketInfos.SocketMaps.forEach(el => {
-          const { port, ip, jw, mac, uart, AT } = el
+          const { port, ip, jw, mac, uart, AT, ICCID } = el
           if ((<KoaCtx>ctx).$Event.Cache.CacheTerminal.has(mac)) {
-            Terminal.updateOne({ DevMac: mac }, { $set: { ip, port, jw, uart, AT, uptime: updateTime } }, { upsert: true }).exec()
+            Terminal.updateOne({ DevMac: mac }, { $set: { ip, port, jw, uart, AT, ICCID, uptime: updateTime } }, { upsert: true }).exec()
             ctx.$Event.Cache.CacheNodeTerminalOnline.add(mac)
           }
         })

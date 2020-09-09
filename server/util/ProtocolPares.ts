@@ -21,26 +21,24 @@ export default async (R: queryResult) => {
       {
         R.result = IntructResult.filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
           .map(el => {
-            const data = el.buffer.data;
             // 解析规则
             const instructs = InstructMap.get(el.content) as protocolInstruct;
             // 把buffer转换为utf8字符串并掐头去尾
-            const parseStr = Buffer.from(data)
-              .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? data.length - instructs.popNum : data.length)
+            const parseStr = Buffer.from(el.buffer)
+              .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length)
               .replace(/(#)/g, "")
               // 如果是utf8,分隔符为' '
               .split(instructs.isSplit ? " " : "");
-            console.log({ parseStr });
-
-            return instructs.formResize.map(el2 => {
-              const [start] = CacheParseRegx(el2.regx as string)// (el2.regx?.split("-") as string[]).map(el => parseInt(el));
-              return { name: el2.name, value: parseStr[start - 1], unit: el2.unit } as queryResultArgument;
+            // console.log({ cont:el.content,parseStr, parseStrlen: parseStr.length, ins: instructs.formResize.length });
+            return instructs.formResize.map<queryResultArgument>(el2 => {
+              const [start] = CacheParseRegx(el2.regx as string)
+              return { name: el2.name, value: parseStr[start - 1], unit: el2.unit }
             });
           })
           .flat()
       }
       break;
-
+    // 适用于modbus协议
     case 485:
       {
         switch (true) {
@@ -69,18 +67,32 @@ export default async (R: queryResult) => {
           // 标准modbus协议
           default:
             {
-              R.result = []
-              IntructResult.forEach(el => {
-                // 功能码
+              R.result = IntructResult.filter(el => {
                 const FunctionCode = parseInt(el.content.slice(2, 4))
-                if (el.buffer.data[1] !== FunctionCode) return
-                // 解析规则
-                const instructs = InstructMap.get(el.content.slice(2, 12))
-                if (!instructs) return
+                if (el.buffer.data[1] === FunctionCode) return true
+                else {
+                  console.log({ instruct: el.content, buffer: el.buffer, msg: '指令返回的格式不对' });
+                  return false
+                }
+              }).filter(el => {
+                if (InstructMap.has(el.content.slice(2, 12))) return true
+                else {
+                  console.log({ instruct: el.content, buffer: el.buffer, msg: '协议不包含此指令' });
+                  return false
+                }
+              }).filter(el => {
                 // 数据长度
                 const bufSize = el.buffer.data[2];
                 // 检查数据实际长度是否对应
-                //if (bufSize + 5 === el.buffer.data.length) return
+                if (bufSize + 5 === el.buffer.data.length) return true
+                else {
+                  console.log({ instruct: el.content, buffer: el.buffer, msg: '返回Buffer数据长度错误' });
+                  return false
+                }
+              }).map(el => {
+                // 功能码
+                // 解析规则
+                const instructs = <protocolInstruct>InstructMap.get(el.content.slice(2, 12))
                 // 取出实际数据
                 const data = el.buffer.data.slice(instructs.shift ? instructs.shiftNum : 3, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length - 2)
                 let buf: Buffer | Array<number>
@@ -106,7 +118,7 @@ export default async (R: queryResult) => {
                     break
                 }
                 // 迭代指令解析规则,解析结果集返回
-                instructs.formResize.forEach(el2 => {
+                return instructs.formResize.map(el2 => {
                   // 申明结果
                   const result = { name: el2.name, value: 0, unit: el2.unit }
                   // 每个数据的结果地址
@@ -130,9 +142,9 @@ export default async (R: queryResult) => {
                       result.value = Tool.HexToSingle((<Buffer>buf).slice(start - 1, start + len - 1)); //Tool.BufferToFlot(buf, start)
                       break;
                   }
-                  R.result?.push(result);
+                  return result
                 })
-              })
+              }).flat()
             }
             break
         }

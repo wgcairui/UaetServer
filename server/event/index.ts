@@ -196,8 +196,8 @@ export class Event extends EventEmitter.EventEmitter {
         new LogUartTerminalDataTransfinite(body).save()
         break
       case 'terminal':
-        this.SendUserAlarm({ mac: (<logTerminals>body).TerminalMac, msg: (<logTerminals>body).type })
-        //const {} = <logNodes>body
+        // this.SendUserAlarm({ mac: (<logTerminals>body).TerminalMac, msg: (<logTerminals>body).type })
+        // const {} = <logNodes>body
         new LogTerminals(body).save()
         break
       case 'request':
