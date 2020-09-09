@@ -39,7 +39,7 @@ interface protocolInstructFormrize {
   name: string;
   enName?: string;
   regx: string | null;
-  bl: number;
+  bl: string;
   unit: string | null;
   isState: boolean;
 }
@@ -55,7 +55,13 @@ interface protocolInstruct {
   resize: string;
   formResize: protocolInstructFormrize[];
   // 加入指令是否启用
-  isUse: boolean
+  isUse: boolean,
+  // 非标协议
+  noStandard: boolean,
+  // 前处理脚本
+  scriptStart: string,
+  // 后处理脚本
+  scriptEnd: string
 }
 // 协议
 interface protocol {

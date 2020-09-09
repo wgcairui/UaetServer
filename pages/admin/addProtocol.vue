@@ -84,6 +84,29 @@
                 <my-form label="指令是否启用:">
                   <b-form-checkbox v-model="instruct.isUse" class="py-2 mr-3"></b-form-checkbox>
                 </my-form>
+                <my-form label="指令为非标协议:">
+                  <b-form-checkbox v-model="instruct.noStandard" class="py-2 mr-3"></b-form-checkbox>
+                </my-form>
+                <b-collapse v-model="instruct.noStandard">
+                  <my-form label="前处理脚本:">
+                    <b-form-textarea
+                      rows="1"
+                      max-rows="150"
+                      trim
+                      v-model="instruct.scriptStart"
+                      placeholder="默认参数有两个,为设备pid和指令名称,编写脚本以处理,function(pid,instruct){}"
+                    ></b-form-textarea>
+                  </my-form>
+                  <my-form label="后处理脚本:">
+                    <b-form-textarea
+                      rows="1"
+                      max-rows="150"
+                      trim
+                      v-model="instruct.scriptEnd"
+                      placeholder="默认参数有一个,为Buffer,编写脚本以处理,function(buffer){}"
+                    ></b-form-textarea>
+                  </my-form>
+                </b-collapse>
                 <my-form label="结果集:">
                   <b-form-select
                     :disabled="Is232"
@@ -184,7 +207,13 @@ export default vue.extend({
         resize: "",
         addModel: true,
         isUse: true,
-        isSplit: true
+        isSplit: true,
+        // 非标协议
+        noStandard: false,
+        // 前处理脚本
+        scriptStart: 'function(pid,instruct){\n\n}',
+        // 后处理脚本
+        scriptEnd: 'function(buffer){\n\n}'
       },
       // 指令集
       instructItems: [] as protocol[],
@@ -225,7 +254,7 @@ export default vue.extend({
       // 分割字符串并刷选出有内容的 ["系统1吸气温度+1-2+0.1+℃","送风温度+3-2+0.1+℃"]
       const split = resize
         .replace(/(\n)/g, "")
-        .split("/")
+        .split("&")
         .filter(el => el !== "");
       // 继续分割数组，为单个单位 [[[系统1吸气温度],[1-2],[0.1],[℃]"],[[送风温度],[3-2],[0.1],[℃]]]
       const resize1 = split.map(el => el.split("+"));
@@ -233,21 +262,17 @@ export default vue.extend({
       return resize1.map(el => ({
         name: el[0].replace(/(\n)/g, ""),
         regx: el[1],
-        bl: parseFloat(el[2]) || 1,
-        unit: el[3] || null,
+        bl: el[2] || '1',
+        unit: el[3] || '',
         isState: /(^{.*}$)/.test(el[3]) //el[3]?.includes("{")
       } as protocolInstructFormrize)
       );
     }
-    //创建计算对象，用于watch检测
-    /*  resize() {
-      return <string>this.$data.instruct.resize;
-    } */
   },
   watch: {
-    // 检测到"/"，字符自动换行
+    // 检测到"&"，字符自动换行
     "instruct.resize": function (newVal) {
-      if (newVal.endsWith("/")) this.$data.instruct.resize += "\n";
+      if (newVal.endsWith("&")) this.$data.instruct.resize += "\n";
     },
     // 检测类型以去除头尾
     "accont.Type": function (newVal) {
@@ -274,9 +299,6 @@ export default vue.extend({
     // 监测协议是否重复，重复之后填充input
     apolloProtocol: function (newVal: protocol) {
       if (newVal) {
-        /*  newVal.instruct.forEach(el => {
-          this.$data.instructItems.push(el);
-        }); */
         this.$data.instructItems = newVal.instruct;
         this.$data.accont.ProtocolType = newVal.ProtocolType;
         this.$data.accont.Type = newVal.Type;
@@ -305,6 +327,9 @@ export default vue.extend({
               popNum
               resize
               formResize
+              noStandard
+              scriptStart
+              scriptEnd
             }
           }
         }
@@ -328,10 +353,7 @@ export default vue.extend({
       for (let el of formResize) {
         const a = el.name !== "";
         const isreg = el.regx && /(^[0-9]{1,2}-[1-9])/.test(el.regx);
-        /*  const b = typeof el.regx === "string";
-        const c = el.regx?.split("-").length == 2;
-        const d = el.regx?.split("-").some(e => Number(e)); */
-        const e = Number(el.bl);
+        const e = Number(el.bl) || /^\(.*\)$/.test(el.bl);
         if (!a || !isreg || !e) {
           this.$bvModal.msgBoxOk("参数效验错误" + a + isreg + e);
           return;
@@ -382,12 +404,12 @@ export default vue.extend({
       });
     },
     // 上传指令
-    submit() {
+    async submit() {
       //
       const accont = this.$data.accont;
       const instruct: protocolInstruct[] = this.$data.instructItems;
 
-      this.$apollo.mutate({
+      await this.$apollo.mutate({
         mutation: gql`
             mutation addProtocolSet($arg: JSON) {
               setProtocol(arg: $arg) {
@@ -400,7 +422,9 @@ export default vue.extend({
       })
         .then(({ data }: { data: any }) => {
           this.$bvModal.msgBoxOk(data.setProtocol.ok == 1 ? "上传协议成功" : "上传协议失败");
+
         });
+      this.$apollo.queries.apolloProtocol.refresh()
     }
   },
   head() {

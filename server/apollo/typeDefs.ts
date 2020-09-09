@@ -26,6 +26,9 @@ const typeDefs: DocumentNode = gql`
   type ProtocolInstruct {
     isUse: Boolean
     isSplit: Boolean
+    noStandard: Boolean
+    scriptStart: String
+    scriptEnd: String
     name: String
     resultType: String
     shift: Boolean

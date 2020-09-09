@@ -17,3 +17,12 @@ if(typeof f !== 'string'){
     console.log(a);
     
 }
+
+
+const d = new Function('pid','instruct',`const content = ("AA" + pid.toString(16).padStart(2, "0") + instruct).replace(/\s*/g, "");
+const num = 255 - (Buffer.from(content, 'hex').toJSON().data.reduce((pre, cur) => pre + cur));
+const crc = Buffer.allocUnsafe(2);
+crc.writeInt16BE(num, 0);
+return content + crc.slice(1, 2).toString("hex").padStart(2, '0')`)
+
+console.log(d(1,'FFFFFF000000000000000000'));

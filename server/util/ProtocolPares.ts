@@ -58,7 +58,7 @@ export default async (R: queryResult) => {
                   // 每个数据的结果地址
                   const [start, len] = CacheParseRegx(el2.regx as string)//(el2.regx?.split("-") as string[]).map(el2 => parseInt(el2));
                   // 申明结果
-                  const value = /(温度|湿度)/.test(el2.name) ? parseFloat(((buf.readIntBE(start, len) / 2) - 20).toFixed(1)) : parseFloat((buf.readIntBE(start, len) * el2.bl).toFixed(1));
+                  const value = /(温度|湿度)/.test(el2.name) ? parseFloat(((buf.readIntBE(start, len) / 2) - 20).toFixed(1)) : parseFloat((buf.readIntBE(start, len) * Number(el2.bl)).toFixed(1));
                   return { name: el2.name, value, unit: el2.unit };
                 });
               })
@@ -134,7 +134,7 @@ export default async (R: queryResult) => {
                     case "hex":
                     case "short":
                       // 转换为带一位小数点的浮点数
-                      result.value = parseFloat(((<Buffer>buf).readIntBE(start - 1, len) * el2.bl).toFixed(1));
+                      result.value = parseFloat(((<Buffer>buf).readIntBE(start - 1, len) * Number(el2.bl)).toFixed(1));
                       //parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
                       break;
                     // 处理单精度浮点数

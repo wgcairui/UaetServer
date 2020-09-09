@@ -38,6 +38,12 @@ const SchemaProtocols = new Schema({
           type: Boolean,
           default: true
         },
+        // 非标协议
+        noStandard: Boolean,
+        // 前处理脚本
+        scriptStart: String,
+        // 后处理脚本
+        scriptEnd: String,
         resultType: {
           type: String,
           enum: ["utf8", "hex", "float", "short", "int", "HX", 'bit2']
@@ -53,7 +59,7 @@ const SchemaProtocols = new Schema({
               name: String,
               enName: String,
               regx: String,
-              bl: Number,
+              bl: String,
               unit: String,
               isState: Boolean
             },
