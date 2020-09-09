@@ -176,6 +176,8 @@ export default Vue.extend({
             ? userSetup.AlarmStat.map(el => [el.name, el])
             : []
         );
+        console.log({ MapSys, MapUser });
+
         let i = 0;
         // 迭代协议参数值，取出状态值，把unit转为obj，如果参数有定义监控则写入监控，优先使用用户定义
         result = ProtocolSingle.instruct
@@ -187,14 +189,15 @@ export default Vue.extend({
                   .replace(/(\{|\}| )/g, "")
                   .split(",")
                   .map(el4 => el4.split(":"))
-                  .map(el5 => ({ text: el5[1], value: Number(el5[0]) }));
+                  .map(el5 => ({ text: el5[1], value: el5[0] }));
+                const showKeys = show.map(el => el.value)
                 const alarmStat =
                   MapUser.get(el3.name)?.alarmStat ||
                   MapSys.get(el3.name)?.alarmStat;
                 return {
                   name: el3.name,
                   show,
-                  alarmStat: Array.from(new Set(alarmStat || []))
+                  alarmStat: Array.from(new Set(alarmStat || [])).filter(el => showKeys.includes(el))
                 };
               });
           })
@@ -227,7 +230,6 @@ export default Vue.extend({
             Threshold
             AlarmStat {
               name
-              unit
               alarmStat
             }
           }
@@ -246,7 +248,6 @@ export default Vue.extend({
             Threshold
             AlarmStat {
               name
-              unit
               alarmStat
             }
           }
@@ -273,7 +274,7 @@ export default Vue.extend({
       this.pushThreshold(Array.from(ShowTag), "ShowTag");
     },
     // 添加删除showtags
-    async StateAlarmSelects(item: ConstantAlarmStat, value: number) {
+    async StateAlarmSelects(item: ConstantAlarmStat, value: string) {
       const StatSet = new Set(item.alarmStat);
       if (StatSet.has(value)) {
         StatSet.delete(value);
@@ -282,7 +283,12 @@ export default Vue.extend({
       }
       item.alarmStat = Array.from(StatSet);
 
-      const AlarmStat = this.AlarmStatItems;
+      const AlarmStat = this.AlarmStatItems.map(el => {
+        return {
+          name: el.name,
+          alarmStat: (<any[]>el.alarmStat).filter(el => el).map(el => String(el))
+        }
+      }).filter(el => el.alarmStat.length > 0)
       this.pushThreshold(AlarmStat, "AlarmStat");
     },
     // 添加阀值

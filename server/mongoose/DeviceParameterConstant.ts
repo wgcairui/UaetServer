@@ -54,7 +54,7 @@ const AlarmStat = new Schema({
   name: String,
   value: String,
   unit: String,
-  alarmStat: [Number]
+  alarmStat: [String]
 }, { _id: false })
 
 export const Schema_DevConstant = new Schema({

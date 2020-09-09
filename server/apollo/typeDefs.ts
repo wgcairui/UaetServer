@@ -196,7 +196,7 @@ const typeDefs: DocumentNode = gql`
     name: String
     value: String
     unit: String
-    alarmStat:[Int]
+    alarmStat:[String]
   }
   # 每个协议的设备常量和阀值，显示参数
   type DevConstant{
