@@ -28,7 +28,7 @@
       <!--  -->
       <b-row no-gutters>
         <b-col>
-          <separated title="指令集"></separated>
+          <separated title="指令集" :back="false"></separated>
           <b-table
             responsive
             ref="table1"
@@ -68,12 +68,15 @@
       <!--  -->
       <b-row no-gutters>
         <b-col>
-          <separated title="添加协议指令"></separated>
+          <separated title="添加协议指令" :back="false"></separated>
           <b-card>
             <b-card-body>
               <b-form>
                 <my-form label="指令字符：">
-                  <b-form-input v-model="instruct.name" placeholder="232/QGS或者485/0300010002"></b-form-input>
+                  <b-form-input
+                    v-model="instruct.name"
+                    :placeholder="Is232?'QGS or QMOD,不需要添加結束符\\n':'例:0300000001,不需要加地址碼和校驗碼'"
+                  ></b-form-input>
                 </my-form>
                 <!--   <b-form-group v-bind="forGroup" :disabled="!instruct.addModel">
                
@@ -83,8 +86,9 @@
                 </my-form>
                 <my-form label="结果集:">
                   <b-form-select
+                    :disabled="Is232"
                     v-model="instruct.resultType"
-                    :options="['hex', 'utf8', 'float', 'short', 'int','HX','bit2']"
+                    :options="Is232?['utf8']:['hex', 'float', 'short', 'HX','bit2']"
                   ></b-form-select>
                 </my-form>
                 <my-form label="字符去头处理:">
@@ -123,7 +127,7 @@
                     max-rows="150"
                     trim
                     v-model="instruct.resize"
-                    placeholder
+                    placeholder="格式為:工作電壓+1-2+1+(V|{A:在線,B:離線}),加號為分隔符,第一位为参数名称,第二位1-2为从地址第一位开始读取两位长度数据,第三位为系数,获取的值乘系数为实际值,第四位为单位或者解析对象"
                   ></b-form-textarea>
                 </my-form>
                 <my-form label="解析结果:">
@@ -210,6 +214,9 @@ export default vue.extend({
     };
   },
   computed: {
+    Is232() {
+      return this.accont.Type !== 485
+    },
     // 解析规则分解为Json，{name:"aa",regx:"1-5",bl:"1",unit:"%"}
     formResize() {
       if (this.$data.instruct.resize == "") return [];
