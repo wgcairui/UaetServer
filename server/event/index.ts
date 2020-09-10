@@ -141,14 +141,19 @@ export class Event extends EventEmitter.EventEmitter {
             ({ TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<TerminalMountDevsEX>
           nodeTerminals.cache.set(terminal.DevMac + mountDev.pid, mount)
         })
+        // 如果cache下面有同mac不同pid的话此种情况无法清理
+        // 遍历所有DTU,当DTU存在与terminal相同的mac但不存在的pid时,清理此DTU
+        const pidKeys = terminal.mountDevs.map(el => el.pid)
+        nodeTerminals.cache.forEach((DTU, hash) => {
+          if (DTU.TerminalMac === mac && !pidKeys.includes(DTU.pid)) nodeTerminals.cache.delete(hash)
+        })
       }
     } else {
       // 如果缓存没有这个终端，遍历所有，删除匹配的缓存
-      const Regexs = new RegExp("^" + mac)
       if (this.uartSocket) {
         this.uartSocket.CacheSocket.forEach(client => {
-          client.cache.forEach((v, key) => {
-            if (Regexs.test(key)) client.cache.delete(key)
+          client.cache.forEach((DTU, key) => {
+            if (DTU.TerminalMac === mac) client.cache.delete(key)
           })
         })
       }
