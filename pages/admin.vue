@@ -48,7 +48,7 @@
         </div>
       </div>
     </b-navbar>
-    <b-container class=" container-h flex-grow-1"  id="admin-content">
+    <b-container class=" container-h flex-grow-1 px-5"  id="admin-content" fluid>
       <nuxt-child/>
     </b-container>
   </div>

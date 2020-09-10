@@ -97,6 +97,7 @@
                       placeholder="默认参数有两个,为设备pid和指令名称,编写脚本以处理,function(pid,instruct){}"
                     ></b-form-textarea>
                   </my-form>
+
                   <my-form label="后处理脚本:">
                     <b-form-textarea
                       rows="1"
@@ -222,6 +223,7 @@ export default vue.extend({
         { key: "name", label: "名称" },
         { key: "isUse", label: "启用", formatter(val) { return val ? "启用" : "禁用" } },
         { key: 'isSplit', label: "分隔符", formatter(val) { return val ? "启用" : "禁用" } },
+        { key: 'noStandard', label: '非标协议', formatter(val) { return val ? "是" : "否" } },
         { key: "resultType", label: "结果集" },
         { key: "shift", label: "字符去头" },
         { key: "shiftNum", label: "去头数" },
@@ -375,7 +377,8 @@ export default vue.extend({
       } else {
         instructItems.forEach((el, index) => {
           if (el.name == result.name) {
-            instructItems[index] = result;
+            instructItems.splice(index, 1, result)
+            //instructItems[index] = result;
             this.$bvModal.msgBoxOk(`更新指令${instructItems[index].name} success`);
             return;
           }

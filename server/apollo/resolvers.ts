@@ -14,6 +14,7 @@ import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
 import { protocol, Terminal as terminal, ApolloCtx, BindDevice, queryResult, queryResultSave, UserInfo, Aggregation, ProtocolConstantThreshold, queryResultArgument, userSetup, logUserLogins, ApolloMongoResult, ConstantThresholdType, DevConstant_Air, DevConstant_Ups, DevConstant_EM, DevConstant_TH, OprateInstruct, instructQueryArg, instructQuery, AggregationDev, uartAlarmObject, DTUoprate } from "uart";
 import { getUserBindDev } from "../util/util";
+import { ParseCoefficient } from "../util/func";
 
 const resolvers: IResolvers = {
     Query: {
@@ -482,8 +483,8 @@ const resolvers: IResolvers = {
                 await LogUartTerminalDataTransfinite.deleteMany({ mac: DevMac }).exec()
                 await LogTerminals.deleteMany({ TerminalMac: DevMac }).exec()
                 await LogUseBytes.deleteMany({ mac: DevMac }).exec()
-                const result = await RegisterTerminal.deleteOne({ DevMac })
-                ctx.$Event.Cache.CacheTerminal.delete(DevMac)
+                const result = await RegisterTerminal.deleteOne({ DevMac }).lean()
+                ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
                 return result
             }
         },
@@ -716,16 +717,19 @@ const resolvers: IResolvers = {
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
             // 检查操作指令是否含有自定义参数
             if (/(%i)/.test(item.value)) {
+                //const b = Buffer.allocUnsafe(2)
+                //b.writeIntBE(item.val as number * Number(item.bl), 0, 2)
+                //b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 1)
+                item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
+                console.log({item});                
                 // 如果是海信协议
-                if (/(^HX.*)/.test(query.protocol)) {
+                /* if (/(^HX.*)/.test(query.protocol)) {
                     const b = Buffer.allocUnsafe(2)
                     b.writeInt16BE((item.val as number + 20) * 2)
                     item.value = item.value.replace(/(%i)/, b.slice(1, 2).toString("hex"))
                 } else {
-                    const b = Buffer.allocUnsafe(2)
-                    b.writeIntBE(item.val as number * item.bl, 0, 2)
-                    item.value = item.value.replace(/(%i)/, b.toString("hex"))
-                }
+
+                } */
             }
             // 携带事件名称，触发指令查询
             const Query: instructQuery = {

@@ -31,7 +31,12 @@
       <b-row>
         <b-col>
           <separated title="注册设备列表"></separated>
-          <b-table-lite :items="RegisterTerminalsItems" :fields="RegisterTerminalsFields">
+          <b-table
+            :items="RegisterTerminalsItems"
+            :fields="RegisterTerminalsFields"
+            :busy="$apollo.loading"
+            
+          >
             <template v-slot:cell(oprate)="row">
               <b-button-group>
                 <b-button
@@ -51,7 +56,7 @@
                 >Delete</b-button>
               </b-button-group>
             </template>
-          </b-table-lite>
+          </b-table>
         </b-col>
       </b-row>
     </b-col>
@@ -175,8 +180,10 @@ export default Vue.extend({
         });
     },
     async deleteRegisterTerminal(DevMac: string) {
-      const res = await this.$apollo.mutate({
-        mutation: gql`
+      const isOk = await this.$bvModal.msgBoxConfirm(`是否确定删除DTU:${DevMac} ??`, { buttonSize: 'sm', title: '删除设备' })
+      if (isOk) {
+        const res = await this.$apollo.mutate({
+          mutation: gql`
           mutation deleteRegisterTerminal($DevMac: String) {
             deleteRegisterTerminal(DevMac: $DevMac) {
               ok
@@ -184,17 +191,18 @@ export default Vue.extend({
             }
           }
         `,
-        variables: {
-          DevMac
-        }
-      });
+          variables: {
+            DevMac
+          }
+        });
 
-      const result: ApolloMongoResult = res.data.deleteRegisterTerminal;
-      if (result.ok === 0) {
-        this.$bvModal.msgBoxOk(result.msg, { title: "Info" });
-      } else {
-        this.$bvModal.msgBoxOk("delete success", { title: "Info" });
-        this.$apollo.queries.RegisterTerminals.refetch()
+        const result: ApolloMongoResult = res.data.deleteRegisterTerminal;
+        if (result.ok === 0) {
+          this.$bvModal.msgBoxOk(result.msg, { buttonSize: 'sm', title: "Info" });
+        } else {
+          this.$bvModal.msgBoxOk("delete success", { buttonSize: 'sm', title: "Info" });
+          this.$apollo.queries.RegisterTerminals.refetch()
+        }
       }
     }
   }

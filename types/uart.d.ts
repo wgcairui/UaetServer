@@ -297,7 +297,7 @@ interface ConstantAlarmStat extends queryResultArgument {
 interface OprateInstruct {
   name: string
   value: string
-  bl: number
+  bl: string
   val?: number
   readme: string
 }

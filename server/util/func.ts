@@ -1,28 +1,21 @@
-const a = '(x,(x/2)-20)'
-
-function parseString(str: string) {
-    if (/\(*\)/.test(str)) {
-        const s = str.replace(/(^\(|\)$)/g, '').split(',')
-        s[s.length - 1] = 'return ' + s[s.length - 1]
-        console.log(s);
-        return new Function(...s)
-    } return str
+// 使用于非标协议前置脚本,转换脚本为Function
+export const ParseFunction = (fun: string) => {
+    const content = fun.replace(/(^function\(pid,instruct\)\{|\}$)/g, '')
+    return new Function('pid', 'instruct', content)
 }
 
-const f = parseString(a)
-
-if(typeof f !== 'string'){
-    console.log(f(88));
-}else{
-    console.log(a);
-    
+// 适用于非标协议后置脚本
+export const ParseFunctionEnd = (fun: string) => {
+    const content = fun.replace(/(^function\(buffer\)\{|\}$)/g, '')
+    return new Function('buffer', content)
 }
 
-
-const d = new Function('pid','instruct',`const content = ("AA" + pid.toString(16).padStart(2, "0") + instruct).replace(/\s*/g, "");
-const num = 255 - (Buffer.from(content, 'hex').toJSON().data.reduce((pre, cur) => pre + cur));
-const crc = Buffer.allocUnsafe(2);
-crc.writeInt16BE(num, 0);
-return content + crc.slice(1, 2).toString("hex").padStart(2, '0')`)
-
-console.log(d(1,'FFFFFF000000000000000000'));
+// 转换参数值系数
+export const ParseCoefficient = (fun: string, val: number) => {
+    if (Number(fun)) return Number(fun) * val
+    else {
+        const args = fun.replace(/(^\(|\)$)/g, '').split(',')
+        const Fun = new Function(args[0],`return ${args[1]}`)
+        return Fun(val)
+    }
+}

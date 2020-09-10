@@ -41,7 +41,78 @@ export default async (R: queryResult) => {
     // 适用于modbus协议
     case 485:
       {
-        switch (true) {
+        const ResultFilter =  IntructResult.filter(el => {
+          const instructName = Event.Cache.CacheInstructContents.get(el.content) || '' //0300010002
+          const FunctionCode = parseInt(el.content.slice(2, 4))
+          // 协议
+          if(InstructMap.has(instructName)){
+
+          }
+          // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
+          if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
+          else {
+            console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
+            return false
+          }
+        })
+
+        R.result = ResultFilter.map(el => {
+          // 功能码
+          // 解析规则
+          const instructs = <protocolInstruct>InstructMap.get(el.content.slice(2, 12))
+          // 取出实际数据
+          const data = el.buffer.data.slice(instructs.shift ? instructs.shiftNum : 3, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length - 2)
+          let buf: Buffer | Array<number>
+          //根据指令结果类型预先处理数据
+          switch (instructs.resultType) {
+            case "bit2":
+              {
+                // 把结果字段中的10进制转换为2进制,翻转后补0至8位,代表modbus线圈状态
+                // https://blog.csdn.net/qq_26093511/article/details/58628270
+                // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
+
+                // 1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
+                // 2,把连续的几个数组拼接起来，转换为数字
+                // 例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
+                // [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
+
+                const bit2Array = data.map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
+                buf = bit2Array
+              }
+              break
+            default:
+              buf = Buffer.from(data);
+              break
+          }
+          // 迭代指令解析规则,解析结果集返回
+          return instructs.formResize.map(el2 => {
+            // 申明结果
+            const result = { name: el2.name, value: 0, unit: el2.unit }
+            // 每个数据的结果地址
+            const [start, len] = CacheParseRegx(el2.regx as string)
+            switch (instructs.resultType) {
+              // 处理
+              case 'bit2':
+                {
+                  result.value = (<Array<number>>buf)[start - 1]
+                }
+                break
+              // 处理整形
+              case "hex":
+              case "short":
+                // 转换为带一位小数点的浮点数
+                result.value = parseFloat(((<Buffer>buf).readIntBE(start - 1, len) * Number(el2.bl)).toFixed(1));
+                //parseFloat((valBuf.readInt16BE(0) * el2.bl).toFixed(1));
+                break;
+              // 处理单精度浮点数
+              case "float":
+                result.value = Tool.HexToSingle((<Buffer>buf).slice(start - 1, start + len - 1)); //Tool.BufferToFlot(buf, start)
+                break;
+            }
+            return result
+          })
+        }).flat()
+        /* switch (true) {
           // 已HX开头的海信空调非标协议处理程序
           case /(^HX.*)/.test(R.protocol):
             R.result = IntructResult
@@ -103,12 +174,12 @@ export default async (R: queryResult) => {
                       // 把结果字段中的10进制转换为2进制,翻转后补0至8位,代表modbus线圈状态
                       // https://blog.csdn.net/qq_26093511/article/details/58628270
                       // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
-                      /* 
-                        1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
-                        2,把连续的几个数组拼接起来，转换为数字
-                        例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
-                        [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
-                      */
+                       
+                      // 1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
+                       // 2,把连续的几个数组拼接起来，转换为数字
+                       // 例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
+                       // [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
+                      
                       const bit2Array = data.map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
                       buf = bit2Array
                     }
@@ -147,7 +218,7 @@ export default async (R: queryResult) => {
               }).flat()
             }
             break
-        }
+        } */
       }
       break;
   }

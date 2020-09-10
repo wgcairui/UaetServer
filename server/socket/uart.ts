@@ -1,18 +1,19 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, queryResult, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate } from "uart";
+import { NodeClient, Terminal, protocol, queryObject, queryResult, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate, uartAlarmObject } from "uart";
 
 import tool from "../util/tool";
 import { SmsDTUDevTimeOut } from "../util/SMS";
 
 import config from "../config";
+import { ParseFunction } from "../util/func";
 
 export default class NodeSocketIO {
     private io: IO.Server;
     private Event: event;
     // 缓存查询指令 0300000001=>010300000001ba4c
-    private CacheQueryIntruct: Map<string, string>
+    CacheQueryIntruct: Map<string, string>
     // 缓存所有Socket连接,name=>socket
     CacheSocket: Map<string, nodeClient>
     constructor(server: Server, opt: ServerOptions) {
@@ -57,8 +58,11 @@ export default class NodeSocketIO {
             Query.Interval = client.cache.get(Query.DevMac + Query.pid)?.Interval || 20000
             // 构建指令
             if (Query.type === 485) {
-                if (/(^HX.*)/.test(Query.protocol)) {
-                    Query.content = tool.HX(Query.pid, Query.content)
+                const instructs = this.Event.Cache.CacheProtocol.get(Query.protocol)?.instruct
+                // 如果包含非标协议,取第一个协议指令的前处理脚本处理指令内容
+                if (instructs && instructs[0].noStandard && instructs[0].scriptStart) {
+                    const Fun = ParseFunction(instructs[0].scriptStart)
+                    Query.content = Fun(Query.pid, Query.content)
                 } else {
                     Query.content = tool.Crc16modbus(Query.pid, Query.content)
                 }
@@ -168,7 +172,11 @@ class nodeClient {
                 const date = new Date()
                 if (!Array.isArray(data)) {
                     data = [data]
-                    this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
+                    const terminal = this.Event.Cache.CacheTerminal.get(data[0])
+                    if (terminal) {
+                        this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: data[0], devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已上线`, timeStamp: Date.now() })
+                        this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
+                    }
                 }
 
                 data.forEach(el => {
@@ -190,7 +198,11 @@ class nodeClient {
                 this.Event.Cache.DTUOfflineTime.set(mac, date)
                 console.error(`${date.toLocaleTimeString()}##${this.Name} DTU:${mac} 已${active ? '主动' : '被动'}离线`);
                 // 添加日志
-                this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: mac, type: "断开" })
+                const terminal = this.Event.Cache.CacheTerminal.get(mac)
+                if (terminal) {
+                    this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已${active ? '主动' : '被动'}离线`, timeStamp: Date.now() })
+                    this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: mac, type: "断开" })
+                }
             })
             // 设备查询指令有部分超时,
             .on('instructTimeOut', (Query, instruct) => {
@@ -208,23 +220,18 @@ class nodeClient {
                     console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                     QueryTerminal.Interval += 500
                     // 如果超时次数>10和短信发送状态为false
-                    console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
+                    // console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                         this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
-                        const a = SmsDTUDevTimeOut(Query, '超时')
-                        console.log({ a });
-                        if (a) {
-                            a.then(res => {
-                                console.log({ res });
-
-                            }).catch(e => console.log({ e })
-                            )
+                        SmsDTUDevTimeOut(Query, '超时')
+                        const terminal = this.Event.Cache.CacheTerminal.get(Query.mac)
+                        if (terminal) {
+                            // 添加日志
+                            this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: Query.mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}/${Query.pid}/${Query.mountDev} 查询超时`, timeStamp: Date.now() })
+                            this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: Query.mac, type: "查询超时", query: Query })
                         }
                     }
-                    // 添加日志
-                    this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: Query.mac, type: "查询超时", query: Query })
                 }
-
             })
             // 节点注册成功,初始化设备列表缓存
             .on('ready', () => {
@@ -259,14 +266,22 @@ class nodeClient {
                         case "utf8":
                             content = ProtocolInstruct.name
                             break
-                        case "HX":
+                        /* case "HX":
                             content = tool.HX(Query.pid, ProtocolInstruct.name)
-                            break;
+                            break; */
                         default:
-                            content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                            // 如果是非标协议,且包含前处理脚本
+                            if (ProtocolInstruct.noStandard && ProtocolInstruct.scriptStart) {
+                                // 转换脚本字符串为Fun函数,此处不保证字符串为规定的格式,请在添加协议的时候手工校验
+                                const Fun = ParseFunction(ProtocolInstruct.scriptStart)
+                                content = Fun(Query.pid, ProtocolInstruct.name)
+                            } else {
+                                content = tool.Crc16modbus(Query.pid, ProtocolInstruct.name)
+                            }
                             break;
                     }
                     CacheQueryIntruct.set(IntructName, content)
+                    this.Event.Cache.CacheInstructContents.set(content, ProtocolInstruct.name)
                     return content
                 }
             })

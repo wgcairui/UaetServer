@@ -192,7 +192,7 @@ const typeDefs: DocumentNode = gql`
  type OprateInstruct{
     name:String
     value:String
-    bl:Int
+    bl:String
     readme:String
   }
   # 协议告警状态

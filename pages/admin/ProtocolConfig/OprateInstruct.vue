@@ -15,7 +15,7 @@
               ></b-form-input>
             </my-form>
             <my-form label="值的倍数:">
-              <b-form-select v-model="instruct.bl" :options="[0.1,1,10,100]"></b-form-select>
+              <b-form-input v-model="instruct.bl"></b-form-input>
             </my-form>
             <my-form label="指令说明:">
               <b-form-textarea v-model="instruct.readme"></b-form-textarea>
@@ -58,7 +58,7 @@ export default Vue.extend({
       Protocol,
       ProtocolSingle: null,
       //
-      instruct: { name: "", value: "", bl: 1, readme: "" } as OprateInstruct,
+      instruct: { name: "", value: "", bl: '1', readme: "" } as OprateInstruct,
       instructs: [] as OprateInstruct[],
       fields: [
         { key: "name", label: "指令名称" },

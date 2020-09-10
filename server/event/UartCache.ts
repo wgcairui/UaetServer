@@ -86,6 +86,8 @@ export default class Cache {
   TimeOutMonutDevINstruct: Map<string, Map<string, number>>
   // DTU下挂载的设备指令超时Set
   TimeOutMonutDevINstructSet: Set<string>
+  // 缓存协议指令转换关系 010300010009abcd => 0300010009
+  CacheInstructContents: Map<string, string>
   private Events: event;
   CacheSocket: any;
   constructor(Events: event) {
@@ -118,6 +120,7 @@ export default class Cache {
     this.DTUOnlineTime = new Map()
     this.TimeOutMonutDevINstruct = new Map()
     this.TimeOutMonutDevINstructSet = new Set()
+    this.CacheInstructContents = new Map()
   }
   //
   async start(): Promise<void> {
