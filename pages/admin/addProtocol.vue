@@ -104,7 +104,7 @@
                       max-rows="150"
                       trim
                       v-model="instruct.scriptEnd"
-                      placeholder="默认参数有一个,为Buffer,编写脚本以处理,function(buffer){}"
+                      placeholder="默认参数有一个,为BufferArray,使用Buffer.from()转换为buffer,编写脚本校验buffer，返回Boolen，,function(buffer){}"
                     ></b-form-textarea>
                   </my-form>
                 </b-collapse>

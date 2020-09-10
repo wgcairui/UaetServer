@@ -2,6 +2,7 @@ import Event from "../event/index";
 import Tool from "./tool";
 import { protocolInstruct, queryResult, queryResultArgument, protocol } from "uart";
 import CacheParseRegx from "../util/regxCache"
+import { ParseFunctionEnd } from "./func";
 
 export default async (R: queryResult) => {
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
@@ -41,19 +42,26 @@ export default async (R: queryResult) => {
     // 适用于modbus协议
     case 485:
       {
-        const ResultFilter =  IntructResult.filter(el => {
+        const ResultFilter = IntructResult.filter(el => {
           const instructName = Event.Cache.CacheInstructContents.get(el.content) || '' //0300010002
-          const FunctionCode = parseInt(el.content.slice(2, 4))
-          // 协议
-          if(InstructMap.has(instructName)){
+          const protocolInstruct = InstructMap.get(instructName)
+          // 指令是此协议中的
+          if (protocolInstruct) {
+            // 如果是非标协议且含有后处理脚本，由脚本校验结果buffer
+            if (protocolInstruct.noStandard && protocolInstruct.scriptEnd) {
+              const Fun = ParseFunctionEnd(protocolInstruct.scriptEnd)
+              return Fun(el.buffer) as Boolean
+            } else {
+              const FunctionCode = parseInt(el.content.slice(2, 4))
+              // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
+              if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
+              else {
+                console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
+                return false
+              }
+            }
+          } else return false
 
-          }
-          // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
-          if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
-          else {
-            console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
-            return false
-          }
         })
 
         R.result = ResultFilter.map(el => {
