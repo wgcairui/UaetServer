@@ -217,7 +217,7 @@ export default Vue.extend({
             break
           default:
             console.log(data.devTimeOut);
-            this.$apollo.queries.Data.startPolling()
+            //this.$apollo.queries.Data.startPolling()
             break
         }
       }

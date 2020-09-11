@@ -1,8 +1,8 @@
 import Event from "../event/index";
 import Tool from "./tool";
-import { protocolInstruct, queryResult, queryResultArgument, protocol } from "uart";
+import { protocolInstruct, queryResult, queryResultArgument, protocol, uartAlarmObject } from "uart";
 import CacheParseRegx from "../util/regxCache"
-import { ParseFunctionEnd } from "./func";
+import { ParseFunctionEnd, ParseCoefficient } from "./func";
 
 export default async (R: queryResult) => {
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
@@ -42,6 +42,11 @@ export default async (R: queryResult) => {
     // 适用于modbus协议
     case 485:
       {
+        // 刷选阶段,协议指令查询返回的结果不一定是正确的,可能存在返回报警数据,其他设备返回的数据
+        // 检查1,检查返回的查询指令是否是查询协议中包含的指令
+        // 2,检查协议是否是非标协议,如果是非标协议的话且有检查脚本,使用脚本检查结果buffer,返回Boolen
+        // 3,检查标准modbus协议,协议返回的控制字符与查询指令一致,结果数据长度与结果中声明的数据长度一致
+        // 
         const ResultFilter = IntructResult.filter(el => {
           const instructName = Event.Cache.CacheInstructContents.get(el.content) || '' //0300010002
           const protocolInstruct = InstructMap.get(instructName)
@@ -50,12 +55,13 @@ export default async (R: queryResult) => {
             // 如果是非标协议且含有后处理脚本，由脚本校验结果buffer
             if (protocolInstruct.noStandard && protocolInstruct.scriptEnd) {
               const Fun = ParseFunctionEnd(protocolInstruct.scriptEnd)
-              return Fun(el.buffer) as Boolean
+              return Fun(el.content, el.buffer.data) as Boolean
             } else {
               const FunctionCode = parseInt(el.content.slice(2, 4))
               // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
               if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
               else {
+                Event.savelog<uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
                 console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
                 return false
               }
@@ -63,8 +69,63 @@ export default async (R: queryResult) => {
           } else return false
 
         })
+        //console.log(ResultFilter);
+        // 根据协议指令解析类型的不同,转换裁减Array<number>为Array<number>,把content换成指令名称
+        const ParseInstructResultType = ResultFilter.map(el => {
+          el.content = Event.Cache.CacheInstructContents.get(el.content) as string
+          const instructs = InstructMap.get(el.content) as protocolInstruct
+          const data = el.buffer.data.slice(instructs.shift ? instructs.shiftNum : 3, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length - 2)
+          switch (instructs.resultType) {
+            case 'bit2':
+              // 把结果字段中的10进制转换为2进制,翻转后补0至8位,代表modbus线圈状态
+              // https://blog.csdn.net/qq_26093511/article/details/58628270
+              // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
 
-        R.result = ResultFilter.map(el => {
+              // 1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
+              // 2,把连续的几个数组拼接起来，转换为数字
+              // 例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
+              // [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
+              el.buffer.data = data.map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
+              break
+            default:
+              el.buffer.data = data
+              break
+          }
+          return el
+        })
+        //console.log(ParseInstructResultType);
+        // 把转换处理后的数据根据协议指令对应的解析对象生成结果对象数组,赋值result属性
+        const ParseInstructResultArray = ParseInstructResultType.map(el => {
+          const instructs = InstructMap.get(el.content) as protocolInstruct
+          const buffer = Buffer.from(el.buffer)
+          return instructs.formResize.map(el2 => {
+            // 申明结果
+            const result = { name: el2.name, value: '0', unit: el2.unit }
+            // 每个数据的结果地址
+            const [start, len] = CacheParseRegx(el2.regx as string)
+            switch (instructs.resultType) {
+              // 处理
+              case 'bit2':
+                result.value = buffer[start - 1].toString()
+                break
+              // 处理整形
+              case "hex":
+              case "short":
+                // 转换为带一位小数点的浮点数
+                result.value = ParseCoefficient(el2.bl, buffer.readIntBE(start - 1, len)).toFixed(1)
+                break;
+              // 处理单精度浮点数
+              case "float":
+                result.value = Tool.HexToSingle(buffer.slice(start - 1, start + len - 1)).toFixed(2)
+                break;
+            }
+            return result
+          })
+        })
+        //console.log(ParseInstructResultArray);
+        R.result = ParseInstructResultArray.flat()
+
+        /* R.result = ResultFilter.map(el => {
           // 功能码
           // 解析规则
           const instructs = <protocolInstruct>InstructMap.get(el.content.slice(2, 12))
@@ -75,14 +136,7 @@ export default async (R: queryResult) => {
           switch (instructs.resultType) {
             case "bit2":
               {
-                // 把结果字段中的10进制转换为2进制,翻转后补0至8位,代表modbus线圈状态
-                // https://blog.csdn.net/qq_26093511/article/details/58628270
-                // http://blog.sina.com.cn/s/blog_dc9540b00102x9p5.html
-
-                // 1,读bit2指读线圈oil，方法为把10/16进制转为2进制,不满8位则前补0至8位，然后翻转这个8位数组，
-                // 2,把连续的几个数组拼接起来，转换为数字
-                // 例子：[1,0,0,0,1],[0,1,1,1,1]补0为[0,0,0,1,0,0,0,1],[0,0,0,0,1,1,1,1],数组顺序不变，每个数组内次序翻转
-                // [1,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0],然后把二维数组转为一维数组
+                
 
                 const bit2Array = data.map(el2 => el2.toString(2).padStart(8, '0').split('').reverse().map(el3 => Number(el3))).flat()
                 buf = bit2Array
@@ -119,7 +173,7 @@ export default async (R: queryResult) => {
             }
             return result
           })
-        }).flat()
+        }).flat() */
         /* switch (true) {
           // 已HX开头的海信空调非标协议处理程序
           case /(^HX.*)/.test(R.protocol):

@@ -717,19 +717,15 @@ const resolvers: IResolvers = {
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
             // 检查操作指令是否含有自定义参数
             if (/(%i)/.test(item.value)) {
-                //const b = Buffer.allocUnsafe(2)
-                //b.writeIntBE(item.val as number * Number(item.bl), 0, 2)
-                //b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 1)
-                item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
-                console.log({item});                
-                // 如果是海信协议
-                /* if (/(^HX.*)/.test(query.protocol)) {
+                // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
+                if (/%i%i/.test(item.value)) {
                     const b = Buffer.allocUnsafe(2)
-                    b.writeInt16BE((item.val as number + 20) * 2)
-                    item.value = item.value.replace(/(%i)/, b.slice(1, 2).toString("hex"))
+                    b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
+                    item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
                 } else {
-
-                } */
+                    item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
+                }
+                console.log({ msg: '发送查询指令', item });
             }
             // 携带事件名称，触发指令查询
             const Query: instructQuery = {

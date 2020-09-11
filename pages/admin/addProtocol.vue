@@ -72,50 +72,57 @@
           <b-card>
             <b-card-body>
               <b-form>
-                <my-form label="指令字符：">
-                  <b-form-input
-                    v-model="instruct.name"
-                    :placeholder="Is232?'QGS or QMOD,不需要添加結束符\\n':'例:0300000001,不需要加地址碼和校驗碼'"
-                  ></b-form-input>
+                <my-form
+                  label="指令字符："
+                  :description="Is232?'QGS or QMOD,不需要添加結束符\\n':'例:0300000001,不需要加地址碼和校驗碼'"
+                >
+                  <b-form-input v-model="instruct.name"></b-form-input>
                 </my-form>
                 <!--   <b-form-group v-bind="forGroup" :disabled="!instruct.addModel">
                
                 </b-form-group>-->
-                <my-form label="指令是否启用:">
+                <my-form label="指令是否启用:" description="不启用的话则这条指令不会发送到设备">
                   <b-form-checkbox v-model="instruct.isUse" class="py-2 mr-3"></b-form-checkbox>
                 </my-form>
-                <my-form label="指令为非标协议:">
-                  <b-form-checkbox v-model="instruct.noStandard" class="py-2 mr-3"></b-form-checkbox>
+                <my-form
+                  label="指令为非标协议:"
+                  description="针对modbus,如果是非标协议,指令发送前由前处理脚本处理指令字符,后处理脚本判断查询结果是否符合正常返回格式"
+                >
+                  <b-form-checkbox
+                    :disabled="Is232"
+                    v-model="instruct.noStandard"
+                    class="py-2 mr-3"
+                  ></b-form-checkbox>
                 </my-form>
                 <b-collapse v-model="instruct.noStandard">
-                  <my-form label="前处理脚本:">
-                    <b-form-textarea
-                      rows="1"
-                      max-rows="150"
-                      trim
-                      v-model="instruct.scriptStart"
-                      placeholder="默认参数有两个,为设备pid和指令名称,编写脚本以处理,function(pid,instruct){}"
-                    ></b-form-textarea>
+                  <my-form
+                    label="前处理脚本:"
+                    description="默认参数有两个,为设备pid as string和指令名称instruct as string,格式为:function(pid,instruct){},不编写默认以标准modbus处理"
+                  >
+                    <b-form-textarea rows="1" max-rows="150" trim v-model="instruct.scriptStart"></b-form-textarea>
                   </my-form>
 
-                  <my-form label="后处理脚本:">
-                    <b-form-textarea
-                      rows="1"
-                      max-rows="150"
-                      trim
-                      v-model="instruct.scriptEnd"
-                      placeholder="默认参数有一个,为BufferArray,使用Buffer.from()转换为buffer,编写脚本校验buffer，返回Boolen，,function(buffer){}"
-                    ></b-form-textarea>
+                  <my-form
+                    label="后处理脚本:"
+                    description="默认参数有两个,为content as string指令和arr as Array<number>结果,使用Buffer.from()转换为buffer,编写脚本校验buffer，返回Boolen，格式:function(content,arr){}"
+                  >
+                    <b-form-textarea rows="1" max-rows="150" trim v-model="instruct.scriptEnd"></b-form-textarea>
                   </my-form>
                 </b-collapse>
-                <my-form label="结果集:">
+                <my-form
+                  label="结果集:"
+                  description="utf8把结果buffer转换为utf8字符串,适用于232协议,hex把buffer转换为Int整数,一般为两个字节,float转换为双精度浮点数,一般四位字节,bit2则是解析读线圈状态,转换为二进制"
+                >
                   <b-form-select
                     :disabled="Is232"
                     v-model="instruct.resultType"
-                    :options="Is232?['utf8']:['hex', 'float', 'short', 'HX','bit2']"
+                    :options="Is232?['utf8']:['hex', 'float', 'short', 'bit2']"
                   ></b-form-select>
                 </my-form>
-                <my-form label="字符去头处理:">
+                <my-form
+                  label="字符去头处理:"
+                  description="处理结果buffer,删除buffer前n个字符,根据协议而定,标准modbus一般删除前置3个字节"
+                >
                   <b-input-group>
                     <b-form-checkbox
                       v-model="instruct.shift"
@@ -130,7 +137,10 @@
                     >2</b-form-input>
                   </b-input-group>
                 </my-form>
-                <my-form label="字符去尾处理:">
+                <my-form
+                  label="字符去尾处理:"
+                  description="处理结果buffer,删除buffer后n个字符,根据协议而定,标准modbus一般删除后置2个字节"
+                >
                   <b-input-group>
                     <b-form-checkbox v-model="instruct.pop" class="py-2 mr-3">{{ instruct.popNum }}</b-form-checkbox>
                     <b-form-input
@@ -142,17 +152,17 @@
                     >2</b-form-input>
                   </b-input-group>
                 </my-form>
-                <my-form label="是否有分隔符:">
+                <my-form
+                  label="是否有分隔符:"
+                  description="针对232协议,232有时会把状态读取为连接的二进制字符串,选择无分隔符可以解析,一般以空格符为分隔符"
+                >
                   <b-form-checkbox v-model="instruct.isSplit" class="py-2 mr-3"></b-form-checkbox>
                 </my-form>
-                <my-form label="解析规则:">
-                  <b-form-textarea
-                    rows="1"
-                    max-rows="150"
-                    trim
-                    v-model="instruct.resize"
-                    placeholder="格式為:工作電壓+1-2+1+(V|{A:在線,B:離線}),加號為分隔符,第一位为参数名称,第二位1-2为从地址第一位开始读取两位长度数据,第三位为系数,获取的值乘系数为实际值,第四位为单位或者解析对象"
-                  ></b-form-textarea>
+                <my-form
+                  label="解析规则:"
+                  description="格式為:工作電壓+1-2+1+(V|{A:在線,B:離線}),加號為分隔符,第一位为参数名称,第二位1-2为从地址第一位开始读取两位长度数据,第三位为系数,获取的值乘系数为实际值,第四位为单位或者解析对象"
+                >
+                  <b-form-textarea rows="1" max-rows="150" trim v-model="instruct.resize"></b-form-textarea>
                 </my-form>
                 <my-form label="解析结果:">
                   <b-table-lite
@@ -214,7 +224,7 @@ export default vue.extend({
         // 前处理脚本
         scriptStart: 'function(pid,instruct){\n\n}',
         // 后处理脚本
-        scriptEnd: 'function(buffer){\n\n}'
+        scriptEnd: 'function(content,arr){\n\n}'
       },
       // 指令集
       instructItems: [] as protocol[],

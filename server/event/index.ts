@@ -158,7 +158,6 @@ export class Event extends EventEmitter.EventEmitter {
         })
       }
     }
-
   }
 
   // 重置设备超时查询
@@ -172,7 +171,14 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // // 解析设备请求结果,检查设备是否是超时设备,是的话取消超时,发送短信提醒 send ProtocolPares
+  // 重置协议指令处理缓存
+  ResetUartSocketQueryIntruct() {
+    if (this.uartSocket) {
+      this.uartSocket.CacheQueryIntruct.clear()
+    }
+  }
+
+  // 解析设备请求结果,检查设备是否是超时设备,是的话取消超时,发送短信提醒 send ProtocolPares
   QuerySuccess(Query: queryResult) {
     const hash = Query.mac + Query.pid
     if (this.Cache.TimeOutMonutDev.has(hash)) {

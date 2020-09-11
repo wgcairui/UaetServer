@@ -147,6 +147,7 @@ export default class Cache {
     if (res.length === 0 && protocol) {
       this.CacheProtocol.delete(protocol)
     }
+    this.Events.ResetUartSocketQueryIntruct()
   }
   //
   async RefreshCacheDevType(DevModel?: string) {
