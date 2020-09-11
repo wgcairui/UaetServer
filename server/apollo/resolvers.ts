@@ -345,7 +345,7 @@ const resolvers: IResolvers = {
                 }
                 // 在线节点
                 const Node = {
-                    online: Cache.CacheSocket.size,
+                    online: Event.uartSocket?.CacheSocket.size || 0,
                     all: Cache.CacheNode.size
                 }
                 // 在线终端
