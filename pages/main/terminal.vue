@@ -33,6 +33,13 @@
                 }}
               </b-form-text>
             </b-form-group>
+            <b-form-group label="ICCD:" v-bind="label">
+              <b-form-text class="terminal text-dark">
+                {{
+                Terminals.ICCD
+                }}
+              </b-form-text>
+            </b-form-group>
             <b-form-group label="GPS定位:" v-bind="label">
               <b-form-text class="terminal text-dark">{{ Terminals.jw || '没有gps信息时以IP模糊定位'}}</b-form-text>
             </b-form-group>
@@ -127,6 +134,7 @@ export default Vue.extend({
             jw
             uart
             AT
+            ICCID
             uptime
             mountNode
             mountDevs {

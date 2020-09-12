@@ -103,6 +103,7 @@ import gql from "graphql-tag";
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
 import { MessageBoxInputData } from "element-ui/types/message-box";
+import { BvTableFieldArray } from "bootstrap-vue";
 export default vue.extend({
   data() {
     return {
@@ -112,9 +113,13 @@ export default vue.extend({
       uartField: [
         { key: "DevMac", label: "设备ID" },
         { key: "name", label: "设备别名" },
+        { key: 'AT', label: '支持AT' },
+        { key: 'uart', label: '通讯参数' },
+        { key: 'ICCID', label: 'ICCID' },
         { key: "mountDevs", label: "挂载" },
-        { key: "oprate", label: "操作" }
-      ],
+        { key: "oprate", label: "操作" },
+        { key: 'uptime', label: '更新时间' }
+      ] as BvTableFieldArray,
 
       /* ecAdd: false,
       ECid: "mac01010025455",
@@ -206,6 +211,12 @@ export default vue.extend({
             UTs {
               DevMac
               name
+              jw
+              uart
+              AT
+              ICCID
+              uptime
+              mountNode
               mountDevs {
                 mountDev
               }
