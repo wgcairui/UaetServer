@@ -60,22 +60,24 @@ export class Event extends EventEmitter.EventEmitter {
       {
         const DTUOfflineTime = this.Cache.DTUOfflineTime
         const date = Date.now() // 当前时间
-        DTUOfflineTime.forEach((time, mac) => {
+        DTUOfflineTime.forEach(async (time, mac) => {
           if (date - time.getTime() > 60000 * 10) {
+            await SmsDTU(mac, '离线')
             DTUOfflineTime.delete(mac)
-            SmsDTU(mac, '离线')
           }
         })
+        console.log(`${new Date().toLocaleString()}## 更新DTU离线超时时间,离线设备数${DTUOfflineTime.size}`);
       }
       {
         const DTUOnlineTime = this.Cache.DTUOnlineTime
         const date = Date.now() // 当前时间
-        DTUOnlineTime.forEach((time, mac) => {
+        DTUOnlineTime.forEach(async (time, mac) => {
           if (date - time.getTime() > 60000 * 10) {
+            await SmsDTU(mac, '恢复上线')
             DTUOnlineTime.delete(mac)
-            SmsDTU(mac, '恢复上线')
           }
         })
+        console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,离线设备数${DTUOnlineTime.size}`);
       }
     }, 60000 * 10)
   }

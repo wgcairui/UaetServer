@@ -36,7 +36,7 @@
             <b-form-group label="ICCD:" v-bind="label">
               <b-form-text class="terminal text-dark">
                 {{
-                Terminals.ICCD
+                Terminals.ICCID
                 }}
               </b-form-text>
             </b-form-group>

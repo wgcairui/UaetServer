@@ -220,10 +220,11 @@ class nodeClient {
                     console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                     QueryTerminal.Interval += 500
                     // 如果超时次数>10和短信发送状态为false
-                    // console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
+                    console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                         this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
                         SmsDTUDevTimeOut(Query, '超时')
+                        console.log({ msg: '查询超时', timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                         const terminal = this.Event.Cache.CacheTerminal.get(Query.mac)
                         if (terminal) {
                             // 添加日志
