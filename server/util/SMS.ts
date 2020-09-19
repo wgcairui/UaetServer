@@ -161,7 +161,7 @@ export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
 // 发送设备超时下线
 export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     const info = getDtuInfo(mac)
-    if (info && info.userInfo.tels?.length > 0) {
+    if (info && info.userInfo?.tels?.length && info.userInfo?.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
         const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
@@ -169,15 +169,24 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
             name: info.user.name,
             DTU: info.terminalInfo.name,
             time: d,
-            event
+            remind: event
         })
+        console.log({
+            msg: 'senSmsDtu' + event,
+            tels: info.userInfo.tels,
+            TemplateParam
+        });
+
         const params: params = {
             "RegionId": "cn-hangzhou",
-            "PhoneNumbers": info.userInfo.tels.join(','),
+            "PhoneNumbers": info.userInfo.tels.filter(el=>el).join(','),
             "SignName": "雷迪司科技湖北有限公司",
             "TemplateCode": 'SMS_200691431',
             TemplateParam
         }
-        return SendSms(params)
+        return SendSms(params).then(el => {
+            console.log(el);
+            return el
+        })
     } else return false
 }

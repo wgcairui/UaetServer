@@ -178,17 +178,16 @@ class nodeClient {
                         this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
                     }
                 }
-
                 data.forEach(el => {
                     this.Event.Cache.CacheNodeTerminalOnline.add(el)
                     this.Event.Cache.DTUOfflineTime.delete(el)
                 })
-
                 // 如果是重连，加入缓存
                 if (reline) {
+                    console.log('');                    
                     this.Event.Cache.DTUOnlineTime.set(data[0], date)
                 }
-                console.info(`${date.toLocaleTimeString()}##${this.Name} DTU:/${data.join("|")}/ 已上线`);
+                console.info(`${date.toLocaleTimeString()}##${this.Name} DTU:/${data.join("|")}/ 已上线,模式:${reline},重连设备数：${this.Event.Cache.DTUOnlineTime.size}`);
             })
             // 节点终端设备掉线
             .on('terminalOff', (mac, active) => {
@@ -212,7 +211,7 @@ class nodeClient {
 
             })
             // 设备挂载节点查询超时
-            .on('terminalMountDevTimeOut', (Query: queryResult, timeOut: number) => {
+            .on('terminalMountDevTimeOut',async (Query: queryResult, timeOut: number) => {
                 const hash = Query.mac + Query.pid
                 const QueryTerminal = this.cache.get(hash)
                 if (QueryTerminal) {
@@ -223,8 +222,12 @@ class nodeClient {
                     console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                         this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
-                        SmsDTUDevTimeOut(Query, '超时')
-                        console.log({ msg: '查询超时', timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
+                        const sms = await SmsDTUDevTimeOut(Query, '超时')
+                        console.log({
+                            msg: `sms连接超时告警`,
+                            Query,
+                            sms
+                        });
                         const terminal = this.Event.Cache.CacheTerminal.get(Query.mac)
                         if (terminal) {
                             // 添加日志

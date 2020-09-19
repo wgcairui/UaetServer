@@ -3,7 +3,6 @@ import { GraphQLRequest } from "apollo-server-types";
 import { JwtVerify } from "../util/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
-import { LogUserRequst } from "../mongoose/Log";
 import { KoaCtx, UserInfo, logUserRequst } from "uart";
 
 export default new ApolloServer({

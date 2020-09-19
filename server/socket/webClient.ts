@@ -48,7 +48,9 @@ export default class webClientSocketIO {
     }
     SendUserAlarm(alarm: { mac: string, msg: string }) {
         const { user } = getDtuInfo(alarm.mac)
-        this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
+        if(user && user.user){
+            this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
+        }
     }
     // 缓存socket
     private _connect(Node: socketArgument) {

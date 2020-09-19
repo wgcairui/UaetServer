@@ -61,7 +61,7 @@ export class Event extends EventEmitter.EventEmitter {
         const DTUOfflineTime = this.Cache.DTUOfflineTime
         const date = Date.now() // 当前时间
         DTUOfflineTime.forEach(async (time, mac) => {
-          if (date - time.getTime() > 60000 * 10) {
+          if (date - time.getTime() > 60000 * 5) {
             await SmsDTU(mac, '离线')
             DTUOfflineTime.delete(mac)
           }
@@ -72,14 +72,14 @@ export class Event extends EventEmitter.EventEmitter {
         const DTUOnlineTime = this.Cache.DTUOnlineTime
         const date = Date.now() // 当前时间
         DTUOnlineTime.forEach(async (time, mac) => {
-          if (date - time.getTime() > 60000 * 10) {
+          if (date - time.getTime() > 60000 * 5) {
             await SmsDTU(mac, '恢复上线')
             DTUOnlineTime.delete(mac)
           }
         })
-        console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,离线设备数${DTUOnlineTime.size}`);
+        console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,在线设备数${DTUOnlineTime.size}`);
       }
-    }, 60000 * 10)
+    }, 60000 * 5)
   }
 
   // 初始化socket监听

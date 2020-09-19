@@ -44,6 +44,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import gql from "graphql-tag";
+import { Terminal } from 'uart';
 export default Vue.extend({
   data() {
     return {
@@ -93,8 +94,8 @@ export default Vue.extend({
         }
       `,
       update: data => {
-        return data.Terminals.map(el => ({
-          text: el.name + (!el.AT && '---不支持AT指令'),
+        return (<Terminal[]>data.Terminals).map(el => ({
+          text: el.name + (!el.AT ? '---不支持AT指令':''),
           value: el.DevMac,
           AT: el.AT
         }))

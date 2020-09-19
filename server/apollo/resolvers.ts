@@ -287,10 +287,13 @@ const resolvers: IResolvers = {
                     result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(50).lean()
                 }
                 const terminalMaps = ctx.$Event.Cache.CacheTerminal
-                return result.map(el => {
+                const arr = result.map(el => {
                     el.mac = terminalMaps.get(el.mac)?.name || el.mac
                     return el
-                }).reverse()
+                })
+                return _.sortBy(arr, (item) => {
+                    return -item.timeStamp
+                })
             } else {
                 return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
             }
