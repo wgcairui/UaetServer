@@ -174,7 +174,7 @@ class nodeClient {
                     data = [data]
                     const terminal = this.Event.Cache.CacheTerminal.get(data[0])
                     if (terminal) {
-                        this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: data[0], devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已上线`, timeStamp: Date.now() })
+                        // this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: data[0], devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已上线`, timeStamp: Date.now() })
                         this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
                     }
                 }
@@ -199,7 +199,7 @@ class nodeClient {
                 // 添加日志
                 const terminal = this.Event.Cache.CacheTerminal.get(mac)
                 if (terminal) {
-                    this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已${active ? '主动' : '被动'}离线`, timeStamp: Date.now() })
+                    //this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已${active ? '主动' : '被动'}离线`, timeStamp: Date.now() })
                     this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: mac, type: "断开" })
                 }
             })
