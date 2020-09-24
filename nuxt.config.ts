@@ -1,10 +1,10 @@
 import { NuxtConfig } from "@nuxt/types"
-import { NuxtRouteConfig } from "@nuxt/types/config/router"
 const isProd = process.env.NODE_ENV === "production"
 const Config = {
   //
   telemetry: true,
-  mode: "spa",
+  ssr:false,
+  modern:'server',
   // mode: "universal",
   server: {
     host: isProd ? "0.0.0.0" : "0.0.0.0",
