@@ -33,7 +33,8 @@
       "@nuxt/types",
       "vue/types",
       "bootstrap-vue",
-      "@types/amap-js-api"
+      "@types/amap-js-api",
+      "@types/echarts"
     ]
   },
   "exclude": [

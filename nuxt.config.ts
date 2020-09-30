@@ -4,7 +4,7 @@ const Config = {
   //
   telemetry: true,
   ssr:false,
-  modern:'server',
+  modern:'client',
   // mode: "universal",
   server: {
     host: isProd ? "0.0.0.0" : "0.0.0.0",

@@ -5,19 +5,31 @@
         <separated title="选择参数"></separated>
         <b-form>
           <b-form-group label="Colletion:" label-for="colletion" v-bind="label">
-            <b-form-select v-model="select.value" :options="ShowTag"></b-form-select>
+            <b-form-select
+              v-model="select.value"
+              :options="ShowTag"
+            ></b-form-select>
           </b-form-group>
           <b-form-group label="选择时间:" label-for="TimePicker" v-bind="label">
-            <b-form-datepicker id="TimePicker" v-model="datetime"></b-form-datepicker>
+            <b-form-datepicker
+              id="TimePicker"
+              v-model="datetime"
+            ></b-form-datepicker>
           </b-form-group>
         </b-form>
       </b-col>
     </b-row>
     <b-row>
       <b-col>
-        <separated title="折线图" :back='false'>{{ line.dates }}</separated>
+        <separated title="折线图" :back="false">{{ line.dates }}</separated>
         <b-overlay :show="$apollo.loading">
-          <ve-line :data="line.chartData" />
+          <ve-line
+            :data="line.chartData"
+            :mark-line="markLine"
+            :mark-point="markPoint"
+            :data-zoom="dataZoom"
+            :toolbox="toolbox"
+          />
         </b-overlay>
       </b-col>
     </b-row>
@@ -27,15 +39,41 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { queryResultSave } from "uart";
+import 'echarts/lib/component/markLine'
+import 'echarts/lib/component/markPoint'
+import 'echarts/lib/component/dataZoom'
+import 'echarts/lib/component/toolbox'
 export default Vue.extend({
   data() {
     const query = this.$route.query;
     const label = {
       labelCols: "12",
       labelColsSm: "2",
-      labelAlignSm: "right"
+      labelAlignSm: "right",
     };
+    const markLine = {
+      data: [
+        {
+          name: '平均线',
+          type: 'average'
+        }
+      ]
+    }
+    const markPoint = {
+      data: [
+        {
+          name: '最大值',
+          type: 'max'
+        }
+      ]
+    }
+    const toolbox = {
+        feature: {
+          saveAsImage: {}
+        }
+      }
     return {
+      markLine, markPoint,toolbox,
       query, label, select: { value: this.$route.query.name }, Data: [] as queryResultSave[], datetime: "", ShowTag: []
     };
   },
@@ -54,6 +92,19 @@ export default Vue.extend({
         chartData.rows = this.parseResult(ReverData);
       }
       return { chartData, dates };
+    },
+    dataZoom(){
+      const Data = this.Data
+      const Zoom:echarts.EChartOption.DataZoom.Slider = [
+        {
+          type: 'slider',
+          start: 0
+        }
+      ]
+      if(Data[0]){
+        Zoom[0].start = Data[0].timeStamp
+      }
+      return Zoom
     }
   },
   apollo: {
