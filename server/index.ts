@@ -9,9 +9,6 @@ import cors from "@koa/cors";
 import compress from "koa-compress";
 // nuxt
 const { Nuxt, Builder } = require("nuxt");
-// socket
-import NodeIO from "./socket/uart";
-import WebIO from "./socket/webClient"
 // Apollo
 import ApolloServer from "./apollo/apollo";
 // Router
@@ -81,7 +78,7 @@ attachNuxt(app).then(result => {
   // http监听
   Http.listen(port, host, undefined, () => {
     consola.ready({
-      message: `HTTP Server listening on http://localhost:${port}`,
+      message: `HTTP Server listening on http://${host}:${port}`,
       badge: true
     });
   });

@@ -7,7 +7,7 @@ const Config = {
   modern:'client',
   // mode: "universal",
   server: {
-    host: isProd ? "0.0.0.0" : "0.0.0.0",
+    host: "0.0.0.0",
     port: 9010
   },
   /*
