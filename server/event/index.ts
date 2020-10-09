@@ -9,6 +9,7 @@ import config from "../config";
 import { SmsDTUDevTimeOut, SmsDTU } from "../util/SMS";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
+import wxUtil from "../util/wxUtil";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 
@@ -27,6 +28,8 @@ export class Event extends EventEmitter.EventEmitter {
     this.Cache.start()
     this.setMaxListeners(29)
       .on("error", console.error);
+    //
+    // wxUtil.get_AccessToken()
 
   }
   // 挂载监听到koa ctx

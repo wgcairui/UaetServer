@@ -488,11 +488,29 @@ interface wxRequest {
   errcode?: number
   errmsg?: string
 }
-
+// https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
 interface wxRequestCode2Session extends wxRequest {
   openid: string
   session_key: string
   unionid: string
+}
+// https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
+interface wxRequestAccess_token extends wxRequest {
+  access_token: string
+  expires_in: number
+}
+// https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+interface wxsubscribeMessage {
+  touser: string
+  template_id: string
+  page?: string
+  miniprogram_state?: 'developer' | 'trial' | 'formal'
+  lang?: string
+  data: {
+    [x: string]: {
+      value: string
+    }
+  }
 }
 
 type AT = 'Z' | 'VER' | 'UART=1' | 'LOCATE=1' | 'IMEI' | 'ICCID' | 'IMSI'

@@ -1,5 +1,4 @@
 import { ParameterizedContext } from "koa";
-import axios, { AxiosResponse } from "axios";
 import { Users, UserAlarmSetup, UserBindDevice } from "../mongoose/user";
 import {
   KoaCtx,
@@ -9,7 +8,7 @@ import {
   userSetup,
   logUserLogins, uartAlarmObject, queryResult, queryResultSave
 } from "uart";
-import { WXBizDataCrypt } from "../util/wxUtil";
+import WX from "../util/wxUtil";
 import { BcryptDo } from "../util/bcrypt";
 import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
 import { Terminal } from "../mongoose/Terminal";
@@ -35,7 +34,7 @@ export default async (Ctx: ParameterizedContext) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
-  console.log({ body });
+  console.log(_.pickBy(body, (_val, key) => key !== 'token'));
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register']
   const token = body.token
@@ -51,17 +50,11 @@ export default async (Ctx: ParameterizedContext) => {
       {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
-        const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${wxSecret.appid}&secret=${wxSecret.secret}&js_code=${body.js_code}&grant_type=authorization_code`;
-        const wxGetseesion = await axios
-          .get<any, AxiosResponse<wxRequestCode2Session>>(url)
-          .catch(e => {
-            console.log(e);
-            ctx.throw("code2Session", 400);
-          });
+        const wxGetseesion = await WX.UserOpenID(body.js_code)
         // 包含错误
-        ctx.assert(!wxGetseesion.data.errcode, 401, wxGetseesion.data.errmsg);
+        ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
         // 正确的话返回sessionkey
-        const { openid, session_key } = wxGetseesion.data;
+        const { openid, session_key } = wxGetseesion
         // 存储session
         ClientCache.CacheWXSession.set(openid, session_key);
         // 检查openid是否为已注册用户
@@ -81,14 +74,13 @@ export default async (Ctx: ParameterizedContext) => {
     // 解密手机号码
     case "getphonenumber":
       {
-        const { encryptedData, iv, appid } = body;
+        const { encryptedData, iv, openid } = body;
         // 获取用户最近的seesionKey
-        const session_key = ClientCache.CacheWXSession.get(appid);
-        ctx.assert(session_key, 400, "appid is nologin");
-        const Crypt = new WXBizDataCrypt(session_key as string);
+        const session_key = ClientCache.CacheWXSession.get(openid);
+        ctx.assert(session_key, 400, "openid is nologin");
         ctx.body = {
           ok: 1,
-          arg: Crypt.decryptData(encryptedData, iv)
+          arg: WX.BizDataCryptdecryptData(session_key!, encryptedData, iv)
         } as ApolloMongoResult;
       }
       break;

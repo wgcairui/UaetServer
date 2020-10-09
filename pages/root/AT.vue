@@ -2,7 +2,7 @@
   <b-row class="h-100">
     <b-col class="overflow-auto h-100">
       <b-row>
-        <b-col>
+        <b-col cols="6" class="">
           <separated title="DTU调试"></separated>
           <my-form label="DTU列表">
             <b-select :options="Terminals" v-model="DevMac"></b-select>
@@ -11,31 +11,33 @@
             <b-input v-model="AT"></b-input>
           </my-form>
 
-          <div class="p-3">
+          <div class="px-3">
             <separated title="DTU参数" :back="false"></separated>
             <b-check v-model="label">添加+++AT+前辍</b-check>
           </div>
 
-          <div class="p-3">
+          <div class="px-3">
             <separated title="快捷指令" :back="false"></separated>
             <b-button
               variant="success"
               v-for="val in at"
               :key="val.text"
-              class="m-3"
+              class="m-1"
+              size="sm"
               @click="setAT(val.value)"
-            >{{val.text}}</b-button>
+              >{{ val.text }}</b-button
+            >
           </div>
-          <b-button @click="OprateAT" block size="sm" :disabled="!DevMac || !AT">执行</b-button>
+          <b-button class="m-3" @click="OprateAT" block size="sm" :disabled="!DevMac || !AT"
+            >执行</b-button
+          >
         </b-col>
-      </b-row>
-      <b-row class="my-4">
-        <b-col>
-          <b-overlay :show="$apollo.loading">
-            <b-card>
-              <p v-for="val in msg" :key="val">{{val}}</p>
-            </b-card>
-          </b-overlay>
+        <b-col cols="6">
+          <b-card title="logs">
+            <b-overlay :show="$apollo.loading">
+              <p v-for="val in msg" :key="val">{{ val }}</p>
+            </b-overlay>
+          </b-card>
         </b-col>
       </b-row>
     </b-col>
@@ -65,7 +67,7 @@ export default Vue.extend({
         { text: '设置波特率9600', value: 'UART=1,9600,8,1,NONE,HD' },
         { text: '设置波特率19200', value: 'UART=1,19200,8,1,NONE,HD' },
         { text: '设置波特率115200', value: 'UART=1,115200,8,1,NONE,HD' },
-        { text: '注册包配置', value: 'NREGEN=A' },
+        { text: '注册包配置', value: 'NREGDT=A' },
         { text: '基站定位', value: 'LOCATE=1' },
         { text: 'GPS定位', value: 'LOCATE=2' },
         { text: '查询 GPRS 信号强度', value: 'GSLQ' },
@@ -95,7 +97,7 @@ export default Vue.extend({
       `,
       update: data => {
         return (<Terminal[]>data.Terminals).map(el => ({
-          text: el.name + (!el.AT ? '---不支持AT指令':''),
+          text: el.name + (!el.AT ? '---不支持AT指令' : ''),
           value: el.DevMac,
           AT: el.AT
         }))
