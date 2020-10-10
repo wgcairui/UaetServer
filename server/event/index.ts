@@ -29,7 +29,7 @@ export class Event extends EventEmitter.EventEmitter {
     this.setMaxListeners(29)
       .on("error", console.error);
     //
-    // wxUtil.get_AccessToken()
+    wxUtil.get_AccessToken()
 
   }
   // 挂载监听到koa ctx

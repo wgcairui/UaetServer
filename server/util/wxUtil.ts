@@ -18,11 +18,11 @@ class WX {
     const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
     const { access_token, expires_in } = await this.fecth<wxRequestAccess_token>({ url, method: 'GET' })
     this.AccessToken = access_token
-    console.log(`weixin AccessToken ：：${this.AccessToken}`);
+    console.log(`weixin AccessToken ：：${this.AccessToken},expires_in:${expires_in}`);
 
     setTimeout(() => {
       this.get_AccessToken()
-    }, expires_in || 7200 - 500)
+    }, ((expires_in || 7200) * 1000) - 10000)
 
   }
 
@@ -33,15 +33,16 @@ class WX {
     return await this.fecth<wxRequestCode2Session>({ url, method: 'GET' })
   }
 
-  // 发送订阅消息
+  // 发送订阅消息-设备告警
   async SendsubscribeMessageDevAlarm(UserOpenID: string, time: string, content: string, Devname: string, DevId: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
     const postData: wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: '8NX6ji8ABlNAOEMcU7v2jtD4sgCB7NMHguWzxZn3HO4',
+      page: "/pages/index/index",
       data: {
         date1: {
-          value: time
+          value: this._formatTime(time)
         },
         thing2: {
           value: content
@@ -57,9 +58,33 @@ class WX {
         }
       }
     }
-    const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
     return await this.fecth({ url, method: 'POST', data: postData })
-
+  }
+  // 发送订阅消息-设备告警
+  async SendsubscribeMessageRegister(UserOpenID: string, user: string, name: string, time: string, tip: string) {
+    const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
+    const postData: wxsubscribeMessage = {
+      touser: UserOpenID,
+      template_id: 'XPN75P-0F3so8dE__e5bxS9xznCyNGx4TKX0Fl-i_b4',
+      page: "/pages/index/index",
+      data: {
+        character_string1: {
+          value: user
+        },
+        name2: {
+          value: name
+        },
+        date3: {
+          value: this._formatTime(time)
+        },
+        thing8: {
+          value: tip
+        }
+      }
+    }
+    //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    return await this.fecth({ url, method: 'POST', data: postData })
   }
   // 解密微信加密数据
   BizDataCryptdecryptData(SessionKey: string, encryptedData: string, iv: string) {
@@ -89,8 +114,20 @@ class WX {
     }
     return decodeParse;
   }
+  // 把时间转换为标准格式
+  private _formatTime(time: string | undefined) {
+    const times = time ? new Date(time) : new Date()
+    const year = times.getFullYear()
+    const month = times.getMonth() + 1
+    const day = times.getDate()
+    const hour = times.getHours() + 8
+    const min = times.getMinutes()
+    const sen = times.getSeconds()
+    return `${year}-${month}-${day} ${hour}:${min}:${sen}`
+  }
   private async fecth<T extends wxRequest>(config: AxiosRequestConfig) {
-    const res: AxiosResponse<T> = await axios(config);
+    // console.log(config);
+    const res: AxiosResponse<T> = await axios(config)
     if (res.data.errcode) {
       throw new Error(res.data.errmsg);
     } else

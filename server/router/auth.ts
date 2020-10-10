@@ -30,8 +30,8 @@ export default async (ctx: ParameterizedContext) => {
           new LogUserLogins({ user: u.user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
           ctx.body = { token: await JwtSign(u), user: u.user, name: u.name || u.user, userGroup: u.userGroup };
         }
-        break;
       }
+      break
     case "user":
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");

@@ -2,14 +2,13 @@ import { ParameterizedContext } from "koa";
 import { Users, UserAlarmSetup, UserBindDevice } from "../mongoose/user";
 import {
   KoaCtx,
-  wxRequestCode2Session,
   UserInfo,
   ApolloMongoResult,
   userSetup,
   logUserLogins, uartAlarmObject, queryResult, queryResultSave
 } from "uart";
 import WX from "../util/wxUtil";
-import { BcryptDo } from "../util/bcrypt";
+import { BcryptCompare, BcryptDo } from "../util/bcrypt";
 import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
 import { Terminal } from "../mongoose/Terminal";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -17,7 +16,6 @@ import _ from "lodash";
 import * as Cron from "../cron/index";
 import { getUserBindDev } from "../util/util";
 import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
-const wxSecret = require("../key/wxSecret.json");
 
 type url = 'getuserMountDev'
   | 'code2Session'
@@ -28,6 +26,9 @@ type url = 'getuserMountDev'
   | 'getAlarm'
   | 'getDevsRunInfo'
   | 'getDevsHistoryInfo'
+  | 'userlogin'
+  | 'getUserInfo'
+  | 'unbindwx'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -36,7 +37,7 @@ export default async (Ctx: ParameterizedContext) => {
   const ClientCache = ctx.$Event.ClientCache;
   console.log(_.pickBy(body, (_val, key) => key !== 'token'));
   // 校验用户cookie
-  const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register']
+  const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = body.token
   const tokenUser: UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
@@ -71,6 +72,39 @@ export default async (Ctx: ParameterizedContext) => {
         }
       }
       break;
+    // 用户登录
+    case "userlogin":
+      {
+        const { openid, user, passwd, avanter } = body
+        const userInfo = await Users.findOne({ user }).lean<UserInfo>()
+        if (userInfo) {
+          const pwStat = await BcryptCompare(passwd, userInfo.passwd as string);
+          ctx.assert(pwStat, 400, "密码效验错误");
+          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.ip, userId: openid, avanter } }).exec()
+          new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
+          ctx.body = { ok: 1, msg: 'success' } as ApolloMongoResult
+        } else {
+          ctx.body = { ok: 0, msg: '用户账号未注册' } as ApolloMongoResult
+        }
+
+      }
+      break
+    // 获取用户信息
+    case "getUserInfo":
+      {
+        ctx.body = {
+          ok: 1, arg: _.pickBy(tokenUser, (_val, key) => {
+            return key !== 'passwd'
+          })
+        } as ApolloMongoResult
+      }
+      break
+    // 用于解绑微信和透传账号的绑定关系
+    case "unbindwx":
+      {
+        ctx.body = await Users.updateOne({ user: tokenUser.user, rgtype: { $ne: 'wx' } }, { $set: { userId: '' } })
+      }
+      break
     // 解密手机号码
     case "getphonenumber":
       {
@@ -88,20 +122,19 @@ export default async (Ctx: ParameterizedContext) => {
     case "register":
       {
         const data: {
-          appid: string;
           user: string;
           name: string;
           tel: string;
           avanter: string;
         } = body as any;
 
-        const userStat = await Users.findOne({ userId: data.appid });
+        const userStat = await Users.findOne({ userId: data.user });
         ctx.assert(!userStat, 400, "账号有重复,此微信账号已绑定");
         //
         const user = Object.assign(
           body,
-          { userId: data.appid },
-          { passwd: await BcryptDo(data.appid) },
+          { userId: data.user },
+          { passwd: await BcryptDo(data.user) },
           { rgtype: "wx" }
         ) as unknown as UserInfo;
         const User = new Users(user);
@@ -120,6 +153,7 @@ export default async (Ctx: ParameterizedContext) => {
               type: "用户注册"
             } as logUserLogins).save();
             ctx.$Event.Cache.RefreshCacheUser(user.user)
+            WX.SendsubscribeMessageRegister(user.userId, user.user, user.name || '', user.creatTime as any, '欢迎使用LADS透传云平台')
             return { ok: 1, msg: "账号注册成功" };
           })
           .catch(e => console.log(e));
@@ -128,24 +162,28 @@ export default async (Ctx: ParameterizedContext) => {
     // 获取用户挂载设备
     case 'getuserMountDev':
       const Bind: any = await UserBindDevice.findOne({ user: tokenUser.user }).lean();
-      ctx.assert(Bind, 400, { ok: 0, msg: 'user no bindDev' } as ApolloMongoResult)
-      Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
-      //
-      Bind.UTs = Bind.UTs.map((el: any) => {
-        el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
-        if (el.online && el?.mountDevs?.length > 0) {
-          el.mountDevs.forEach((element: any) => {
-            element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
-          });
-        }
-        return el
-      })
-      ctx.body = { ok: 1, arg: Bind } as ApolloMongoResult;
+      if (Bind) {
+        Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
+        //
+        Bind.UTs = Bind.UTs.map((el: any) => {
+          el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
+          if (el.online && el?.mountDevs?.length > 0) {
+            el.mountDevs.forEach((element: any) => {
+              element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
+            });
+          }
+          return el
+        })
+        ctx.body = { ok: 1, arg: Bind } as ApolloMongoResult;
+      } else {
+        ctx.body = { ok: 0, msg: 'user no bindDev' } as ApolloMongoResult
+      }
+
       break
     // 查询DTU信息
     case 'getDTUInfo':
       const terminal = await Terminal.findOne({ DevMac: body.mac })
-      ctx.body = { ok: terminal ? 1 : 0, arg: { terminal } } as ApolloMongoResult
+      ctx.body = { ok: terminal ? 1 : 0, arg: terminal } as ApolloMongoResult
       break
     // 绑定设备信息
     case 'bindDev':
