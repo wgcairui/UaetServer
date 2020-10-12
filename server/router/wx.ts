@@ -29,6 +29,8 @@ type url = 'getuserMountDev'
   | 'userlogin'
   | 'getUserInfo'
   | 'unbindwx'
+  | 'getAlarmunconfirmed'
+  | 'alarmConfirmed'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -203,6 +205,15 @@ export default async (Ctx: ParameterizedContext) => {
         }
       }
       break
+    // 获取未确认告警数量
+    case "getAlarmunconfirmed":
+      {
+        const BindDevs: string[] = getUserBindDev(tokenUser.user)
+        const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs }, isOk: false })
+        const logCurCount = await logCur.countDocuments()
+        ctx.body = { ok: 1, arg: logCurCount.toString() } as ApolloMongoResult
+      }
+      break
     // 获取用户告警信息
     case "getAlarm":
       {
@@ -238,6 +249,21 @@ export default async (Ctx: ParameterizedContext) => {
           })
         } as ApolloMongoResult
 
+      }
+      break
+
+    case "alarmConfirmed":
+      {
+        const id = body.id as string
+        const BindDevs: string[] = getUserBindDev(tokenUser.user)
+        if (id) {
+          const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as uartAlarmObject
+          if (BindDevs.includes(doc.mac)) {
+            ctx.body = await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }).exec()
+          } else ctx.body = { ok: 0 } as ApolloMongoResult
+        } else {
+          ctx.body = await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
+        }
       }
       break
     // 获取设备实时运行信息
