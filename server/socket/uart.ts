@@ -184,7 +184,7 @@ class nodeClient {
                 })
                 // 如果是重连，加入缓存
                 if (reline) {
-                    console.log('');                    
+                    console.log('');
                     this.Event.Cache.DTUOnlineTime.set(data[0], date)
                 }
                 console.info(`${date.toLocaleTimeString()}##${this.Name} DTU:/${data.join("|")}/ 已上线,模式:${reline},重连设备数：${this.Event.Cache.DTUOnlineTime.size}`);
@@ -207,17 +207,17 @@ class nodeClient {
             .on('instructTimeOut', (Query, instruct) => {
                 console.log({ type: 'instructTimeOut', Query, instruct });
                 const EX = this.cache.get(Query.mac + Query.pid)
-                if (EX) Query.Interval += 500
+                if (EX) EX.Interval += 500
 
             })
             // 设备挂载节点查询超时
-            .on('terminalMountDevTimeOut',async (Query: queryResult, timeOut: number) => {
+            .on('terminalMountDevTimeOut', async (Query: queryResult, timeOut: number) => {
                 const hash = Query.mac + Query.pid
                 const QueryTerminal = this.cache.get(hash)
                 if (QueryTerminal) {
                     this.Event.Cache.TimeOutMonutDev.add(hash)
                     console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
-                    QueryTerminal.Interval += 500
+                    if (QueryTerminal.Interval < 300000) QueryTerminal.Interval += 500
                     // 如果超时次数>10和短信发送状态为false
                     console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {

@@ -5,7 +5,7 @@ import {
   UserInfo,
   ApolloMongoResult,
   userSetup,
-  logUserLogins, uartAlarmObject, queryResult, queryResultSave
+  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold
 } from "uart";
 import WX from "../util/wxUtil";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
@@ -16,6 +16,7 @@ import _ from "lodash";
 import * as Cron from "../cron/index";
 import { getUserBindDev } from "../util/util";
 import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
+import { DevConstant } from "../mongoose/DeviceParameterConstant";
 
 type url = 'getuserMountDev'
   | 'code2Session'
@@ -31,6 +32,7 @@ type url = 'getuserMountDev'
   | 'unbindwx'
   | 'getAlarmunconfirmed'
   | 'alarmConfirmed'
+  | 'getDevOprate'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -80,8 +82,10 @@ export default async (Ctx: ParameterizedContext) => {
         const { openid, user, passwd, avanter } = body
         const userInfo = await Users.findOne({ user }).lean<UserInfo>()
         if (userInfo) {
+          ctx.assert(userInfo.userGroup === 'user', 400, "管理账号不能使用小程序");
           const pwStat = await BcryptCompare(passwd, userInfo.passwd as string);
           ctx.assert(pwStat, 400, "密码效验错误");
+          ctx.assert(!userInfo.userId, 400, '用户已绑定其它微信账号，请先解绑')
           Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.ip, userId: openid, avanter } }).exec()
           new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
           ctx.body = { ok: 1, msg: 'success' } as ApolloMongoResult
@@ -320,6 +324,13 @@ export default async (Ctx: ParameterizedContext) => {
         }).flat().map(el3 => ({ time: new Date(el3.timeStamp).toLocaleTimeString(), [name]: el3.result[0].value })
         )
         ctx.body = { ok: 1, arg: res } as ApolloMongoResult
+      }
+      break
+    // 获取设备操控指令
+    case "getDevOprate":
+      {
+        const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<ProtocolConstantThreshold>()
+        ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as ApolloMongoResult
       }
       break
   }

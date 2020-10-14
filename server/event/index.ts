@@ -47,11 +47,15 @@ export class Event extends EventEmitter.EventEmitter {
               const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
               const maxTime = Math.max(...yxuseTimeArray) || 4000
               // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-              if (maxTime < config.runArg.Query.Interval) terEX.Interval = config.runArg.Query.Interval
+              /* if (maxTime < config.runArg.Query.Interval) 
               else {
-                const round = Math.round(maxTime / 1000) * 1000
-                terEX.Interval = round - maxTime > 500 ? round + 500 : round
-              }
+                // const round = Math.round(maxTime / 1000) * 1000
+                // terEX.Interval = round - maxTime > 500 ? round + 500 : round
+                // 最大数加500 - 最大值%500的余数
+                terEX.Interval = (maxTime + 500) - (maxTime % 500)
+
+              } */
+              terEX.Interval = maxTime < config.runArg.Query.Interval ? config.runArg.Query.Interval : (maxTime + 500) - (maxTime % 500)
             })
           })
           console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
