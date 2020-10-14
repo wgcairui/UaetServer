@@ -5,7 +5,7 @@ import {
   UserInfo,
   ApolloMongoResult,
   userSetup,
-  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold
+  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol
 } from "uart";
 import WX from "../util/wxUtil";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
@@ -17,6 +17,7 @@ import * as Cron from "../cron/index";
 import { getUserBindDev } from "../util/util";
 import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
+import { ParseCoefficient } from "../util/func";
 
 type url = 'getuserMountDev'
   | 'code2Session'
@@ -33,6 +34,8 @@ type url = 'getuserMountDev'
   | 'getAlarmunconfirmed'
   | 'alarmConfirmed'
   | 'getDevOprate'
+  | 'SendProcotolInstructSet'
+  | 'getUserDevConstant'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -331,6 +334,46 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<ProtocolConstantThreshold>()
         ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as ApolloMongoResult
+      }
+      break
+    //  固定发送设备操作指令
+    case "SendProcotolInstructSet":
+      {
+        const query: instructQueryArg = body.query
+        const item: OprateInstruct = body.item
+        // 获取协议指令
+        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
+        // 检查操作指令是否含有自定义参数
+        if (/(%i)/.test(item.value)) {
+          // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
+          if (/%i%i/.test(item.value)) {
+            const b = Buffer.allocUnsafe(2)
+            b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
+            item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
+          } else {
+            item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
+          }
+          console.log({ msg: '发送查询指令', item });
+        }
+        // 携带事件名称，触发指令查询
+        const Query: instructQuery = {
+          protocol: query.protocol,
+          DevMac: query.DevMac,
+          pid: query.pid,
+          type: Protocol.Type,
+          events: 'oprate' + Date.now() + query.DevMac,
+          content: item.value
+        }
+        const result = await ctx.$Event.DTU_OprateInstruct(Query)
+        ctx.body = result
+      }
+      break
+    // 获取用户自定义协议配置
+    case "getUserDevConstant":
+      {
+        const Protocol: string = body.protocol
+        const userSetup = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string) as userSetup
+        ctx.body = { ok: 1, arg: userSetup.ProtocolSetupMap.get(Protocol) } as ApolloMongoResult
       }
       break
   }

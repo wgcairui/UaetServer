@@ -205,7 +205,7 @@ class nodeClient {
             })
             // 设备查询指令有部分超时,
             .on('instructTimeOut', (Query, instruct) => {
-                console.log({ type: 'instructTimeOut', Query, instruct });
+                // console.log({ type: 'instructTimeOut', Query, instruct });
                 const EX = this.cache.get(Query.mac + Query.pid)
                 if (EX) EX.Interval += 500
 
@@ -216,10 +216,10 @@ class nodeClient {
                 const QueryTerminal = this.cache.get(hash)
                 if (QueryTerminal) {
                     this.Event.Cache.TimeOutMonutDev.add(hash)
-                    console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
+                    // console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                     if (QueryTerminal.Interval < 300000) QueryTerminal.Interval += 500
                     // 如果超时次数>10和短信发送状态为false
-                    console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
+                    // console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                         this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
                         const sms = await SmsDTUDevTimeOut(Query, '超时')
