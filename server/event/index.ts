@@ -58,7 +58,7 @@ export class Event extends EventEmitter.EventEmitter {
               terEX.Interval = maxTime < config.runArg.Query.Interval ? config.runArg.Query.Interval : (maxTime + 500) - (maxTime % 500)
             })
           })
-          console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
+          // console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
           // 清空查询计数数组
           this.Cache.QueryTerminaluseTime.forEach(el => el = [])
         }
@@ -73,7 +73,7 @@ export class Event extends EventEmitter.EventEmitter {
             DTUOfflineTime.delete(mac)
           }
         })
-        console.log(`${new Date().toLocaleString()}## 更新DTU离线超时时间,离线设备数${DTUOfflineTime.size}`);
+        // console.log(`${new Date().toLocaleString()}## 更新DTU离线超时时间,离线设备数${DTUOfflineTime.size}`);
       }
       {
         const DTUOnlineTime = this.Cache.DTUOnlineTime
@@ -84,7 +84,7 @@ export class Event extends EventEmitter.EventEmitter {
             DTUOnlineTime.delete(mac)
           }
         })
-        console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,在线设备数${DTUOnlineTime.size}`);
+        // console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,在线设备数${DTUOnlineTime.size}`);
       }
     }, 60000 * 5)
   }

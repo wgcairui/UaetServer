@@ -5,7 +5,7 @@ import {
   UserInfo,
   ApolloMongoResult,
   userSetup,
-  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol
+  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol, ConstantThresholdType, DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups
 } from "uart";
 import WX from "../util/wxUtil";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
@@ -36,6 +36,7 @@ type url = 'getuserMountDev'
   | 'getDevOprate'
   | 'SendProcotolInstructSet'
   | 'getUserDevConstant'
+  | 'pushThreshold'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -373,7 +374,40 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const Protocol: string = body.protocol
         const userSetup = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string) as userSetup
-        ctx.body = { ok: 1, arg: userSetup.ProtocolSetupMap.get(Protocol) } as ApolloMongoResult
+        const user = userSetup.ProtocolSetupMap.get(Protocol)
+        const sys = await DevConstant.findOne({ Protocol })
+        const protocol = ctx.$Event.Cache.CacheProtocol.get(Protocol)
+        ctx.body = { ok: 1, arg: { user, sys, protocol } } as ApolloMongoResult
+      }
+      break
+    // 统一提交配置
+    case "pushThreshold":
+      {
+        const { Protocol, type, arg }: { Protocol: string, type: ConstantThresholdType, arg: DevConstant_Air | DevConstant_Ups | DevConstant_EM | DevConstant_TH | string[] | OprateInstruct } = body as any
+        const user = tokenUser.user
+        let Up
+        switch (type) {
+          case "Threshold":
+            Up = { "ProtocolSetup.$.Threshold": arg }
+            break
+          case "ShowTag":
+            Up = { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) }
+            break
+          case "AlarmStat":
+            Up = { "ProtocolSetup.$.AlarmStat": arg }
+            break
+        }
+        const isNull = await UserAlarmSetup.findOne({ user, "ProtocolSetup.Protocol": Protocol }).exec()
+        if (!isNull) {
+          await UserAlarmSetup.updateOne({ user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
+        }
+        const result = await UserAlarmSetup.updateOne(
+          { user, "ProtocolSetup.Protocol": Protocol },
+          { $set: Up },
+          { upsert: true }
+        )
+        ctx.$Event.Cache.RefreshCacheUserSetup(user)
+        ctx.body = result;
       }
       break
   }
