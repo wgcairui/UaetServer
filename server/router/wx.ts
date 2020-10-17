@@ -279,15 +279,18 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const { mac, pid } = body
         // 获取mac协议
-        const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
+        const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
         // 获取配置显示常量参数
-        const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
+        const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
+        // ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
         const data = await TerminalClientResultSingle.findOne({
           mac: mac,
           pid
         }).lean<queryResult>() as queryResult
         // 刷选
-        data.result = ShowTag ? (data.result?.filter(el => ShowTag?.includes(el.name))) : data.result
+        if (ShowTag) {
+          data.result = (data.result?.filter(el => ShowTag.has(el.name)))
+        }
         ctx.body = { ok: 1, arg: data } as ApolloMongoResult
       }
       break
@@ -398,6 +401,8 @@ export default async (Ctx: ParameterizedContext) => {
             break
         }
         const isNull = await UserAlarmSetup.findOne({ user, "ProtocolSetup.Protocol": Protocol }).exec()
+        console.log(isNull);
+
         if (!isNull) {
           await UserAlarmSetup.updateOne({ user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
         }

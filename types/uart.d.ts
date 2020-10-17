@@ -318,6 +318,7 @@ interface userSetup {
   mails: string[]
   ProtocolSetup: ProtocolConstantThreshold[]
   ProtocolSetupMap: Map<string, ProtocolConstantThreshold>
+  ShowTagMap: Map<string, Set<string>>
   ThresholdMap: Map<string, Map<string, Threshold>>
   AlarmStateMap: Map<string, Map<string, ConstantAlarmStat>>
 }
