@@ -50,7 +50,7 @@ export default async (Ctx: ParameterizedContext) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
-  // console.log(_.pickBy(body, (_val, key) => key !== 'token'));
+  console.log(_.pickBy(body, (_val, key) => key !== 'token'));
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = body.token
