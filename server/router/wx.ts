@@ -9,8 +9,8 @@ import {
 } from "uart";
 import WX from "../util/wxUtil";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
-import { LogTerminals, LogUartTerminalDataTransfinite, LogUseBytes, LogUserLogins } from "../mongoose/Log";
-import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
+import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
+import { Terminal } from "../mongoose/Terminal";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import _ from "lodash";
 import * as Cron from "../cron/index";
@@ -19,7 +19,6 @@ import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/no
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { ParseCoefficient } from "../util/func";
 import { DevsType } from "../mongoose/DeviceAndProtocol";
-import { mode } from "crypto-js";
 
 type url = 'getuserMountDev'
   | 'code2Session'
@@ -51,7 +50,7 @@ export default async (Ctx: ParameterizedContext) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
-  console.log(_.pickBy(body, (_val, key) => key !== 'token'));
+  // console.log(_.pickBy(body, (_val, key) => key !== 'token'));
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = body.token
