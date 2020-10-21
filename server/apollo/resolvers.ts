@@ -533,8 +533,6 @@ const resolvers: IResolvers = {
         },
         // 添加终端挂载信息
         async addTerminalMountDev(root, { arg }, ctx: ApolloCtx) {
-            console.log(arg);
-
             const { DevMac, Type, mountNode, mountDev, protocol, pid } = arg;
             const result = await Terminal.updateOne(
                 { DevMac },

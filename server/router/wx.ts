@@ -5,12 +5,12 @@ import {
   UserInfo,
   ApolloMongoResult,
   userSetup,
-  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol, ConstantThresholdType, DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups
+  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol, ConstantThresholdType, DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups, TerminalMountDevs
 } from "uart";
 import WX from "../util/wxUtil";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
-import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
-import { Terminal } from "../mongoose/Terminal";
+import { LogTerminals, LogUartTerminalDataTransfinite, LogUseBytes, LogUserLogins } from "../mongoose/Log";
+import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import _ from "lodash";
 import * as Cron from "../cron/index";
@@ -18,6 +18,8 @@ import { getUserBindDev } from "../util/util";
 import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { ParseCoefficient } from "../util/func";
+import { DevsType } from "../mongoose/DeviceAndProtocol";
+import { mode } from "crypto-js";
 
 type url = 'getuserMountDev'
   | 'code2Session'
@@ -37,6 +39,12 @@ type url = 'getuserMountDev'
   | 'SendProcotolInstructSet'
   | 'getUserDevConstant'
   | 'pushThreshold'
+  | 'getUserAlarmTels'
+  | 'setUserSetupContact'
+  | 'addTerminalMountDev'
+  | 'delTerminalMountDev'
+  | 'delUserTerminal'
+  | 'DevTypes'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -380,7 +388,10 @@ export default async (Ctx: ParameterizedContext) => {
         const user = userSetup.ProtocolSetupMap.get(Protocol)
         const sys = await DevConstant.findOne({ Protocol })
         const protocol = ctx.$Event.Cache.CacheProtocol.get(Protocol)
-        ctx.body = { ok: 1, arg: { user, sys, protocol } } as ApolloMongoResult
+        if (!user) {
+          await UserAlarmSetup.updateOne({ user: tokenUser.user }, { "$addToSet": { ProtocolSetup: { Protocol } } }).exec()
+        }
+        ctx.body = { ok: 1, arg: { user, sys, protocol, userSetup } } as ApolloMongoResult
       }
       break
     // 统一提交配置
@@ -400,12 +411,12 @@ export default async (Ctx: ParameterizedContext) => {
             Up = { "ProtocolSetup.$.AlarmStat": arg }
             break
         }
-        const isNull = await UserAlarmSetup.findOne({ user, "ProtocolSetup.Protocol": Protocol }).exec()
-        console.log(isNull);
+        /* const isNull = await UserAlarmSetup.findOne({ user, "ProtocolSetup.Protocol": Protocol }).exec()
+        console.log({isNull}); */
 
-        if (!isNull) {
-          await UserAlarmSetup.updateOne({ user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
-        }
+        /* if (!ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string)?.ProtocolSetupMap.has(Protocol)) {
+          await UserAlarmSetup.updateOne({ user }, { "$addToSet": { ProtocolSetup: { Protocol } } }).exec()
+        } */
         const result = await UserAlarmSetup.updateOne(
           { user, "ProtocolSetup.Protocol": Protocol },
           { $set: Up },
@@ -413,6 +424,73 @@ export default async (Ctx: ParameterizedContext) => {
         )
         ctx.$Event.Cache.RefreshCacheUserSetup(user)
         ctx.body = result;
+      }
+      break
+    // 获取用户的告警联系方式
+    case "getUserAlarmTels":
+      {
+        const { tels = [], mails = [] } = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)!
+        ctx.body = { ok: 1, arg: { tels, mails } } as ApolloMongoResult
+      }
+      break
+    // 设置用户自定义设置(联系方式)
+    case "setUserSetupContact":
+      {
+        const { tels, mails } = body
+        const result = await UserAlarmSetup.updateOne({ user: tokenUser.user }, { $set: { tels: tels || [], mails: mails || [] } }, { upsert: true })
+        ctx.$Event.Cache.RefreshCacheUserSetup(tokenUser.user)
+        ctx.body = result
+      }
+      break
+    // 添加终端挂载信息
+    case "addTerminalMountDev":
+      {
+        const { DevMac, Type, mountDev, protocol, pid } = body
+        const result = await Terminal.updateOne(
+          { DevMac },
+          {
+            $addToSet: {
+              mountDevs: {
+                Type,
+                mountDev,
+                protocol,
+                pid
+              }
+            }
+          }
+        );
+        await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+        ctx.body = result;
+      }
+      break
+    // 删除终端挂载设备
+    case "delTerminalMountDev":
+      {
+        const { DevMac, mountDev, pid } = body
+        const result = await Terminal.updateOne({ DevMac }, { $pull: { mountDevs: { mountDev, pid } } })
+        await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
+        ctx.body = result
+      }
+      break
+    // 删除用户终端绑定
+    case "delUserTerminal":
+      {
+        const id = body.mac
+        const res = await UserBindDevice.updateOne(
+          { user: tokenUser.user },
+          { $pull: { UTs: id } },
+          { upsert: true }
+        );
+        ctx.$Event.Cache.CacheBindUart.delete(id)
+        ctx.$Event.Cache.RefreshCacheBind(tokenUser.user)
+        ctx.body = res
+      }
+      break
+    // 获取设备信号
+    case "DevTypes":
+      {
+        const model = await DevsType.find({ Type: body.Type })
+        ctx.body = { ok: 1, arg: model } as ApolloMongoResult
       }
       break
   }

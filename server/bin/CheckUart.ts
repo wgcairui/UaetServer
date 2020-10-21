@@ -46,9 +46,12 @@ export default (query: queryResult) => {
       })
       UserAlarmStat.forEach((ant, key) => {
         if (parse.hasOwnProperty(ant.name) && !_.compact(ant.alarmStat).includes(parse[key].value)) {
-          parse[key].alarm = true
-          sendSmsAlarm(query, `${ant.name}[${Event.GetUnit(<string>parse[key].unit)[parse[key].value]}]`, parse[key].name);
-          console.log(parse[key]);
+          const value = Event.GetUnit(<string>parse[key].unit)[parse[key].value]
+          if (value) {
+            parse[key].alarm = true
+            sendSmsAlarm(query, `${ant.name}[${value}]`, parse[key].name);
+            console.log(parse[key]);
+          }
         }
       })
     }
