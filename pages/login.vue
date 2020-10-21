@@ -24,8 +24,8 @@
             <p class="text-dark">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
           </span>
           <span>
-            <b-img-lazy src="~/static/app.png" class=" w-50 d-block"></b-img-lazy>
-            <b>android-APP v1.0.1</b>
+            <b-img-lazy src="~/static/LADS_Uart.png" class=" w-50 d-block"></b-img-lazy>
+            <b>LADS透传平台小程序</b>
           </span>
         </b-col>
         <b-col
