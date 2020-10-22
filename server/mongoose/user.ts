@@ -5,11 +5,11 @@ import { Schema_DevConstant } from "./DeviceParameterConstant";
 
 // 用户信息
 const Schema_Users = new Schema({
-  avanter:String,
-  rgtype:{
-    type:String,
-    enum:['wx','web','app'],
-    default:'web'
+  avanter: String,
+  rgtype: {
+    type: String,
+    enum: ['wx', 'web', 'app'],
+    default: 'web'
   },
   userId: String,
   name: String,
@@ -23,7 +23,7 @@ const Schema_Users = new Schema({
   passwd: String,
   mail: String,
   company: String,
-  tel: Number,
+  tel: String,
   creatTime: { type: Date, default: new Date() },
   modifyTime: { type: Date, default: null },
   address: String,

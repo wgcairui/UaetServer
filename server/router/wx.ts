@@ -8,6 +8,7 @@ import {
   logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol, ConstantThresholdType, DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups, TerminalMountDevs
 } from "uart";
 import WX from "../util/wxUtil";
+import TencetMapAPI from "../util/TencetMapAPI";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
 import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
 import { Terminal } from "../mongoose/Terminal";
@@ -44,6 +45,8 @@ type url = 'getuserMountDev'
   | 'delTerminalMountDev'
   | 'delUserTerminal'
   | 'DevTypes'
+  | 'modifyUserInfo'
+  | 'getGPSaddress'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -93,10 +96,14 @@ export default async (Ctx: ParameterizedContext) => {
         const { openid, user, passwd, avanter } = body
         const userInfo = await Users.findOne({ user }).lean<UserInfo>()
         if (userInfo) {
-          ctx.assert(userInfo.userGroup === 'user', 400, "管理账号不能使用小程序");
-          const pwStat = await BcryptCompare(passwd, userInfo.passwd as string);
-          ctx.assert(pwStat, 400, "密码效验错误");
-          ctx.assert(!userInfo.userId, 400, '用户已绑定其它微信账号，请先解绑')
+          if (!await BcryptCompare(passwd, userInfo.passwd as string)) {
+            ctx.body = { ok: 0, msg: "密码效验错误" } as ApolloMongoResult
+            return
+          }
+          if (userInfo.userId) {
+            ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as ApolloMongoResult
+            return
+          }
           Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.ip, userId: openid, avanter } }).exec()
           new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
           ctx.body = { ok: 1, msg: 'success' } as ApolloMongoResult
@@ -145,9 +152,11 @@ export default async (Ctx: ParameterizedContext) => {
           avanter: string;
         } = body as any;
 
-        const userStat = await Users.findOne({ userId: data.user });
-        ctx.assert(!userStat, 400, "账号有重复,此微信账号已绑定");
-        //
+        const userStat = await Users.findOne({ $or: [{ userId: data.user }, { tel: data.tel }] });
+        if (userStat) {
+          ctx.body = { ok: 0, msg: "手机号码已被注册，请使用账号登录" } as ApolloMongoResult
+          return
+        }
         const user = Object.assign(
           body,
           { userId: data.user },
@@ -250,7 +259,7 @@ export default async (Ctx: ParameterizedContext) => {
             result = await logCur.find().lean()
           }
         } else {
-          result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(50).lean()
+          result = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).sort("-timeStamp").limit(200).lean()
         }
         const terminalMaps = ctx.$Event.Cache.CacheTerminal
         const arr = result.map(el => {
@@ -285,20 +294,23 @@ export default async (Ctx: ParameterizedContext) => {
     case "getDevsRunInfo":
       {
         const { mac, pid } = body
-        // 获取mac协议
-        const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
-        // 获取配置显示常量参数
-        const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
-        // ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
         const data = await TerminalClientResultSingle.findOne({
           mac: mac,
           pid
-        }).lean<queryResult>() as queryResult
-        // 刷选
-        if (ShowTag) {
-          data.result = (data.result?.filter(el => ShowTag.has(el.name)))
+        }).lean<queryResult>()
+        if (data) {
+          // 获取mac协议
+          const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
+          // 获取配置显示常量参数
+          const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
+          // 刷选
+          if (ShowTag) {
+            data.result = (data.result?.filter(el => ShowTag.has(el.name)))
+          }
+          ctx.body = { ok: 1, arg: data } as ApolloMongoResult
+        } else {
+          ctx.body = { ok: 0, msg: '设备没有运行数据' } as ApolloMongoResult
         }
-        ctx.body = { ok: 1, arg: data } as ApolloMongoResult
       }
       break
     // 获取设备历史运行数据
@@ -490,6 +502,31 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const model = await DevsType.find({ Type: body.Type })
         ctx.body = { ok: 1, arg: model } as ApolloMongoResult
+      }
+      break
+    // 修改用户信息
+    case "modifyUserInfo":
+      {
+        const { type, value }: { type: 'tel' | 'mail', value: string } = body as any
+        if (type === 'mail' || type === 'tel') {
+          const users = await Users.findOne({ $or: [{ tel: value }, { mail: value }] }).lean<UserInfo>()
+          if (users && users.user !== tokenUser.user) {
+            ctx.body = { ok: 0, msg: '号码已被使用，请换新的号码重试' } as ApolloMongoResult
+          } else {
+            const res = await Users.updateOne({ user: tokenUser.user }, { $set: { [type]: value } })
+            ctx.$Event.Cache.RefreshCacheUser(tokenUser.user)
+            ctx.body = res
+          }
+        }
+      }
+      break
+
+    // 获取gps定位的详细地址
+    case "getGPSaddress":
+      {
+        const location = body.location
+        const adress = await TencetMapAPI.geocoder(location)
+        ctx.body = { ok: Number(Boolean(adress.status === 0)), arg: adress } as ApolloMongoResult
       }
       break
   }
