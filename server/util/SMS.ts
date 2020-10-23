@@ -3,6 +3,7 @@ import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
 import { logSmsSend, smsUartAlarm, ApolloMongoResult, queryResult, TerminalMountDevs } from "uart";
 import { getDtuInfo } from "./util";
+import wxUtil from "./wxUtil";
 const key = require("../key/aliSms.json")
 
 interface SmsResult {
@@ -55,6 +56,7 @@ export const SendUartAlarm = async (query: smsUartAlarm) => {
     return SendSms(params)
 }
 
+// 发送校验码
 export const SendValidation = (tel: string, code: string) => {
     if (!tel || tel.length !== 11) {
         return { ok: 0, msg: `电话号码错误,${tel}` } as ApolloMongoResult
@@ -135,6 +137,10 @@ export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复')
 // 发送DTU挂载设备告警
 export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
     const info = getDtuInfo(Query.mac)
+    const { userId } = Event.Cache.CacheUser.get(info.user.user)!
+    if (userId) {
+        wxUtil.SendsubscribeMessageDevAlarm(userId, Query.timeStamp, remind, Query.mountDev, Query.mac, '运行异常')
+    }
     if (info && info.userInfo.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
@@ -161,6 +167,10 @@ export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
 // 发送设备超时下线
 export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     const info = getDtuInfo(mac)
+    const { userId } = Event.Cache.CacheUser.get(info.user.user)!
+    if (userId) {
+        wxUtil.SendsubscribeMessageDevAlarm(userId, Date.now(), event, info.terminalInfo.name, mac, event)
+    }
     if (info && info.userInfo?.tels?.length && info.userInfo?.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
@@ -179,7 +189,7 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
 
         const params: params = {
             "RegionId": "cn-hangzhou",
-            "PhoneNumbers": info.userInfo.tels.filter(el=>el).join(','),
+            "PhoneNumbers": info.userInfo.tels.filter(el => el).join(','),
             "SignName": "雷迪司科技湖北有限公司",
             "TemplateCode": 'SMS_200691431',
             TemplateParam

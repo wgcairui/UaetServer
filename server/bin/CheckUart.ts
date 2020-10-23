@@ -2,8 +2,9 @@ import Event from "../event/index";
 import _ from "lodash";
 import { SmsDTUDevAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
-import { queryResult, userSetup, queryResultParse, ProtocolConstantThreshold, queryResultArgument, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
+import { queryResult, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
 import { getDtuInfo } from "../util/util";
+import wxUtil from "../util/wxUtil";
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
 export default (query: queryResult) => {
   // 获取mac绑定的用户
@@ -11,11 +12,11 @@ export default (query: queryResult) => {
   // 没有绑定用户则跳出检查
   if (User) {
     // 获取用户个性化配置实例
-    const UserSetup = Event.Cache.CacheUserSetup.get(User) as userSetup;
+    const UserSetup = Event.Cache.CacheUserSetup.get(User)!;
     // 结果集
-    const parse = query.parse as queryResultParse;
+    const parse = query.parse!;
     // 协议参数阀值,状态
-    const Constant = Event.Cache.CacheConstant.get(query.protocol) as ProtocolConstantThreshold;
+    const Constant = Event.Cache.CacheConstant.get(query.protocol)!;
     // 获取协议参数阀值缓存
     {
       // 获取用户协议配置
@@ -70,7 +71,7 @@ async function sendSmsAlarm(query: queryResult, event: string, tag: string) {
   const { userInfo } = getDtuInfo(query.mac)
   // 缓存告警记录
   if (Event.Cache.CacheAlarmNum.has(tags)) {
-    const n = Event.Cache.CacheAlarmNum.get(tags) as number;
+    const n = Event.Cache.CacheAlarmNum.get(tags)!;
     Event.Cache.CacheAlarmNum.set(tags, n + 1);
     // console.log({ n, tels: userInfo.tels });
     if (n === 10) {
@@ -82,6 +83,7 @@ async function sendSmsAlarm(query: queryResult, event: string, tag: string) {
       if (userInfo.tels.length > 0) {
         SmsDTUDevAlarm(query, event)
       }
+      
       // 保存为日志
       Event.savelog<uartAlarmObject>('DataTransfinite', {
         mac: query.mac,

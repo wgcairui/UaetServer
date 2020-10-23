@@ -34,7 +34,7 @@ class WX {
   }
 
   // 发送订阅消息-设备告警
-  async SendsubscribeMessageDevAlarm(UserOpenID: string, time: string, content: string, Devname: string, DevId: string, Alarmtype: string) {
+  async SendsubscribeMessageDevAlarm(UserOpenID: string, time: string | number, content: string, Devname: string, DevId: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
     const postData: wxsubscribeMessage = {
       touser: UserOpenID,
@@ -115,7 +115,7 @@ class WX {
     return decodeParse;
   }
   // 把时间转换为标准格式
-  private _formatTime(time: string | undefined) {
+  private _formatTime(time: string | number | undefined) {
     const times = time ? new Date(time) : new Date()
     const year = times.getFullYear()
     const month = times.getMonth() + 1
