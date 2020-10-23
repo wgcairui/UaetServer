@@ -139,7 +139,10 @@ export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
     const info = getDtuInfo(Query.mac)
     const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     if (userId) {
-        wxUtil.SendsubscribeMessageDevAlarm(userId, Query.timeStamp, remind, Query.mountDev, Query.mac, '运行异常')
+        const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 运行故障，故障信息:${remind}`
+        wxUtil.SendsubscribeMessageDevAlarm(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, '运行异常').then(res => {
+            console.log(res);
+        })
     }
     if (info && info.userInfo.tels?.length > 0) {
         // 时间参数,长度限制20字节
@@ -169,7 +172,10 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     const info = getDtuInfo(mac)
     const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     if (userId) {
-        wxUtil.SendsubscribeMessageDevAlarm(userId, Date.now(), event, info.terminalInfo.name, mac, event)
+        const content = `您的DTU:${info.terminalInfo.name} 已${event}`
+        wxUtil.SendsubscribeMessageDevAlarm(userId, Date.now(), content, info.terminalInfo.name, mac, 'DTU状态变更').then(res => {
+            console.log(res);
+        })
     }
     if (info && info.userInfo?.tels?.length && info.userInfo?.tels?.length > 0) {
         // 时间参数,长度限制20字节

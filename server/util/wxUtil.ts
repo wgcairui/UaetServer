@@ -120,7 +120,7 @@ class WX {
     const year = times.getFullYear()
     const month = times.getMonth() + 1
     const day = times.getDate()
-    const hour = times.getHours() + 8
+    const hour = times.getHours()
     const min = times.getMinutes()
     const sen = times.getSeconds()
     return `${year}-${month}-${day} ${hour}:${min}:${sen}`
