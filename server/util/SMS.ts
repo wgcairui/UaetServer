@@ -31,30 +31,7 @@ const client = new core(
         apiVersion: '2017-05-25'
     }
 )
-// 发送告警短信
-export const SendUartAlarm = async (query: smsUartAlarm) => {
-    const smsCode = {
-        透传设备下线提醒: "SMS_189710812",
-        透传设备上线提醒: "SMS_189710830",
-        透传设备告警: 'SMS_189710878'
-    }
-    // 时间参数,长度限制20字节
-    const time = new Date()
-    const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
-    // 构建请求对象
-    const queryObject = query.type === "透传设备告警"
-        ? { name: query.name, devname: query.devname, air: query.air, event: query.event, time: d }
-        : { name: query.name, devname: query.devname, time: d }
-    const TemplateParam = JSON.stringify(queryObject)
-    const params: params = {
-        "RegionId": "cn-hangzhou",
-        "PhoneNumbers": query.tel,
-        "SignName": "雷迪司科技湖北有限公司",
-        "TemplateCode": smsCode[query.type],
-        TemplateParam
-    }
-    return SendSms(params)
-}
+
 
 // 发送校验码
 export const SendValidation = (tel: string, code: string) => {
@@ -111,6 +88,12 @@ const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
 // 发送设备超时下线
 export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复') => {
     const info = getDtuInfo(Query.mac)
+    /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
+    if (userId) {
+        const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 连接超时,请检查设备是否开机，信号线是否连接和连接是否正确，通讯参数是否设置正确`
+        const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
+        wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, DevType?.Type + '连接超时')
+    }  */
     if (info && info.userInfo.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
@@ -138,12 +121,11 @@ export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复')
 export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
     const info = getDtuInfo(Query.mac)
     const { userId } = Event.Cache.CacheUser.get(info.user.user)!
-    if (userId) {
+    /* if (userId) {
         const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 运行故障，故障信息:${remind}`
-        wxUtil.SendsubscribeMessageDevAlarm(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, '运行异常').then(res => {
-            console.log(res);
-        })
-    }
+        const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
+        wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, DevType?.Type + '运行异常')
+    } */
     if (info && info.userInfo.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
@@ -170,13 +152,11 @@ export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
 // 发送设备超时下线
 export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     const info = getDtuInfo(mac)
-    const { userId } = Event.Cache.CacheUser.get(info.user.user)!
+    /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     if (userId) {
         const content = `您的DTU:${info.terminalInfo.name} 已${event}`
-        wxUtil.SendsubscribeMessageDevAlarm(userId, Date.now(), content, info.terminalInfo.name, mac, 'DTU状态变更').then(res => {
-            console.log(res);
-        })
-    }
+        wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Date.now(), content, info.terminalInfo.name, mac, 'DTU状态变更')
+    } */
     if (info && info.userInfo?.tels?.length && info.userInfo?.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
@@ -200,9 +180,31 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
             "TemplateCode": 'SMS_200691431',
             TemplateParam
         }
-        return SendSms(params).then(el => {
-            console.log(el);
-            return el
-        })
+        return SendSms(params)
     } else return false
+}
+
+// 发送告警短信
+export const SendUartAlarm = async (query: smsUartAlarm) => {
+    const smsCode = {
+        透传设备下线提醒: "SMS_189710812",
+        透传设备上线提醒: "SMS_189710830",
+        透传设备告警: 'SMS_189710878'
+    }
+    // 时间参数,长度限制20字节
+    const time = new Date()
+    const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+    // 构建请求对象
+    const queryObject = query.type === "透传设备告警"
+        ? { name: query.name, devname: query.devname, air: query.air, event: query.event, time: d }
+        : { name: query.name, devname: query.devname, time: d }
+    const TemplateParam = JSON.stringify(queryObject)
+    const params: params = {
+        "RegionId": "cn-hangzhou",
+        "PhoneNumbers": query.tel,
+        "SignName": "雷迪司科技湖北有限公司",
+        "TemplateCode": smsCode[query.type],
+        TemplateParam
+    }
+    //return SendSms(params)
 }

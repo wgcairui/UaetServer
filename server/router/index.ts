@@ -4,10 +4,19 @@ import nodeApi from "./node";
 import Auth from "./auth";
 import APPs from "./app";
 import WX from "./wx"
+import wxPublic from "./wxPublic";
 
 rout.all("/api/app/:type", APPs);
 rout.post("/Api/Node/:type", nodeApi);
 rout.all("/api/auth/:type", Auth);
 rout.all("/api/wx/:type",WX)
+rout.all("/api/wxPublic",wxPublic)
+
+// 微信公众号之前的服务器配置
+/* 
+url: http://hhd.wxmmd.com/index.php?g=Home&amp;m=Weixin&amp;a=index&amp;token=sjpuhj1467254959
+Token :6wF2e3auzFxQP4NamBCw
+EncodingAESKey :  jMTwdwFmxqlxnQsMjZfVhIqFcefuRjiKGGtekuNzkxf
+*/
 
 export default rout;

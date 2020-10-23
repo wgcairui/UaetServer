@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@alicloud/pop-core": "^1.7.9",
+    "@amap/amap-jsapi-loader": "^0.0.4",
     "@koa/cors": "^3.1.0",
     "@nuxt/typescript-runtime": "^1.0.0",
     "@nuxtjs/apollo": "^4.0.1-rc.3",
@@ -52,15 +53,16 @@
     "nodemailer": "^6.4.11",
     "nuxt": "^2.14.3",
     "nuxt-i18n": "^6.13.10",
+    "sha1": "^1.1.1",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",
     "ts-indexdb": "^0.0.6",
     "v-charts": "^1.19.0",
     "vue": "^2.6.11",
-    "vue-socket.io-extended": "^4.0.4",
-    "@amap/amap-jsapi-loader": "^0.0.4"
+    "vue-socket.io-extended": "^4.0.4"
   },
   "devDependencies": {
+    "@types/sha1": "^1.1.2",
     "@babel/highlight": "^7.8.3",
     "@nuxt/types": "^2.14.3",
     "@nuxt/typescript-build": "^2.0.2",

@@ -222,12 +222,7 @@ class nodeClient {
                     // console.log({ timeOut, SmsSend: this.Event.Cache.TimeOutMonutDevSmsSend.get(hash) });
                     if (timeOut > 10 && !this.Event.Cache.TimeOutMonutDevSmsSend.get(hash)) {
                         this.Event.Cache.TimeOutMonutDevSmsSend.set(hash, true)
-                        const sms = await SmsDTUDevTimeOut(Query, '超时')
-                        console.log({
-                            msg: `sms连接超时告警`,
-                            Query,
-                            sms
-                        });
+                        await SmsDTUDevTimeOut(Query, '超时')
                         const terminal = this.Event.Cache.CacheTerminal.get(Query.mac)
                         if (terminal) {
                             // 添加日志

@@ -21,7 +21,8 @@ import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { ParseCoefficient } from "../util/func";
 import { DevsType } from "../mongoose/DeviceAndProtocol";
 
-type url = 'getuserMountDev'
+type url =
+  | 'getuserMountDev'
   | 'code2Session'
   | 'getphonenumber'
   | 'register'
@@ -70,6 +71,8 @@ export default async (Ctx: ParameterizedContext) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
+        // console.log(wxGetseesion);
+
         // 包含错误
         ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
         // 正确的话返回sessionkey
@@ -507,7 +510,7 @@ export default async (Ctx: ParameterizedContext) => {
     // 修改用户信息
     case "modifyUserInfo":
       {
-        const { type, value }: { type: 'tel' | 'mail', value: string } = body as any
+        const { type, value }: { type: 'tel' | 'mail' | 'name', value: string } = body as any
         if (type === 'mail' || type === 'tel') {
           const users = await Users.findOne({ $or: [{ tel: value }, { mail: value }] }).lean<UserInfo>()
           if (users && users.user !== tokenUser.user) {
@@ -517,6 +520,10 @@ export default async (Ctx: ParameterizedContext) => {
             ctx.$Event.Cache.RefreshCacheUser(tokenUser.user)
             ctx.body = res
           }
+        } else if (type === 'name') {
+          const res = await Users.updateOne({ user: tokenUser.user }, { $set: { [type]: value } })
+          ctx.$Event.Cache.RefreshCacheUser(tokenUser.user)
+          ctx.body = res
         }
       }
       break

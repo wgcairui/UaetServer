@@ -507,10 +507,25 @@ interface wxsubscribeMessage {
   page?: string
   miniprogram_state?: 'developer' | 'trial' | 'formal'
   lang?: string
+  miniprogram?: {
+    appid: string
+    pagepath?: string
+  }
   data: {
     [x: string]: {
       value: string
     }
+  }
+}
+// 公众号行业
+interface wxRequest_industry extends wxRequest {
+  primary_industry: {
+    "first_class": string,
+    "second_class": string
+  },
+  secondary_industry: {
+    "first_class": string,
+    "second_class": string
   }
 }
 
