@@ -3,7 +3,10 @@
     <b-row name="header" no-gutters>
       <b-col>
         <header class="d-flex flex-row p-2 shadow-sm" style="height:56px">
-          <b-img src="https://www.ladishb.com/logo.png" style="height:40px"></b-img>
+          <b-img
+            src="https://www.ladishb.com/logo.png"
+            style="height:40px"
+          ></b-img>
           <span class="ml-auto">
             <b-button variant="link" to="/user/app">APP</b-button>
             <!-- <b-button variant="link" class="text-success">English</b-button> -->
@@ -21,10 +24,15 @@
         >
           <span>
             <h3 class=" text-dark">物联网ITO监控服务平台</h3>
-            <p class="text-dark">适用于数据中心,微模块机房,单体UPS,空调等设备监控</p>
+            <p class="text-dark">
+              适用于数据中心,微模块机房,单体UPS,空调等设备监控
+            </p>
           </span>
           <span>
-            <b-img-lazy src="~/static/LADS_Uart.png" class=" w-50 d-block"></b-img-lazy>
+            <b-img-lazy
+              src="~/static/LADS_Uart.png"
+              class=" w-50 d-block"
+            ></b-img-lazy>
             <b>LADS透传平台小程序</b>
           </span>
         </b-col>
@@ -39,16 +47,25 @@
               <div class="d-flex flex-row mb-3">
                 <h4 class="text-success login-left">登陆</h4>
                 <div class="ml-auto">
-                  <b-link class="m-1 text-info" :to="{ name: 'user-register' }">{{$t('zhu-ce')}}</b-link>
+                  <b-link
+                    class="m-1 text-info"
+                    :to="{ name: 'user-register' }"
+                    >{{ $t("zhu-ce") }}</b-link
+                  >
                   <b-link
                     class="m-1 ml-2 text-info"
                     :to="{ name: 'user-reset' }"
-                  >{{$t('zhong-zhi')}}</b-link>
+                    >{{ $t("zhong-zhi") }}</b-link
+                  >
                 </div>
               </div>
               <b-form class="mt-auto">
                 <b-form-group label="账号:" label-for="user" v-bind="label">
-                  <b-form-input id="user" v-model.trim="accont.user" placeholder />
+                  <b-form-input
+                    id="user"
+                    v-model.trim="accont.user"
+                    placeholder
+                  />
                 </b-form-group>
                 <b-form-group label="密码:" label-for="passwd" v-bind="label">
                   <b-form-input
@@ -59,8 +76,14 @@
                     @keyup.enter="login_submit"
                   />
                 </b-form-group>
-                <b-button id="login_submit" block variant="info" class="mt-4" @click="login_submit">
-                  {{$t('deng-lu')}}
+                <b-button
+                  id="login_submit"
+                  block
+                  variant="info"
+                  class="mt-4"
+                  @click="login_submit"
+                >
+                  {{ $t("deng-lu") }}
                   <span />
                 </b-button>
               </b-form>
@@ -75,16 +98,20 @@
               class="d-none d-sm-block px-1"
               href="https://www.ladis.com.cn"
               target="_blank"
-            >雷迪司官网</b-link>
+              >雷迪司官网</b-link
+            >
             <b-link
               class="d-none d-sm-block px-1"
               href="https://www.ladishb.com"
               target="_blank"
-            >雷迪司湖北</b-link>
+              >雷迪司湖北</b-link
+            >
             <span class="ml-auto">
               <small>© 2019 All Rights Reserved 湖北雷迪司</small>
               <b-link href="http://www.beian.miit.gov.cn/">
-                <small class="text-decoration-none text-dark">鄂ICP备19029626号-1</small>
+                <small class="text-decoration-none text-dark"
+                  >鄂ICP备19029626号-1</small
+                >
               </b-link>
             </span>
           </footer>
@@ -146,7 +173,11 @@ export default vue.extend({
   mounted() {
     const user = localStorage.getItem("uartserverUser");
     if (user) this.accont.user = user;
-  }
+  },/* 
+  created() {
+    console.log(this.query);
+    this.accont.user = this.query.token
+  } */
 });
 </script>
 <style lang="scss" scoped>
@@ -180,7 +211,7 @@ a {
   /* background-blend-mode:luminosity */
   //background-blend-mode: color-burn;
 }
-.bg-footer{
-  background-color: #cad7e0
+.bg-footer {
+  background-color: #cad7e0;
 }
 </style>

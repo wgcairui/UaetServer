@@ -38,13 +38,13 @@ class WX {
     }
     // 雷迪司公众号accessToken
     {
-      const urlpublic = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appidPublic}&secret=${this.secretPublic}`
+      /* const urlpublic = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appidPublic}&secret=${this.secretPublic}`
       const { access_token, expires_in } = await this.fecth<wxRequestAccess_token>({ url: urlpublic, method: 'GET' })
       this.AccessTokenPublic = access_token
       console.log(`weixin AccessToken_Public ：：${this.AccessTokenPublic},expires_in:${expires_in}`);
       setTimeout(() => {
         this.get_AccessToken()
-      }, ((expires_in || 7200) * 1000) - 10000)
+      }, ((expires_in || 7200) * 1000) - 10000) */
       /* const industryUrl = `https://api.weixin.qq.com/cgi-bin/template/get_industry?access_token=${this.AccessTokenPublic}`
       const { primary_industry, secondary_industry } = await this.fecth<wxRequest_industry>({ url: industryUrl, method: "GET" })
       this.primary_industry_first = primary_industry.first_class

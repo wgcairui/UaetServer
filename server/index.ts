@@ -55,11 +55,15 @@ async function attachNuxt(app: Koa<Koa.DefaultState, Koa.DefaultContext>) {
     port = process.env.PORT || 3000
   } = nuxt.options.server;
   // Build in development
+
+
   await nuxt.ready();
   if (app.env !== "production") {
     const builder = new Builder(nuxt);
     await builder.build();
   }
+
+
   // koa处理页面请求,放在最后面
   app.use(ctx => {
     ctx.status = 200;

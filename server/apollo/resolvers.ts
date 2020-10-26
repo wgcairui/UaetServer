@@ -893,6 +893,9 @@ const resolvers: IResolvers = {
             if (id) {
                 const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as uartAlarmObject
                 if (BindDevs.includes(doc.mac)) {
+                    // 确认告警缓存清除
+                    const tags = doc.mac + doc.pid + doc.tag
+                    ctx.$Event.Cache.CacheAlarmNum.delete(tags)
                     return await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }).exec()
                 } else return { ok: 0 } as ApolloMongoResult
             } else {

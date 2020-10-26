@@ -227,12 +227,14 @@ export default class Cache {
       el.AlarmStateMap = new Map()
       el.ShowTagMap = new Map()
       //
-      el.ProtocolSetup.forEach(els => {
-        el.ProtocolSetupMap.set(els.Protocol, els)
-        el.ShowTagMap.set(els.Protocol, els.ShowTag ? new Set(els.ShowTag) : new Set())
-        el.ThresholdMap.set(els.Protocol, els.Threshold ? new Map(els.Threshold.map(ela => [ela.name, ela])) : new Map())
-        el.AlarmStateMap.set(els.Protocol, els.AlarmStat ? new Map(els.AlarmStat.map(ela => [ela.name, ela])) : new Map())
-      })
+      if (el.ProtocolSetup) {
+        el.ProtocolSetup.forEach(els => {
+          el.ProtocolSetupMap.set(els.Protocol, els)
+          el.ShowTagMap.set(els.Protocol, els.ShowTag ? new Set(els.ShowTag) : new Set())
+          el.ThresholdMap.set(els.Protocol, els.Threshold ? new Map(els.Threshold.map(ela => [ela.name, ela])) : new Map())
+          el.AlarmStateMap.set(els.Protocol, els.AlarmStat ? new Map(els.AlarmStat.map(ela => [ela.name, ela])) : new Map())
+        })
+      }
       this.CacheUserSetup.set(el.user, el)
     })
   }

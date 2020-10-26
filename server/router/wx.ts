@@ -236,9 +236,9 @@ export default async (Ctx: ParameterizedContext) => {
     case "getAlarmunconfirmed":
       {
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
-        const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs }, isOk: false })
-        const logCurCount = await logCur.countDocuments()
-        ctx.body = { ok: 1, arg: logCurCount.toString() } as ApolloMongoResult
+        const logCur =await LogUartTerminalDataTransfinite.countDocuments({ mac: { $in: BindDevs }, isOk: false })
+        // const logCurCount = await logCur.countDocuments()
+        ctx.body = { ok: 1, arg: logCur } as ApolloMongoResult
       }
       break
     // 获取用户告警信息
@@ -278,7 +278,7 @@ export default async (Ctx: ParameterizedContext) => {
 
       }
       break
-
+    // 确认用户告警
     case "alarmConfirmed":
       {
         const id = body.id as string
@@ -286,7 +286,10 @@ export default async (Ctx: ParameterizedContext) => {
         if (id) {
           const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as uartAlarmObject
           if (BindDevs.includes(doc.mac)) {
-            ctx.body = await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }).exec()
+            // 确认告警缓存清除
+            const tags = doc.mac + doc.pid + doc.tag
+            ctx.$Event.Cache.CacheAlarmNum.delete(tags)
+            ctx.body = await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }, { new: true }).exec()
           } else ctx.body = { ok: 0 } as ApolloMongoResult
         } else {
           ctx.body = await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
@@ -399,12 +402,12 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const Protocol: string = body.protocol
         const userSetup = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string) as userSetup
-        const user = userSetup.ProtocolSetupMap.get(Protocol)
+        const user = userSetup?.ProtocolSetupMap.get(Protocol)
         const sys = await DevConstant.findOne({ Protocol })
         const protocol = ctx.$Event.Cache.CacheProtocol.get(Protocol)
-        if (!user) {
-          await UserAlarmSetup.updateOne({ user: tokenUser.user }, { "$addToSet": { ProtocolSetup: { Protocol } } }).exec()
-        }
+        /* if (!user) {
+          await UserAlarmSetup.updateOne({ user: tokenUser.user }, { "$addToSet": { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
+        } */
         ctx.body = { ok: 1, arg: { user, sys, protocol, userSetup } } as ApolloMongoResult
       }
       break
@@ -425,16 +428,22 @@ export default async (Ctx: ParameterizedContext) => {
             Up = { "ProtocolSetup.$.AlarmStat": arg }
             break
         }
-        /* const isNull = await UserAlarmSetup.findOne({ user, "ProtocolSetup.Protocol": Protocol }).exec()
-        console.log({isNull}); */
+        const userSetup = await UserAlarmSetup.findOne({ user }).lean<userSetup>()
 
+        if (!userSetup) {
+          await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
+        } else if (!userSetup.ProtocolSetup.find(el => el.Protocol === Protocol)) {
+          console.log(userSetup);
+          await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }).exec()
+          // await UserAlarmSetup.updateOne({ user }, { ProtocolSetup: { "$addToSet": { Protocol } } }).exec()
+        }
         /* if (!ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string)?.ProtocolSetupMap.has(Protocol)) {
           await UserAlarmSetup.updateOne({ user }, { "$addToSet": { ProtocolSetup: { Protocol } } }).exec()
         } */
+
         const result = await UserAlarmSetup.updateOne(
           { user, "ProtocolSetup.Protocol": Protocol },
-          { $set: Up },
-          { upsert: true }
+          { $set: Up }
         )
         ctx.$Event.Cache.RefreshCacheUserSetup(user)
         ctx.body = result;
@@ -443,8 +452,8 @@ export default async (Ctx: ParameterizedContext) => {
     // 获取用户的告警联系方式
     case "getUserAlarmTels":
       {
-        const { tels = [], mails = [] } = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)!
-        ctx.body = { ok: 1, arg: { tels, mails } } as ApolloMongoResult
+        const data = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)
+        ctx.body = { ok: 1, arg: { tels: data?.tels || [], mails: data?.mails || [] } } as ApolloMongoResult
       }
       break
     // 设置用户自定义设置(联系方式)
