@@ -68,13 +68,13 @@ export default Vue.extend({
       ]
     }
     const toolbox = {
-        feature: {
-          saveAsImage: {}
-        }
+      feature: {
+        saveAsImage: {}
       }
+    }
     return {
-      markLine, markPoint,toolbox,
-      query, label, select: { value: this.$route.query.name }, Data: [] as queryResultSave[], datetime: "", ShowTag: []
+      markLine, markPoint, toolbox,
+      query, label, select: { value: decodeURI(this.$route.query.name) }, Data: [] as queryResultSave[], datetime: "", ShowTag: []
     };
   },
   computed: {
@@ -93,15 +93,15 @@ export default Vue.extend({
       }
       return { chartData, dates };
     },
-    dataZoom(){
+    dataZoom() {
       const Data = this.Data
-      const Zoom:echarts.EChartOption.DataZoom.Slider = [
+      const Zoom: echarts.EChartOption.DataZoom.Slider = [
         {
           type: 'slider',
           start: 0
         }
       ]
-      if(Data[0]){
+      if (Data[0]) {
         Zoom[0].start = Data[0].timeStamp
       }
       return Zoom

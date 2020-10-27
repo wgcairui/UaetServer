@@ -125,7 +125,7 @@ async function CleanClientresultcolltion(cur: QueryCursor<Document>) {
                 // 刷选出参数结果单位为空或者是对象的参数名，在文档中删除，因为历史查询不会对这些参数启用
                 const keys = doc.result?.filter(el => !el.unit || el.unit.length > 10).map(el => el.name)
 
-                if (keys) await TerminalClientResult.updateOne({ _id }, { $pull: { "result.name": keys } }).exec()
+                if (keys) await TerminalClientResult.updateOne({ _id }, { $pull: { result: { name: { $in: keys } } } }, { multi: true }).exec()
             }
         } else {
             MapClientresultcolltion.set(tag, doc)
