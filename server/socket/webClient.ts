@@ -59,9 +59,6 @@ export default class webClientSocketIO {
     }
     // 缓存socket
     private _connect(Node: socketArgument) {
-        // this.io.to(Node.User).emit('data')
-        console.log(`user socket login ${Node.User}`);
-
         // 缓存id
         this.CacheSocketidUser.set(Node.ID, Node.User)
         // 加入房间

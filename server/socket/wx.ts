@@ -16,14 +16,16 @@ class WXws {
     private start() {
         this.ws.on("connection", socket => {
             socket.on("message", data => {
-                const ObjData = JSON.parse(data.toString())
-                if (ObjData?.token) {
-                    JwtVerify(ObjData.token).then((user: UserInfo) => {
-                        this.clients.set(user.user, new client(socket))
-                        socket.on("close", () => this.clean(user.user)).on("error", () => this.clean(user.user))
-                    }).catch(() => {
-                        socket.close()
-                    })
+                if (/^{.*}$/.test(data.toString())) {
+                    const ObjData = JSON.parse(data.toString())
+                    if (ObjData?.token) {
+                        JwtVerify(ObjData.token).then((user: UserInfo) => {
+                            this.clients.set(user.user, new client(socket))
+                            socket.on("close", () => this.clean(user.user)).on("error", () => this.clean(user.user))
+                        }).catch(() => {
+                            socket.close()
+                        })
+                    }
                 }
             })
         })

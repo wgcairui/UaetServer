@@ -42,7 +42,7 @@
               <i>{{name}}</i>
             </h6>
             <ul class="p-0">
-              <li v-for="(link,key2) in val" :key="link.text+key2" class="my-1">
+              <li v-for="(link,key2) in val" :key="link.text+key2" class="my-1 ">
                 <b-link :to="link.to" class="text-decoration-none">
                   <span class="text-light">
                     <i class="iconfont ico">{{ link.ico }}</i>
@@ -108,7 +108,7 @@ export default Vue.extend({
         ] as navi[],
         log: [
           { to: { name: "root-log-node" }, text: "节点", ico: "\uEB64" },
-          { to: { name: "root-log-terminal" }, text: "终端", ico: "\uEB23" },
+          { to: { name: "root-log-terminal" }, text: "终端", ico: "\uEB64" },
           { to: { name: "root-log-sms" }, text: "短信", ico: "\uEB8b" },
           { to: { name: "root-log-mail" }, text: "邮件", ico: "\uEB8b" },
           {
@@ -147,5 +147,8 @@ export default Vue.extend({
 }
 .container-h {
   height: calc(100% - 57px);
+}
+li{
+  list-style: none;
 }
 </style>
