@@ -9,6 +9,7 @@
       </template>
       <template v-slot:cell(oprate)="row">
         <b-button-group size="sm">
+          <b-button @click="sendInfo(row.item.user)">发送实时信息</b-button>
           <b-button :to="{name:'root-log-userlogins',query:{user:row.item.user}}">日志</b-button>
         </b-button-group>
       </template>
@@ -19,6 +20,8 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { MessageBox } from "element-ui";
+import "element-ui/lib/theme-chalk/message-box.css";
 export default Vue.extend({
   data() {
     return {
@@ -26,7 +29,7 @@ export default Vue.extend({
       user: [],
       fields: [
         { key: "user", label: "用户" },
-        { key: "set", label: "在线数" },
+        { key: "set", label: "登录端" },
         { key: 'oprate', label: '操作' }
       ] as BvTableFieldArray
     };
@@ -39,6 +42,26 @@ export default Vue.extend({
         }
       `,
       pollInterval: 1000
+    }
+  },
+  methods:{
+   async sendInfo(user:string){
+    const result = await MessageBox.prompt('输入要发送的信息',user).catch(e=>false)
+    if(result && result.action === 'confirm'){
+      this.$apollo.mutate({
+        mutation:gql`
+        mutation sendSocketInfo($user:String,$msg:String){
+          sendSocketInfo(user:$user,msg:$msg){
+            ok
+          }
+        }
+        `,
+        variables:{
+          user,
+          msg:result.value
+        }
+      })
+    }
     }
   }
 });

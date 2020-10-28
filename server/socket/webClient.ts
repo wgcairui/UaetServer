@@ -46,15 +46,22 @@ export default class webClientSocketIO {
             socket.on("disconnect", () => this._disconnect(Node))
         })
     }
+    // 发送用户告警信息
     SendUserAlarm(alarm: { mac: string, msg: string }) {
         const { user } = getDtuInfo(alarm.mac)
-        if(user && user.user){
+        if (user && user.user) {
             this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
         }
+    }
+    // 发送用户提醒
+    SendUserInfo(user: string, msg: string) {
+        this.io.to(user).emit("UartTerminalDataTransfinite", msg)
     }
     // 缓存socket
     private _connect(Node: socketArgument) {
         // this.io.to(Node.User).emit('data')
+        console.log(`user socket login ${Node.User}`);
+
         // 缓存id
         this.CacheSocketidUser.set(Node.ID, Node.User)
         // 加入房间

@@ -1,7 +1,7 @@
 export default {
   runArg: {
     Query: {
-      Interval: 3000
+      Interval: 3500
     }
   }
 };

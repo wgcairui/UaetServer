@@ -59,7 +59,8 @@
     "ts-indexdb": "^0.0.6",
     "v-charts": "^1.19.0",
     "vue": "^2.6.11",
-    "vue-socket.io-extended": "^4.0.4"
+    "vue-socket.io-extended": "^4.0.4",
+    "ws": "^7.3.1"
   },
   "devDependencies": {
     "@types/sha1": "^1.1.2",

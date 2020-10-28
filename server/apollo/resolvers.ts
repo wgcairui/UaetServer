@@ -229,12 +229,24 @@ const resolvers: IResolvers = {
         },
         // 获取socket user状态
         getUserNode(root, arg, ctx: ApolloCtx) {
-            const userids = [] as { user: string, set: string[] }[]
-            ctx.$Event.ClientCache.CacheUserSocketids.forEach((val, key) => {
-                const set = Array.from(val) as any[]
-                userids.push({ user: key, set })
-            })
-            return userids
+            const userids = new Map() as Map<string, Set<string>>
+            if (ctx.$Event.clientSocket) {
+                ctx.$Event.clientSocket.CacheSocketidUser.forEach((val) => {
+                    userids.set(val, new Set(['web']))
+                })
+            }
+            if (ctx.$Event.wxSocket) {
+                ctx.$Event.wxSocket.clients.forEach((val, key) => {
+                    if (userids.has(key)) {
+                        const set = userids.get(key)!.add('wx')
+                        userids.set(key, set)
+                    } else {
+                        userids.set(key, new Set(['wx']))
+                    }
+                })
+            }
+
+            return Array.from(userids).map(([user, set]) => ({ user, set: Array.from(set) }))
         },
         // 获取节点日志
         async lognodes(root, { start, end }: { start: Date, end: Date }) {
@@ -901,6 +913,11 @@ const resolvers: IResolvers = {
             } else {
                 return await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
             }
+        },
+        // 发送用户socket信息
+        sendSocketInfo(root, { user, msg }: { user: string, msg: string }, ctx: ApolloCtx) {
+            ctx.$Event.SendUserSocketInfo(user, msg)
+            return { ok: 1 } as ApolloMongoResult
         }
     },
 

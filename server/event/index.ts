@@ -9,6 +9,7 @@ import config from "../config";
 import { SmsDTUDevTimeOut, SmsDTU } from "../util/SMS";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
+import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
@@ -18,6 +19,7 @@ export class Event extends EventEmitter.EventEmitter {
   ClientCache: ClientCache
   uartSocket?: NodeSocketIO
   clientSocket?: webClientSocketIO
+  wxSocket?: Wxws
   constructor() {
     super();
     // Node节点,透传协议，设备...缓存
@@ -97,6 +99,9 @@ export class Event extends EventEmitter.EventEmitter {
     //WebClient_SocketServer挂载
     this.clientSocket = new webClientSocketIO(Http, { path: "/WebClient" })
     console.info(`Socket Server(namespace:/WebClient) runing`)
+    // wxws服务端监听
+    this.wxSocket = new Wxws(Http, "/wx")
+    console.info(`WS Server(namespace:/wx) runing`)
   }
 
   // 发送设备操作指令查询
@@ -205,6 +210,19 @@ export class Event extends EventEmitter.EventEmitter {
   SendUserAlarm(alarm: { mac: string, msg: string }) {
     if (this.clientSocket) {
       this.clientSocket.SendUserAlarm(alarm)
+    }
+    if (this.wxSocket) {
+      this.wxSocket.SendAlarm(alarm)
+    }
+  }
+
+  // 触发客户端告警提醒事件
+  SendUserSocketInfo(user: string, msg: string) {
+    if (this.clientSocket) {
+      this.clientSocket.SendUserInfo(user, msg)
+    }
+    if (this.wxSocket) {
+      this.wxSocket.SendInfo(user, msg)
     }
   }
 

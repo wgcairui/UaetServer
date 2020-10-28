@@ -381,6 +381,8 @@ const typeDefs: DocumentNode = gql`
     refreshDevTimeOut(mac:String,pid:String):result
     # 确认用户告警
     confrimAlarm(id:String):result
+    # 发送用户socket信息
+    sendSocketInfo(user:String,msg:String):result
 
   }
 

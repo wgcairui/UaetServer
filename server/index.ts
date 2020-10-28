@@ -56,7 +56,6 @@ async function attachNuxt(app: Koa<Koa.DefaultState, Koa.DefaultContext>) {
   } = nuxt.options.server;
   // Build in development
 
-
   await nuxt.ready();
   if (app.env !== "production") {
     const builder = new Builder(nuxt);
