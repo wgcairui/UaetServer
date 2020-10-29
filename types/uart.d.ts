@@ -94,6 +94,7 @@ interface TerminalMountDevs {
 }
 // 终端
 interface Terminal extends RegisterTerminal {
+  tag?: string[];
   DevMac: string
   online?: boolean
   mountNode: string

@@ -1,15 +1,39 @@
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <b-navbar toggleable="lg" type="dark" variant="dark" class="align-items-start">
-      <b-navbar-brand>
-        <span class="text-center text-light" style="font-size:1.3rem">LADS云平台后台监控查询</span>
+    <b-navbar
+      toggleable="lg"
+      type="dark"
+      variant="dark"
+      class="align-items-start"
+      sticky
+    >
+      <b-navbar-brand href="/root">
+        <span class="text-center text-light" style="font-size:1.3rem"
+          >LADS云平台后台监控查询</span
+        >
       </b-navbar-brand>
       <div class="navber-m-2 ml-auto">
-        <div class="navber-m-3 float-right d-inline-flex flex-column head-right">
+        <div
+          class="navber-m-3 float-right d-inline-flex flex-column head-right"
+        >
           <b-navbar-toggle target="nav-collapse" class="float-right head-btn" />
           <b-collapse id="nav-collapse" is-nav class="float-rigth mr-1">
             <!-- Right aligned nav items -->
             <b-navbar-nav class="ml-auto text-nowrap">
+              <b-nav-item-dropdown
+                v-for="(val, name, key) in nav"
+                :key="key"
+                :text="name"
+                right
+              >
+                <b-dropdown-item
+                  v-for="(link, key2) in val"
+                  :key="link.text + key2"
+                  :to="link.to"
+                  >{{ link.text }}</b-dropdown-item
+                >
+              </b-nav-item-dropdown>
+
               <b-nav-dropdown right>
                 <template v-slot:button-content>
                   <span>
@@ -33,18 +57,24 @@
     </b-navbar>
     <b-container class="container-h flex-grow-1" fluid>
       <b-row class="h-100 border-top">
-        <b-col md="2" class="bg-dark d-flex flex-column p-4 text-light">
+        <!-- <b-col md="2" class="bg-dark d-flex flex-column p-4 text-light">
           <h6>
-            <b-link to="/root" class="text-decoration-none text-light">Home</b-link>
+            <b-link to="/root" class="text-decoration-none text-light"
+              >Home</b-link
+            >
           </h6>
-          <div v-for="(val,name,key) in nav" :key="key" class="pt-3">
+          <div v-for="(val, name, key) in nav" :key="key" class="pt-3">
             <h6>
-              {{name}}
+              {{ name }}
             </h6>
             <ul class="p-0">
-              <li v-for="(link,key2) in val" :key="link.text+key2" class="my-1 ">
+              <li
+                v-for="(link, key2) in val"
+                :key="link.text + key2"
+                class="my-1 "
+              >
                 <b-link :to="link.to" class="text-decoration-none">
-                  <span class="text-light">
+                  <span class="text-light border-bottom border-light">
                     <i class="iconfont ico">{{ link.ico }}</i>
                     {{ link.text }}
                   </span>
@@ -52,11 +82,9 @@
               </li>
             </ul>
           </div>
-        </b-col>
-        <b-col md="10" class="overflow-auto h-100">
-          <b-card>
-            <nuxt-child></nuxt-child>
-          </b-card>
+        </b-col> -->
+        <b-col class="overflow-auto h-100">
+            <nuxt-child class="my-2"></nuxt-child>
         </b-col>
       </b-row>
     </b-container>
@@ -90,7 +118,7 @@ export default Vue.extend({
             text: "终端状态",
             ico: "\uEB63"
           },
-          { to: { name: "root-node-user" }, text: "用户", ico: "\uEB6f" },
+          { to: { name: "root-node-user" }, text: "用户状态", ico: "\uEB6f" },
           {
             to: { name: "root-node-userSetup" },
             text: "用户设置",
@@ -102,11 +130,11 @@ export default Vue.extend({
             ico: "\uEC63"
           }
         ] as navi[],
-        Socket: [
+        在线状态: [
           { to: { name: "root-socket-node" }, text: "终端", ico: "\uEB64" },
           { to: { name: "root-socket-user" }, text: "用户", ico: "\uEB6f" }
         ] as navi[],
-        log: [
+        日志记录: [
           { to: { name: "root-log-node" }, text: "节点", ico: "\uEB64" },
           { to: { name: "root-log-terminal" }, text: "终端", ico: "\uEB64" },
           { to: { name: "root-log-sms" }, text: "短信", ico: "\uEB8b" },
@@ -148,7 +176,7 @@ export default Vue.extend({
 .container-h {
   height: calc(100% - 57px);
 }
-li{
+li {
   list-style: none;
 }
 </style>

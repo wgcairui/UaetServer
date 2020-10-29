@@ -1,5 +1,5 @@
 <template>
-  <div :id="id" class="map" :style="{height}"></div>
+  <div :id="id" class="map"></div>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -13,12 +13,9 @@ export default Vue.extend({
       default() {
         return {
           center: [113.975299479167, 29.924395345053],
-          zoom: 4
-        } as AMap.Map.Options;
+          zoom: 5
+        } as AMap.MapOptions;
       }
-    },
-    height:{
-        default:500
     },
     amapKey: {
       default: "2bbc666ac8e6a9d69c2910a7053243b6"
@@ -45,7 +42,6 @@ export default Vue.extend({
 </script>
 <style lang="scss" scoped>
 .map {
-  height: 500px;
   width: 100%;
 }
 </style>

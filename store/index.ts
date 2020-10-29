@@ -39,11 +39,14 @@ export const getters: GetterTree<RootState, RootState> = {
         const arr = value.unit.replace(/(\{|\}| )/g, "").split(",").map(el => el.split(":")) as Iterable<readonly [string, string]>
         state.unitCache.set(value.unit, new Map(arr))
       }
-      // 读取缓存
-      const unitCache = <string>state.unitCache.get(value.unit)?.get(String(value.value))
-      // 没有相应缓存则返回原始值val:0,unit:{1:open,2:close}
-      value.value = unitCache
+      // 读取缓存// 没有相应缓存则返回原始值val:0,unit:{1:open,2:close}
+      value.value = <string>state.unitCache.get(value.unit)!.get(value.value)
+
+      value.unit = ''
+
     }
+    console.log(value);
+
     return value
   }
 }
@@ -52,7 +55,7 @@ export const getters: GetterTree<RootState, RootState> = {
 */
 export const mutations: MutationTree<RootState> = {
   // 更新用户绑定设备
-  updateBindDev(state,payload){
+  updateBindDev(state, payload) {
     state.BindDevice = payload
   },
   addSysInfo(state, payload) {
