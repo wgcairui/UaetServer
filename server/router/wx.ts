@@ -48,6 +48,7 @@ type url =
   | 'DevTypes'
   | 'modifyUserInfo'
   | 'getGPSaddress'
+  | 'cancelwx'
 
 export default async (Ctx: ParameterizedContext) => {
   const ctx: KoaCtx = Ctx as any;
@@ -129,7 +130,7 @@ export default async (Ctx: ParameterizedContext) => {
     // 用于解绑微信和透传账号的绑定关系
     case "unbindwx":
       {
-        ctx.body = await Users.updateOne({ user: tokenUser.user, rgtype: { $ne: 'wx' } }, { $set: { userId: '' } })
+        ctx.body = await Users.updateOne({ user: tokenUser.user, rgtype: { $ne: 'wx' } }, { $set: { userId: '', avanter: '' } })
       }
       break
     // 解密手机号码
@@ -236,7 +237,7 @@ export default async (Ctx: ParameterizedContext) => {
     case "getAlarmunconfirmed":
       {
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
-        const logCur =await LogUartTerminalDataTransfinite.countDocuments({ mac: { $in: BindDevs }, isOk: false })
+        const logCur = await LogUartTerminalDataTransfinite.countDocuments({ mac: { $in: BindDevs }, isOk: false })
         // const logCurCount = await logCur.countDocuments()
         ctx.body = { ok: 1, arg: logCur } as ApolloMongoResult
       }
@@ -543,6 +544,25 @@ export default async (Ctx: ParameterizedContext) => {
         const location = body.location
         const adress = await TencetMapAPI.geocoder(location)
         ctx.body = { ok: Number(Boolean(adress.status === 0)), arg: adress } as ApolloMongoResult
+      }
+      break
+    // 注销微信
+    case "cancelwx":
+      {
+        if (tokenUser.rgtype !== "wx") {
+          ctx.body = { ok: 0, msg: '只有微信注册的用户可以执行注销操作' } as ApolloMongoResult
+          return
+        }
+        if (getUserBindDev(tokenUser.user).length > 0) {
+          ctx.body = { ok: 0, msg: '请先卸载绑定的所有设备再注销账号' } as ApolloMongoResult
+          return
+        }
+        ctx.body = await new Promise(async (resolve) => {
+          await UserAlarmSetup.deleteOne({ user: tokenUser.user })
+          await UserBindDevice.deleteOne({ user: tokenUser.user })
+          const result = await Users.deleteOne({ userId: tokenUser.userId })
+          resolve(result)
+        })
       }
       break
   }

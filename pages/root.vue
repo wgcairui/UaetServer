@@ -39,7 +39,7 @@
           </h6>
           <div v-for="(val,name,key) in nav" :key="key" class="pt-3">
             <h6>
-              <i>{{name}}</i>
+              {{name}}
             </h6>
             <ul class="p-0">
               <li v-for="(link,key2) in val" :key="link.text+key2" class="my-1 ">

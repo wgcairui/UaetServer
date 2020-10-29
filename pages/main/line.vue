@@ -19,7 +19,7 @@
         </b-form>
       </b-col>
     </b-row>
-    <b-row>
+    <b-row class="mb-5">
       <b-col>
         <separated title="折线图" :back="false">{{ line.dates }}</separated>
         <b-overlay :show="$apollo.loading">
