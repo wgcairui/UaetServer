@@ -43,14 +43,13 @@
   import Vue from "vue";
   import { BvTableFieldArray } from "bootstrap-vue";
   import gql from "graphql-tag";
-  import { Terminal, TerminalMountDevs } from "uart";
   export default Vue.extend({
     data() {
       return {
         types: ['全部', 'UPS', '空调', '温湿度', '电量仪'],
         type: '全部',
         filter: this.$route.query.DevMac || "",
-        Terminals: [] as Terminal[],
+        Terminals: [] as Uart.Terminal[],
         fields: [
           { key: "name", label: "别名" },
           { key: "DevMac", label: "设备ID" },
@@ -76,7 +75,7 @@
     computed: {
       item() {
         let item = [] as any[]
-        const Terminal = this.$data.Terminals as Terminal[]
+        const Terminal = this.$data.Terminals as Uart.Terminal[]
         const type = this.$data.type
         if (Terminal) {
           item = Terminal.map(terminal => {
@@ -113,7 +112,7 @@
       }
     },
     methods: {
-      seeDev(dtu: Terminal, mount: TerminalMountDevs) {
+      seeDev(dtu: Uart.Terminal, mount: Uart.TerminalMountDevs) {
         console.log({ dtu, mount });
         this.$router.push({ name: 'root-node-dev-device', query: { DevMac: dtu.DevMac, pid: mount.pid.toString(), mountDev: mount.mountDev, protocol: mount.protocol } })
       }

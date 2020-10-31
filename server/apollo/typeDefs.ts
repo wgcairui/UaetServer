@@ -258,7 +258,7 @@ const typeDefs: DocumentNode = gql`
     #BindDevice
     #由ctx提供user
     BindDevice: BindDevice
-    BindDevices: [BindDevice]
+    BindDevices:JSON #[BindDevice]
     #获取用户组
     userGroup: String
     #获取透传设备数据
@@ -383,7 +383,8 @@ const typeDefs: DocumentNode = gql`
     confrimAlarm(id:String):result
     # 发送用户socket信息
     sendSocketInfo(user:String,msg:String):result
-
+    #删除用户配置
+    deleteUsersetup(user:String):result
   }
 
   # Subscription

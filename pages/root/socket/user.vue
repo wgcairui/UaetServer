@@ -46,7 +46,7 @@ export default Vue.extend({
   },
   methods:{
    async sendInfo(user:string){
-    const result = await MessageBox.prompt('输入要发送的信息',user).catch(e=>false)
+    const result = await MessageBox.prompt('输入要发送的信息',user)
     if(result && result.action === 'confirm'){
       this.$apollo.mutate({
         mutation:gql`

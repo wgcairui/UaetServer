@@ -59,7 +59,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { DevsType, Terminal, TerminalMountDevs, RegisterTerminal } from "uart";
 import deepmerge from "deepmerge";
 export default vue.extend({
   data() {
@@ -99,7 +98,7 @@ export default vue.extend({
     },
     // 返回设备类型,选择协议
     SelectDevtype() {
-      const DevTypes: DevsType[] = this.DevTypes;
+      const DevTypes: Uart.DevsType[] = this.DevTypes;
       let DevType: string[] = [];
       let Protocols: Map<string, string[]> = new Map();
       DevTypes.forEach(el => {
@@ -158,7 +157,7 @@ export default vue.extend({
     async addTerminal() {
       const { DevMac, name, Type, mountNode, mountDev, protocol, pid } = this.$data.accont;
       const arg = this.$data.accont;
-      const Terminal: Terminal = this.$data.Terminal;
+      const Terminal: Uart.Terminal = this.$data.Terminal;
       console.log({ Terminal, mountDevs: Terminal.mountDevs, acc: this.accont });
 
       const isPidOccupy = Terminal.mountDevs.find(el => el.pid === arg.pid);
@@ -200,7 +199,7 @@ export default vue.extend({
     },
 
     // 删除终端挂载设备
-    async delTerminalMountDev(item: TerminalMountDevs) {
+    async delTerminalMountDev(item: Uart.TerminalMountDevs) {
       const DevMac = String(this.$route.query.DevMac);
       const { pid, mountDev } = item;
       const isDel: boolean = await this.$bvModal.msgBoxConfirm(`确定删除终端绑定设备：Pid(${pid})/${mountDev}??`, { buttonSize: "sm", centered: true });

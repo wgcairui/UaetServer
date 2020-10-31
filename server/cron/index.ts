@@ -3,7 +3,7 @@ import Event from "../event/index";
 import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst } from "../mongoose/Log";
 import { QueryCursor, Document, Types } from "mongoose";
 import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
-import { uartAlarmObject, logUserRequst, queryResult } from "uart";
+import { Uart } from "typing";
 
 // 计数器
 let NumUartterminaldatatransfinites = 0
@@ -12,10 +12,10 @@ let NumClientresults = 0
 let NumClientresultcolltion = 0
 
 // Map缓存
-const MapUartterminaldatatransfinites: Map<string, uartAlarmObject> = new Map()
-const MapUserRequst: Map<string, logUserRequst> = new Map()
-const MapClientresults: Map<string, queryResult> = new Map()
-const MapClientresultcolltion: Map<string, queryResult> = new Map()
+const MapUartterminaldatatransfinites: Map<string, Uart.uartAlarmObject> = new Map()
+const MapUserRequst: Map<string, Uart.logUserRequst> = new Map()
+const MapClientresults: Map<string, Uart.queryResult> = new Map()
+const MapClientresultcolltion: Map<string, Uart.queryResult> = new Map()
 
 // 数据清洗,清除告警数据中连续的重复的
 const DataClean = new CronJob('0 0 2 * * *', async () => {
@@ -43,12 +43,12 @@ const DataClean = new CronJob('0 0 2 * * *', async () => {
 
 // 清洗告警数据
 async function Uartterminaldatatransfinites(cur: QueryCursor<Document>) {
-    for (let doc = await cur.next() as uartAlarmObject; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next() as Uart.uartAlarmObject; doc != null; doc = await cur.next()) {
         NumUartterminaldatatransfinites++
         const tag = doc.mac + doc.pid + doc.tag
         const _id = Types.ObjectId((doc as any)._id)
         if (MapUartterminaldatatransfinites.has(tag)) {
-            const old = MapUartterminaldatatransfinites.get(tag) as uartAlarmObject
+            const old = MapUartterminaldatatransfinites.get(tag) as Uart.uartAlarmObject
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
             if (old.msg === doc.msg) {
                 await LogUartTerminalDataTransfinite.deleteOne({ _id }).exec()
@@ -65,12 +65,12 @@ async function Uartterminaldatatransfinites(cur: QueryCursor<Document>) {
 
 // 清洗请求数据
 async function CleanUserRequst(cur: QueryCursor<Document>) {
-    for (let doc = await cur.next() as logUserRequst; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next() as Uart.logUserRequst; doc != null; doc = await cur.next()) {
         NumUserRequst++
         const tag = doc.user + doc.type
         const _id = Types.ObjectId((doc as any)._id)
         if (MapUserRequst.has(tag)) {
-            const old = MapUserRequst.get(tag) as logUserRequst
+            const old = MapUserRequst.get(tag) as Uart.logUserRequst
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
             if (JSON.stringify(doc.argument) === JSON.stringify(old.argument) || !doc.type) {
                 await LogUserRequst.deleteOne({ _id }).exec()
@@ -87,12 +87,12 @@ async function CleanUserRequst(cur: QueryCursor<Document>) {
 
 // 清洗设备原始Result
 async function CleanClientresults(cur: QueryCursor<Document>) {
-    for (let doc = await cur.next() as queryResult; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
         NumClientresults++
         const tag = doc.mac + doc.pid
         const _id = Types.ObjectId((doc as any)._id)
         if (MapClientresults.has(tag)) {
-            const old = MapClientresults.get(tag) as queryResult
+            const old = MapClientresults.get(tag) as Uart.queryResult
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
             const newVal = doc.contents.map(el => el.buffer.data).flat().join()
             const oldVal = old.contents.map(el => el.buffer.data).flat().join()
@@ -111,12 +111,12 @@ async function CleanClientresults(cur: QueryCursor<Document>) {
 
 // 清洗设备解析Result
 async function CleanClientresultcolltion(cur: QueryCursor<Document>) {
-    for (let doc = await cur.next() as queryResult; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
         NumClientresultcolltion++
         const tag = doc.mac + doc.pid
         const _id = Types.ObjectId((doc as any)._id)
         if (MapClientresultcolltion.has(tag)) {
-            const old = MapClientresultcolltion.get(tag) as queryResult
+            const old = MapClientresultcolltion.get(tag) as Uart.queryResult
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
             if (JSON.stringify(doc.result) === JSON.stringify(old.result)) {
                 await TerminalClientResult.deleteOne({ _id }).exec()

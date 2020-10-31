@@ -48,7 +48,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { protocol, OprateInstruct, protocolType, ConstantThresholdType } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
@@ -58,8 +57,8 @@ export default Vue.extend({
       Protocol,
       ProtocolSingle: null,
       //
-      instruct: { name: "", value: "", bl: '1', readme: "" } as OprateInstruct,
-      instructs: [] as OprateInstruct[],
+      instruct: { name: "", value: "", bl: '1', readme: "" } as Uart.OprateInstruct,
+      instructs: [] as Uart.OprateInstruct[],
       fields: [
         { key: "name", label: "指令名称" },
         { key: "value", label: "指令值" },
@@ -107,8 +106,8 @@ export default Vue.extend({
   },
   methods: {
     async add() {
-      const instruct = JSON.parse(JSON.stringify(this.$data.instruct)) as OprateInstruct;
-      const instructs = this.$data.instructs as OprateInstruct[];
+      const instruct = JSON.parse(JSON.stringify(this.$data.instruct)) as Uart.OprateInstruct;
+      const instructs = this.$data.instructs as Uart.OprateInstruct[];
       if (this.$data.isModify) {
         instructs.forEach((el, index) => {
           if (el.name === instruct.name) instructs.splice(index, 1, instruct);
@@ -132,15 +131,15 @@ export default Vue.extend({
       this.$data.instruct.value = "";
       this.$data.instruct.readme = "";
     },
-    modify(items: OprateInstruct) {
+    modify(items: Uart.OprateInstruct) {
       this.$data.isModify = true;
       this.$data.instruct = JSON.parse(JSON.stringify(items));
     },
-    deletes(items: OprateInstruct) {
-      this.$data.instructs = (this.$data.instructs as OprateInstruct[]).filter(el => el.name !== items.name);
+    deletes(items: Uart.OprateInstruct) {
+      this.$data.instructs = (this.$data.instructs as Uart.OprateInstruct[]).filter(el => el.name !== items.name);
     },
     addDevConstent() {
-      const arg = this.$data.instructs as OprateInstruct[];
+      const arg = this.$data.instructs as Uart.OprateInstruct[];
       const Protocol = this.$data.Protocol;
       const ProtocolType = this.$data.ProtocolType;
       this.$apollo.mutate({
@@ -163,7 +162,7 @@ export default Vue.extend({
               }
             }
           `,
-        variables: { arg, Protocol, type: "Oprate" as ConstantThresholdType, ProtocolType }
+        variables: { arg, Protocol, type: "Oprate" as Uart.ConstantThresholdType, ProtocolType }
       })
         .then((res: any) => {
           const ok = res.data.addDevConstent.ok;

@@ -1,5 +1,5 @@
 import { createTransport } from "nodemailer";
-import { mailResponse, logMailSend } from "uart";
+import { Uart } from "typing";
 import { LogMailSend } from "../mongoose/Log";
 const key = require("../key/qqMail.json");
 
@@ -37,20 +37,20 @@ const Send = async (mail: string, title: string, subject: string, body: string) 
         html: body // 发送text或者html格式 // text: 'Hello world?', // plain text body
     };
 
-    await new Promise<mailResponse>((res, rej) => {
-        transporter.sendMail(mailOptions, (error, info: mailResponse) => {
+    await new Promise<Uart.mailResponse>((res, rej) => {
+        transporter.sendMail(mailOptions, (error, info: Uart.mailResponse) => {
             if (error) rej(error);
             res(info);
         });
     }).then(el => {
-        const data: logMailSend = {
+        const data: Uart.logMailSend = {
             mails: mail.split(","),
             sendParams: mailOptions,
             Success: el
         }
         new LogMailSend(data).save()
     }).catch(e => {
-        const data: logMailSend = {
+        const data: Uart.logMailSend = {
             mails: mail.split(","),
             sendParams: mailOptions,
             Error: e

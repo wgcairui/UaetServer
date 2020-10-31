@@ -65,10 +65,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import {
-  RegisterTerminal,
-  ApolloMongoResult
-} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
@@ -91,7 +87,7 @@ export default Vue.extend({
     },
     RegisterTerminalsItems() {
       const DevMac = this.$data.accont.DevMac;
-      const RegisterTerminals: RegisterTerminal[] = this.$data.RegisterTerminals;
+      const RegisterTerminals: Uart.RegisterTerminal[] = this.$data.RegisterTerminals;
       return RegisterTerminals.filter(el =>
         el.DevMac.includes(DevMac)
       ).reverse();
@@ -196,7 +192,7 @@ export default Vue.extend({
           }
         });
 
-        const result: ApolloMongoResult = res.data.deleteRegisterTerminal;
+        const result: Uart.ApolloMongoResult = res.data.deleteRegisterTerminal;
         if (result.ok === 0) {
           this.$bvModal.msgBoxOk(result.msg, { buttonSize: 'sm', title: "Info" });
         } else {

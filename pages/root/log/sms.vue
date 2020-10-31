@@ -18,14 +18,13 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { logSmsSend } from "uart";
 export default Vue.extend({
   data() {
     return {
       start: new Date().toLocaleDateString().replace(/\//g, "-") + " 0:00:00",
       end: new Date().toLocaleDateString().replace(/\//g, "-") + " 23:59:59",
       filter: "" as string,
-      data: [] as logSmsSend[],
+      data: [] as Uart.logSmsSend[],
       fields: [
         {
           key: "tels",

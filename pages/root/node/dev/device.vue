@@ -32,14 +32,13 @@
 </template>
 <script lang="ts">
   import Vue from "vue";
-  import { queryResultSave, ProtocolConstantThreshold, queryResultArgument, PageQuery } from "uart";
   import { BvTableFieldArray } from "bootstrap-vue";
   import gql from "graphql-tag";
   export default Vue.extend({
     data() {
       return {
         query: this.$route.query,
-        Data: {} as queryResultSave,
+        Data: {} as Uart.queryResultSave,
         fields: [
           { key: "name", label: "变量" },
           { key: "value", label: "值" },
@@ -54,8 +53,8 @@
       // 从设备数据中刷选出用户指定的参数值
       line() {
         // 状态量
-        let quantity: queryResultArgument[] = [];
-        const Data = this.Data as queryResultSave;
+        let quantity: Uart.queryResultArgument[] = [];
+        const Data = this.Data as Uart.queryResultSave;
         if (Data?.parse) {
           quantity = Object.values(Data.parse).map(el => this.$store.getters.getUnit(el));
         }
@@ -63,7 +62,7 @@
       },
       // 查询耗时和查询间隔
       Queryarg() {
-        const Data = this.$data.Data as queryResultSave;
+        const Data = this.$data.Data as Uart.queryResultSave;
         const time = { queryTime: "", useTime: 0, Interval: 0 };
         if (Data?.parse) {
           time.useTime = Data.useTime;

@@ -79,7 +79,6 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { OprateInstruct, ApolloMongoResult } from "uart";
 import gql from "graphql-tag";
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
@@ -101,7 +100,7 @@ export default Vue.extend({
       msg: "",
       tempVal: "",
       //
-      OprateInstruct: [] as OprateInstruct[]
+      OprateInstruct: [] as Uart.OprateInstruct[]
     };
   },
   apollo: {
@@ -128,7 +127,7 @@ export default Vue.extend({
     }
   },
   methods: {
-    async SendOprateInstruct(item: OprateInstruct) {
+    async SendOprateInstruct(item: Uart.OprateInstruct) {
       if (item.value.includes("%i")) {
         //const value = prompt(`请输入指令<${item.name}> 的值:`);
         //this.$bvModal.hide("OprateInstructMode");
@@ -167,7 +166,7 @@ export default Vue.extend({
         }
       });
       this.$data.loading = false;
-      const R = result.data.SendProcotolInstructSet as ApolloMongoResult;
+      const R = result.data.SendProcotolInstructSet as Uart.ApolloMongoResult;
       this.$data.ok = R.ok;
       this.$data.msg = R.msg;
       if (R.ok === 4) {

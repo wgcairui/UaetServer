@@ -2,11 +2,11 @@ import Event from "../event/index";
 import _ from "lodash";
 import { SmsDTUDevAlarm } from "../util/SMS";
 import { SendMailAlarm } from "../util/Mail";
-import { queryResult, uartAlarmObject, Threshold, ConstantAlarmStat } from "uart";
 import { getDtuInfo } from "../util/util";
 import wxUtil from "../util/wxUtil";
+import { Uart } from "typing";
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
-export default (query: queryResult) => {
+export default (query: Uart.queryResult) => {
   // 获取mac绑定的用户
   const User = Event.Cache.CacheBindUart.get(query.mac);
   // 没有绑定用户则跳出检查
@@ -20,7 +20,7 @@ export default (query: queryResult) => {
     // 获取协议参数阀值缓存
     {
       // 获取用户协议配置
-      const UserThreshold: Map<string, Threshold> = UserSetup.ThresholdMap.get(query.protocol) || new Map();
+      const UserThreshold: Map<string, Uart.Threshold> = UserSetup.ThresholdMap.get(query.protocol) || new Map();
       // 迭代系统默认配置,如果用户有相同的配置则覆盖系统设置
       (Constant.Threshold || []).forEach(ther => {
         //if(UserThreshold.has(ther.name)) ther = UserThreshold.get(ther.name) as Threshold
@@ -40,7 +40,7 @@ export default (query: queryResult) => {
     // 检查参数状态
     {
       // 获取用户协议配置
-      const UserAlarmStat: Map<string, ConstantAlarmStat> = UserSetup.AlarmStateMap.get(query.protocol) || new Map();
+      const UserAlarmStat: Map<string, Uart.ConstantAlarmStat> = UserSetup.AlarmStateMap.get(query.protocol) || new Map();
       // 合并配置
       (Constant.AlarmStat || []).forEach(ant => {
         if (!UserAlarmStat.has(ant.name)) UserAlarmStat.set(ant.name, ant)
@@ -65,7 +65,7 @@ export default (query: queryResult) => {
 };
 // 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日（如您是在发短信通知时提示业务限流，建议根据以上业务调整接口调用时间）
 // 发送告警推送,短信,邮件
-async function sendSmsAlarm(query: queryResult, event: string, tag: string) {
+async function sendSmsAlarm(query: Uart.queryResult, event: string, tag: string) {
   // 创建tag
   const tags = query.mac + query.pid + tag;
   const { userInfo } = getDtuInfo(query.mac)
@@ -85,7 +85,7 @@ async function sendSmsAlarm(query: queryResult, event: string, tag: string) {
       }
       
       // 保存为日志
-      Event.savelog<uartAlarmObject>('DataTransfinite', {
+      Event.savelog<Uart.uartAlarmObject>('DataTransfinite', {
         mac: query.mac,
         pid: query.pid,
         devName: query.mountDev,
@@ -99,7 +99,7 @@ async function sendSmsAlarm(query: queryResult, event: string, tag: string) {
 }
 
 
-async function checkUPS(Query: queryResult) {
+async function checkUPS(Query: Uart.queryResult) {
   // 4、判断UPS是否有故障信息：每1秒钟查询一下指令QGS，检测返回的信息(MMM.M HH.H LLL.L NN.N QQQ.Q DDD KKK.K VVV.V SSS.S XXX.X TTT.T b9b8b7b6b5b4b3b2b1b0<cr>,
   if (Query.type === 232 && Query.content.includes('QGS')) {
     const index = Query.contents.findIndex(el => el.content === "QGS")

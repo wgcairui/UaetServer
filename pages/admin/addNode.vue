@@ -31,7 +31,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { NodeClient } from "uart";
 
 export default vue.extend({
   data() {
@@ -127,7 +126,7 @@ export default vue.extend({
           this.$bvModal.msgBoxOk("添加节点成功", { buttonSize: "sm" });
         });
     },
-    deleteNode(item: NodeClient) {
+    deleteNode(item: Uart.NodeClient) {
       this.$apollo
         .mutate({
           mutation: gql`

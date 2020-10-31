@@ -56,7 +56,6 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { queryResultSave, ProtocolConstantThreshold, queryResultArgument, PageQuery } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 import { MessageBox } from "element-ui";
@@ -64,8 +63,8 @@ export default Vue.extend({
   data() {
     return {
       query: {},
-      Data: {} as queryResultSave,
-      DevConstant: { ProtocolType: '' } as ProtocolConstantThreshold,
+      Data: {} as Uart.queryResultSave,
+      DevConstant: { ProtocolType: '' } as Uart.ProtocolConstantThreshold,
       ShowTags: [] as string[],
       fields: [
         { key: "name", label: "变量" },
@@ -79,7 +78,7 @@ export default Vue.extend({
   /* 
   使用watchQuery属性可以监听参数字符串的更改。 如果定义的字符串发生变化，将调用所有组件方法(asyncData, fetch, validate, layout, ...)。 为了提高性能，默认情况下禁用。
   */
-  validate({ query }: { query: PageQuery }) {
+  validate({ query }: { query: Uart.PageQuery }) {
     if (query.DevMac) return true
     else throw new Error("请求参数缺失")
   },
@@ -138,16 +137,16 @@ export default Vue.extend({
     // 从设备数据中刷选出用户指定的参数值
     line() {
       // 状态量
-      const quantity: queryResultArgument[] = [];
+      const quantity: Uart.queryResultArgument[] = [];
       // 模拟量
-      const simulate: queryResultArgument[] = [];
-      const Data = this.Data as queryResultSave;
+      const simulate: Uart.queryResultArgument[] = [];
+      const Data = this.Data as Uart.queryResultSave;
       const ShowTags = this.$data.ShowTags as string[];
       if (Data?.parse) {
         const parse = Object.values(Data.parse)
         const result = ShowTags.length > 0 ? parse.filter(el => ShowTags.includes(el.name)) : parse
         result.forEach(el => {
-          const valGetter: queryResultArgument = this.$store.getters.getUnit(el);
+          const valGetter: Uart.queryResultArgument = this.$store.getters.getUnit(el);
           if (valGetter.issimulate) simulate.push(valGetter)
           else quantity.push(valGetter);
         });
@@ -158,7 +157,7 @@ export default Vue.extend({
     },
     // 查询耗时和查询间隔
     Queryarg() {
-      const Data = this.$data.Data as queryResultSave;
+      const Data = this.$data.Data as Uart.queryResultSave;
       const time = { queryTime: "", useTime: 0, Interval: 0 };
       if (Data?.parse) {
         time.useTime = Data.useTime;
@@ -224,7 +223,7 @@ export default Vue.extend({
     }
   },
   methods: {
-    rowClass(item: queryResultArgument, type: string) {
+    rowClass(item: Uart.queryResultArgument, type: string) {
       if (!item || type !== "row") return;
       if (item.alarm) return "table-danger";
       return;

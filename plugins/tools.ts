@@ -52,8 +52,8 @@ export const gps2AutonaviPosition = async (gps: string, window: Window & typeof 
     .split(",")
     .map((el: string) => parseFloat(el)) as [number, number];
   return await new Promise<AMap.LngLat>(res => {
-    window.AMap.convertFrom(sgps, "gps", (stat, result) => {
-      const jws = (result as AMap.convertFrom.Result).locations[0];
+    window.AMap.convertFrom(sgps, "gps", (stat: any, result: { locations: any[]; }) => {
+      const jws = result.locations[0];
       res(jws);
     });
   });
@@ -85,6 +85,16 @@ export const API_Aamp_gps2autoanvi = (coordsys: 'gps' | 'mapbar' | 'baidu', loca
   return get<AmapResonpAutonavi>('assistant/coordinate/convert', { coordsys, locations })
 }
 
+// V2 gps转高德gps
+export const V2_API_Aamp_gps2autoanvi = (locations: string | string[], coordsys: 'gps' | 'mapbar' | 'baidu' = "gps") => {
+  return ServerApi<string | string[]>('AMap/GPS2autonavi', { coordsys, locations:Array.isArray(locations)?locations.join("|"):locations })
+}
+
+// V2 ip转gps
+export const V2_API_Aamp_ip2local = async (ip: string) => {
+  return ServerApi<string>("AMap/IP2loction", { ip })
+}
+
 // 格式化日期时间
 export const paresTime = (time: string | number | Date): string => {
   const T = new Date(time);
@@ -95,6 +105,22 @@ export const paresTime = (time: string | number | Date): string => {
 
 async function get<T>(type: restype, params: Object): Promise<T> {
   const result = await axios.get(ApiAddress + type, { params: { key: AmapKey, ...params } })
+  return result.data
+}
+
+interface serverApi<T> {
+  code: number
+  msg: string
+  timeStap: number
+  query: Object
+  result: T
+}
+
+// serverAPI
+async function ServerApi<T>(path: string, params: Object) {
+  const url = "http://localhost:9010/api/util/"
+  const token = '38_HFuhHEaxyKgthO-vgUzCIioWUHbkUlBYOsUoczHZU6VhLAfXOGIgAL2px8ApStw_u1XLGFIVxrgkYfxlRkVP8idjEch0Ykg0-ETwB8us19rXxWU6aKTbaoAS9Gma_N4UgtWZBbM7_r0OPkHHXHVgAEAGQE'
+  const result = await axios.get<serverApi<T>>(url + path, { params: { token, ...params } })
   return result.data
 }
 

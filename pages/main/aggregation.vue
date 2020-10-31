@@ -63,21 +63,20 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { Aggregation, AggregationDevParse } from "uart";
 export default Vue.extend({
   data() {
     return {
       id: this.$route.query.id as string,
-      aggregation: {} as Aggregation
+      aggregation: {} as Uart.Aggregation
     };
   },
   computed: {
     devs() {
       const a = {
-        ups: [] as AggregationDevParse[],
-        air: [] as AggregationDevParse[],
-        em: [] as AggregationDevParse[],
-        th: [] as AggregationDevParse[]
+        ups: [] as Uart.AggregationDevParse[],
+        air: [] as Uart.AggregationDevParse[],
+        em: [] as Uart.AggregationDevParse[],
+        th: [] as Uart.AggregationDevParse[]
       };
       const aggregation = this.aggregation;
       if (aggregation?.devs) {

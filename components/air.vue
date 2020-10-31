@@ -59,7 +59,6 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import gql from "graphql-tag";
-import { queryResultArgument, queryResult, Terminal, TerminalMountDevs, ProtocolConstantThreshold, DevConstant_Air, queryResultSave } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 type airHM = | "ColdChannelTemperature" | "ColdChannelHumidity" | "RefrigerationTemperature" | "RefrigerationHumidity";
 type airType = | "Speed" | "HeatModel" | "ColdModel" | "Dehumidification" | "Humidification";
@@ -68,11 +67,11 @@ type airTypeObj = { [p in airType]: { property: string; name: string; value: num
 export default Vue.extend({
   props: {
     dev: {
-      type: Object as PropType<queryResultSave>,
+      type: Object as PropType<Uart.queryResultSave>,
       default: {}
     },
     Constant: {
-      type: Object as PropType<ProtocolConstantThreshold>
+      type: Object as PropType<Uart.ProtocolConstantThreshold>
     }
   },
   data() {
@@ -116,13 +115,13 @@ export default Vue.extend({
       // 空调数据和常量数据都pull之后生成数据
       if (this.Constant?.Constant && this.dev?.parse) {
         // 状态常量
-        const Constant: DevConstant_Air = this.Constant.Constant;
+        const Constant: Uart.DevConstant_Air = this.Constant.Constant;
         // 设置数值量
         const statKeys = ["ColdChannelTemperature", "ColdChannelHumidity", "RefrigerationTemperature", "RefrigerationHumidity"];
         const parse = this.dev.parse;
         Object.entries(Constant).forEach(([key, val]) => {
           if (val && statKeys.includes(key) && parse.hasOwnProperty(val)) {
-            const parse1: queryResultArgument = (parse as any)[val] as any;
+            const parse1: Uart.queryResultArgument = (parse as any)[val] as any;
             (stat as any)[key].value = parseInt(parse1.value);
           }
         });
@@ -135,7 +134,7 @@ export default Vue.extend({
         }
         // 设置工作状态
         if (parse["机组工作状态"]) {
-          const devRunStat: queryResultArgument = this.$store.getters.getUnit(parse["机组工作状态"]);
+          const devRunStat: Uart.queryResultArgument = this.$store.getters.getUnit(parse["机组工作状态"]);
           //
           AirStat.HeatModel.value = devRunStat.value.includes("热") ? hotRun : hotStop;
           AirStat.ColdModel.value = devRunStat.value.includes("冷") ? coolRun : coolStop;

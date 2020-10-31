@@ -1,6 +1,6 @@
 import { createDecipheriv } from "crypto";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { wxRequest, wxRequestAccess_token, wxRequestCode2Session, wxRequest_industry, wxsubscribeMessage } from "uart";
+import { Uart } from "typing";
 const wxSecret = require("../key/wxSecret.json");
 
 // 微信解密数据
@@ -28,13 +28,15 @@ class WX {
   async get_AccessToken() {
     // 雷迪司透传平台accessToken
     {
-      const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
-      const { access_token, expires_in } = await this.fecth<wxRequestAccess_token>({ url, method: 'GET' })
-      this.AccessToken = access_token
-      console.log(`weixin AccessToken ：：${this.AccessToken},expires_in:${expires_in}`);
-      setTimeout(() => {
-        this.get_AccessToken()
-      }, ((expires_in || 7200) * 1000) - 10000)
+      if (process.env.NODE_ENV !== 'development') {
+        const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
+        const { access_token, expires_in } = await this.fecth<Uart.WX.wxRequestAccess_token>({ url, method: 'GET' })
+        this.AccessToken = access_token
+        console.log(`weixin AccessToken ：：${this.AccessToken},expires_in:${expires_in}`);
+        setTimeout(() => {
+          this.get_AccessToken()
+        }, ((expires_in || 7200) * 1000) - 10000)
+      }
     }
     // 雷迪司公众号accessToken
     {
@@ -58,13 +60,13 @@ class WX {
   // 获取用户openid
   async UserOpenID(code: string) {
     const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${this.appid}&secret=${this.secret}&js_code=${code}&grant_type=authorization_code`;
-    return await this.fecth<wxRequestCode2Session>({ url, method: 'GET' })
+    return await this.fecth<Uart.WX.wxRequestCode2Session>({ url, method: 'GET' })
   }
 
   // 发送订阅消息-设备告警-雷迪司公众号-智能设备报警提醒
   async SendsubscribeMessageDevAlarmPublic(UserOpenID: string, time: string | number, content: string, Devname: string, DTUname: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${this.AccessTokenPublic}`
-    const postData: wxsubscribeMessage = {
+    const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: 'rIFS7MnXotNoNifuTfFpfh4vFGzCGlhh-DmWZDcXpWg',
       miniprogram: {
@@ -107,7 +109,7 @@ class WX {
   // 发送订阅消息-设备告警
   async SendsubscribeMessageDevAlarm(UserOpenID: string, time: string | number, content: string, Devname: string, DevId: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
-    const postData: wxsubscribeMessage = {
+    const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: '8NX6ji8ABlNAOEMcU7v2jtD4sgCB7NMHguWzxZn3HO4',
       page: "/pages/index/index",
@@ -135,7 +137,7 @@ class WX {
   // 发送订阅消息-用户注册
   async SendsubscribeMessageRegister(UserOpenID: string, user: string, name: string, time: string, tip: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
-    const postData: wxsubscribeMessage = {
+    const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: 'XPN75P-0F3so8dE__e5bxS9xznCyNGx4TKX0Fl-i_b4',
       page: "/pages/index/index",
@@ -196,7 +198,7 @@ class WX {
     const sen = times.getSeconds()
     return `${year}-${month}-${day} ${hour}:${min}:${sen}`
   }
-  private async fecth<T extends wxRequest>(config: AxiosRequestConfig) {
+  private async fecth<T extends Uart.WX.wxRequest>(config: AxiosRequestConfig) {
     // console.log(config);
     const res: AxiosResponse<T> = await axios(config)
     if (res.data.errcode) {

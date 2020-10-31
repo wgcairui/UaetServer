@@ -78,7 +78,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { Terminal, TerminalMountDevs } from "uart";
 import { VeTree } from "v-charts";
 import { API_Aamp_gps2autoanvi, API_Aamp_local2address, API_Aamp_address2local, API_Aamp_ip2local, gps2AutonaviPosition } from "../../plugins/tools";
 interface selectTree {
@@ -149,7 +148,7 @@ export default Vue.extend({
       `,
       variables: { DevMac }
     });
-    let Terminal: Terminal = data.Terminal;
+    let Terminal: Uart.Terminal = data.Terminal;
     // 构建tree对象
     const children = Terminal.mountDevs.map(el =>
       Object.assign(el, { name: el.mountDev + el.pid })
@@ -183,7 +182,7 @@ export default Vue.extend({
 
   methods: {
     // 根据设备类型返回不同的svg图标
-    treeSysbol(a: null, { data }: { data: TerminalMountDevs }) {
+    treeSysbol(a: null, { data }: { data: Uart.TerminalMountDevs }) {
       switch (data.Type) {
         case "温湿度":
           return "path://M349.866667 618.666667c-8.533333-4.266667-17.066667-8.533333-29.866667-8.533334-34.133333 4.266667-64 29.866667-64 68.266667 0 34.133333 29.866667 64 64 64S384 712.533333 384 678.4c0-8.533333-4.266667-17.066667-4.266667-25.6l358.4-358.4c8.533333-8.533333 8.533333-21.333333 0-29.866667-8.533333-8.533333-21.333333-8.533333-29.866666 0l-358.4 354.133334z m-34.133334-89.6L640 204.8c42.666667-42.666667 110.933333-42.666667 149.333333 0s42.666667 110.933333 0 149.333333L469.333333 678.4c0 81.066667-68.266667 149.333333-149.333333 149.333333S170.666667 759.466667 170.666667 678.4c0-85.333333 64-149.333333 145.066666-149.333333z m430.933334 341.333333c-59.733333 0-106.666667-51.2-106.666667-110.933333 0-38.4 34.133333-115.2 106.666667-230.4 72.533333 115.2 106.666667 192 106.666666 230.4 0 59.733333-46.933333 110.933333-106.666666 110.933333z m0-89.6c12.8 0 21.333333-17.066667 21.333333-42.666667 0-12.8-8.533333-34.133333-21.333333-81.066666-12.8 42.666667-21.333333 64-21.333334 81.066666 0 25.6 8.533333 42.666667 21.333334 42.666667z";
@@ -199,7 +198,7 @@ export default Vue.extend({
     },
     // 修改map
     async mapReady(map: AMap.Map) {
-      const terminal = (this as any).Terminals as Terminal;
+      const terminal = (this as any).Terminals as Uart.Terminal;
       let position = terminal.jw as AMap.LngLat;
 
       if (position) position = await gps2AutonaviPosition(position as any, window);

@@ -38,14 +38,13 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { UserInfo, ApolloMongoResult } from "uart";
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
 export default Vue.extend({
   data() {
     return {
       userSetup: { tels: [], mails: [] },
-      user: {} as UserInfo,
+      user: {} as Uart.UserInfo,
       userField: [
         { key: "name", label: "用户名:" },
         { key: "user", label: "账号:" },
@@ -106,7 +105,7 @@ export default Vue.extend({
         variables: { arg: { [item.key]: (value as any).value } }
       });
       //
-      const modify = result.data.modifyUserInfo as ApolloMongoResult;
+      const modify = result.data.modifyUserInfo as Uart.ApolloMongoResult;
       if (!modify.ok) MessageBox.alert(modify.msg);
       else this.$apollo.queries.user.refetch();
     },

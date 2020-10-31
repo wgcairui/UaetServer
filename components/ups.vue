@@ -28,17 +28,16 @@
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { queryResultSave, ProtocolConstantThreshold, queryResultArgument, instructQueryArg } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 export default Vue.extend({
   props: {
     dev: {
-      type: Object as PropType<queryResultSave>,
+      type: Object as PropType<Uart.queryResultSave>,
       default: {}
     },
     Constant: {
-      type: Object as PropType<ProtocolConstantThreshold>
+      type: Object as PropType<Uart.ProtocolConstantThreshold>
     }
   },
   data() {
@@ -60,10 +59,10 @@ export default Vue.extend({
   computed: {
     // 电池工作模式
     betty_model() {
-      const data = this.dev as queryResultSave
+      const data = this.dev as Uart.queryResultSave
       //return { name: "待机模式", src: this.$data.map['待机模式'] }
       if (data?.parse && data?.parse["工作模式"]) {
-        const pas = this.$store.getters.getUnit(data.parse["工作模式"]) as queryResultArgument;
+        const pas = this.$store.getters.getUnit(data.parse["工作模式"]) as Uart.queryResultArgument;
         return { name: pas.value, src: this.$data.map[pas.value] }
       } else {
         return { name: "待机模式", src: this.$data.map['待机模式'] }
@@ -71,8 +70,8 @@ export default Vue.extend({
     },
     // 电池状态
     betty_stat() {
-      const Constant = this.Constant as ProtocolConstantThreshold
-      const data = this.dev as queryResultSave
+      const Constant = this.Constant as Uart.ProtocolConstantThreshold
+      const data = this.dev as Uart.queryResultSave
       // return []
       if (Constant.Constant && data.parse) {
         const keys = Object.values(Constant.Constant);

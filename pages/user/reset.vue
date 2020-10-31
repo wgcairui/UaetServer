@@ -24,8 +24,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { ApolloMongoResult } from "uart";
-
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
 export default Vue.extend({
@@ -48,7 +46,7 @@ export default Vue.extend({
         `,
         variables: { user }
       });
-      const validation = result.data.resetUserPasswd as ApolloMongoResult;
+      const validation = result.data.resetUserPasswd as Uart.ApolloMongoResult;
       if (!validation.ok) {
         MessageBox.alert(validation.msg);
         return;
@@ -71,7 +69,7 @@ export default Vue.extend({
         variables: { user, code: value }
       });
       const hashs = resetValidationCode.data
-        .resetValidationCode as ApolloMongoResult;
+        .resetValidationCode as Uart.ApolloMongoResult;
       if (!hashs.ok) {
         MessageBox.alert(hashs.msg);
         return;
@@ -93,7 +91,7 @@ export default Vue.extend({
         `,
         variables: { hash: hashs.msg, passwd }
       });
-      const setUserPasswd = reset.data.setUserPasswd as ApolloMongoResult;
+      const setUserPasswd = reset.data.setUserPasswd as Uart.ApolloMongoResult;
       if (!setUserPasswd.ok) {
         MessageBox.alert(setUserPasswd.msg);
         return;

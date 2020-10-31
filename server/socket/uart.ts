@@ -1,13 +1,12 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { NodeClient, Terminal, protocol, queryObject, queryResult, TerminalMountDevsEX, instructQuery, ApolloMongoResult, logNodes, logTerminals, DTUoprate, uartAlarmObject } from "uart";
-
 import tool from "../util/tool";
 import { SmsDTUDevTimeOut } from "../util/SMS";
 
 import config from "../config";
 import { ParseFunction } from "../util/func";
+import { Uart } from "typing";
 
 export default class NodeSocketIO {
     private io: IO.Server;
@@ -41,15 +40,15 @@ export default class NodeSocketIO {
                 console.log(`有未登记或重复登记节点连接=>${IP}，断开连接`);
                 socket.disconnect()
                 // 添加日志
-                this.Event.savelog<logNodes>('node', { ID, IP, type: "非法连接请求", Name: 'null' })
+                this.Event.savelog<Uart.logNodes>('node', { ID, IP, type: "非法连接请求", Name: 'null' })
             }
         })
     }
     // 发送程序变更指令，公开
-    public InstructQuery(Query: instructQuery) {
-        return new Promise<Partial<ApolloMongoResult>>((resolve) => {
+    public InstructQuery(Query: Uart.instructQuery) {
+        return new Promise<Partial<Uart.ApolloMongoResult>>((resolve) => {
             // 在在线设备中查找
-            const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
+            const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Uart.Terminal
             if (!terminal) return resolve({ ok: 0, msg: '无此设备' })
             const client = this.CacheSocket.get(terminal.mountNode)
             if (!client) return resolve({ ok: 0, msg: '设备所在节点未上线' })
@@ -69,7 +68,7 @@ export default class NodeSocketIO {
             }
             // 创建一次性监听，监听来自Node节点指令查询操作结果            
             client.socket.once(Query.events, result => {
-                this.Event.savelog<logTerminals>('terminal', { NodeIP: client.IP, NodeName: client.Name, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result })
+                this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: client.IP, NodeName: client.Name, TerminalMac: Query.DevMac, type: "操作设备", query: Query, result })
                 resolve(result)
             }).emit('instructQuery', Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
@@ -80,17 +79,17 @@ export default class NodeSocketIO {
     }
 
     // 下发操作指令到DTU
-    public async OprateDTU(Query: DTUoprate) {
-        return new Promise<Partial<ApolloMongoResult>>((resolve) => {
+    public async OprateDTU(Query: Uart.DTUoprate) {
+        return new Promise<Partial<Uart.ApolloMongoResult>>((resolve) => {
             // 在在线设备中查找
-            const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Terminal
+            const terminal = this.Event.Cache.CacheTerminal.get(Query.DevMac) as Uart.Terminal
             if (!terminal) return resolve({ ok: 0, msg: '无此设备' })
             const client = this.CacheSocket.get(terminal.mountNode)
             if (!client) return resolve({ ok: 0, msg: '设备所在节点未上线' })
             if (client.socket.disconnected) return resolve({ ok: 0, msg: '设备所在节点离线' })
             // 创建一次性监听，监听来自Node节点指令查询操作结果            
             client.socket.once(Query.events, result => {
-                this.Event.savelog<logTerminals>('terminal', { NodeIP: client.IP, NodeName: client.Name, TerminalMac: Query.DevMac, type: "DTU操作", query: Query, result })
+                this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: client.IP, NodeName: client.Name, TerminalMac: Query.DevMac, type: "DTU操作", query: Query, result })
                 resolve(result)
             }).emit('DTUoprate', Query)
             // 设置定时器，超过20秒无响应则触发事件，避免事件堆积内存泄漏
@@ -103,7 +102,7 @@ export default class NodeSocketIO {
 
 class nodeClient {
     socket: Socket;
-    cache: Map<string, TerminalMountDevsEX>;
+    cache: Map<string, Uart.TerminalMountDevsEX>;
     Event: event;
     CacheQueryIntruct: Map<string, string>;
     ID: string;
@@ -140,7 +139,7 @@ class nodeClient {
         this.socket
             .on('register', regster => {
                 // 根据节点IP获取节点登记信息，节点将根据登记运行程序
-                const Info = <NodeClient>this.Event.Cache.CacheNode.get(this.IP);
+                const Info = <Uart.NodeClient>this.Event.Cache.CacheNode.get(this.IP);
                 // 发送节点注册信息
                 this.socket.emit('registerSuccess', Info)
             })
@@ -155,7 +154,7 @@ class nodeClient {
                 this.cache.clear()
                 //clearInterval(this.interVal)
                 // 添加日志
-                this.Event.savelog<logNodes>('node', { type: "断开", ID: this.ID, IP: this.IP, Name: this.Name })
+                this.Event.savelog<Uart.logNodes>('node', { type: "断开", ID: this.ID, IP: this.IP, Name: this.Name })
             })
             // 节点启动失败
             .on('startError', (data) => {
@@ -175,7 +174,7 @@ class nodeClient {
                     const terminal = this.Event.Cache.CacheTerminal.get(data[0])
                     if (terminal) {
                         // this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: data[0], devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已上线`, timeStamp: Date.now() })
-                        this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
+                        this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: data[0], type: "连接" })
                     }
                 }
                 data.forEach(el => {
@@ -200,7 +199,7 @@ class nodeClient {
                 const terminal = this.Event.Cache.CacheTerminal.get(mac)
                 if (terminal) {
                     //this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}已${active ? '主动' : '被动'}离线`, timeStamp: Date.now() })
-                    this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: mac, type: "断开" })
+                    this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: mac, type: "断开" })
                 }
             })
             // 设备查询指令有部分超时,
@@ -211,7 +210,7 @@ class nodeClient {
 
             })
             // 设备挂载节点查询超时
-            .on('terminalMountDevTimeOut', async (Query: queryResult, timeOut: number) => {
+            .on('terminalMountDevTimeOut', async (Query: Uart.queryResult, timeOut: number) => {
                 const hash = Query.mac + Query.pid
                 const QueryTerminal = this.cache.get(hash)
                 if (QueryTerminal) {
@@ -226,8 +225,8 @@ class nodeClient {
                         const terminal = this.Event.Cache.CacheTerminal.get(Query.mac)
                         if (terminal) {
                             // 添加日志
-                            this.Event.savelog<uartAlarmObject>('DataTransfinite', { mac: Query.mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}/${Query.pid}/${Query.mountDev} 查询超时`, timeStamp: Date.now() })
-                            this.Event.savelog<logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: Query.mac, type: "查询超时", query: Query })
+                            this.Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: Query.mac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}/${Query.pid}/${Query.mountDev} 查询超时`, timeStamp: Date.now() })
+                            this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.IP, NodeName: this.Name, TerminalMac: Query.mac, type: "查询超时", query: Query })
                         }
                     }
                 }
@@ -245,13 +244,13 @@ class nodeClient {
     }
 
     // 发送查询指令
-    private _SendQueryIntruct(Query: TerminalMountDevsEX) {
+    private _SendQueryIntruct(Query: Uart.TerminalMountDevsEX) {
         // 判断挂载设备是否在线
         if (this.Event.Cache.CacheNodeTerminalOnline.has(Query.TerminalMac)) {
             // 生成时间戳
             const timeStamp = Date.now()
             // 获取设备协议
-            const Protocol = <protocol>this.Event.Cache.CacheProtocol.get(Query.protocol)
+            const Protocol = <Uart.protocol>this.Event.Cache.CacheProtocol.get(Query.protocol)
             // 获取协议指令生成缓存
             const CacheQueryIntruct = this.CacheQueryIntruct
             // 迭代设备协议获取多条查询数据
@@ -284,7 +283,7 @@ class nodeClient {
                     return content
                 }
             })
-            const query: queryObject = {
+            const query: Uart.queryObject = {
                 mac: Query.TerminalMac,
                 type: Protocol.Type,
                 mountDev: Query.mountDev,

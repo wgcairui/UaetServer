@@ -1,8 +1,8 @@
 import { crc16modbus } from "crc";
 import os from "os";
-import { nodeInfo } from "uart";
+import { Uart } from "typing";
 export default class Tool {
-  static NodeInfo(): nodeInfo {
+  static NodeInfo(): Uart.nodeInfo {
     const hostname: string = os.hostname();
     const totalmem: number = os.totalmem() / 1024 / 1024 / 1024;
     const freemem: number = (os.freemem() / os.totalmem()) * 100;

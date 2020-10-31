@@ -1,4 +1,3 @@
-import { queryResult } from "uart";
 import Axios from "axios";
 
 function AriTestData(): any[] {

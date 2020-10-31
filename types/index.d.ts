@@ -7,7 +7,6 @@ import { Auth } from "nuxtjs__auth";
 import { BvModal, BvToast } from "bootstrap-vue";
 import { NuxtAxiosInstance } from "@nuxtjs/axios";
 import { Socket, Namespace } from "socket.io";
-import { nodeInfo, NodeClient, queryResult, queryObject, DTUoprate, instructQuery } from "uart";
 
 // 2. 定制一个文件，设置你想要补充的类型
 //    在 types/vue.d.ts 里 Vue 有构造函数类型
@@ -67,7 +66,7 @@ declare module "socket.io" {
   interface Socket extends NodeJS.EventEmitter {
     on(event: 'disconnect', listener: () => void): this
 
-    on(event: 'register', listener: (node: nodeInfo) => void): this
+    on(event: 'register', listener: (node: Uart.nodeInfo) => void): this
 
     on(event: 'ready', listener: () => void): this
 
@@ -78,15 +77,14 @@ declare module "socket.io" {
     on(event: 'terminalOn', listener: (data: string | string[], reline?: boolean) => void): this
 
     on(event: 'terminalOff', listener: (mac: string, active: boolean) => void): this
-    on(event: 'terminalMountDevTimeOut', listener: (Query: queryResult, instruct: string[]) => void): this
-    on(event: 'instructTimeOut', listener: (Query: queryResult, instruct: string[]) => void): this
+    on(event: 'terminalMountDevTimeOut', listener: (Query: Uart.queryResult, instruct: string[]) => void): this
+    on(event: 'instructTimeOut', listener: (Query: Uart.queryResult, instruct: string[]) => void): this
     on(event: string, listener: (...args: any[]) => void): this
 
-    emit(event: 'registerSuccess', node: NodeClient): this
-    emit(event: 'query', Query: queryObject): this
-    emit(event: 'instructQuery', Query: instructQuery): this
-    emit(event: 'DTUoprate', Query: DTUoprate): this
+    emit(event: 'registerSuccess', node: Uart.NodeClient): this
+    emit(event: 'query', Query: Uart.queryObject): this
+    emit(event: 'instructQuery', Query: Uart.instructQuery): this
+    emit(event: 'DTUoprate', Query: Uart.DTUoprate): this
     emit(event: string, ...args: any[]): this
   }
-
 }

@@ -43,7 +43,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { queryResultArgument, protocol, ConstantAlarmStat } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 export default Vue.extend({
   data() {
@@ -55,14 +54,14 @@ export default Vue.extend({
       //
       addModal: true,
       State: { name: "", value: "", unit: "{0:正常,1:报警}", alarmStat: [0] },
-      selectNames: [] as ConstantAlarmStat[],
-      States: [] as ConstantAlarmStat[]
+      selectNames: [] as Uart.ConstantAlarmStat[],
+      States: [] as Uart.ConstantAlarmStat[]
     };
   },
   computed: {
     // 参数状态
     AlarmStatItems() {
-      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      const ProtocolSingle: Uart.protocol = this.$data.ProtocolSingle;
       const DevConstant = this.States
       let result: any[] = [];
       // 如果协议单例存在
@@ -128,7 +127,7 @@ export default Vue.extend({
   },
   methods: {
     
-    async StateAlarmSelects(item: ConstantAlarmStat, value: string) {
+    async StateAlarmSelects(item: Uart.ConstantAlarmStat, value: string) {
       const StatSet = new Set(item.alarmStat);
       if (StatSet.has(value)) {
         StatSet.delete(value);

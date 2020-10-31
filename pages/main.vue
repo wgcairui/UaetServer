@@ -113,7 +113,6 @@
 import Vue from "vue";
 import { WebInfo } from "../store/DB";
 import gql from "graphql-tag";
-import { Terminal } from "uart";
 export default Vue.extend({
   scrollToTop: true,
   data() {
@@ -133,7 +132,7 @@ export default Vue.extend({
       return ((this.$store as any).state.Infos as WebInfo[]) || [];
     },
     mountDev() {
-      const terminals = (this as any).BindDevice?.UTs as Terminal[];
+      const terminals = (this as any).BindDevice?.UTs as Uart.Terminal[];
       let result: any[] = [];
       if (terminals) {
         result = terminals.filter(el => el.mountDevs)

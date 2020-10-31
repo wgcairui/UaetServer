@@ -28,7 +28,6 @@
 import Vue from "vue";
 import { getInstance, WebInfo } from "../../store/DB";
 import { BvTableFieldArray } from "bootstrap-vue/src/components/table";
-import { logTerminals } from "uart";
 import gql from "graphql-tag";
 export default Vue.extend({
   data() {
@@ -40,7 +39,7 @@ export default Vue.extend({
         { key: "type", label: "类型", sortable: true },
         { key: "msg", label: "消息" }
       ] as BvTableFieldArray,
-      terminals: [] as logTerminals[],
+      terminals: [] as Uart.logTerminals[],
       fieldsTerminal: [
         { key: "NodeName", label: "挂载节点" },
         { key: "TerminalMac", label: "设备ID" },

@@ -18,7 +18,6 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { queryResult } from "uart";
 export default Vue.extend({
   data() {
     return {
@@ -33,7 +32,7 @@ export default Vue.extend({
         { key: "TerminalMac", label: "终端ID" },
         {
           key: "query", label: "请求",
-          formatter: (data: queryResult) =>
+          formatter: (data: Uart.queryResult) =>
             data ? `设备:${data.mountDev},协议:${data.protocol},类型:${data.type},Pid:${data.pid},查询耗时:${data.useTime}` : ''
         }
       ] as BvTableFieldArray

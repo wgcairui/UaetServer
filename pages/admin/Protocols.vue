@@ -113,10 +113,9 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { protocol, protocolInstruct } from "uart";
 export default Vue.extend({
   data() {
-    let Protocols: protocol[] = [];
+    let Protocols: Uart.protocol[] = [];
     return {
       forGroup: { "label-align-md": "right", "label-cols-md": "2" },
       DevType: "",
@@ -159,7 +158,7 @@ export default Vue.extend({
       return result;
     },
     protocolsFilter() {
-      const Protocols: protocol[] = this.$data.Protocols;
+      const Protocols: Uart.protocol[] = this.$data.Protocols;
       if (this.selectProtocol !== "") {
         return Protocols.filter(
           el => el.Protocol === this.$data.selectProtocol

@@ -50,7 +50,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { DevConstant_Air, protocol, DevConstant_EM, DevConstant_Ups, DevConstant_TH, protocolType, Threshold } from "uart";
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;
@@ -68,7 +67,7 @@ export default Vue.extend({
   computed: {
     items() {
       if (this.addModal) {
-        let ProtocolSingle: protocol = this.$data.ProtocolSingle;
+        let ProtocolSingle: Uart.protocol = this.$data.ProtocolSingle;
         let i = 0;
         let result: any[] = [];
         if (ProtocolSingle) {
@@ -135,12 +134,12 @@ export default Vue.extend({
     }
   },
   methods: {
-    addThreshold(Threshold: Threshold, addModal: boolean) {
+    addThreshold(Threshold: Uart.Threshold, addModal: boolean) {
       if (Threshold.name === "" || Threshold.min > Threshold.max) {
         this.$bvToast.toast("参数错误", { title: "error", variant: "warn" });
         return;
       }
-      let Thresholds: Threshold[] = this.Thresholds;
+      let Thresholds: Uart.Threshold[] = this.Thresholds;
       const ThresholdCy = Object.assign({}, Threshold);
       if (!addModal) {
         Thresholds.forEach((el, index) => {
@@ -157,19 +156,19 @@ export default Vue.extend({
       this.Threshold.min = 0;
       this.Threshold.max = 0;
     },
-    modifyThreshold(Threshold: Threshold) {
+    modifyThreshold(Threshold: Uart.Threshold) {
       this.Threshold.name = Threshold.name;
       this.Threshold.min = Threshold.min;
       this.Threshold.max = Threshold.max;
     },
     deleteThreshold(data: any) {
-      const { item, index }: { item: Threshold; index: number } = data;
+      const { item, index }: { item: Uart.Threshold; index: number } = data;
       console.log(item.name);
 
       this.ThresholdCache.delete(item.name);
       this.Thresholds.splice(index, 1);
     },
-    pushThreshold(Thresholds: Threshold[]) {
+    pushThreshold(Thresholds: Uart.Threshold[]) {
       const { ProtocolType, Protocol }: { ProtocolType: string; Protocol: string } = this.$data as any;
       this.$apollo.mutate({
         mutation: gql`

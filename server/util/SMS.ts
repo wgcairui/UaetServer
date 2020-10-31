@@ -1,7 +1,7 @@
 import core from "@alicloud/pop-core"
+import { Uart } from "typing";
 import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
-import { logSmsSend, smsUartAlarm, ApolloMongoResult, queryResult, TerminalMountDevs } from "uart";
 import { getDtuInfo } from "./util";
 import wxUtil from "./wxUtil";
 const key = require("../key/aliSms.json")
@@ -36,7 +36,7 @@ const client = new core(
 // 发送校验码
 export const SendValidation = (tel: string, code: string) => {
     if (!tel || tel.length !== 11) {
-        return { ok: 0, msg: `电话号码错误,${tel}` } as ApolloMongoResult
+        return { ok: 0, msg: `电话号码错误,${tel}` } as Uart.ApolloMongoResult
     }
     const TemplateParam = JSON.stringify({ code })
     const params: params = {
@@ -50,7 +50,7 @@ export const SendValidation = (tel: string, code: string) => {
 }
 
 // 发送短信
-const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
+const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoResult>> => {
     const CacheAlarmSendNum = Event.Cache.CacheAlarmSendNum
     //const tels = params.PhoneNumbers.split(",")
     // 迭代发送的手机号码,检查号码每天的发送次数,每个号码每天限额50
@@ -59,7 +59,7 @@ const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
     if (!params.PhoneNumbers) return { ok: 0, msg: "all tels Sending messages in excess of the number 50 " }
     // console.log(params);
     const result = await client.request<SmsResult>('SendSms', params, { method: 'POST' }).then(el => {
-        const data: logSmsSend = {
+        const data: Uart.logSmsSend = {
             tels,
             sendParams: params,
             Success: el
@@ -67,7 +67,7 @@ const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
         new LogSmsSend(data).save()
         return { ok: 1, msg: "send Success" }
     }).catch(e => {
-        const data: logSmsSend = {
+        const data: Uart.logSmsSend = {
             tels,
             sendParams: params,
             Error: e
@@ -86,7 +86,7 @@ const SendSms = async (params: params): Promise<Partial<ApolloMongoResult>> => {
 }
 
 // 发送设备超时下线
-export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复') => {
+export const SmsDTUDevTimeOut = (Query: Uart.queryResult, event: '超时' | '恢复') => {
     const info = getDtuInfo(Query.mac)
     /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     if (userId) {
@@ -118,7 +118,7 @@ export const SmsDTUDevTimeOut = (Query: queryResult, event: '超时' | '恢复')
 }
 
 // 发送DTU挂载设备告警
-export const SmsDTUDevAlarm = (Query: queryResult, remind: string) => {
+export const SmsDTUDevAlarm = (Query: Uart.queryResult, remind: string) => {
     const info = getDtuInfo(Query.mac)
     const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     /* if (userId) {
@@ -185,7 +185,7 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
 }
 
 // 发送告警短信
-export const SendUartAlarm = async (query: smsUartAlarm) => {
+export const SendUartAlarm = async (query: Uart.smsUartAlarm) => {
     const smsCode = {
         透传设备下线提醒: "SMS_189710812",
         透传设备上线提醒: "SMS_189710830",

@@ -22,7 +22,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { ApolloMongoResult } from "uart";
 export default Vue.extend({
   props: {
     id: {
@@ -65,7 +64,7 @@ export default Vue.extend({
           }
         `
       });
-      const stat = result.data.sendValidationSms as ApolloMongoResult;
+      const stat = result.data.sendValidationSms as Uart.ApolloMongoResult;
       if (!stat) return this.$bvModal.msgBoxOk("请求过程出错");
       if (stat.ok === 0) return this.$bvModal.msgBoxOk("验证短信发送失败");
       this.validationStat = true;
@@ -86,7 +85,7 @@ export default Vue.extend({
         `,
         variables: { code }
       });
-      const ValidationCode = result.data.ValidationCode as ApolloMongoResult;
+      const ValidationCode = result.data.ValidationCode as Uart.ApolloMongoResult;
       if (!ValidationCode) return this.$bvModal.msgBoxOk("请求过程出错");
       if (ValidationCode.ok === 0)
         return this.$bvModal.msgBoxOk(ValidationCode.msg);

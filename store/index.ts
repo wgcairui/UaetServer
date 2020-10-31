@@ -1,7 +1,6 @@
 import { GetterTree, ActionTree, MutationTree } from 'vuex'
 import { Context } from "@nuxt/types"
 import { WebInfo, getInstance } from "./DB"
-import { queryResultArgument, nodeInfo } from 'uart'
 import { BvToast } from 'bootstrap-vue'
 
 // 获取state返回值类型
@@ -17,7 +16,7 @@ export const state = () => ({
     type: "SYS"
   } as WebInfo,
   Infos: [] as WebInfo[],
-  SysInfos: [] as nodeInfo[],
+  SysInfos: [] as Uart.nodeInfo[],
   BindDevice: {
     UTs: [],
     ECs: []
@@ -26,9 +25,9 @@ export const state = () => ({
 
 export const getters: GetterTree<RootState, RootState> = {
   // 
-  getUnit: state => (query: queryResultArgument) => {
+  getUnit: state => (query: Uart.queryResultArgument) => {
 
-    const value: queryResultArgument = Object.assign({ issimulate: false }, query)
+    const value: Uart.queryResultArgument = Object.assign({ issimulate: false }, query)
     // 检查unit是否含有“{.*}”
     if (!value.unit || !/^{.*}$/.test(value.unit)) value.issimulate = true
     else {

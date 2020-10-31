@@ -2,9 +2,9 @@ import ProtocolPares from "../util/ProtocolPares";
 import { TerminalClientResults, TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 import { LogUseBytes } from "../mongoose/Log";
-import { queryResult, queryResultArgument } from "uart";
+import { Uart } from "typing";
 
-export default async (queryResultArray: queryResult[]) => {
+export default async (queryResultArray: Uart.queryResult[]) => {
     if (queryResultArray.length > 0) {
         // 保存每个终端使用的数字节数
         SaveTerminaluseBytes(queryResultArray)
@@ -26,7 +26,7 @@ export default async (queryResultArray: queryResult[]) => {
             if (!MacID.has(ID)) {
                 MacID.add(ID)
                 // 把结果转换为对象
-                data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: queryResultArgument }[])
+                data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
                 // 把数据发给检查器,检查数据是否有故障,保存数据单例
                 const checkData = CheckUart(data)
                 // console.log({checkData});
@@ -41,7 +41,7 @@ export default async (queryResultArray: queryResult[]) => {
     }
 }
 // 保存每个查询指令使用的字节，以天为单位
-async function SaveTerminaluseBytes(queryResult: queryResult[]) {
+async function SaveTerminaluseBytes(queryResult: Uart.queryResult[]) {
     const date = new Date().toLocaleDateString()
     for (let el of queryResult) {
         await LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes: el.useBytes } }, { upsert: true }).exec()

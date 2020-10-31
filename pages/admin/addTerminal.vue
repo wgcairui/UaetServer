@@ -106,7 +106,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { DevsType, Terminal, TerminalMountDevs, RegisterTerminal } from "uart";
 import deepmerge from "deepmerge";
 type OprateMode = | "addTerminal" | "addTerminalMountDev" | "registerTerminalMountDev";
 export default vue.extend({
@@ -175,7 +174,7 @@ export default vue.extend({
     },
     // 返回设备类型,选择协议
     SelectDevtype() {
-      const DevTypes: DevsType[] = this.DevTypes;
+      const DevTypes: Uart.DevsType[] = this.DevTypes;
       let DevType: string[] = [];
       let Protocols: Map<string, string[]> = new Map();
       DevTypes.forEach(el => {
@@ -190,7 +189,7 @@ export default vue.extend({
 
     // 返回所选设备信息
     TerminalItem() {
-      const Terminal: Terminal = this.$data.Terminal;
+      const Terminal: Uart.Terminal = this.$data.Terminal;
       if (Terminal) {
         return [Terminal];
       } else {
@@ -330,7 +329,7 @@ export default vue.extend({
         case "addTerminalMountDev":
           {
             const arg = this.$data.accont;
-            const Terminal: Terminal = this.$data.Terminal;
+            const Terminal: Uart.Terminal = this.$data.Terminal;
             const isPidOccupy = Terminal.mountDevs.some(el => el.pid === arg.pid);
             if (isPidOccupy) {
               const isRegister = await this.$bvModal.msgBoxConfirm(`Pid：${arg.pid}已经使用,是否修改Pid：${arg.pid}挂载的设备??`);
@@ -391,7 +390,7 @@ export default vue.extend({
     },
 
     // 删除终端
-    async deleteTerminal(item: Terminal) {
+    async deleteTerminal(item: Uart.Terminal) {
       const isDel: boolean = await this.$bvModal.msgBoxConfirm(`确定删除终端：${item.DevMac}??`);
       if (isDel) {
         return;
@@ -423,7 +422,7 @@ export default vue.extend({
       this.accont.protocol = "";
     },
     // 修改终端挂载设备模式
-    registerTerminalMountDevMode(item: TerminalMountDevs) {
+    registerTerminalMountDevMode(item: Uart.TerminalMountDevs) {
       if (this.$data.OprateMode !== "registerTerminalMountDev") {
         this.TerminalStat = true;
         this.$data.OprateMode = "registerTerminalMountDev";
@@ -440,7 +439,7 @@ export default vue.extend({
       }
     },
     // 删除终端挂载设备
-    async delTerminalMountDev(item: TerminalMountDevs) {
+    async delTerminalMountDev(item: Uart.TerminalMountDevs) {
       const DevMac = String(this.accont.DevMac);
       const { pid, mountDev } = item;
       const isDel: boolean = await this.$bvModal.msgBoxConfirm(`确定删除终端绑定设备：Pid(${pid})/${mountDev}??`);

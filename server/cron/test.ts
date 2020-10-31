@@ -1,13 +1,13 @@
 import { CronJob } from "cron";
 import { LogUartTerminalDataTransfinite, LogDataClean } from "../mongoose/Log";
 import { QueryCursor, Document, Types } from "mongoose";
-import { uartAlarmObject } from "uart";
+import { Uart } from "typing";
 
 // 计数器
 let NumUartterminaldatatransfinites = 0
 
 // Map缓存
-const MapUartterminaldatatransfinites: Map<string, uartAlarmObject> = new Map()
+const MapUartterminaldatatransfinites: Map<string, Uart.uartAlarmObject> = new Map()
 
 // 数据清洗,清除告警数据中连续的重复的
 
@@ -19,7 +19,7 @@ async function Uartterminaldatatransfinites(cur: QueryCursor<Document>) {
         const tag = doc.mac + doc.pid + doc.tag
         const _id = Types.ObjectId((doc as any)._id)
         if (MapUartterminaldatatransfinites.has(tag)) {
-            const old = MapUartterminaldatatransfinites.get(tag) as uartAlarmObject
+            const old = MapUartterminaldatatransfinites.get(tag) as Uart.uartAlarmObject
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
             if (old.msg === doc.msg) {
                 await LogUartTerminalDataTransfinite.deleteOne({ _id }).exec()

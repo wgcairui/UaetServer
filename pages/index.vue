@@ -164,7 +164,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { BindDevice, Terminal, AggregationDev } from "uart";
 import aggregationVue from "./uart/aggregation.vue";
 export default Vue.extend({
   data() {
@@ -178,19 +177,19 @@ export default Vue.extend({
       uartFilter: "",
       aggregationFilter: "",
       aggName: "",
-      aggSelects: [] as AggregationDev[]
+      aggSelects: [] as Uart.AggregationDev[]
     };
   },
   computed: {
     uts() {
-      const uts = this.$data.BindDevice.UTs as Terminal[];
+      const uts = this.$data.BindDevice.UTs as Uart.Terminal[];
       const uartFilter = this.$data.uartFilter as string;
       if (!uartFilter) return uts;
       const regex = new RegExp(uartFilter);
       return uts.filter(el => uartFilter && regex.test(JSON.stringify(el)));
     },
     aggOption() {
-      const uts = this.$data.BindDevice.UTs as Terminal[];
+      const uts = this.$data.BindDevice.UTs as Uart.Terminal[];
       const aggOpt = uts
         .map(el => {
           return el.mountDevs.map(el2 => ({
@@ -249,7 +248,7 @@ export default Vue.extend({
         }
       `,
       result: function(data) {
-        const BindDevice = data.data.BindDevice as BindDevice;
+        const BindDevice = data.data.BindDevice as Uart.BindDevice;
         if (
           !BindDevice ||
           (BindDevice.UTs.length === 0 && BindDevice.ECs.length === 0)

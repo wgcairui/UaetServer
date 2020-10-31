@@ -21,30 +21,29 @@
   </b-col>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import gql from "graphql-tag";
-import { BvTableFieldArray } from "bootstrap-vue";
-import { UserInfo } from "uart";
-export default Vue.extend({
-  data() {
-    return {
-      filter: this.$route.query.user || "",
-      Users: [],
-      NodeInfoFields: [
-        { key: "user", label: "账号" },
-        { key: "name", label: "昵称" },
-        { key: "userGroup", label: "用户组" },
-        { key: "mail", label: "邮箱" },
-        { key: "tel", label: "电话" },
-        { key: "creatTime", label: "创建时间", formatter: date => new Date(date).toLocaleString() },
-        { key: "modifyTime", label: "修改时间", formatter: date => new Date(date).toLocaleString() },
-        { key: "address", label: "登陆IP" },
-        { key: 'oprate', label: '操作' }
-      ] as BvTableFieldArray
-    };
-  },
-  apollo: {
-    Users: gql`
+  import Vue from "vue";
+  import gql from "graphql-tag";
+  import { BvTableFieldArray } from "bootstrap-vue";
+  export default Vue.extend({
+    data() {
+      return {
+        filter: this.$route.query.user || "",
+        Users: [],
+        NodeInfoFields: [
+          { key: "user", label: "账号" },
+          { key: "name", label: "昵称" },
+          { key: "userGroup", label: "用户组" },
+          { key: "mail", label: "邮箱" },
+          { key: "tel", label: "电话" },
+          { key: "creatTime", label: "创建时间", formatter: date => new Date(date).toLocaleString() },
+          { key: "modifyTime", label: "修改时间", formatter: date => new Date(date).toLocaleString() },
+          { key: "address", label: "登陆IP" },
+          { key: 'oprate', label: '操作' }
+        ] as BvTableFieldArray
+      };
+    },
+    apollo: {
+      Users: gql`
       {
         Users {
           name
@@ -61,6 +60,6 @@ export default Vue.extend({
         }
       }
     `
-  }
-});
+    }
+  });
 </script>

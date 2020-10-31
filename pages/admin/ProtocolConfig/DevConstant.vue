@@ -91,7 +91,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { DevConstant_Air, protocol, DevConstant_EM, DevConstant_Ups, DevConstant_TH, protocolType } from "uart";
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;
@@ -137,7 +136,7 @@ export default Vue.extend({
   },
   computed: {
     items() {
-      let ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      let ProtocolSingle: Uart.protocol = this.$data.ProtocolSingle;
       let i = 0;
       let result: any[] = [];
       if (ProtocolSingle) {
@@ -217,8 +216,8 @@ export default Vue.extend({
     }
   },
   methods: {
-    addDevConstent(ProtocolType: protocolType) {
-      const arg: | DevConstant_Air | DevConstant_EM | DevConstant_Ups | DevConstant_TH = this.$data[ProtocolType];
+    addDevConstent(ProtocolType: Uart.protocolType) {
+      const arg: | Uart.DevConstant_Air | Uart.DevConstant_EM | Uart.DevConstant_Ups | Uart.DevConstant_TH = this.$data[ProtocolType];
 
       const Protocol = this.Protocol;
       this.$apollo.mutate({

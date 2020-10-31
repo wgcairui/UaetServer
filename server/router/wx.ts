@@ -1,12 +1,5 @@
 import { ParameterizedContext } from "koa";
 import { Users, UserAlarmSetup, UserBindDevice } from "../mongoose/user";
-import {
-  KoaCtx,
-  UserInfo,
-  ApolloMongoResult,
-  userSetup,
-  logUserLogins, uartAlarmObject, queryResult, queryResultSave, ProtocolConstantThreshold, instructQueryArg, OprateInstruct, instructQuery, protocol, ConstantThresholdType, DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups, TerminalMountDevs
-} from "uart";
 import WX from "../util/wxUtil";
 import TencetMapAPI from "../util/TencetMapAPI";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
@@ -20,6 +13,7 @@ import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/no
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { ParseCoefficient } from "../util/func";
 import { DevsType } from "../mongoose/DeviceAndProtocol";
+import { Uart } from "typing";
 
 type url =
   | 'getuserMountDev'
@@ -51,7 +45,7 @@ type url =
   | 'cancelwx'
 
 export default async (Ctx: ParameterizedContext) => {
-  const ctx: KoaCtx = Ctx as any;
+  const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
@@ -59,7 +53,7 @@ export default async (Ctx: ParameterizedContext) => {
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = body.token
-  const tokenUser: UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
+  const tokenUser: Uart.UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
 
   if (!noCookieTypeArray.includes(type) && !token && !tokenUser) {
@@ -81,16 +75,16 @@ export default async (Ctx: ParameterizedContext) => {
         // 存储session
         ClientCache.CacheWXSession.set(openid, session_key);
         // 检查openid是否为已注册用户
-        const user = await Users.findOne({ userId: openid }).lean<UserInfo>();
+        const user = await Users.findOne({ userId: openid }).lean<Uart.UserInfo>();
         if (user) {
           //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
           user.passwd = ''
           ctx.body = {
             ok: 1,
             arg: { token: await JwtSign(user), user: user.user, userGroup: user.userGroup, name: user.name, avanter: user.avanter, tel: user.tel }
-          } as ApolloMongoResult;
+          } as Uart.ApolloMongoResult;
         } else {
-          ctx.body = { ok: 0, msg: "微信未绑定平台账号，请先注册使用", arg: { openid } } as ApolloMongoResult;
+          ctx.body = { ok: 0, msg: "微信未绑定平台账号，请先注册使用", arg: { openid } } as Uart.ApolloMongoResult;
         }
       }
       break;
@@ -98,21 +92,21 @@ export default async (Ctx: ParameterizedContext) => {
     case "userlogin":
       {
         const { openid, user, passwd, avanter } = body
-        const userInfo = await Users.findOne({ user }).lean<UserInfo>()
+        const userInfo = await Users.findOne({ user }).lean<Uart.UserInfo>()
         if (userInfo) {
           if (!await BcryptCompare(passwd, userInfo.passwd as string)) {
-            ctx.body = { ok: 0, msg: "密码效验错误" } as ApolloMongoResult
+            ctx.body = { ok: 0, msg: "密码效验错误" } as Uart.ApolloMongoResult
             return
           }
           if (userInfo.userId) {
-            ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as ApolloMongoResult
+            ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as Uart.ApolloMongoResult
             return
           }
           Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.ip, userId: openid, avanter } }).exec()
-          new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as logUserLogins).save()
-          ctx.body = { ok: 1, msg: 'success' } as ApolloMongoResult
+          new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as Uart.logUserLogins).save()
+          ctx.body = { ok: 1, msg: 'success' } as Uart.ApolloMongoResult
         } else {
-          ctx.body = { ok: 0, msg: '用户账号未注册' } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: '用户账号未注册' } as Uart.ApolloMongoResult
         }
 
       }
@@ -124,7 +118,7 @@ export default async (Ctx: ParameterizedContext) => {
           ok: 1, arg: _.pickBy(tokenUser, (_val, key) => {
             return key !== 'passwd'
           })
-        } as ApolloMongoResult
+        } as Uart.ApolloMongoResult
       }
       break
     // 用于解绑微信和透传账号的绑定关系
@@ -143,7 +137,7 @@ export default async (Ctx: ParameterizedContext) => {
         ctx.body = {
           ok: 1,
           arg: WX.BizDataCryptdecryptData(session_key!, encryptedData, iv)
-        } as ApolloMongoResult;
+        } as Uart.ApolloMongoResult;
       }
       break;
     // 微信用户注册
@@ -158,7 +152,7 @@ export default async (Ctx: ParameterizedContext) => {
 
         const userStat = await Users.findOne({ $or: [{ userId: data.user }, { tel: data.tel }] });
         if (userStat) {
-          ctx.body = { ok: 0, msg: "手机号码已被注册，请使用账号登录" } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: "手机号码已被注册，请使用账号登录" } as Uart.ApolloMongoResult
           return
         }
         const user = Object.assign(
@@ -166,12 +160,12 @@ export default async (Ctx: ParameterizedContext) => {
           { userId: data.user },
           { passwd: await BcryptDo(data.user) },
           { rgtype: "wx" }
-        ) as unknown as UserInfo;
+        ) as unknown as Uart.UserInfo;
         const User = new Users(user);
         ctx.body = await User.save()
           .then(() => {
             // 生成用户新的自定义配置
-            const setup: Partial<userSetup> = {
+            const setup: Partial<Uart.userSetup> = {
               user: user.user,
               tels: user.tel ? [String(user.tel)] : [],
               mails: user.mail ? [user.mail] : []
@@ -181,7 +175,7 @@ export default async (Ctx: ParameterizedContext) => {
             new LogUserLogins({
               user: user.user,
               type: "用户注册"
-            } as logUserLogins).save();
+            } as Uart.logUserLogins).save();
             ctx.$Event.Cache.RefreshCacheUser(user.user)
             WX.SendsubscribeMessageRegister(user.userId, user.user, user.name || '', user.creatTime as any, '欢迎使用LADS透传云平台')
             return { ok: 1, msg: "账号注册成功" };
@@ -204,16 +198,16 @@ export default async (Ctx: ParameterizedContext) => {
           }
           return el
         })
-        ctx.body = { ok: 1, arg: Bind } as ApolloMongoResult;
+        ctx.body = { ok: 1, arg: Bind } as Uart.ApolloMongoResult;
       } else {
-        ctx.body = { ok: 0, msg: 'user no bindDev' } as ApolloMongoResult
+        ctx.body = { ok: 0, msg: 'user no bindDev' } as Uart.ApolloMongoResult
       }
 
       break
     // 查询DTU信息
     case 'getDTUInfo':
       const terminal = await Terminal.findOne({ DevMac: body.mac })
-      ctx.body = { ok: terminal ? 1 : 0, arg: terminal } as ApolloMongoResult
+      ctx.body = { ok: terminal ? 1 : 0, arg: terminal } as Uart.ApolloMongoResult
       break
     // 绑定设备信息
     case 'bindDev':
@@ -221,7 +215,7 @@ export default async (Ctx: ParameterizedContext) => {
         const id = body.mac as string
         const isBind = await UserBindDevice.findOne({ UTs: id }).exec()
         if (isBind) {
-          ctx.body = { ok: 0, msg: `${id}设备已被绑定` } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: `${id}设备已被绑定` } as Uart.ApolloMongoResult
         } else {
           const result = await UserBindDevice.updateOne(
             { user: tokenUser.user },
@@ -239,7 +233,7 @@ export default async (Ctx: ParameterizedContext) => {
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
         const logCur = await LogUartTerminalDataTransfinite.countDocuments({ mac: { $in: BindDevs }, isOk: false })
         // const logCurCount = await logCur.countDocuments()
-        ctx.body = { ok: 1, arg: logCur } as ApolloMongoResult
+        ctx.body = { ok: 1, arg: logCur } as Uart.ApolloMongoResult
       }
       break
     // 获取用户告警信息
@@ -255,7 +249,7 @@ export default async (Ctx: ParameterizedContext) => {
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
         const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end)
         const logCurCount = await logCur.countDocuments()
-        let result = [] as uartAlarmObject[]
+        let result = [] as Uart.uartAlarmObject[]
         if (logCurCount > 0) {
           if (logCurCount > 200) {
             result = await logCur.find().sort("-timeStamp").limit(200).lean()
@@ -275,7 +269,7 @@ export default async (Ctx: ParameterizedContext) => {
           arg: _.sortBy(arr, (item) => {
             return -item.timeStamp
           })
-        } as ApolloMongoResult
+        } as Uart.ApolloMongoResult
 
       }
       break
@@ -285,13 +279,13 @@ export default async (Ctx: ParameterizedContext) => {
         const id = body.id as string
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
         if (id) {
-          const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as uartAlarmObject
+          const doc = await LogUartTerminalDataTransfinite.findById(id, "mac").lean() as Uart.uartAlarmObject
           if (BindDevs.includes(doc.mac)) {
             // 确认告警缓存清除
             const tags = doc.mac + doc.pid + doc.tag
             ctx.$Event.Cache.CacheAlarmNum.delete(tags)
             ctx.body = await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }, { new: true }).exec()
-          } else ctx.body = { ok: 0 } as ApolloMongoResult
+          } else ctx.body = { ok: 0 } as Uart.ApolloMongoResult
         } else {
           ctx.body = await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
         }
@@ -304,7 +298,7 @@ export default async (Ctx: ParameterizedContext) => {
         const data = await TerminalClientResultSingle.findOne({
           mac: mac,
           pid
-        }).lean<queryResult>()
+        }).lean<Uart.queryResult>()
         if (data) {
           // 获取mac协议
           const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
@@ -314,9 +308,9 @@ export default async (Ctx: ParameterizedContext) => {
           if (ShowTag) {
             data.result = (data.result?.filter(el => ShowTag.has(el.name)))
           }
-          ctx.body = { ok: 1, arg: data } as ApolloMongoResult
+          ctx.body = { ok: 1, arg: data } as Uart.ApolloMongoResult
         } else {
-          ctx.body = { ok: 0, msg: '设备没有运行数据' } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: '设备没有运行数据' } as Uart.ApolloMongoResult
         }
       }
       break
@@ -324,7 +318,7 @@ export default async (Ctx: ParameterizedContext) => {
     case "getDevsHistoryInfo":
       {
         const { mac, pid, name, datatime } = body
-        let result: queryResultSave[]
+        let result: Uart.queryResultSave[]
         // 如果没有日期参数,默认检索最新的100条数据
         if (datatime === "") {
           result = await TerminalClientResult.find({ mac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").limit(100).lean() as any;
@@ -345,34 +339,34 @@ export default async (Ctx: ParameterizedContext) => {
         // 遍历切块,刷选出指定字段的结果集,
         const res = resultChunk.map(el => {
           // 刷选切块,如果值相同则抛弃
-          let def: queryResultSave = el[0]
+          let def: Uart.queryResultSave = el[0]
           //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
           return el.reduce((pre, cur) => {
             // 获取最后一个值
-            const last = _.last(pre) as queryResultSave
+            const last = _.last(pre) as Uart.queryResultSave
             //cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
             if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
             return pre
           }, [def])
         }).flat().map(el3 => ({ time: new Date(el3.timeStamp).toLocaleTimeString(), [name]: el3.result[0].value })
         )
-        ctx.body = { ok: 1, arg: res } as ApolloMongoResult
+        ctx.body = { ok: 1, arg: res } as Uart.ApolloMongoResult
       }
       break
     // 获取设备操控指令
     case "getDevOprate":
       {
-        const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<ProtocolConstantThreshold>()
-        ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as ApolloMongoResult
+        const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<Uart.ProtocolConstantThreshold>()
+        ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as Uart.ApolloMongoResult
       }
       break
     //  固定发送设备操作指令
     case "SendProcotolInstructSet":
       {
-        const query: instructQueryArg = body.query
-        const item: OprateInstruct = body.item
+        const query: Uart.instructQueryArg = body.query
+        const item: Uart.OprateInstruct = body.item
         // 获取协议指令
-        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as protocol
+        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
         // 检查操作指令是否含有自定义参数
         if (/(%i)/.test(item.value)) {
           // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
@@ -386,7 +380,7 @@ export default async (Ctx: ParameterizedContext) => {
           console.log({ msg: '发送查询指令', item });
         }
         // 携带事件名称，触发指令查询
-        const Query: instructQuery = {
+        const Query: Uart.instructQuery = {
           protocol: query.protocol,
           DevMac: query.DevMac,
           pid: query.pid,
@@ -402,20 +396,20 @@ export default async (Ctx: ParameterizedContext) => {
     case "getUserDevConstant":
       {
         const Protocol: string = body.protocol
-        const userSetup = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string) as userSetup
+        const userSetup = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string) as Uart.userSetup
         const user = userSetup?.ProtocolSetupMap.get(Protocol)
         const sys = await DevConstant.findOne({ Protocol })
         const protocol = ctx.$Event.Cache.CacheProtocol.get(Protocol)
         /* if (!user) {
           await UserAlarmSetup.updateOne({ user: tokenUser.user }, { "$addToSet": { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
         } */
-        ctx.body = { ok: 1, arg: { user, sys, protocol, userSetup } } as ApolloMongoResult
+        ctx.body = { ok: 1, arg: { user, sys, protocol, userSetup } } as Uart.ApolloMongoResult
       }
       break
     // 统一提交配置
     case "pushThreshold":
       {
-        const { Protocol, type, arg }: { Protocol: string, type: ConstantThresholdType, arg: DevConstant_Air | DevConstant_Ups | DevConstant_EM | DevConstant_TH | string[] | OprateInstruct } = body as any
+        const { Protocol, type, arg }: { Protocol: string, type: Uart.ConstantThresholdType, arg: Uart.DevConstant_Air | Uart.DevConstant_Ups | Uart.DevConstant_EM | Uart.DevConstant_TH | string[] | Uart.OprateInstruct } = body as any
         const user = tokenUser.user
         let Up
         switch (type) {
@@ -429,7 +423,7 @@ export default async (Ctx: ParameterizedContext) => {
             Up = { "ProtocolSetup.$.AlarmStat": arg }
             break
         }
-        const userSetup = await UserAlarmSetup.findOne({ user }).lean<userSetup>()
+        const userSetup = await UserAlarmSetup.findOne({ user }).lean<Uart.userSetup>()
 
         if (!userSetup) {
           await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
@@ -454,7 +448,7 @@ export default async (Ctx: ParameterizedContext) => {
     case "getUserAlarmTels":
       {
         const data = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)
-        ctx.body = { ok: 1, arg: { tels: data?.tels || [], mails: data?.mails || [] } } as ApolloMongoResult
+        ctx.body = { ok: 1, arg: { tels: data?.tels || [], mails: data?.mails || [] } } as Uart.ApolloMongoResult
       }
       break
     // 设置用户自定义设置(联系方式)
@@ -514,7 +508,7 @@ export default async (Ctx: ParameterizedContext) => {
     case "DevTypes":
       {
         const model = await DevsType.find({ Type: body.Type })
-        ctx.body = { ok: 1, arg: model } as ApolloMongoResult
+        ctx.body = { ok: 1, arg: model } as Uart.ApolloMongoResult
       }
       break
     // 修改用户信息
@@ -522,9 +516,9 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const { type, value }: { type: 'tel' | 'mail' | 'name', value: string } = body as any
         if (type === 'mail' || type === 'tel') {
-          const users = await Users.findOne({ $or: [{ tel: value }, { mail: value }] }).lean<UserInfo>()
+          const users = await Users.findOne({ $or: [{ tel: value }, { mail: value }] }).lean<Uart.UserInfo>()
           if (users && users.user !== tokenUser.user) {
-            ctx.body = { ok: 0, msg: '号码已被使用，请换新的号码重试' } as ApolloMongoResult
+            ctx.body = { ok: 0, msg: '号码已被使用，请换新的号码重试' } as Uart.ApolloMongoResult
           } else {
             const res = await Users.updateOne({ user: tokenUser.user }, { $set: { [type]: value } })
             ctx.$Event.Cache.RefreshCacheUser(tokenUser.user)
@@ -543,18 +537,18 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const location = body.location
         const adress = await TencetMapAPI.geocoder(location)
-        ctx.body = { ok: Number(Boolean(adress.status === 0)), arg: adress } as ApolloMongoResult
+        ctx.body = { ok: Number(Boolean(adress.status === 0)), arg: adress } as Uart.ApolloMongoResult
       }
       break
     // 注销微信
     case "cancelwx":
       {
         if (tokenUser.rgtype !== "wx") {
-          ctx.body = { ok: 0, msg: '只有微信注册的用户可以执行注销操作' } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: '只有微信注册的用户可以执行注销操作' } as Uart.ApolloMongoResult
           return
         }
         if (getUserBindDev(tokenUser.user).length > 0) {
-          ctx.body = { ok: 0, msg: '请先卸载绑定的所有设备再注销账号' } as ApolloMongoResult
+          ctx.body = { ok: 0, msg: '请先卸载绑定的所有设备再注销账号' } as Uart.ApolloMongoResult
           return
         }
         ctx.body = await new Promise(async (resolve) => {

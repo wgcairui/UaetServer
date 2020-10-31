@@ -35,7 +35,6 @@
 <script lang="ts">
 import vue from "vue";
 import gql from "graphql-tag";
-import { protocol, DevsType } from "uart";
 
 export default vue.extend({
   data() {
@@ -59,11 +58,11 @@ export default vue.extend({
   },
   computed: {
     selectProtocols() {
-      const Protocols: protocol[] = this.$data.accont.Protocols;
+      const Protocols: Uart.protocol[] = this.$data.accont.Protocols;
       return Protocols.map(el => el.Protocol).toString();
     },
     filterProtocols() {
-      const Protocols: protocol[] = this.$data.Protocols;
+      const Protocols: Uart.protocol[] = this.$data.Protocols;
       const type = {
         ups: "UPS",
         air: "空调",
@@ -144,7 +143,7 @@ export default vue.extend({
           this.$apollo.queries.DevTypes.refresh();
         });
     },
-    deleteDevModel(item: DevsType) {
+    deleteDevModel(item: Uart.DevsType) {
       this.$bvModal.msgBoxConfirm(`确定删除型号"${item.DevModel}"？？？`).then(value => {
         if (!value) return;
         this.$apollo.mutate({

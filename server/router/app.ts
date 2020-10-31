@@ -1,21 +1,21 @@
 /* app端用api */
 import { ParameterizedContext } from "koa";
 import { JwtVerify, JwtSign } from "../util/Secret";
-import { UserInfo, KoaCtx, ApolloMongoResult, userSetup, logUserLogins } from "uart";
 import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
 import { Users, UserAlarmSetup } from "../mongoose/user";
 import { BcryptDo } from "../util/bcrypt";
 import { LogUserLogins } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
+import { Uart } from "typing";
 export default async (Ctx: ParameterizedContext) => {
-  const ctx: KoaCtx = Ctx as any;
+  const ctx: Uart.KoaCtx = Ctx as any;
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type;
   // 所有的请求都需要检查token，没有token返回err
   if (body.token) {
     ctx.assert(body.token, 400, "no token");
-    const user: UserInfo = await JwtVerify(body.token).catch(err => ctx.throw(401));
+    const user: Uart.UserInfo = await JwtVerify(body.token).catch(err => ctx.throw(401));
     switch (type) {
       case "nodes":
         {
@@ -43,7 +43,7 @@ export default async (Ctx: ParameterizedContext) => {
             }
           });
           const msg = await Promise.all(resut);
-          ctx.body = { msg: msg.join(""), ok: 1 } as ApolloMongoResult;
+          ctx.body = { msg: msg.join(""), ok: 1 } as Uart.ApolloMongoResult;
         }
         break;
     }
@@ -62,19 +62,19 @@ export default async (Ctx: ParameterizedContext) => {
           /* const mailStat = await Users.findOne({ user: body.mail });
           ctx.assert(!mailStat,400,"邮箱账号有重复,请重新填写邮箱")
           // */
-          const user = Object.assign(body, { passwd: await BcryptDo(body.passwd) }, { rgtype: "app" }) as UserInfo
+          const user = Object.assign(body, { passwd: await BcryptDo(body.passwd) }, { rgtype: "app" }) as Uart.UserInfo
           const User = new Users(user);
           ctx.body = await User.save()
             .then(() => {
               // 生成用户新的自定义配置
-              const setup: Partial<userSetup> = {
+              const setup: Partial<Uart.userSetup> = {
                 user: user.user,
                 tels: user.tel ? [String(user.tel)] : [],
                 mails: user.mail ? [user.mail] : []
               }
               new UserAlarmSetup(setup).save()
               // 添加日志记录
-              new LogUserLogins({ user: user.user, type: '用户注册' } as logUserLogins).save()
+              new LogUserLogins({ user: user.user, type: '用户注册' } as Uart.logUserLogins).save()
               ctx.$Event.Cache.RefreshCacheUser(user.user)
               return { ok: 1, msg: "账号注册成功" };
             })
@@ -84,7 +84,7 @@ export default async (Ctx: ParameterizedContext) => {
       // 重置用户，发送校验码
       case "resetUserPasswd":
         {
-          const User = await Users.findOne({ $or: [{ user: body.user }, { mail: body.user }] }).lean<UserInfo>()
+          const User = await Users.findOne({ $or: [{ user: body.user }, { mail: body.user }] }).lean<Uart.UserInfo>()
           if (User) {
             const code = (Math.random() * 10000).toFixed(0)
             ctx.$Event.ClientCache.CacheUserValidationCode.set('reset' + User.user, code)
@@ -92,7 +92,7 @@ export default async (Ctx: ParameterizedContext) => {
             if (res.ok) res.msg = Tool.Mixtel(User.tel)
             ctx.body = res
           } else {
-            ctx.body = { ok: 0, msg: '账号不存在,请和对账号' } as ApolloMongoResult
+            ctx.body = { ok: 0, msg: '账号不存在,请和对账号' } as Uart.ApolloMongoResult
           }
         }
         break;
@@ -106,10 +106,10 @@ export default async (Ctx: ParameterizedContext) => {
               codeMap.delete('reset' + user)
               ctx.body = await Users.updateOne({ user }, { $set: { passwd: await BcryptDo(passwd) } })
             } else {
-              ctx.body = { ok: 0, msg: '校验码不正确' } as ApolloMongoResult
+              ctx.body = { ok: 0, msg: '校验码不正确' } as Uart.ApolloMongoResult
             }
           } else {
-            ctx.body = { ok: 0, msg: '没有校验码,请重新获取' } as ApolloMongoResult
+            ctx.body = { ok: 0, msg: '没有校验码,请重新获取' } as Uart.ApolloMongoResult
           }
         }
         break

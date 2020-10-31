@@ -4,10 +4,10 @@
       <b-row class="mb-5">
         <b-col>
           <separated title="终端散布" :back="false">
-            <b>{{Terminals.length}}</b>
+            <b class="mr-3">终端数:{{Terminals.length}}</b>
             <b-icon icon="arrows-fullscreen" @click="full"></b-icon>
           </separated>
-          <amap id="admin" ref="admin" class="map" @ready="mapready"></amap>
+          <amap id="admin" ref="admin" class="map" @ready="AMapReady"></amap>
         </b-col>
       </b-row>
       <b-row>
@@ -54,8 +54,11 @@
   import gql from "graphql-tag";
   import { VeLine, VePie } from "v-charts";
   import { BvTableFieldArray } from "bootstrap-vue";
-  import { Terminal, logTerminaluseBytes } from "uart";
-  import { gps2AutonaviPosition, API_Aamp_ip2local } from "../../plugins/tools";
+  import { gps2AutonaviPosition, API_Aamp_ip2local, V2_API_Aamp_ip2local, V2_API_Aamp_gps2autoanvi } from "../../plugins/tools";
+  import "@amap/amap-jsapi-types";
+  import { Uart } from "typing";
+  import { VueRouter } from "vue-router/types/router";
+
   interface navi {
     to: { name: string };
     text: string;
@@ -64,6 +67,18 @@
   interface runstate {
     online: number;
     all: number;
+  }
+
+  // 转换终端gps到autonavi
+  async function terminal2locations(terminals: Uart.Terminal[]) {
+    const hasJw = terminals.filter(el => el.jw && /[1-9]/.test(el.jw as string))
+    const hasJwKeys = new Set(hasJw.map(el => el.DevMac))
+    const IPs = terminals.filter(el => !hasJwKeys.has(el.DevMac))
+    const JwConvert = await V2_API_Aamp_gps2autoanvi(hasJw.map(el => el.jw as string))
+    const IPsConvert = await Promise.all(IPs.map(el => V2_API_Aamp_ip2local(el.ip!)))
+    hasJw.forEach((el, index) => el.jw = JwConvert.result[index])
+    IPs.forEach((el, index) => el.jw = IPsConvert[index].result)
+    return [...hasJw, ...IPs]
   }
   export default Vue.extend({
     components: { VeLine, VePie },
@@ -118,14 +133,15 @@
         ] as BvTableFieldArray,
         //
         BtyeMac: "",
-        logterminaluseBtyes: [] as logTerminaluseBytes[],
-        Terminals: [] as Terminal[]
+        logterminaluseBtyes: [] as Uart.logTerminaluseBytes[],
+        Terminals: [] as Uart.Terminal[],
+        mapReady: false
       };
     },
     computed: {
       // 是否是全屏状态
       cterminals() {
-        let terminals = this.$data.Terminals as Terminal[];
+        let terminals = this.$data.Terminals as Uart.Terminal[];
         if (terminals) {
           terminals = terminals.map<any>(el => ({
             text: el.name,
@@ -136,10 +152,10 @@
       },
       btyes() {
         const logterminaluseBtyes = this.$data
-          .logterminaluseBtyes as logTerminaluseBytes[];
+          .logterminaluseBtyes as Uart.logTerminaluseBytes[];
         const btyes = {
           columns: ["date", "useBytes"],
-          rows: [] as logTerminaluseBytes[]
+          rows: [] as Uart.logTerminaluseBytes[]
         };
         if (logterminaluseBtyes) {
           btyes.rows = logterminaluseBtyes.map(el => {
@@ -268,10 +284,19 @@
         query TerminalsInfo {
           Terminals {
             DevMac
-            name
+              jw
+              ip
+              name
+              online
           }
         }
-      `
+      `,
+        pollInterval: 10000
+      }
+    },
+    watch: {
+      Terminals: function () {
+        this.$emit("terminalUpdate")
       }
     },
     methods: {
@@ -279,74 +304,71 @@
       full() {
         document.documentElement.requestFullscreen()
       },
-      // 等待amap地图组件准备好,加载地图mark
-      async mapready(map: AMap.Map) {
-        const ter = await this.$apollo.query({
-          query: gql`
-          query Terminals {
-            Terminals {
-              DevMac
-              jw
-              ip
-              name
-              online
-            }
-          }
-        `
-        });
-        const jws = ter.data.Terminals as Terminal[];
-        //https://lbs.amap.com/api/jsapi-v2/guide/overlays/massmarker
-        const markArr = jws.map(async ({ jw, ip, name, DevMac, online }) => {
-          const position = jw && /[1-9]/.test(jw as string) ? await gps2AutonaviPosition(jw as string, window) : await API_Aamp_ip2local(ip as string);
-          const labelMarker = new AMap.LabelMarker({
-            name, // 此属性非绘制文字内容，仅最为标识使用
-            position,
-            zIndex: 16,
-            // 将第一步创建的 icon 对象传给 icon 属性
-            icon: {
-              // 图片 url
-              image: require(online ? "~/assets/jw-success.png" : "~/assets/jw-error.png"),
-              // 图片尺寸
-              size: [48, 48],
-              // 图片相对 position 的锚点，默认为 bottom-center
-              anchor: 'center',
-            },
-            // 将第二步创建的 text 对象传给 text 属性
-            text: {
-              // 要展示的文字内容
-              content: name,
-              // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
-              direction: 'right',
-              // 在 direction 基础上的偏移量
-              offset: [-15, 0],
-              // 文字样式
-              style: {
-                // 字体大小
-                fontSize: 12,
-                // 字体颜色
-                fillColor: '#0041ff',
-                // 描边颜色
-                strokeColor: '#fff',
-                // 描边宽度
-                strokeWidth: 2,
-              }
-            }
-          });
-          labelMarker.on('click', (e) => {
-            this.$router.push({ name: 'root-node-Terminal', query: { DevMac } })
-          });
-          return labelMarker
+      // 
+      async AMapReady(map: AMap.Map) {
+        // 执行一次
+        updateMark(map, this.$data.Terminals, this.$router)
+        // 监听更新事件,
+        this.$on("terminalUpdate", () => {
+          updateMark(map, this.$data.Terminals, this.$router)
         })
-        const labelsLayer = new AMap.LabelsLayer({
-          zooms: [3, 30],
-          zIndex: 1000,
-          // 该层内标注是否避让
-          collision: false,
-          // 设置 allowCollision：true，可以让标注避让用户的标注
-          allowCollision: true,
-        });
-        (labelsLayer as any).add(await Promise.all(markArr))
-        map.add(labelsLayer)
+
+        async function updateMark(amap: AMap.Map, data: Uart.Terminal[], rout: VueRouter) {
+          const convert = await terminal2locations(data)
+          const markers = convert.map(el => {
+            const labelMarker = new AMap.LabelMarker({
+              name: el.DevMac, // 此属性非绘制文字内容，仅最为标识使用
+              position: el.jw,
+              zIndex: 16,
+              // 将第一步创建的 icon 对象传给 icon 属性
+              icon: {
+                // 图片 url
+                image: require(el.online ? "~/assets/jw-success.png" : "~/assets/jw-error.png"),
+                // 图片尺寸
+                size: [48, 48],
+                // 图片相对 position 的锚点，默认为 bottom-center
+                anchor: 'center',
+              },
+              // 将第二步创建的 text 对象传给 text 属性
+              text: {
+                // 要展示的文字内容
+                content: el.name,
+                // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
+                direction: 'right',
+                // 在 direction 基础上的偏移量
+                offset: [-15, 0],
+                // 文字样式
+                style: {
+                  // 字体大小
+                  fontSize: 12,
+                  // 字体颜色
+                  fillColor: '#0041ff',
+                  // 描边颜色
+                  strokeColor: '#fff',
+                  // 描边宽度
+                  strokeWidth: 2,
+                }
+              }
+            });
+            labelMarker.on('click', (e) => {
+              rout.push({ name: 'root-node-Terminal', query: { DevMac: el.DevMac } })
+            });
+            return labelMarker
+          });
+          const labelsLayer = new AMap.LabelsLayer({
+            zooms: [3, 30],
+            zIndex: 1000,
+            // 该层内标注是否避让
+            collision: false,
+            // 设置 allowCollision：true，可以让标注避让用户的标注
+            allowCollision: true,
+          });
+          (labelsLayer as any).add(markers)
+          map.clearMap()
+          map.add(labelsLayer)
+
+        }
+
 
       }
     },

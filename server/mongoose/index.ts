@@ -11,12 +11,20 @@ mongoose.connect(DB_URL, {
 mongoose.set("useUnifiedTopology", true);
 mongoose.set("useFindAndModify", false);
 mongoose.connection
-  .on("connected", function() {
+  .on("connected", function () {
     console.log("Mongoose connection open to " + DB_URL);
   })
-  .on("error", function(err) {
+  .on("error", function (err) {
     console.log("Mongoose connection error: " + err);
   })
-  .on("disconnected", function() {
+  .on("disconnected", function () {
     console.log("Mongoose connection disconnected");
   });
+
+
+const AMapLoctionCacheScheme = new Schema({
+  key: String,
+  val: String
+})
+
+export const AMapLoctionCache = mongoose.model("AMap.LoctionCache", AMapLoctionCacheScheme)

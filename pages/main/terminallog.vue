@@ -16,7 +16,6 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { VeLine } from "v-charts";
-import { logTerminals } from "uart";
 export default Vue.extend({
   components: { VeLine },
   data() {
@@ -30,7 +29,7 @@ export default Vue.extend({
   },
   computed: {
     lines() {
-      const data = this.$data.data as logTerminals[];
+      const data = this.$data.data as Uart.logTerminals[];
       const item = { columns: ["time", "type"], rows: [] as any[] };
       if (data?.length > 0) {
         let temp = 1;

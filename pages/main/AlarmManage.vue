@@ -65,7 +65,6 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
-import { uartAlarmObject } from "uart";
 export default Vue.extend({
   data() {
     return {
@@ -100,7 +99,7 @@ export default Vue.extend({
       variables() {
         return { start: this.start, end: this.end };
       },
-      update: ({ items }: { items: uartAlarmObject[] }) => items.map(el => {
+      update: ({ items }: { items: Uart.uartAlarmObject[] }) => items.map(el => {
         if (!el.isOk) {
           return Object.assign({ _rowVariant: 'danger' }, el)
         } else {

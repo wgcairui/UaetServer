@@ -5,22 +5,10 @@
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
 import { Terminal } from "../mongoose/Terminal";
 import { NodeClient } from "../mongoose/node";
-
-import {
-  protocol,
-  DevsType as devsType,
-  Terminal as terminal,
-  NodeClient as nodeClient,
-  ProtocolConstantThreshold,
-  BindDevice,
-  userSetup,
-  TerminalMountDevsEX,
-  UserInfo
-} from "uart";
-import { Socket } from "socket.io";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { UserBindDevice, UserAlarmSetup, Users } from "../mongoose/user";
 import { Event as event } from "./index";
+import { Uart } from "typing";
 
 export interface sendQuery {
   IP: string;
@@ -33,17 +21,17 @@ type TerminalPid = string
 
 export default class Cache {
   // 协议缓存protocol=>
-  CacheProtocol: Map<string, protocol>;
+  CacheProtocol: Map<string, Uart.protocol>;
   // 设备类型缓存devmodal=>
-  CacheDevsType: Map<string, devsType>;
+  CacheDevsType: Map<string, Uart.DevsType>;
   // 透传终端缓存mac=>terminal
-  CacheTerminal: Map<string, terminal>;
+  CacheTerminal: Map<string, Uart.Terminal>;
   // Node节点=》终端缓存
-  CacheNodeTerminal: Map<string, Map<string, terminal>>;
+  CacheNodeTerminal: Map<string, Map<string, Uart.Terminal>>;
   // Node节点缓存ip=>nodeclient
-  CacheNode: Map<string, nodeClient>;
+  CacheNode: Map<string, Uart.NodeClient>;
   // Node节点缓存name=>nodeclient
-  CacheNodeName: Map<string, nodeClient>;
+  CacheNodeName: Map<string, Uart.NodeClient>;
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   //CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备ip->terminal
@@ -51,9 +39,9 @@ export default class Cache {
   // 缓存节点查询终端设备超时的指令
   CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
-  CacheConstant: Map<string, ProtocolConstantThreshold>
+  CacheConstant: Map<string, Uart.ProtocolConstantThreshold>
   // 缓存用户绑定
-  CacheBind: Map<string, BindDevice>
+  CacheBind: Map<string, Uart.BindDevice>
   // 缓存绑定透传设备mac=>user
   CacheBindUart: Map<string, string>
   // 缓存绑定透传设备mac=>user
@@ -61,9 +49,9 @@ export default class Cache {
   // 缓存告警参数次数 tag=>number
   CacheAlarmNum: Map<string, number>
   // 缓存用户 user=》user
-  CacheUser: Map<string, UserInfo>
+  CacheUser: Map<string, Uart.UserInfo>
   // 缓存用户配置 user=>setup
-  CacheUserSetup: Map<string, userSetup>
+  CacheUserSetup: Map<string, Uart.userSetup>
   // 用户uart挂载终端缓存
   // QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
@@ -136,7 +124,7 @@ export default class Cache {
 
   // 
   async RefreshCacheProtocol(protocol?: string) {
-    const res: protocol[] = await DeviceProtocol.find(protocol ? { Protocol: protocol } : {}).lean()
+    const res: Uart.protocol[] = await DeviceProtocol.find(protocol ? { Protocol: protocol } : {}).lean()
     console.log(`更新协议缓存......`);
     res.map(el => {
       el.instruct = el.instruct.filter(el1 => el1.isUse)
@@ -151,7 +139,7 @@ export default class Cache {
   }
   //
   async RefreshCacheDevType(DevModel?: string) {
-    const res: devsType[] = await DevsType.find(DevModel ? { DevModel } : {}).lean()
+    const res: Uart.DevsType[] = await DevsType.find(DevModel ? { DevModel } : {}).lean()
     console.log(`更新设备型号缓存......`);
     res.forEach(el => {
       this.CacheDevsType.set(el.DevModel, el)
@@ -159,7 +147,7 @@ export default class Cache {
   }
   //
   async RefreshCacheNode() {
-    const res: nodeClient[] = await NodeClient.find().lean()
+    const res: Uart.NodeClient[] = await NodeClient.find().lean()
     console.log(`更新节点缓存......`);
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
     this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
@@ -167,7 +155,7 @@ export default class Cache {
   }
   //
   async RefreshCacheTerminal(DevMac?: string) {
-    const res: terminal[] = await Terminal.find(DevMac ? { DevMac } : {}).lean()
+    const res: Uart.Terminal[] = await Terminal.find(DevMac ? { DevMac } : {}).lean()
     console.log(`更新4g终端缓存......`)
     res.forEach(el => {
       if (!el.mountDevs) el.mountDevs = []
@@ -188,7 +176,7 @@ export default class Cache {
   }
   //
   async RefreshCacheConstant(protocol?: string) {
-    const res = await DevConstant.find(protocol ? { Protocol: protocol } : {}).lean<ProtocolConstantThreshold>()
+    const res = await DevConstant.find(protocol ? { Protocol: protocol } : {}).lean<Uart.ProtocolConstantThreshold>()
     console.log(`更新协议常量缓存......`);
     res.forEach(el => {
       this.CacheConstant.set(el.Protocol, el)
@@ -199,7 +187,7 @@ export default class Cache {
   }
   //
   async RefreshCacheBind(user?: string) {
-    const res = await UserBindDevice.find(user ? { user } : {}).lean<BindDevice>()
+    const res = await UserBindDevice.find(user ? { user } : {}).lean<Uart.BindDevice>()
     console.log(`更新绑定设备缓存......`);
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
@@ -211,14 +199,14 @@ export default class Cache {
   //
   async RefreshCacheUser(user?: string) {
     console.log(`更新用户信息缓存......`);
-    const users = await Users.find(user ? { user } : {}).lean<UserInfo>()
+    const users = await Users.find(user ? { user } : {}).lean<Uart.UserInfo>()
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
     })
   }
   //
   async RefreshCacheUserSetup(user?: string) {
-    const res = await UserAlarmSetup.find(user ? { user } : {}).lean<userSetup>()
+    const res = await UserAlarmSetup.find(user ? { user } : {}).lean<Uart.userSetup>()
     console.log(`更新用户个性化配置......`);
     res.forEach(el => {
       // 如果用户没有自定义告警阀值,生成空map   

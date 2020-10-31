@@ -38,7 +38,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { queryResultSave } from "uart";
 import 'echarts/lib/component/markLine'
 import 'echarts/lib/component/markPoint'
 import 'echarts/lib/component/dataZoom'
@@ -74,7 +73,7 @@ export default Vue.extend({
     }
     return {
       markLine, markPoint, toolbox,
-      query, label, select: { value: decodeURI(this.$route.query.name) }, Data: [] as queryResultSave[], datetime: "", ShowTag: []
+      query, label, select: { value: decodeURI(this.$route.query.name as string) }, Data: [] as Uart.queryResultSave[], datetime: "", ShowTag: []
     };
   },
   computed: {
@@ -147,7 +146,7 @@ export default Vue.extend({
       const T = new Date(parseInt(time));
       return `${T.getMonth() + 1}/${T.getDate()} ${T.getHours()}:${T.getMinutes()}:${T.getSeconds()}`;
     },
-    parseResult(data: queryResultSave[]) {
+    parseResult(data: Uart.queryResultSave[]) {
       return data.map(el => {
         const { name, value } = el.result[0];
         return { time: this.parseTime(el.timeStamp as any), [name]: value };

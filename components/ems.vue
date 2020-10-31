@@ -17,17 +17,16 @@
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { queryResultSave, ProtocolConstantThreshold, queryResultArgument } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 import gql from "graphql-tag";
 export default Vue.extend({
   props: {
     dev: {
-      type: Object as PropType<queryResultSave>,
+      type: Object as PropType<Uart.queryResultSave>,
       default: {}
     },
     Constant: {
-      type: Object as PropType<ProtocolConstantThreshold>
+      type: Object as PropType<Uart.ProtocolConstantThreshold>
     }
   },
 });

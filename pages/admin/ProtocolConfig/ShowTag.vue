@@ -15,7 +15,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import { protocol } from "uart";
 interface tags {
   name: string;
   show: boolean;
@@ -33,7 +32,7 @@ export default Vue.extend({
   computed: {
     items: {
       get() {
-        const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+        const ProtocolSingle: Uart.protocol = this.$data.ProtocolSingle;
         const ShowTag: string[] = this.$data.ShowTag;
         const result: tags[] = [];
         if (ProtocolSingle) {

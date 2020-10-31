@@ -1,16 +1,16 @@
 import Event from "../event/index";
 import Tool from "./tool";
-import { protocolInstruct, queryResult, queryResultArgument, protocol, uartAlarmObject } from "uart";
 import CacheParseRegx from "../util/regxCache"
 import { ParseFunctionEnd, ParseCoefficient } from "./func";
+import { Uart } from "typing";
 
-export default async (R: queryResult) => {
+export default async (R: Uart.queryResult) => {
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
   // if (R.content.length !== R.contents.length) Event.Emit("QueryIntervalLow", R)
   // 保存查询的查询时间，间隔10min重新计算查询间隔
   Event.Cache.QueryTerminaluseTime.get(R.mac + R.pid)?.push(R.useTime);
   // 协议数组
-  const Protocol = Event.Cache.CacheProtocol.get(R.protocol) as protocol;
+  const Protocol = Event.Cache.CacheProtocol.get(R.protocol) as Uart.protocol;
   // 缓存协议方法
   const InstructMap = new Map(Protocol.instruct.map(el => [el.name, el]));
   // 结果集数组
@@ -23,7 +23,7 @@ export default async (R: queryResult) => {
         R.result = IntructResult.filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
           .map(el => {
             // 解析规则
-            const instructs = InstructMap.get(el.content) as protocolInstruct;
+            const instructs = InstructMap.get(el.content) as Uart.protocolInstruct;
             // 把buffer转换为utf8字符串并掐头去尾
             const parseStr = Buffer.from(el.buffer)
               .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length)
@@ -31,7 +31,7 @@ export default async (R: queryResult) => {
               // 如果是utf8,分隔符为' '
               .split(instructs.isSplit ? " " : "");
             // console.log({ cont:el.content,parseStr, parseStrlen: parseStr.length, ins: instructs.formResize.length });
-            return instructs.formResize.map<queryResultArgument>(el2 => {
+            return instructs.formResize.map<Uart.queryResultArgument>(el2 => {
               const [start] = CacheParseRegx(el2.regx as string)
               return { name: el2.name, value: parseStr[start - 1], unit: el2.unit }
             });
@@ -61,7 +61,7 @@ export default async (R: queryResult) => {
               // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
               if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
               else {
-                Event.savelog<uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
+                Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
                 console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
                 return false
               }
@@ -73,7 +73,7 @@ export default async (R: queryResult) => {
         // 根据协议指令解析类型的不同,转换裁减Array<number>为Array<number>,把content换成指令名称
         const ParseInstructResultType = ResultFilter.map(el => {
           el.content = Event.Cache.CacheInstructContents.get(el.content) as string
-          const instructs = InstructMap.get(el.content) as protocolInstruct
+          const instructs = InstructMap.get(el.content) as Uart.protocolInstruct
           const data = el.buffer.data.slice(instructs.shift ? instructs.shiftNum : 3, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length - 2)
           switch (instructs.resultType) {
             case 'bit2':
@@ -96,7 +96,7 @@ export default async (R: queryResult) => {
         //console.log(ParseInstructResultType);
         // 把转换处理后的数据根据协议指令对应的解析对象生成结果对象数组,赋值result属性
         const ParseInstructResultArray = ParseInstructResultType.map(el => {
-          const instructs = InstructMap.get(el.content) as protocolInstruct
+          const instructs = InstructMap.get(el.content) as Uart.protocolInstruct
           const buffer = Buffer.from(el.buffer)
           return instructs.formResize.map(el2 => {
             // 申明结果

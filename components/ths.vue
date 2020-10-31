@@ -16,21 +16,20 @@
 </template>
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { queryResult, queryResultSave, ProtocolConstantThreshold, queryResultArgument } from "uart";
 import gql from "graphql-tag";
 export default Vue.extend({
   props: {
     dev: {
-      type: Object as PropType<queryResultSave>,
+      type: Object as PropType<Uart.queryResultSave>,
       default: {}
     },
     Constant: {
-      type: Object as PropType<ProtocolConstantThreshold>
+      type: Object as PropType<Uart.ProtocolConstantThreshold>
     }
   },
   computed: {
     TH() {
-      const data = this.dev as queryResultSave
+      const data = this.dev as Uart.queryResultSave
       if (data?.parse) {
         const th = data.parse;
         return {

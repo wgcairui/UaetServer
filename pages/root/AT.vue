@@ -46,14 +46,13 @@
 <script lang="ts">
 import Vue from 'vue'
 import gql from "graphql-tag";
-import { Terminal } from 'uart';
 export default Vue.extend({
   data() {
     return {
       Terminals: [],
       DevMac: this.$route.query.mac || '',
       AT: 'VER',
-      msg: [],
+      msg: [] as string[],
       label: true,
       at: [
         { text: '硬重启', value: 'Z' },
@@ -96,7 +95,7 @@ export default Vue.extend({
         }
       `,
       update: data => {
-        return (<Terminal[]>data.Terminals).map(el => ({
+        return (<Uart.Terminal[]>data.Terminals).map(el => ({
           text: el.name + (!el.AT ? '---不支持AT指令' : ''),
           value: el.DevMac,
           AT: el.AT
@@ -126,7 +125,7 @@ export default Vue.extend({
           content: label ? str + AT : AT
         }
       })
-      const R = result.data.Send_DTU_AT_InstructSet as ApolloMongoResult;
+      const R = result.data.Send_DTU_AT_InstructSet as Uart.ApolloMongoResult;
       this.msg.push(`Recive(${new Date().toLocaleTimeString()}): ${DevMac} -- code:${R.ok} -- msg:${R.msg}`)
     }
   }

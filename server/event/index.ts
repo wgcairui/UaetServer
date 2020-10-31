@@ -4,13 +4,13 @@ import ClientCache from "./ClientCache"
 import { DefaultContext } from "koa";
 import { Server } from "http";
 import { LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins } from "../mongoose/Log";
-import { TerminalMountDevsEX, TerminalMountDevs, queryResult, uartAlarmObject, logLogins, logNodes, logTerminals, logUserRequst, ApolloMongoResult, instructQuery, DTUoprate } from "uart";
 import config from "../config";
 import { SmsDTUDevTimeOut, SmsDTU } from "../util/SMS";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
+import { Uart } from "typing";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 
@@ -105,22 +105,22 @@ export class Event extends EventEmitter.EventEmitter {
   }
 
   // 发送设备操作指令查询
-  DTU_OprateInstruct(Query: instructQuery) {
+  DTU_OprateInstruct(Query: Uart.instructQuery) {
     if (this.uartSocket) {
       return this.uartSocket.InstructQuery(Query)
     } else {
-      return new Promise<Partial<ApolloMongoResult>>(resolve => {
+      return new Promise<Partial<Uart.ApolloMongoResult>>(resolve => {
         resolve({ ok: 0, msg: '节点Socket服务器未运行' })
       })
     }
   }
 
   // 发送设备DTU AT查询指令
-  DTU_ATInstruct(Query: DTUoprate) {
+  DTU_ATInstruct(Query: Uart.DTUoprate) {
     if (this.uartSocket) {
       return this.uartSocket.OprateDTU(Query)
     } else {
-      return new Promise<Partial<ApolloMongoResult>>(resolve => {
+      return new Promise<Partial<Uart.ApolloMongoResult>>(resolve => {
         resolve({ ok: 0, msg: '节点Socket服务器未运行' })
       })
     }
@@ -151,8 +151,8 @@ export class Event extends EventEmitter.EventEmitter {
       const nodeTerminals = this.uartSocket?.CacheSocket.get(terminal.mountNode)
       if (nodeTerminals) {
         terminal.mountDevs.forEach(mountDev => {
-          const mount = Object.assign<Partial<TerminalMountDevsEX>, TerminalMountDevs>
-            ({ TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<TerminalMountDevsEX>
+          const mount = Object.assign<Partial<Uart.TerminalMountDevsEX>, Uart.TerminalMountDevs>
+            ({ TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<Uart.TerminalMountDevsEX>
           nodeTerminals.cache.set(terminal.DevMac + mountDev.pid, mount)
         })
         // 如果cache下面有同mac不同pid的话此种情况无法清理
@@ -193,7 +193,7 @@ export class Event extends EventEmitter.EventEmitter {
   }
 
   // 解析设备请求结果,检查设备是否是超时设备,是的话取消超时,发送短信提醒 send ProtocolPares
-  QuerySuccess(Query: queryResult) {
+  QuerySuccess(Query: Uart.queryResult) {
     const hash = Query.mac + Query.pid
     if (this.Cache.TimeOutMonutDev.has(hash)) {
       this.Cache.TimeOutMonutDev.delete(hash)
@@ -227,10 +227,10 @@ export class Event extends EventEmitter.EventEmitter {
   }
 
   // 保存日志
-  savelog<T extends uartAlarmObject | logLogins | logNodes | logTerminals | logUserRequst>(event: eventsName, body: T) {
+  savelog<T extends Uart.uartAlarmObject | Uart.logLogins | Uart.logNodes | Uart.logTerminals | Uart.logUserRequst>(event: eventsName, body: T) {
     switch (event) {
       case 'DataTransfinite':
-        this.SendUserAlarm(<uartAlarmObject>body)
+        this.SendUserAlarm(<Uart.uartAlarmObject>body)
         new LogUartTerminalDataTransfinite(body).save()
         break
       case 'terminal':

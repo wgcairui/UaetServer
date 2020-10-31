@@ -1,8 +1,8 @@
 import ws from "ws";
 import { Server } from "http";
 import { JwtVerify } from "../util/Secret";
-import { UserInfo } from "uart";
 import { getDtuInfo } from "../util/util";
+import { Uart } from "typing";
 
 class WXws {
     private ws: ws.Server;
@@ -19,7 +19,7 @@ class WXws {
                 if (/^{.*}$/.test(data.toString())) {
                     const ObjData = JSON.parse(data.toString())
                     if (ObjData?.token) {
-                        JwtVerify(ObjData.token).then((user: UserInfo) => {
+                        JwtVerify(ObjData.token).then((user: Uart.UserInfo) => {
                             this.clients.set(user.user, new client(socket))
                             socket.on("close", () => this.clean(user.user)).on("error", () => this.clean(user.user))
                         }).catch(() => {

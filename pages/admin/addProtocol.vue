@@ -194,7 +194,6 @@
 import vue from "vue";
 import gql from "graphql-tag";
 import deepmerge from "deepmerge";
-import { protocolInstructFormrize, protocol, protocolInstruct } from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 
 export default vue.extend({
@@ -227,7 +226,7 @@ export default vue.extend({
         scriptEnd: 'function(content,arr){\n\n}'
       },
       // 指令集
-      instructItems: [] as protocol[],
+      instructItems: [] as Uart.protocol[],
       //
       instructItemsFields: [
         { key: "name", label: "名称" },
@@ -277,7 +276,7 @@ export default vue.extend({
         bl: el[2] || '1',
         unit: el[3] || '',
         isState: /(^{.*}$)/.test(el[3]) //el[3]?.includes("{")
-      } as protocolInstructFormrize)
+      } as Uart.protocolInstructFormrize)
       );
     }
   },
@@ -309,7 +308,7 @@ export default vue.extend({
       }
     },
     // 监测协议是否重复，重复之后填充input
-    apolloProtocol: function (newVal: protocol) {
+    apolloProtocol: function (newVal: Uart.protocol) {
       if (newVal) {
         this.$data.instructItems = newVal.instruct;
         this.$data.accont.ProtocolType = newVal.ProtocolType;
@@ -371,12 +370,12 @@ export default vue.extend({
           return;
         }
       }
-      const instruct: protocolInstruct = this.$data.instruct;
+      const instruct: Uart.protocolInstruct = this.$data.instruct;
       instruct.name = instruct.name.replace(/\s*/g, "");
       instruct.formResize = [];
-      const result = <protocolInstruct>deepmerge(instruct, { formResize });
+      const result = <Uart.protocolInstruct>deepmerge(instruct, { formResize });
       // 协议
-      const instructItems: protocolInstruct[] = this.$data.instructItems;
+      const instructItems: Uart.protocolInstruct[] = this.$data.instructItems;
       // 检测是否为新增指令
       if ((result as any).addModel) {
         if (instructItems.some(val => val.name === result.name)) {
@@ -407,7 +406,7 @@ export default vue.extend({
     // 删除指令
     rm(data: any) {
       this.$bvModal.msgBoxConfirm(`确定要删除指令:${data.item.name}吗??`).then(() => {
-        const instructItems: protocolInstruct[] = this.$data.instructItems;
+        const instructItems: Uart.protocolInstruct[] = this.$data.instructItems;
         instructItems.forEach((el, index) => {
           if (el.name == data.item.name) {
             instructItems.splice(index, 1);
@@ -420,7 +419,7 @@ export default vue.extend({
     async submit() {
       //
       const accont = this.$data.accont;
-      const instruct: protocolInstruct[] = this.$data.instructItems;
+      const instruct: Uart.protocolInstruct[] = this.$data.instructItems;
 
       await this.$apollo.mutate({
         mutation: gql`

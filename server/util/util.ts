@@ -1,5 +1,5 @@
+import { Uart } from "typing";
 import Event from "../event/index";
-import { userSetup, Terminal, UserInfo } from "uart";
 // 格式化cookie-token
 export const parseToken = (token: string) => {
   return token.replace(/(bearer)/, "").trim();
@@ -9,9 +9,9 @@ export const parseToken = (token: string) => {
 export const getDtuInfo = (DevMac: string) => {
   const User = Event.Cache.CacheBindUart.get(DevMac) as string
   return {
-    terminalInfo: Event.Cache.CacheTerminal.get(DevMac) as Terminal,
-    userInfo: Event.Cache.CacheUserSetup.get(User) as userSetup,
-    user:Event.Cache.CacheUser.get(User) as UserInfo
+    terminalInfo: Event.Cache.CacheTerminal.get(DevMac) as Uart.Terminal,
+    userInfo: Event.Cache.CacheUserSetup.get(User) as Uart.userSetup,
+    user:Event.Cache.CacheUser.get(User) as Uart.UserInfo
   }
 };
 

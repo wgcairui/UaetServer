@@ -71,15 +71,6 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
-import {
-  protocol,
-  queryResult,
-  ProtocolConstantThreshold,
-  userSetup,
-  Threshold,
-  ConstantThresholdType,
-  ConstantAlarmStat
-} from "uart";
 import { BvTableFieldArray } from "bootstrap-vue";
 interface tags {
   name: string;
@@ -114,11 +105,11 @@ export default Vue.extend({
         { key: "show", label: "勾选正常状态" }
       ] as BvTableFieldArray,
       DevConstant: {} as Pick<
-        ProtocolConstantThreshold,
+        Uart.ProtocolConstantThreshold,
         "ProtocolType" | "ShowTag" | "Threshold" | "AlarmStat"
       >,
       //
-      userSetup: {} as ProtocolConstantThreshold,
+      userSetup: {} as Uart.ProtocolConstantThreshold,
       ProtocolSingle: null
     };
   },
@@ -138,7 +129,7 @@ export default Vue.extend({
         }
       }
       //
-      let Thresholds = [] as Threshold[];
+      let Thresholds = [] as Uart.Threshold[];
       if (DevConstant?.Threshold) {
         // 获取默认配置key
         const ThresholdMap = new Map(
@@ -157,8 +148,8 @@ export default Vue.extend({
     },
     // 参数状态
     AlarmStatItems() {
-      const DevConstant = this.$data.DevConstant as ProtocolConstantThreshold;
-      const ProtocolSingle: protocol = this.$data.ProtocolSingle;
+      const DevConstant = this.$data.DevConstant as Uart.ProtocolConstantThreshold;
+      const ProtocolSingle: Uart.protocol = this.$data.ProtocolSingle;
       const userSetup = this.userSetup;
       let result: any[] = [];
       // 如果协议单例存在
@@ -274,7 +265,7 @@ export default Vue.extend({
       this.pushThreshold(Array.from(ShowTag), "ShowTag");
     },
     // 添加删除showtags
-    async StateAlarmSelects(item: ConstantAlarmStat, value: string) {
+    async StateAlarmSelects(item: Uart.ConstantAlarmStat, value: string) {
       const StatSet = new Set(item.alarmStat);
       if (StatSet.has(value)) {
         StatSet.delete(value);
@@ -288,13 +279,13 @@ export default Vue.extend({
           name: el.name,
           alarmStat: (<any[]>el.alarmStat).filter(el => el).map(el => String(el))
         }
-      }).filter(el => el.alarmStat.length > 0)
+      }).filter(el => el.alarmStat.length > 0) as any
       this.pushThreshold(AlarmStat, "AlarmStat");
     },
     // 添加阀值
     addThreshold() {
       const Threshold = JSON.parse(JSON.stringify(this.Thresholds));
-      let data = [Threshold] as Threshold[];
+      let data = [Threshold] as Uart.Threshold[];
       if (this.DevConstant?.Threshold) {
         const ThresholdMap = new Map(
           this.items.Thresholds.map(el => [el.name, el])
@@ -305,7 +296,7 @@ export default Vue.extend({
       this.pushThreshold(data, "Threshold");
     },
     // 删除阈值
-    deleteThreshold(Threshold: Threshold) {
+    deleteThreshold(Threshold: Uart.Threshold) {
       const ThresholdMap = new Map(
         this.DevConstant.Threshold.map(el => [el.name, el])
       );
@@ -315,8 +306,8 @@ export default Vue.extend({
     },
     // 统一提交配置
     async pushThreshold(
-      arg: Threshold[] | string[],
-      type: ConstantThresholdType
+      arg: Uart.Threshold[] | string[],
+      type: Uart.ConstantThresholdType
     ) {
       const isOk = await this.$apollo.mutate({
         mutation: gql`

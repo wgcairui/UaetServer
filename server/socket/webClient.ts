@@ -1,9 +1,9 @@
 import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
-import { UserInfo } from "uart";
 import { JwtVerify } from "../util/Secret";
 import { parseToken, getDtuInfo } from "../util/util";
+import { Uart } from "typing";
 
 interface socketArgument {
     IP: string
@@ -37,7 +37,7 @@ export default class webClientSocketIO {
         // 监听所有连接事件
         this.io.on("connect", async socket => {
             const token = parseToken(socket.handshake.query.token)
-            const { user }: UserInfo = await JwtVerify(token)
+            const { user }: Uart.UserInfo = await JwtVerify(token)
             const id = socket.id
             const ip = socket.conn.remoteAddress
             const Node: socketArgument = { User: user as string, ID: id, socket, IP: ip }

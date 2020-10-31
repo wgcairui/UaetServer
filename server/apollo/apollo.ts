@@ -3,12 +3,12 @@ import { GraphQLRequest } from "apollo-server-types";
 import { JwtVerify } from "../util/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
-import { KoaCtx, UserInfo, logUserRequst } from "uart";
+import { Uart } from "typing";
 
 export default new ApolloServer({
   typeDefs: typeDefs,
   resolvers: resolvers,
-  context: async ({ ctx }: { ctx: KoaCtx }) => {
+  context: async ({ ctx }: { ctx: Uart.KoaCtx }) => {
     // 获取Token
     const token = ctx.cookies.get("auth._token.local");
     const apolloRequest = ctx.request.body as GraphQLRequest
@@ -20,11 +20,11 @@ export default new ApolloServer({
       else throw new Error("query error");
     }
     // 解构token
-    const user: UserInfo = await JwtVerify((<string>token).replace(/^bearer\%20/, ""));
+    const user: Uart.UserInfo = await JwtVerify((<string>token).replace(/^bearer\%20/, ""));
     // token不合法则报错
     if (!user || !user.user) throw new Error("you must be logged in");
     // 保存所有的操作日志
-    ctx.$Event.savelog<logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
+    ctx.$Event.savelog<Uart.logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
     return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token };
   }
 });
