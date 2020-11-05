@@ -1,49 +1,62 @@
 <template>
   <b-row>
     <b-col class="overflow-auto">
-      <b-row class="mb-5">
+      <b-row class="mb-1">
         <b-col>
-          <separated title="终端散布" :back="false">
+          <separated title="终端散布" :back="false" v-b-toggle.accordion-0>
             <b class="mr-3">终端数:{{Terminals.length}}</b>
             <b-icon icon="arrows-fullscreen" @click="full"></b-icon>
           </separated>
-          <amap id="admin" ref="admin" class="map" @ready="AMapReady"></amap>
-        </b-col>
-      </b-row>
-      <b-row>
-        <separated title="Server运行状态" :back="false"></separated>
-        <b-col md="4">
-          <ve-pie :data="state.user" />
-        </b-col>
-        <b-col md="4">
-          <ve-pie :data="state.node" />
-        </b-col>
-        <b-col md="4">
-          <ve-pie :data="state.terminal" />
-        </b-col>
-        <b-col>
-          <ve-line :data="sysinfo" :settings="sysinfoSetting"></ve-line>
-        </b-col>
-      </b-row>
-      <b-row>
-        <separated title="服务器状态" :back="false"></separated>
-        <b-col>
-          <b-table :items="state.syslist" :fields="sysinfoFields"></b-table>
+          <b-collapse id="accordion-0" visible accordion="my-accordion" role="tabpanel">
+            <amap id="admin" ref="admin" class="map" @ready="AMapReady"></amap>
+          </b-collapse>
         </b-col>
       </b-row>
       <b-row>
         <b-col>
-          <separated title="节点状态" :back="false"></separated>
-          <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive />
+          <separated title="Server运行状态" :back="false" v-b-toggle.accordion-1></separated>
+          <b-collapse id="accordion-1" visible accordion="my-accordion" role="tabpanel">
+            <b-row>
+              <b-col md="4">
+                <ve-pie :data="state.user" />
+              </b-col>
+              <b-col md="4">
+                <ve-pie :data="state.node" />
+              </b-col>
+              <b-col md="4">
+                <ve-pie :data="state.terminal" />
+              </b-col>
+              <b-col>
+                <ve-line :data="sysinfo" :settings="sysinfoSetting"></ve-line>
+              </b-col>
+            </b-row>
+          </b-collapse>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col>
+          <separated title="服务器状态" :back="false" v-b-toggle.accordion-2></separated>
+          <b-collapse id="accordion-2" visible accordion="my-accordion" role="tabpanel">
+            <b-table :items="state.syslist" :fields="sysinfoFields"></b-table>
+          </b-collapse>
+        </b-col>
+      </b-row>
+      <b-row>
+        <b-col>
+          <separated title="节点状态" :back="false" v-b-toggle.accordion-3></separated>
+          <b-collapse id="accordion-3" visible accordion="my-accordion" role="tabpanel">
+            <b-table :items="NodeInfo" :fields="NodeInfoFields" responsive />
+          </b-collapse>
         </b-col>
       </b-row>
 
       <b-row id="useBtyes">
         <b-col>
-          <separated title="流量使用(MB)" :back="false">
+          <separated title="流量使用(MB)" :back="false" v-b-toggle.accordion-4></separated>
+          <b-collapse id="accordion-4" visible accordion="my-accordion" role="tabpanel">
             <b-select :options="cterminals" v-model="BtyeMac" />
-          </separated>
-          <ve-line :data="btyes" />
+            <ve-line :data="btyes" />
+          </b-collapse>
         </b-col>
       </b-row>
     </b-col>

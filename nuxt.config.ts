@@ -1,14 +1,17 @@
 import { NuxtConfig } from "@nuxt/types"
-const isProd = process.env.NODE_ENV === "production"
+const server = process.env.NODE_ENV === "production" ? 'https://uart.ladishb.com/' : 'http://localhost:9010/'
 const Config = {
   //
   telemetry: true,
-  ssr:false,
-  modern:'client',
+  ssr: false,
+  modern: 'client',
   // mode: "universal",
   server: {
     host: "0.0.0.0",
     port: 9010
+  },
+  env: {
+    server
   },
   /*
    ** Headers of the page
@@ -43,7 +46,7 @@ const Config = {
     { src: "~/plugins/vue-socket.io-extended.ts", ssr: false },
     "~/plugins/compontent.js"
   ],
-  components:true,
+  components: true,
   /*
    ** Nuxt.js dev-modules
    */
@@ -157,7 +160,7 @@ const Config = {
     },
     clientConfigs: {
       default: {
-        httpEndpoint: "http://127.0.0.1:9010",
+        httpEndpoint: server + "/graphql",
         browserHttpEndpoint: "/graphql",
         httpLinkOptions: {
           credentials: "same-origin"
@@ -186,7 +189,7 @@ const Config = {
     }
   },
   router: {
-    middleware: ["auth", 'checkSocketIO',"CheckUserGroup"],
+    middleware: ["auth", 'checkSocketIO', "CheckUserGroup"],
     /* extendRoutes(routes, resolve){
       const mainIndex = routes.findIndex(r=>r.path === '/main')
       const indexIndex = routes[mainIndex].children?.findIndex(r=>r.name === 'main') as number

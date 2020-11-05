@@ -165,6 +165,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import aggregationVue from "./uart/aggregation.vue";
+import { Uart } from "typing";
 export default Vue.extend({
   data() {
     return {

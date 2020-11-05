@@ -1,4 +1,5 @@
 import axios from "axios";
+import config from "../nuxt.config";
 const AmapKey = "0e99d0426f1afb11f2b95864ebd898d0"
 const ApiAddress = "https://restapi.amap.com/v3/"
 
@@ -87,7 +88,7 @@ export const API_Aamp_gps2autoanvi = (coordsys: 'gps' | 'mapbar' | 'baidu', loca
 
 // V2 gps转高德gps
 export const V2_API_Aamp_gps2autoanvi = (locations: string | string[], coordsys: 'gps' | 'mapbar' | 'baidu' = "gps") => {
-  return ServerApi<string | string[]>('AMap/GPS2autonavi', { coordsys, locations:Array.isArray(locations)?locations.join("|"):locations })
+  return ServerApi<string | string[]>('AMap/GPS2autonavi', { coordsys, locations: Array.isArray(locations) ? locations.join("|") : locations })
 }
 
 // V2 ip转gps
@@ -118,9 +119,9 @@ interface serverApi<T> {
 
 // serverAPI
 async function ServerApi<T>(path: string, params: Object) {
-  const url = "http://localhost:9010/api/util/"
+  // const url = "http://localhost:9010/api/util/"
   const token = '38_HFuhHEaxyKgthO-vgUzCIioWUHbkUlBYOsUoczHZU6VhLAfXOGIgAL2px8ApStw_u1XLGFIVxrgkYfxlRkVP8idjEch0Ykg0-ETwB8us19rXxWU6aKTbaoAS9Gma_N4UgtWZBbM7_r0OPkHHXHVgAEAGQE'
-  const result = await axios.get<serverApi<T>>(url + path, { params: { token, ...params } })
+  const result = await axios.get<serverApi<T>>(config.env!.server + "api/util/" + path, { params: { token, ...params } })
   return result.data
 }
 

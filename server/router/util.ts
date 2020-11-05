@@ -25,9 +25,8 @@ export default async (Ctx: ParameterizedContext) => {
     if (body.token !== '38_HFuhHEaxyKgthO-vgUzCIioWUHbkUlBYOsUoczHZU6VhLAfXOGIgAL2px8ApStw_u1XLGFIVxrgkYfxlRkVP8idjEch0Ykg0-ETwB8us19rXxWU6aKTbaoAS9Gma_N4UgtWZBbM7_r0OPkHHXHVgAEAGQE') {
         ctx.throw("token Error")
     }
-    console.log({body});
+    // console.log({body});
     
-
     switch (type1) {
         case "AMap":
             {
