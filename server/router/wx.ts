@@ -306,7 +306,8 @@ export default async (Ctx: ParameterizedContext) => {
           const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
           // 刷选
           if (ShowTag) {
-            data.result = (data.result?.filter(el => ShowTag.has(el.name)))
+            const objFilter = _.pick(data.parse,[...ShowTag])
+            data.result = _.values(objFilter) as Uart.queryResultArgument[] //(data.result?.filter(el => ShowTag.has(el.name)))
           }
           ctx.body = { ok: 1, arg: data } as Uart.ApolloMongoResult
         } else {

@@ -67,8 +67,12 @@ const resolvers: IResolvers = {
             else return null
             //return await Terminal.findOne({ DevMac });
         },
-        async Terminals() {
-            return await Terminal.find();
+        async Terminals(root,arg,ctx:Uart.ApolloCtx) {
+            const terminals = [...ctx.$Event.Cache.CacheTerminal.values()]
+            return terminals.map(el=>{
+                el.online = ctx.$Event.Cache.CacheNodeTerminalOnline.has(el.DevMac)
+                return el
+            })
         },
         // 环控终端信息
         async ECterminal(root, { ECid }) {
