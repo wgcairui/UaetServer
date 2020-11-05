@@ -718,7 +718,7 @@ const resolvers: IResolvers = {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
-                //return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
+                return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
             }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
