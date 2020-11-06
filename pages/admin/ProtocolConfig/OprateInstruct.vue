@@ -49,6 +49,7 @@
 import Vue from "vue";
 import gql from "graphql-tag";
 import { BvTableFieldArray } from "bootstrap-vue";
+import { Uart } from "typing";
 export default Vue.extend({
   data() {
     const { ProtocolType, Protocol } = this.$route.query;

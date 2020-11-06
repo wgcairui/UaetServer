@@ -596,8 +596,8 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const code = body.code
         const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(token)
-        if (!userCode || !code) return { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
-        if (userCode !== code) return { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
+        if (!userCode || !code) ctx.body = { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
+        if (userCode !== code) ctx.body = { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
         // 缓存权限
         ctx.$Event.ClientCache.CacheUserJurisdiction.set(token, code)
         ctx.body = { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
