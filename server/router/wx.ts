@@ -541,9 +541,13 @@ export default async (Ctx: ParameterizedContext) => {
         const query: Uart.instructQueryArg = body.query
         const item: Uart.OprateInstruct = body.item
         // 验证客户是否校验过权限
+
         const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(token)
-        if (!juri || juri !== tokenUser.user) {
+        console.log({ juri, a: ctx.$Event.ClientCache.CacheUserJurisdiction });
+
+        if (!juri) {
           ctx.body = { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
+          break
         }
         // 获取协议指令
         const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
@@ -596,8 +600,14 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const code = body.code
         const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(token)
-        if (!userCode || !code) ctx.body = { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
-        if (userCode !== code) ctx.body = { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
+        if (!userCode || !code) {
+          ctx.body = { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
+          break
+        }
+        if (userCode !== code) {
+          ctx.body = { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
+          break
+        }
         // 缓存权限
         ctx.$Event.ClientCache.CacheUserJurisdiction.set(token, code)
         ctx.body = { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
