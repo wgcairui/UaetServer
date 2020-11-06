@@ -82,6 +82,7 @@ import Vue from "vue";
 import gql from "graphql-tag";
 import { MessageBox } from "element-ui";
 import "element-ui/lib/theme-chalk/message-box.css";
+import { Uart } from "typing";
 export default Vue.extend({
   props: {
     query: {

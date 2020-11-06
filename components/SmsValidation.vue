@@ -22,6 +22,7 @@
 <script lang="ts">
 import Vue from "vue";
 import gql from "graphql-tag";
+import { Uart } from "typing";
 export default Vue.extend({
   props: {
     id: {

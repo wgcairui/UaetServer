@@ -3,7 +3,7 @@
     <b-col>
       <b-row>
         <b-col>
-          <separated title="添加操作指令"></separated>
+          <separated title="添加操作指令:(指令值如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节)"></separated>
           <b-form>
             <my-form label="指令名称:">
               <b-form-input v-model="instruct.name"></b-form-input>

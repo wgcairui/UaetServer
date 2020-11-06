@@ -14,6 +14,8 @@ import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import { ParseCoefficient } from "../util/func";
 import { DevsType } from "../mongoose/DeviceAndProtocol";
 import { Uart } from "typing";
+import Tool from "../util/tool";
+import { SendValidation } from "../util/SMS";
 
 type url =
   | 'getuserMountDev'
@@ -43,7 +45,9 @@ type url =
   | 'modifyUserInfo'
   | 'getGPSaddress'
   | 'cancelwx'
-
+  | 'getUserTel'
+  | 'sendValidation'
+  | 'ValidationCode'
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
@@ -306,7 +310,7 @@ export default async (Ctx: ParameterizedContext) => {
           const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
           // 刷选
           if (ShowTag) {
-            const objFilter = _.pick(data.parse,[...ShowTag])
+            const objFilter = _.pick(data.parse, [...ShowTag])
             data.result = _.values(objFilter) as Uart.queryResultArgument[] //(data.result?.filter(el => ShowTag.has(el.name)))
           }
           data.parse = {}
@@ -355,45 +359,7 @@ export default async (Ctx: ParameterizedContext) => {
         ctx.body = { ok: 1, arg: res } as Uart.ApolloMongoResult
       }
       break
-    // 获取设备操控指令
-    case "getDevOprate":
-      {
-        const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<Uart.ProtocolConstantThreshold>()
-        ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as Uart.ApolloMongoResult
-      }
-      break
-    //  固定发送设备操作指令
-    case "SendProcotolInstructSet":
-      {
-        const query: Uart.instructQueryArg = body.query
-        const item: Uart.OprateInstruct = body.item
-        // 获取协议指令
-        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
-        // 检查操作指令是否含有自定义参数
-        if (/(%i)/.test(item.value)) {
-          // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
-          if (/%i%i/.test(item.value)) {
-            const b = Buffer.allocUnsafe(2)
-            b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
-            item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
-          } else {
-            item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
-          }
-          console.log({ msg: '发送查询指令', item });
-        }
-        // 携带事件名称，触发指令查询
-        const Query: Uart.instructQuery = {
-          protocol: query.protocol,
-          DevMac: query.DevMac,
-          pid: query.pid,
-          type: Protocol.Type,
-          events: 'oprate' + Date.now() + query.DevMac,
-          content: item.value
-        }
-        const result = await ctx.$Event.DTU_OprateInstruct(Query)
-        ctx.body = result
-      }
-      break
+
     // 获取用户自定义协议配置
     case "getUserDevConstant":
       {
@@ -559,6 +525,82 @@ export default async (Ctx: ParameterizedContext) => {
           const result = await Users.deleteOne({ userId: tokenUser.userId })
           resolve(result)
         })
+      }
+      break
+
+    // 获取设备操控指令
+    case "getDevOprate":
+      {
+        const Constant = await DevConstant.findOne({ Protocol: body.protocol }).lean<Uart.ProtocolConstantThreshold>()
+        ctx.body = { ok: 1, arg: _.pick(Constant, ['OprateInstruct', 'ProtocolType']) } as Uart.ApolloMongoResult
+      }
+      break
+    //  固定发送设备操作指令
+    case "SendProcotolInstructSet":
+      {
+        const query: Uart.instructQueryArg = body.query
+        const item: Uart.OprateInstruct = body.item
+        // 验证客户是否校验过权限
+        const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(token)
+        if (!juri || juri !== tokenUser.user) {
+          ctx.body = { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
+        }
+        // 获取协议指令
+        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
+        // 检查操作指令是否含有自定义参数
+        if (/(%i)/.test(item.value)) {
+          // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
+          if (/%i%i/.test(item.value)) {
+            const b = Buffer.allocUnsafe(2)
+            b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
+            item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
+          } else {
+            item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
+          }
+          console.log({ msg: '发送查询指令', item });
+        }
+        // 携带事件名称，触发指令查询
+        const Query: Uart.instructQuery = {
+          protocol: query.protocol,
+          DevMac: query.DevMac,
+          pid: query.pid,
+          type: Protocol.Type,
+          events: 'oprate' + Date.now() + query.DevMac,
+          content: item.value
+        }
+        const result = await ctx.$Event.DTU_OprateInstruct(Query)
+        console.log(result);
+        ctx.body = result
+      }
+      break
+
+    // 获取用户手机号码
+    case "getUserTel":
+      {
+        const user = await Users.findOne({ user: tokenUser.user }).lean<Uart.UserInfo>()
+        ctx.body = { ok: 1, arg: Tool.Mixtel(user!.tel) } as Uart.ApolloMongoResult
+      }
+      break
+
+    // 发送短信验证码
+    case "sendValidation":
+      {
+        const user = await Users.findOne({ user: tokenUser.user }).lean<Uart.UserInfo>()
+        const code = (Math.random() * 10000).toFixed(0)
+        ctx.$Event.ClientCache.CacheUserValidationCode.set(token, code)
+        ctx.body = await SendValidation(String(user!.tel), code)
+      }
+      break
+    // 检验短信验证码
+    case "ValidationCode":
+      {
+        const code = body.code
+        const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(token)
+        if (!userCode || !code) return { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
+        if (userCode !== code) return { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
+        // 缓存权限
+        ctx.$Event.ClientCache.CacheUserJurisdiction.set(token, code)
+        ctx.body = { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
       }
       break
   }
