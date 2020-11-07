@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-const DB_URL: string = "mongodb://localhost:27017/UartServer"; /** * 连接 */
+const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017/UartServer`; /** * 连接 */
 
 export { mongoose, Schema };
 
@@ -15,6 +15,7 @@ mongoose.connection
     console.log("Mongoose connection open to " + DB_URL);
   })
   .on("error", function (err) {
+    console.log({DB_URL});
     console.log("Mongoose connection error: " + err);
   })
   .on("disconnected", function () {

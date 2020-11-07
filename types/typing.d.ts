@@ -1,5 +1,5 @@
 import { ParameterizedContext } from "koa";
-import { Event } from "server/event/index"
+import { Event } from "../server/event/index"
 // apollo server result
 
 declare namespace Uart {
@@ -102,7 +102,7 @@ declare namespace Uart {
         name: string;
         ip?: string
         port?: number
-        jw?: string | AMap.LngLat;
+        jw?: string ;
         uart?: string
         AT?: boolean
         uptime?: string

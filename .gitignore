@@ -91,3 +91,5 @@ sw.*
 
 # user 
 server/key/*
+server/*.js
+server/*/*.js
