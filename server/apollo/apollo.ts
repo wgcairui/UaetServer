@@ -10,21 +10,23 @@ export default new ApolloServer({
   resolvers: resolvers,
   context: async ({ ctx }: { ctx: Uart.KoaCtx }) => {
     // 获取Token
-    const token = ctx.cookies.get("auth._token.local");
+    const token = ctx.request.header.authorization
     const apolloRequest = ctx.request.body as GraphQLRequest
     // 没有token则检查body，注册和重置页面的请求则通过
     if (!token || token === "false") {
-      const guestQuery = ["getUser", "addUserAccont", 'resetUserPasswd', "resetValidationCode", "setUserPasswd"];
-      if (guestQuery.includes(apolloRequest.operationName || ''))
+      if (["getUser", "addUserAccont", 'resetUserPasswd', "resetValidationCode", "setUserPasswd"].includes(apolloRequest.operationName || ''))
         return { user: "guest", loggedIn: false, $Event: ctx.$Event };
       else throw new Error("query error");
+    } else {
+      const user:Uart.UserInfo = await JwtVerify(token.replace(/(^Bearer|bearer)/ig, "").trim()).catch(e=>console.log(e))
+      if (!user || !user.user) {
+        console.log("you must be logged in");
+        throw new Error("you must be logged in");
+      }
+      // 保存所有的操作日志
+      ctx.$Event.savelog<Uart.logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
+      return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token };
     }
-    // 解构token
-    const user: Uart.UserInfo = await JwtVerify((<string>token).replace(/^bearer\%20/, ""));
-    // token不合法则报错
-    if (!user || !user.user) throw new Error("you must be logged in");
-    // 保存所有的操作日志
-    ctx.$Event.savelog<Uart.logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
-    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token };
+
   }
 });

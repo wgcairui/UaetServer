@@ -1,43 +1,16 @@
 {
   "compilerOptions": {
-    "allowUnreachableCode": true, // 不报告执行不到的代码错误。
-    "allowUnusedLabels": true,
-    "target": "es2018",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "lib": [
-      "esnext",
-      "esnext.asynciterable",
-      "dom"
-    ],
-    "esModuleInterop": true,
-    "allowJs": true,
-    "sourceMap": true,
-    "noImplicitReturns": true,
+    "target": "ES2018",
+    "module": "commonjs",
+    "noImplicitAny": false,
     "strict": true,
-    "noImplicitThis": true,
-    "noEmit": true,
-    "baseUrl": ".",
-    "skipDefaultLibCheck": false,
+    "baseUrl": "./",
     "paths": {
       "*": [
-        "./types/*",
-        "*"
-      ],
-      "@nuxtjs/auth": [
-        "@types/nuxtjs__auth"
+        "./types/*"
       ]
     },
-    "types": [
-      "@types/node",
-      "@nuxt/types",
-      "vue/types",
-      "bootstrap-vue",
-      "@amap/amap-jsapi-types",
-      "@types/echarts"
-    ]
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
+  }
 }
