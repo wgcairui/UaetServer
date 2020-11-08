@@ -18,6 +18,8 @@ export default new ApolloServer({
         return { user: "guest", loggedIn: false, $Event: ctx.$Event };
       else throw new Error("query error");
     } else {
+      // console.log({token});
+      
       const user:Uart.UserInfo = await JwtVerify(token.replace(/(^Bearer|bearer)/ig, "").trim()).catch(e=>console.log(e))
       if (!user || !user.user) {
         console.log("you must be logged in");

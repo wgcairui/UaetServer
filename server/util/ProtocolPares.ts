@@ -5,6 +5,8 @@ import { ParseFunctionEnd, ParseCoefficient } from "./func";
 import { Uart } from "typing";
 
 export default async (R: Uart.queryResult) => {
+  console.log(R);
+  
   R.time = new Date(R.time!).toLocaleString()
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件
   // if (R.content.length !== R.contents.length) Event.Emit("QueryIntervalLow", R)
