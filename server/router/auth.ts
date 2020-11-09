@@ -27,7 +27,7 @@ export default async (ctx: ParameterizedContext) => {
         if (u && pwStat) {
           (ctx as Uart.KoaCtx).$Event.ClientCache.CacheUserLoginHash.delete(user)
           Users.updateOne({ $or: [{ user }, { mail: user }] }, { $set: { modifyTime: new Date(), address: ctx.ip } }).exec()
-          new LogUserLogins({ user: u.user, type: '用户登陆', address: ctx.ip } as Uart.logUserLogins).save()
+          new LogUserLogins({ user: u.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
           // token长度由对象的复杂度决定，edge限值header长度
           const token = await JwtSign({ user: u.user, userGroup: u.userGroup })
           // console.log({tokenlogin:token});

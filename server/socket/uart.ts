@@ -111,12 +111,14 @@ class nodeClient {
     interVal: NodeJS.Timeout;
     count: number;
     constructor(socket: Socket, event: event, CacheQueryIntruct: Map<string, string>) {
+        // console.log(socket);
         this.socket = socket
         this.cache = new Map()
         this.Event = event
         this.CacheQueryIntruct = CacheQueryIntruct
         this.ID = socket.id
-        this.IP = socket.conn.remoteAddress
+        // ip由nginx代理后会变为nginx服务器的ip，重写文件头x-real-ip为远端ip
+        this.IP = socket.handshake.headers["x-real-ip"] || socket.conn.remoteAddress
         this.Name = this.Event.Cache.CacheNode.get(this.IP)?.Name as string
         this.count = 0
         // 注册socket事件

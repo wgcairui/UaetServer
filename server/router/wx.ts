@@ -82,6 +82,7 @@ export default async (Ctx: ParameterizedContext) => {
         const user = await Users.findOne({ userId: openid }).lean<Uart.UserInfo>();
         if (user) {
           //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
+          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.header['x-real-ip'] || ctx.ip } }).exec()
           user.passwd = ''
           ctx.body = {
             ok: 1,
@@ -106,8 +107,8 @@ export default async (Ctx: ParameterizedContext) => {
             ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as Uart.ApolloMongoResult
             return
           }
-          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.ip, userId: openid, avanter } }).exec()
-          new LogUserLogins({ user, type: '用户登陆', address: ctx.ip } as Uart.logUserLogins).save()
+          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.header['x-real-ip'] || ctx.ip, userId: openid, avanter } }).exec()
+          new LogUserLogins({ user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
           ctx.body = { ok: 1, msg: 'success' } as Uart.ApolloMongoResult
         } else {
           ctx.body = { ok: 0, msg: '用户账号未注册' } as Uart.ApolloMongoResult
