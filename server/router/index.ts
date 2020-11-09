@@ -8,7 +8,7 @@ import wxPublic from "./wxPublic";
 import Util from "./util";
 
 rout.all("/api/app/:type", APPs);
-rout.post("/Api/Node/:type", nodeApi);
+rout.post("/api/Node/:type", nodeApi);
 rout.all("/api/auth/:type", Auth);
 rout.all("/api/wx/:type", WX)
 rout.all("/api/wxPublic", wxPublic)
