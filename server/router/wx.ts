@@ -53,7 +53,7 @@ export default async (Ctx: ParameterizedContext) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
-  console.log(_.pickBy(body, (_val, key) => key !== 'token'));
+  console.log({ type, body: _.pickBy(body, (_val, key) => key !== 'token') });
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = body.token
@@ -82,7 +82,10 @@ export default async (Ctx: ParameterizedContext) => {
         const user = await Users.findOne({ userId: openid }).lean<Uart.UserInfo>();
         if (user) {
           //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
-          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.header['x-real-ip'] || ctx.ip } }).exec()
+          const address = ctx.header['x-real-ip'] || ctx.ip
+          console.log({ address, a: ctx.header['x-real-ip'] });
+
+          Users.updateOne({ user:user.user }, { $set: { modifyTime: new Date(), address } }).exec()
           user.passwd = ''
           ctx.body = {
             ok: 1,

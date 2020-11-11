@@ -43,7 +43,7 @@ app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());
 
-const { port, host } = { port: 9010, host: "0.0.0.0" }
+const { port, host } = { port: process.env.NODE_PORT ? Number(process.env.NODE_PORT) : 9010, host: "0.0.0.0" }
 // http
 const Http = http.createServer(app.callback())
 Event.CreateSocketServer(Http)

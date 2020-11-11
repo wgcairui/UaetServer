@@ -1,6 +1,7 @@
 import { createDecipheriv } from "crypto";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Uart } from "typing";
+import { Token, Tokens } from "../mongoose";
 const wxSecret = require("../key/wxSecret.json");
 
 // 微信解密数据
@@ -27,17 +28,25 @@ class WX {
   // 获取AccessToken
   async get_AccessToken() {
     // 雷迪司透传平台accessToken
-    {
+    const token = await Tokens.findOne({ type: 'wxapp' }).lean<Token>();
+    // 如果有token和token未失效
+    if (token && (token.expires * 1000) > (Date.now() - token.creatTime)+5000) {
+      this.AccessToken = token.token
+    } else {
+      const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
+      const { access_token, expires_in } = await this.fecth<Uart.WX.wxRequestAccess_token>({ url, method: 'GET' })
+      this.AccessToken = access_token
+      console.log(`weixin AccessToken ：：${this.AccessToken},expires_in:${expires_in}`);
+      Tokens.updateOne({ type: 'wxapp' }, { $set: { token: access_token, expires: expires_in, creatTime: Date.now() } }, { upsert: true }).exec()
+    }
+    /* {
       if (process.env.NODE_ENV !== 'development') {
-        const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
-        const { access_token, expires_in } = await this.fecth<Uart.WX.wxRequestAccess_token>({ url, method: 'GET' })
-        this.AccessToken = access_token
-        console.log(`weixin AccessToken ：：${this.AccessToken},expires_in:${expires_in}`);
+        
         setTimeout(() => {
           this.get_AccessToken()
         }, ((expires_in || 7200) * 1000) - 10000)
       }
-    }
+    } */
     // 雷迪司公众号accessToken
     {
       /* const urlpublic = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appidPublic}&secret=${this.secretPublic}`
@@ -60,6 +69,7 @@ class WX {
   // 获取用户openid
   async UserOpenID(code: string) {
     const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${this.appid}&secret=${this.secret}&js_code=${code}&grant_type=authorization_code`;
+    await this.get_AccessToken()
     return await this.fecth<Uart.WX.wxRequestCode2Session>({ url, method: 'GET' })
   }
 
@@ -132,6 +142,7 @@ class WX {
       }
     }
     //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
   // 发送订阅消息-用户注册
@@ -157,6 +168,7 @@ class WX {
       }
     }
     //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
   // 解密微信加密数据
@@ -199,12 +211,10 @@ class WX {
     return `${year}-${month}-${day} ${hour}:${min}:${sen}`
   }
   private async fecth<T extends Uart.WX.wxRequest>(config: AxiosRequestConfig) {
-    // console.log(config);
     const res: AxiosResponse<T> = await axios(config)
     if (res.data.errcode) {
       console.log({ data: res.data, config });
     }
-
     return res.data;
   }
 }

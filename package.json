@@ -5,7 +5,8 @@
   "author": "wgcairui",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon ./server/index.ts --watch server",
+    "dev": "cross-env NODE_ENV=development nodemon ./server/index.ts --watch",
+    "dev:docker":"cross-env NODE_PORT=9002 ts-node --files ./server/index.ts",
     "start": "node ./server/index.js",
     "build:docker": "sudo docker build -t uartserver . && rm server/*.js && rm server/*/*.js",
     "run:docker": "sudo docker stop uartserver && sudo docker rm uartserver && sudo docker run -itd --name uartserver --restart always --init --network net -p 9010:9010  uartserver"
