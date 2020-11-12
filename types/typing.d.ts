@@ -102,7 +102,7 @@ declare namespace Uart {
         name: string;
         ip?: string
         port?: number
-        jw?: string ;
+        jw?: string;
         uart?: string
         AT?: boolean
         uptime?: string
@@ -118,6 +118,7 @@ declare namespace Uart {
         IP: string;
         Port: number;
         MaxConnections: number;
+        count?: number
     }
     // 用户绑定设备
     interface BindDevice {

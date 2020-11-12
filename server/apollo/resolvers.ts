@@ -451,7 +451,7 @@ const resolvers: IResolvers = {
         // 删除协议
         async deleteProtocol(root, { Protocol }, ctx: Uart.ApolloCtx) {
             const result = await DeviceProtocol.deleteOne({ Protocol });
-            await ctx.$Event.Cache.CacheProtocol.delete(Protocol)
+            ctx.$Event.Cache.CacheProtocol.delete(Protocol)
             return result;
         },
         // 添加设备类型
@@ -468,7 +468,7 @@ const resolvers: IResolvers = {
         // 添加设备类型
         async deleteDevModel(root, { DevModel }, ctx: Uart.ApolloCtx) {
             const result = await DevsType.deleteOne({ DevModel });
-            await ctx.$Event.Cache.CacheDevsType.delete(DevModel)
+            ctx.$Event.Cache.CacheDevsType.delete(DevModel)
             return result;
         },
         // 添加登记设备

@@ -1,21 +1,17 @@
 import { ParameterizedContext } from "koa";
-import { Users, UserAlarmSetup, UserBindDevice } from "../mongoose/user";
 import WX from "../util/wxUtil";
 import TencetMapAPI from "../util/TencetMapAPI";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
-import { LogUartTerminalDataTransfinite, LogUserLogins } from "../mongoose/Log";
-import { Terminal } from "../mongoose/Terminal";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import _ from "lodash";
 import * as Cron from "../cron/index";
-import { getUserBindDev } from "../util/util";
-import { TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
-import { DevConstant } from "../mongoose/DeviceParameterConstant";
+import { getUserBindDev, validationUserPermission } from "../util/util";
 import { ParseCoefficient } from "../util/func";
-import { DevsType } from "../mongoose/DeviceAndProtocol";
 import { Uart } from "typing";
 import Tool from "../util/tool";
 import { SendValidation } from "../util/SMS";
+import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
+import config from "../config";
 
 type url =
   | 'getuserMountDev'
@@ -48,6 +44,11 @@ type url =
   | 'getUserTel'
   | 'sendValidation'
   | 'ValidationCode'
+  | 'getNodes'
+  | 'bacthRegisterDTU'
+  | "addVm"
+  | "modifyDTUName"
+  | "updateGps"
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
@@ -85,7 +86,7 @@ export default async (Ctx: ParameterizedContext) => {
           const address = ctx.header['x-real-ip'] || ctx.ip
           console.log({ address, a: ctx.header['x-real-ip'] });
 
-          Users.updateOne({ user:user.user }, { $set: { modifyTime: new Date(), address } }).exec()
+          Users.updateOne({ user: user.user }, { $set: { modifyTime: new Date(), address } }).exec()
           user.passwd = ''
           ctx.body = {
             ok: 1,
@@ -214,6 +215,7 @@ export default async (Ctx: ParameterizedContext) => {
       break
     // 查询DTU信息
     case 'getDTUInfo':
+      ctx.assert(validationUserPermission(tokenUser.user, body.mac), 402, '用户越权操作dtu')
       const terminal = await Terminal.findOne({ DevMac: body.mac })
       ctx.body = { ok: terminal ? 1 : 0, arg: terminal } as Uart.ApolloMongoResult
       break
@@ -221,18 +223,22 @@ export default async (Ctx: ParameterizedContext) => {
     case 'bindDev':
       {
         const id = body.mac as string
+        if (config.vmDevs.includes(id)) {
+          ctx.body = { ok: 0, msg: `${id}设备是虚拟设备,无法绑定` } as Uart.ApolloMongoResult
+          break
+        }
         const isBind = await UserBindDevice.findOne({ UTs: id }).exec()
         if (isBind) {
           ctx.body = { ok: 0, msg: `${id}设备已被绑定` } as Uart.ApolloMongoResult
-        } else {
-          const result = await UserBindDevice.updateOne(
-            { user: tokenUser.user },
-            { $addToSet: { UTs: id } },
-            { upsert: true }
-          );
-          ctx.$Event.Cache.RefreshCacheBind(ctx.user)
-          ctx.body = result
+          break
         }
+        const result = await UserBindDevice.updateOne(
+          { user: tokenUser.user },
+          { $addToSet: { UTs: id } },
+          { upsert: true }
+        );
+        ctx.$Event.Cache.RefreshCacheBind(ctx.user)
+        ctx.body = result
       }
       break
     // 获取未确认告警数量
@@ -303,6 +309,8 @@ export default async (Ctx: ParameterizedContext) => {
     case "getDevsRunInfo":
       {
         const { mac, pid } = body
+        ctx.assert(validationUserPermission(tokenUser.user, mac), 402, '用户越权操作dtu')
+
         const data = await TerminalClientResultSingle.findOne({
           mac: mac,
           pid
@@ -328,6 +336,8 @@ export default async (Ctx: ParameterizedContext) => {
     case "getDevsHistoryInfo":
       {
         const { mac, pid, name, datatime } = body
+        ctx.assert(validationUserPermission(tokenUser.user, mac), 402, '用户越权操作dtu')
+
         let result: Uart.queryResultSave[]
         // 如果没有日期参数,默认检索最新的100条数据
         if (datatime === "") {
@@ -436,6 +446,8 @@ export default async (Ctx: ParameterizedContext) => {
     case "addTerminalMountDev":
       {
         const { DevMac, Type, mountDev, protocol, pid } = body
+        ctx.assert(validationUserPermission(tokenUser.user, DevMac), 402, '用户越权操作dtu')
+
         const result = await Terminal.updateOne(
           { DevMac },
           {
@@ -457,6 +469,8 @@ export default async (Ctx: ParameterizedContext) => {
     case "delTerminalMountDev":
       {
         const { DevMac, mountDev, pid } = body
+        ctx.assert(validationUserPermission(tokenUser.user, DevMac), 402, '用户越权操作dtu')
+
         const result = await Terminal.updateOne({ DevMac }, { $pull: { mountDevs: { mountDev, pid } } })
         await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
         ctx.body = result
@@ -466,6 +480,8 @@ export default async (Ctx: ParameterizedContext) => {
     case "delUserTerminal":
       {
         const id = body.mac
+        ctx.assert(validationUserPermission(tokenUser.user, id), 402, '用户越权操作dtu')
+
         const res = await UserBindDevice.updateOne(
           { user: tokenUser.user },
           { $pull: { UTs: id } },
@@ -544,8 +560,12 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const query: Uart.instructQueryArg = body.query
         const item: Uart.OprateInstruct = body.item
+        if (config.vmDevs.includes(query.DevMac)) {
+          ctx.body = { ok: 0, msg: '虚拟体验设备不能操作' } as Uart.ApolloMongoResult;
+          break
+        }
         // 验证客户是否校验过权限
-
+        ctx.assert(validationUserPermission(tokenUser.user, query.DevMac), 402, '用户越权操作dtu')
         const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(token)
         console.log({ juri, a: ctx.$Event.ClientCache.CacheUserJurisdiction });
 
@@ -615,6 +635,86 @@ export default async (Ctx: ParameterizedContext) => {
         // 缓存权限
         ctx.$Event.ClientCache.CacheUserJurisdiction.set(token, code)
         ctx.body = { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
+      }
+      break
+
+    // 获取节点列表
+    case "getNodes":
+      {
+        const nodes = [...ctx.$Event.Cache.CacheNode.values()]
+        for (const node of nodes) {
+          node.count = await Terminal.countDocuments({ mountNode: node.Name })
+        }
+        ctx.body = { ok: 1, arg: nodes } as Uart.ApolloMongoResult
+      }
+      break
+
+    // 批量注册DTU
+    case "bacthRegisterDTU":
+      {
+        const node: string = body.node
+        const dtus: string[] = body.dtus
+        const terminalHasKeys = new Set(ctx.$Event.Cache.CacheTerminal.keys())
+        for (let DevMac of dtus) {
+          if (!terminalHasKeys.has(DevMac) && DevMac.length > 10) {
+            await RegisterTerminal.updateOne({ DevMac }, { $set: { mountNode: node } },
+              { upsert: true }).exec()//({ DevMac, mountNode: node }).save()
+            await Terminal.updateOne(
+              { DevMac },
+              { $set: { mountNode: node, name: DevMac } },
+              { upsert: true }
+            ).exec()
+            await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
+          }
+        }
+
+        ctx.body = { ok: 1, arg: 'ok' } as Uart.ApolloMongoResult
+      }
+      break
+
+    // 用户添加虚拟设备
+    case "addVm":
+      {
+        const UTs = await Terminal.find({ DevMac: { $in: config.vmDevs } }).lean();
+        const Bind = UTs.map((el: any) => {
+          el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
+          if (el.online && el?.mountDevs?.length > 0) {
+            el.mountDevs.forEach((element: any) => {
+              element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
+            });
+          }
+          return el
+        })
+        ctx.body = { ok: 1, arg: Bind } as Uart.ApolloMongoResult;
+      }
+      break
+
+    // 修改DTU别名
+    case "modifyDTUName":
+      {
+        const dtu = body.dtu as string
+        const name = body.name as string
+        if (config.vmDevs.includes(dtu)) {
+          ctx.body = { ok: 0, msg: '虚拟体验设备不能修改' } as Uart.ApolloMongoResult;
+          break
+        }
+        ctx.assert(validationUserPermission(tokenUser.user, dtu), 402, '用户越权操作dtu')
+        const result = await Terminal.updateOne({ DevMac: dtu }, { $set: { name } }).exec()
+        ctx.body = result
+      }
+      break
+
+    // 更新GPS定位信息
+    case "updateGps":
+      {
+        const dtu = body.dtu as string
+        const jw = body.jw as string
+        if (config.vmDevs.includes(dtu)) {
+          ctx.body = { ok: 0, msg: '虚拟体验设备不能修改' } as Uart.ApolloMongoResult;
+          break
+        }
+        ctx.assert(validationUserPermission(tokenUser.user, dtu), 402, '用户越权操作dtu')
+        ctx.body = await Terminal.updateOne({ DevMac: dtu }, { $set: { jw } }).exec()
       }
       break
   }

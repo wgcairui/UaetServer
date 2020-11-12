@@ -123,6 +123,7 @@ const typeDefs: DocumentNode = gql`
   }
   # 用户
   type User {
+    avanter: String
     name: String
     user: String
     userGroup: String
@@ -133,7 +134,7 @@ const typeDefs: DocumentNode = gql`
     modifyTime: Date
     address: String
     status: Boolean
-    messageId: String
+    messageId: String 
   }
   # 用户绑定的设备
   type BindDevice {

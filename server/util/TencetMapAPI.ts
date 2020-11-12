@@ -30,8 +30,8 @@ export default class TencetMap {
     }
 
     //实现从其它地图供应商坐标系或标准GPS坐标系，批量转换到腾讯地图坐标系
-    static translate(locations: string | string[]) {
-        return this.fecth('coord/v1/translate', { lacations: Array.isArray(locations) ? locations.join(";") : locations })
+    static translate(locations: string | string[], type: string = '1') {
+        return this.fecth('coord/v1/translate', { lacations: Array.isArray(locations) ? locations.join(";") : locations, type })
     }
 
     //本接口提供由地址描述到所述位置坐标的转换，与逆地址解析的过程正好相反

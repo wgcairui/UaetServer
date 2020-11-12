@@ -114,3 +114,9 @@ export const TerminalClientResultSingle = mongoose.model(
 export const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
 export const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)
+
+TerminalClientResult.countDocuments({mac:'11'}).then(el=>{
+  console.log({el});
+  
+})
+
