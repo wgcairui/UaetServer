@@ -31,8 +31,8 @@ export default async (ctx: ParameterizedContext) => {
           // token长度由对象的复杂度决定，edge限值header长度
           const token = await JwtSign({ user: u.user, userGroup: u.userGroup })
           // console.log({tokenlogin:token});
-          
-          ctx.body = { token, user: u.user, name: u.name || u.user, userGroup: u.userGroup };
+
+          ctx.body = { token, user: u.user, name: u.name || u.user, userGroup: u.userGroup, avanter: u.avanter };
         }
       }
       break
