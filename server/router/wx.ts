@@ -215,7 +215,7 @@ export default async (Ctx: ParameterizedContext) => {
       break
     // 查询DTU信息
     case 'getDTUInfo':
-      ctx.assert(validationUserPermission(tokenUser.user, body.mac), 402, '用户越权操作dtu')
+      // ctx.assert(validationUserPermission(tokenUser.user, body.mac), 402, '用户越权操作dtu')
       const terminal = await Terminal.findOne({ DevMac: body.mac })
       ctx.body = { ok: terminal ? 1 : 0, arg: terminal } as Uart.ApolloMongoResult
       break
