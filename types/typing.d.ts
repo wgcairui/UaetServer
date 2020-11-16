@@ -25,6 +25,7 @@ declare namespace Uart {
         loggedIn: boolean
         $Event: Event
         $token: string
+        operationName: string
     }
 
     // page auery
