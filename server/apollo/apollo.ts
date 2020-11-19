@@ -45,7 +45,7 @@ export default new ApolloServer({
 
     // 保存所有的操作日志
     ctx.$Event.savelog<Uart.logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
-    return { ...user, loggedIn: true, $Event: ctx.$Event, $SocketUart: ctx.$SocketUart, $token: token, operationName: apolloRequest.operationName };
+    return { ...user, loggedIn: true, $Event: ctx.$Event, $token: token, operationName: apolloRequest.operationName };
 
   }
 });

@@ -50,7 +50,7 @@ export const SendValidation = (tel: string, code: string) => {
 }
 
 // 发送短信
-const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoResult>> => {
+export const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoResult>> => {
     const CacheAlarmSendNum = Event.Cache.CacheAlarmSendNum
     //const tels = params.PhoneNumbers.split(",")
     // 迭代发送的手机号码,检查号码每天的发送次数,每个号码每天限额50
@@ -86,23 +86,23 @@ const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoResult>>
 }
 
 // 发送设备超时下线
-export const SmsDTUDevTimeOut = (Query: Uart.queryResult, event: '超时' | '恢复') => {
-    const info = getDtuInfo(Query.mac)
+export const SmsDTUDevTimeOut = (mac: string, pid: string | number, devName: string, event: '超时' | '恢复') => {
+    const info = getDtuInfo(mac)
     /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
     if (userId) {
         const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 连接超时,请检查设备是否开机，信号线是否连接和连接是否正确，通讯参数是否设置正确`
         const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
         wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, DevType?.Type + '连接超时')
     }  */
-    if (info && info.userInfo.tels?.length > 0) {
+    if (info && info.userInfo?.tels?.length > 0) {
         // 时间参数,长度限制20字节
         const time = new Date()
         const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
         const TemplateParam = JSON.stringify({
             name: info.user.name || info.user.user,
             DTU: info.terminalInfo.name,
-            pid: Query.pid,
-            devname: Query.mountDev,
+            pid: pid,
+            devname: devName,
             time: d,
             event
         })
@@ -117,37 +117,6 @@ export const SmsDTUDevTimeOut = (Query: Uart.queryResult, event: '超时' | '恢
     } else return false
 }
 
-// 发送DTU挂载设备告警
-export const SmsDTUDevAlarm = (Query: Uart.queryResult, remind: string) => {
-    const info = getDtuInfo(Query.mac)
-    const { userId } = Event.Cache.CacheUser.get(info.user.user)!
-    /* if (userId) {
-        const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 运行故障，故障信息:${remind}`
-        const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
-        wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, DevType?.Type + '运行异常')
-    } */
-    if (info && info.userInfo.tels?.length > 0) {
-        // 时间参数,长度限制20字节
-        const time = new Date()
-        const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
-        const TemplateParam = JSON.stringify({
-            name: info.user.name,
-            DTU: info.terminalInfo.name,
-            pid: Query.pid,
-            devname: Query.mountDev,
-            time: d,
-            remind
-        })
-        const params: params = {
-            "RegionId": "cn-hangzhou",
-            "PhoneNumbers": info.userInfo.tels.join(','),
-            "SignName": "雷迪司科技湖北有限公司",
-            "TemplateCode": 'SMS_200701342',
-            TemplateParam
-        }
-        return SendSms(params)
-    } else return false
-}
 
 // 发送设备超时下线
 export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {

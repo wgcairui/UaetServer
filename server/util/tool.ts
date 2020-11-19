@@ -149,4 +149,32 @@ export default class Tool {
       return el
     }).join("") : ''
   }
+
+  // 正则匹配经纬度
+  static RegexLocation(location: string, reserver: boolean = false) {
+    const str = reserver ? location.split(',').reverse().join(',') : location
+    return /^-?1[0-8][0-9]\.[0-9]{6,7}\,-?[0-9]{2}\.[0-9]{6,7}$/.test(str)
+  }
+  // 正则匹配ip
+  static RegexIP(ip: string) {
+    return /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/.test(ip)
+  }
+  // 正则匹配dtu通讯参数
+  static RegexUart(uart: string) {
+    return /^([0-9]{4}|[0-9]{5})\,[0-9]\,[0-9]\,.*/.test(uart)
+  }
+  // 正则匹配ICCID
+  static RegexICCID(ICCID: string) {
+    return /[0-9]{18,22}/.test(ICCID)
+  }
+
+  // 正则匹配手机号码
+  static RegexTel(tel: string) {
+    return /^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/.test(tel)
+  }
+
+  // 正则匹配邮箱账号
+  static RegexMail(mail: string) {
+    return /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/.test(mail)
+  }
 }

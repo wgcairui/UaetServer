@@ -11,17 +11,20 @@ import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
 import { Uart } from "typing";
+import { Terminal } from "../mongoose";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
   ClientCache: ClientCache
-  uartSocket?: NodeSocketIO
-  clientSocket?: webClientSocketIO
-  wxSocket?: Wxws
+  uartSocket!: NodeSocketIO
+  clientSocket!: webClientSocketIO
+  wxSocket!: Wxws
+  private timeOut: number;
   constructor() {
     super();
+    this.timeOut = 60000 * 5
     // Node节点,透传协议，设备...缓存
     this.Cache = new Cache(this);
     // web客户端socket缓存
@@ -43,52 +46,39 @@ export class Event extends EventEmitter.EventEmitter {
           // 迭代查询缓存，检查每个挂载设备的指令耗时数组(往后60个采样)，采用其最大值+500ms,
           this.uartSocket.CacheSocket.forEach(node => {
             node.cache.forEach((terEX, hash) => {
-              if (this.Cache.TimeOutMonutDev.has(hash)) return
+              // if (this.Cache.TimeOutMonutDev.has(hash)) return
               const useTimeArray = this.Cache.QueryTerminaluseTime.get(hash) as number[]
               const len = useTimeArray.length
               const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
               const maxTime = Math.max(...yxuseTimeArray) || 4000
+              // 获取设备间隔值
+              const interval = this.getMountDevInterval(terEX.TerminalMac)
               // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-              /* if (maxTime < config.runArg.Query.Interval) 
-              else {
-                // const round = Math.round(maxTime / 1000) * 1000
-                // terEX.Interval = round - maxTime > 500 ? round + 500 : round
-                // 最大数加500 - 最大值%500的余数
-                terEX.Interval = (maxTime + 500) - (maxTime % 500)
-
-              } */
-              terEX.Interval = maxTime < config.runArg.Query.Interval ? config.runArg.Query.Interval : (maxTime + 500) - (maxTime % 500)
+              terEX.Interval = maxTime < interval ? interval : (maxTime + 1000) - (maxTime % 500)
+              this.Cache.QueryTerminaluseTime.set(hash, [])
             })
           })
-          // console.log(`${new Date().toLocaleString()}## 更新Query查询缓存间隔时间`);
-          // 清空查询计数数组
-          this.Cache.QueryTerminaluseTime.forEach(el => el = [])
         }
       }
       // 迭代所有掉线设备记录，如果掉线时长超过10min，触发短信告警
       {
-        const DTUOfflineTime = this.Cache.DTUOfflineTime
+        const { DTUOfflineTime, DTUOnlineTime } = this.uartSocket
         const date = Date.now() // 当前时间
         DTUOfflineTime.forEach(async (time, mac) => {
-          if (date - time.getTime() > 60000 * 5) {
+          if (date - time.getTime() > this.timeOut) {
             await SmsDTU(mac, '离线')
             DTUOfflineTime.delete(mac)
           }
         })
-        // console.log(`${new Date().toLocaleString()}## 更新DTU离线超时时间,离线设备数${DTUOfflineTime.size}`);
-      }
-      {
-        const DTUOnlineTime = this.Cache.DTUOnlineTime
-        const date = Date.now() // 当前时间
+
         DTUOnlineTime.forEach(async (time, mac) => {
-          if (date - time.getTime() > 60000 * 5) {
+          if (date - time.getTime() > this.timeOut) {
             await SmsDTU(mac, '恢复上线')
             DTUOnlineTime.delete(mac)
           }
         })
-        // console.log(`${new Date().toLocaleString()}## 更新DTU恢复上线时间,在线设备数${DTUOnlineTime.size}`);
       }
-    }, 60000 * 5)
+    }, this.timeOut)
   }
 
   // 初始化socket监听
@@ -126,19 +116,51 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 单位缓存
-  GetUnit(unit: string) {
-    const Cache = this.Cache.CacheParseUnit
-    const unitCache = Cache.get(unit)
-    if (unitCache) return unitCache
-    else {
-      const arr = unit
-        .replace(/(\{|\}| )/g, "")
-        .split(",")
-        .map(el => el.split(":"))
-        .map(el => ({ [el[0]]: el[1] }));
-      Cache.set(unit, Object.assign({}, ...arr))
-      return Cache.get(unit) as { [x in string]: string }
+  // 获取每个dtu下的设备预估耗时（查询间隔）时间
+  // 计算方式为4G模块时间为设备指令条数*1000,其它为*500
+  // 结果为基数x合计指令数量
+  getMountDevInterval(mac: string) {
+    const terminal = this.Cache.CacheTerminal.get(mac)!
+    // 统计挂载的设备协议指令数量
+    const MountDevLens = new Map(terminal.mountDevs.map(el => [el.pid, this.Cache.CacheProtocol.get(el.protocol)!.instruct.length]))
+    // 基数
+    const baseNum = terminal.ICCID ? 1000 : 500
+    // 指令合计数量
+    const LensCount = [...MountDevLens.values()].reduce((pre, cu) => pre + cu)
+    /* // 此PID设备协议指令数量
+    const PidProtocolInstructNum = MountDevLens.get(Pid)!
+    // 
+    return (PidProtocolInstructNum * baseNum) + ((LensCount * baseNum) * (PidProtocolInstructNum / LensCount)) */
+    return LensCount * baseNum
+  }
+
+  // 更新terminal在线状态
+  ChangeTerminalStat(macs: string | string[], online: boolean = true) {
+    const { DTUOfflineTime, DTUOnlineTime } = this.uartSocket
+    if (Array.isArray(macs)) {
+      Terminal.updateMany({ DevMac: { $in: macs } }, { $set: { online } }).then(_el => {
+        macs.forEach(mac => this.Cache.RefreshCacheTerminal(mac))
+      })
+      //macs.forEach(mac => this.Cache.CacheTerminal.get(mac)!.online = online)
+      if (online) {
+        macs.forEach(mac => DTUOfflineTime.delete(mac))
+      } else {
+        macs.forEach(mac => {
+          DTUOfflineTime.set(mac, new Date())
+          DTUOnlineTime.delete(mac)
+        })
+      }
+    } else {
+      Terminal.updateOne({ DevMac: macs }, { $set: { online } }).then(_el => {
+        this.Cache.RefreshCacheTerminal(macs)
+      })
+      // this.Cache.CacheTerminal.get(macs)!.online = online
+      if (online) {
+        DTUOfflineTime.delete(macs)
+      } else {
+        DTUOfflineTime.set(macs, new Date())
+        DTUOnlineTime.delete(macs)
+      }
     }
   }
 
@@ -146,13 +168,13 @@ export class Event extends EventEmitter.EventEmitter {
   UpdateTerminal(mac: string) {
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal) {
-      console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
+      // console.log(`socket:更新Cache=${terminal.DevMac}终端缓存`);
       // 获取设备绑定节点的map
       const nodeTerminals = this.uartSocket?.CacheSocket.get(terminal.mountNode)
       if (nodeTerminals) {
         terminal.mountDevs.forEach(mountDev => {
           const mount = Object.assign<Partial<Uart.TerminalMountDevsEX>, Uart.TerminalMountDevs>
-            ({ TerminalMac: terminal.DevMac, Interval: config.runArg.Query.Interval }, mountDev) as Required<Uart.TerminalMountDevsEX>
+            ({ TerminalMac: terminal.DevMac, Interval: this.getMountDevInterval(terminal.DevMac) }, mountDev) as Required<Uart.TerminalMountDevsEX>
           nodeTerminals.cache.set(terminal.DevMac + mountDev.pid, mount)
         })
         // 如果cache下面有同mac不同pid的话此种情况无法清理
@@ -180,7 +202,7 @@ export class Event extends EventEmitter.EventEmitter {
     if (terminal && this.uartSocket) {
       const mountDev = this.uartSocket.CacheSocket.get(terminal.mountNode)?.cache.get(mac + pid)
       if (mountDev) {
-        mountDev.Interval = config.runArg.Query.Interval
+        mountDev.Interval = this.getMountDevInterval(mac)
       }
     }
   }
@@ -192,18 +214,29 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 解析设备请求结果,检查设备是否是超时设备,是的话取消超时,发送短信提醒 send ProtocolPares
-  QuerySuccess(Query: Uart.queryResult) {
-    const hash = Query.mac + Query.pid
-    if (this.Cache.TimeOutMonutDev.has(hash)) {
-      this.Cache.TimeOutMonutDev.delete(hash)
-      // 如果短信发送记录为true,发送超时恢复短信提醒
-      if (this.Cache.TimeOutMonutDevSmsSend.get(hash)) {
-        console.log({ Query, mas: 'terminal恢复' });
-        SmsDTUDevTimeOut(Query, '恢复')
-        this.Cache.TimeOutMonutDevSmsSend.set(hash, false)
-      }
+  // 设置透传节点下dtu对象下挂载节点上线
+  setClientDtuMountDevOnline(mac: string, pid: string | number, online: boolean) {
+    const terminal = this.Cache.CacheTerminal.get(mac)
+    if (terminal) {
+      Terminal.updateOne({ DevMac: mac, "MountDevs.pid": pid }, { $set: { "MountDevs.$.online": online } }).then(_el => {
+        this.getClientDtuMountDev(mac, pid).online = online
+        if (online) {
+          this.emit("timeOutRestore", mac, pid)
+        }
+      })
     }
+  }
+
+  // 获取透传节点下client对象
+  getClientDtuMountDev(mac: string, pid: string | number) {
+    const terminal = this.Cache.CacheTerminal.get(mac)!
+    return terminal.mountDevs.find(el => el.pid == pid)!
+  }
+
+  // 获取uart实例下client对象
+  getUartClient(mac: string) {
+    const terminal = this.Cache.CacheTerminal.get(mac)!
+    return this.uartSocket.CacheSocket.get(terminal.mountNode)!
   }
 
   // 触发客户端告警提醒事件

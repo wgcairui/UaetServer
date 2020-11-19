@@ -64,18 +64,12 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 检索在线的终端
         async TerminalOnline(root, { DevMac }, ctx) {
-            const terminals = await Terminal.findOne({ DevMac }).lean() as Uart.Terminal
-            if (!terminals) return null
-            if (ctx.$Event.Cache.CacheNodeTerminalOnline.has(DevMac)) return terminals
-            else return null
-            //return await Terminal.findOne({ DevMac });
+            const terminals = ctx.$Event.Cache.CacheTerminal.get(DevMac)
+            if (!terminals || !terminals.online) return null
+            if (terminals.online) return terminals
         },
         async Terminals(root, arg, ctx) {
-            const terminals = [...ctx.$Event.Cache.CacheTerminal.values()]
-            return terminals.map(el => {
-                el.online = ctx.$Event.Cache.CacheNodeTerminalOnline.has(el.DevMac)
-                return el
-            })
+            return ctx.$Event.Cache.CacheTerminal.values()
         },
         // 环控终端信息
         async ECterminal(root, { ECid }) {
@@ -97,22 +91,16 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 绑定设备信息
         async BindDevice(root, arg, ctx) {
-            const Bind: any = await UserBindDevice.findOne({ user: ctx.user }).lean();
+            const Bind = ctx.$Event.Cache.CacheBind.get(ctx.user)
             if (!Bind) return null;
-            Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
-            Bind.ECs = await EcTerminal.find({ ECid: { $in: Bind.ECs } }).lean();
-            Bind.AGG = await UserAggregation.find({ user: ctx.user })
-            //
-            Bind.UTs = Bind.UTs.map((el: any) => {
-                el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
-                if (el.online && el?.mountDevs?.length > 0) {
-                    el.mountDevs.forEach((element: any) => {
-                        element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
-                    });
-                }
-                return el
-            })
-            return Bind;
+            const UTs = [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => Bind.UTs.includes(el.DevMac)) //await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
+            const ECs = await EcTerminal.find({ ECid: { $in: Bind.ECs } }).lean();
+            const AGG = await UserAggregation.find({ user: ctx.user })
+            return {
+                UTs,
+                ECs,
+                AGG
+            };
         },
         async BindDevices() {
             return await UserBindDevice.find({}).lean();
@@ -180,7 +168,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx) {
-            return ctx.$Event.Cache.CacheNodeTerminalOnline.has(mac)
+            return ctx.$Event.Cache.CacheTerminal.get(mac)?.online || false
         },
         // 获取用户自定义配置
         async getUserSetup(root, arg, ctx) {
@@ -192,43 +180,26 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 获取协议常量
         async getUserDevConstant(root, { Protocol }, ctx) {
-            const userSetup = ctx.$Event.Cache.CacheUserSetup.get(ctx.user as string)!
+            const userSetup = ctx.$Event.Cache.CacheUserSetup.get(ctx.user)!
             const res = userSetup.ProtocolSetupMap.get(Protocol)
-            // const res = await UserAlarmSetup.findOne({ user: ctx.user,"ProtocolSetup.Protocol":Protocol },{"ProtocolSetup.Protocol":1,user:1})
-            // console.log({ userSetup, res });
             return res
         },
         // 获取用户设备日志
         async getLogTerminal(root, arg, ctx) {
             //获取用户绑定设备列表
-            const BindDevs: string[] = []
-            ctx.$Event.Cache.CacheBindUart.forEach((val, key) => {
-                if (val === ctx.user) BindDevs.push(key)
-            })
-            // 
+            const BindDevs = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs || []
             const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })
             return result
         },
         // 获取用户tel
         async getUserTel(root, arg, ctx) {
-            const user = await Users.findOne({ user: ctx.user }).lean<Uart.UserInfo>()
+            const user = ctx.$Event.Cache.CacheUser.get(ctx.user)
             const tel = Tool.Mixtel(user!.tel)
             return tel
         },
         // 获取socket node状态
         getSocketNode(root, arg, ctx) {
-            const TimeOutMonutDevs = Array.from(ctx.$Event.Cache.TimeOutMonutDev) as string[]
-            return Array.from(ctx.$Event.Cache.CacheNodeTerminalOnline).map(el => {
-                const reg = new RegExp("^" + el)
-                const ter = ctx.$Event.Cache.CacheTerminal.get(el) as Uart.Terminal
-                const temp = TimeOutMonutDevs.filter(el2 => reg.test(el2))
-                const TimeOutMonutDev = ter.mountDevs.filter(els => temp.includes(ter.DevMac + els.pid))
-                return {
-                    terminal: el,
-                    name: ter.name,
-                    TimeOutMonutDev
-                }
-            })
+            return [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => el.online)
         },
         // 获取socket user状态
         getUserNode(root, arg, ctx) {
@@ -268,7 +239,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 获取短信日志
         async logsmssends(root, { start, end }: { start: Date, end: Date }) {
-            return await LogSmsSend.find().where("createdAt").gte(start).lte(end).exec()
+            return (await LogSmsSend.find().where("createdAt").gte(start).lte(end).lean<Uart.logMailSend>())
         },
         // 获取邮件日志
         async logmailsends(root, { start, end }: { start: Date, end: Date }) {
@@ -368,13 +339,19 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 }
                 // 在线终端
                 const Terminal = {
-                    online: Cache.CacheNodeTerminalOnline.size,
+                    online: [...Cache.CacheTerminal].filter(el => el[1].online).length,
                     all: Cache.CacheTerminal.size
                 }
                 // 所以协议
                 const Protocol = Cache.CacheProtocol.size
                 // 超时设备数量
-                const TimeOutMonutDev = Cache.TimeOutMonutDev.size
+                const TimeOutMonutDev = [...Cache.CacheTerminal.values()].map(el => {
+                    if (el.online) {
+                        return el.mountDevs ? el.mountDevs.filter(e2 => !e2.online).length : 0
+                    } else {
+                        return el.mountDevs.length || 0
+                    }
+                }).reduce((pre, cu) => pre + cu)
                 // 系统事件总数
                 const events = Event.eventNames()
                 // 系统性能
@@ -385,8 +362,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 检查挂载设备是否在超时列表中
         checkDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx) {
-            if (!ctx.$Event.Cache.CacheNodeTerminalOnline.has(mac)) return 'DTUOFF'
-            if (ctx.$Event.Cache.TimeOutMonutDev.has(mac + pid)) return 'TimeOut'
+            if (!ctx.$Event.Cache.CacheTerminal.get(mac)?.online) return 'DTUOFF'
+            if (!ctx.$Event.Cache.CacheTerminal.get(mac)!.mountDevs.find(el => el.pid)?.online) return 'TimeOut'
             return 'online'
         }
     },
@@ -395,31 +372,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
     
     
@@ -927,7 +880,6 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 if (doc && BindDevs.includes(doc.mac)) {
                     // 确认告警缓存清除
                     const tags = doc.mac + doc.pid + doc.tag
-                    ctx.$Event.Cache.CacheAlarmNum.delete(tags)
                     return await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }).exec()
                 } else return { ok: 0 } as Uart.ApolloMongoResult
             } else {

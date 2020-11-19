@@ -16,9 +16,6 @@ export interface sendQuery {
   socket: SocketIO.Socket;
 }
 
-type NodeName = string
-type TerminalPid = string
-
 export default class Cache {
   // 协议缓存protocol=>
   CacheProtocol: Map<string, Uart.protocol>;
@@ -27,7 +24,7 @@ export default class Cache {
   // 透传终端缓存mac=>terminal
   CacheTerminal: Map<string, Uart.Terminal>;
   // Node节点=》终端缓存
-  CacheNodeTerminal: Map<string, Map<string, Uart.Terminal>>;
+  // CacheNodeTerminal: Map<string, Map<string, Uart.Terminal>>;
   // Node节点缓存ip=>nodeclient
   CacheNode: Map<string, Uart.NodeClient>;
   // Node节点缓存name=>nodeclient
@@ -35,9 +32,9 @@ export default class Cache {
   // 缓存每个节点的查询定时器缓存 ip,timeInterl
   //CacheQueryNode: Map<string, NodeJS.Timeout>;
   // 缓存每个节点在线的设备ip->terminal
-  CacheNodeTerminalOnline: Set<string>
+  // CacheNodeTerminalOnline: Set<string>
   // 缓存节点查询终端设备超时的指令
-  CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
+  // CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
   CacheConstant: Map<string, Uart.ProtocolConstantThreshold>
   // 缓存用户绑定
@@ -46,8 +43,7 @@ export default class Cache {
   CacheBindUart: Map<string, string>
   // 缓存绑定透传设备mac=>user
   CacheBindEt: Map<string, string>
-  // 缓存告警参数次数 tag=>number
-  CacheAlarmNum: Map<string, number>
+
   // 缓存用户 user=》user
   CacheUser: Map<string, Uart.UserInfo>
   // 缓存用户配置 user=>setup
@@ -56,62 +52,46 @@ export default class Cache {
   // QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
   QueryTerminaluseTime: Map<string, number[]>
-  // 序列化参数单位解析
-  CacheParseUnit: Map<string, { [x in string]: string }>
-  // 序列化参数regx解析
-  CacheParseRegx: Map<string, [number, number]>
-  // 每个手机号发送告警的次数
+  // 每个手机号发送告警的次数tel=>number
   CacheAlarmSendNum: Map<string, number>
-  // 设备超时列表
-  TimeOutMonutDev: Set<string>
-  // 查询超时告警发送模式 hash state
-  TimeOutMonutDevSmsSend: Map<string, boolean>
-  // DTU设备下线时间
-  DTUOfflineTime: Map<string, Date>
-  //
-  DTUOnlineTime: Map<string, Date>
   // DTU下挂载的设备指令超时, mac[instruct,num]
-  TimeOutMonutDevINstruct: Map<string, Map<string, number>>
+  // TimeOutMonutDevINstruct: Map<string, Map<string, number>>
   // DTU下挂载的设备指令超时Set
-  TimeOutMonutDevINstructSet: Set<string>
+  // TimeOutMonutDevINstructSet: Set<string>
   // 缓存协议指令转换关系 010300010009abcd => 0300010009
   CacheInstructContents: Map<string, string>
   private Events: event;
-  CacheSocket: any;
+  // CacheSocket: any;
   constructor(Events: event) {
     this.Events = Events
     // 缓存
     this.CacheProtocol = new Map();
     this.CacheDevsType = new Map();
     this.CacheTerminal = new Map();
-    this.CacheNodeTerminal = new Map();
+    // this.CacheNodeTerminal = new Map();
     this.CacheNode = new Map();
     this.CacheNodeName = new Map()
-    //this.CacheQueryNode = new Map()
-    this.CacheNodeTerminalOnline = new Set()
+    // this.CacheQueryNode = new Map()
+    // this.CacheNodeTerminalOnline = new Set()
     this.CacheConstant = new Map()
-    this.CacheTerminalQueryIntructTimeout = new Map()
+    // this.CacheTerminalQueryIntructTimeout = new Map()
     this.CacheBind = new Map()
     this.CacheBindUart = new Map()
     this.CacheBindEt = new Map()
-    this.CacheAlarmNum = new Map()
     this.CacheUser = new Map()
     this.CacheUserSetup = new Map()
-    //this.QueryTerminal = new Map()
+    // this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
-    this.TimeOutMonutDev = new Set()
-    this.TimeOutMonutDevSmsSend = new Map()
-    this.CacheParseUnit = new Map()
-    this.CacheParseRegx = new Map()
     this.CacheAlarmSendNum = new Map()
-    this.DTUOfflineTime = new Map()
-    this.DTUOnlineTime = new Map()
-    this.TimeOutMonutDevINstruct = new Map()
-    this.TimeOutMonutDevINstructSet = new Set()
+
+    // this.TimeOutMonutDevINstruct = new Map()
+    // this.TimeOutMonutDevINstructSet = new Set()
+    // 对应解析指令0103000000013a4a => 0300000001
     this.CacheInstructContents = new Map()
   }
   //
   async start(): Promise<void> {
+    await this.resetTerminalStat()
     await this.RefreshCacheDevType();
     await this.RefreshCacheProtocol();
     await this.RefreshCacheNode();
@@ -120,6 +100,11 @@ export default class Cache {
     await this.RefreshCacheBind();
     await this.RefreshCacheUserSetup()
     await this.RefreshCacheUser()
+  }
+
+  // 重置terminal终端设备在线状态
+  private async resetTerminalStat() {
+    await Terminal.updateMany({}, { $set: { onlien: false } })
   }
 
   // 
@@ -131,6 +116,7 @@ export default class Cache {
       return el
     }).forEach(el => {
       this.CacheProtocol.set(el.Protocol, el)
+      this.Events.emit("updateProtocol", el.Protocol)
     })
     if (res.length === 0 && protocol) {
       this.CacheProtocol.delete(protocol)
@@ -151,16 +137,17 @@ export default class Cache {
     console.log(`更新节点缓存......`);
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
     this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
-    this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
+    // this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
   }
   //
   async RefreshCacheTerminal(DevMac?: string) {
     const res: Uart.Terminal[] = await Terminal.find(DevMac ? { DevMac } : {}).lean()
-    console.log(`更新4g终端缓存......`)
+    // console.log(`更新4g终端缓存......`)
     res.forEach(el => {
       if (!el.mountDevs) el.mountDevs = []
       this.CacheTerminal.set(el.DevMac, el)
-      this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
+      this.Events.emit("updateTerminal", el.DevMac)
+      // this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
       el.mountDevs.forEach(el2 => {
         this.QueryTerminaluseTime.set(el.DevMac + el2.pid, [])
       })
@@ -180,6 +167,7 @@ export default class Cache {
     console.log(`更新协议常量缓存......`);
     res.forEach(el => {
       this.CacheConstant.set(el.Protocol, el)
+      this.Events.emit("updateSysSetup", el.Protocol)
     })
     if (res.length === 0 && protocol) {
       this.CacheConstant.delete(protocol)
@@ -221,9 +209,11 @@ export default class Cache {
           el.ShowTagMap.set(els.Protocol, els.ShowTag ? new Set(els.ShowTag) : new Set())
           el.ThresholdMap.set(els.Protocol, els.Threshold ? new Map(els.Threshold.map(ela => [ela.name, ela])) : new Map())
           el.AlarmStateMap.set(els.Protocol, els.AlarmStat ? new Map(els.AlarmStat.map(ela => [ela.name, ela])) : new Map())
+          this.Events.emit("updateUserSetup", el.user, els.Protocol)
         })
       }
       this.CacheUserSetup.set(el.user, el)
     })
+
   }
 }

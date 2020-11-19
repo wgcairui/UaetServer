@@ -12,8 +12,18 @@ const SchemaTerminal = new Schema({
   port: Number,
   jw: String,
   uart: String,
-  ICCID: String,
   AT: Boolean,
+  ICCID: String,
+  connecting: Boolean,
+  lock: Boolean,
+  PID: String,
+  ver: String,
+  Gver: String,
+  iotStat: String,
+  online: {
+    type: Boolean,
+    default: false
+  },
   uptime: { type: String, default: new Date().toLocaleString() },
   mountNode: { type: String, required: true },
   mountDevs: [
@@ -22,7 +32,11 @@ const SchemaTerminal = new Schema({
         Type: { type: String, required: true },
         mountDev: { type: String, required: true },
         protocol: { type: String, required: true },
-        pid: { type: Number, default: 0 }
+        pid: { type: Number, default: 0 },
+        online: {
+          type: Boolean,
+          default: true
+        },
       },
       { _id: false }
     )

@@ -60,10 +60,10 @@ export default async (Ctx: ParameterizedContext) => {
   const token = body.token
   const tokenUser: Uart.UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
+  ctx.$Event.savelog<Uart.logUserRequst>('request', { user: tokenUser.user, userGroup: tokenUser.userGroup || 'group', type, argument: body })
 
-  if (!noCookieTypeArray.includes(type) && !token && !tokenUser) {
-    ctx.throw('用户未登陆或登陆失效')
-  }
+  if (!noCookieTypeArray.includes(type) && !token && !tokenUser) ctx.throw('用户未登陆或登陆失效')
+
   switch (type) {
     // 微信登录
     case "code2Session":
@@ -194,20 +194,11 @@ export default async (Ctx: ParameterizedContext) => {
       break;
     // 获取用户挂载设备
     case 'getuserMountDev':
-      const Bind: any = await UserBindDevice.findOne({ user: tokenUser.user }).lean();
+
+      const Bind = ctx.$Event.Cache.CacheBind.get(ctx.user)
       if (Bind) {
-        Bind.UTs = await Terminal.find({ DevMac: { $in: Bind.UTs } }).lean();
-        //
-        Bind.UTs = Bind.UTs.map((el: any) => {
-          el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
-          if (el.online && el?.mountDevs?.length > 0) {
-            el.mountDevs.forEach((element: any) => {
-              element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
-            });
-          }
-          return el
-        })
-        ctx.body = { ok: 1, arg: Bind } as Uart.ApolloMongoResult;
+        const UTs = [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => Bind.UTs.includes(el.DevMac))
+        ctx.body = { ok: 1, arg: UTs } as Uart.ApolloMongoResult;
       } else {
         ctx.body = { ok: 0, msg: 'user no bindDev' } as Uart.ApolloMongoResult
       }
@@ -297,7 +288,6 @@ export default async (Ctx: ParameterizedContext) => {
           if (BindDevs.includes(doc.mac)) {
             // 确认告警缓存清除
             const tags = doc.mac + doc.pid + doc.tag
-            ctx.$Event.Cache.CacheAlarmNum.delete(tags)
             ctx.body = await LogUartTerminalDataTransfinite.findByIdAndUpdate(id, { $set: { isOk: true } }, { new: true }).exec()
           } else ctx.body = { ok: 0 } as Uart.ApolloMongoResult
         } else {
@@ -675,17 +665,8 @@ export default async (Ctx: ParameterizedContext) => {
     // 用户添加虚拟设备
     case "addVm":
       {
-        const UTs = await Terminal.find({ DevMac: { $in: config.vmDevs } }).lean();
-        const Bind = UTs.map((el: any) => {
-          el.online = ctx.$Event.Cache.CacheNodeTerminalOnline?.has(el.DevMac)
-          if (el.online && el?.mountDevs?.length > 0) {
-            el.mountDevs.forEach((element: any) => {
-              element.online = !ctx.$Event.Cache.TimeOutMonutDev.has(el.DevMac + element.pid)
-            });
-          }
-          return el
-        })
-        ctx.body = { ok: 1, arg: Bind } as Uart.ApolloMongoResult;
+        const UTs = [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => config.vmDevs.includes(el.DevMac))
+        ctx.body = { ok: 1, arg: UTs } as Uart.ApolloMongoResult;
       }
       break
 

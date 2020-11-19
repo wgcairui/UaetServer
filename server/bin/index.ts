@@ -1,4 +1,4 @@
-import ProtocolPares from "../util/ProtocolPares";
+import ProtocolPares from "./ProtocolPares";
 import { TerminalClientResults, TerminalClientResult, TerminalClientResultSingle } from "../mongoose/node";
 import CheckUart from "./CheckUart";
 import { LogUseBytes } from "../mongoose/Log";
@@ -13,8 +13,7 @@ export default async (queryResultArray: Uart.queryResult[]) => {
         // 翻转结果数组,已新的结果为准
         const UartData = queryResultArray.reverse()
         // 解析结果
-        const ParseData = await Promise.all(UartData.map(el => ProtocolPares(el)))
-        //    .then(el => el.filter(el2 => el2.result?.length as number > 0))
+        const ParseData = UartData.map(el => ProtocolPares.parse(el))
         // 保存解析后的数据
         TerminalClientResult.insertMany(ParseData);
         // 保存单例数据库
@@ -25,12 +24,14 @@ export default async (queryResultArray: Uart.queryResult[]) => {
             // 如果数据重复,抛弃旧数据
             if (!MacID.has(ID)) {
                 MacID.add(ID)
-                // 把结果转换为对象
-                data.parse = Object.assign({}, ...data.result?.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
                 // 把数据发给检查器,检查数据是否有故障,保存数据单例
-                const checkData = CheckUart(data)
+                const checkData = CheckUart.check(data)
+                // 把结果转换为对象
+                data.parse = Object.assign({}, ...checkData.result!.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
                 // console.log({checkData});
-                //保存对象
+                // 保存对象
+                // console.log(data.result);
+                
                 TerminalClientResultSingle.updateOne(
                     { mac: checkData.mac, pid: checkData.pid },
                     checkData,

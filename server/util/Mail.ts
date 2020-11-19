@@ -24,7 +24,7 @@ let transporter = createTransport({
  * @param {*} body  校验码
  * @returns
  */
-const Send = async (mail: string, title: string, subject: string, body: string) => {
+export const Send = async (mail: string, title: string, subject: string, body: string) => {
     body = String(body);
     title = title || "Ladis";
     if (title == "注册") body = `注册验证码：<strong>${body}</strong>`;
@@ -65,6 +65,6 @@ export const SendValidation = async (mail: string, code: string) => {
     const title = "Ladis"
     return await Send(mail, title, "验证码", code)
 }
-export const SendMailAlarm = async (mail: string[], body: string) => {
+/* export const SendMailAlarm = async (mail: string[], body: string) => {
     return await Send(mail.join(","), "Ladis透传平台", "透传设备告警事件", body)
-}
+} */

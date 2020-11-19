@@ -14,7 +14,16 @@ const SchemaWebSocketTerminal = new Schema(
     port: Number,
     ip: String,
     jw: String,
-    mountNode: String
+
+    uart: String,
+    AT: Boolean,
+    ICCID: String,
+    connecting: Boolean,
+    lock: Boolean,
+    PID: String,
+    ver: String,
+    Gver: String,
+    iotStat: String,
   }
 )
 // 节点状态流
@@ -115,8 +124,8 @@ export const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
 export const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)
 
-TerminalClientResult.countDocuments({mac:'11'}).then(el=>{
-  console.log({el});
-  
+TerminalClientResult.countDocuments({ mac: '11' }).then(el => {
+  console.log({ el });
+
 })
 

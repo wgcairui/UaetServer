@@ -103,10 +103,16 @@ declare namespace Uart {
         name: string;
         ip?: string
         port?: number
+
+        AT?: boolean
         jw?: string;
         uart?: string
-        AT?: boolean
         uptime?: string
+        PID?: string,
+        ver?: string,
+        Gver?: string,
+        iotStat?: string,
+        ICCID?: string
         mountDevs: TerminalMountDevs[];
     }
     interface TerminalMountDevsEX extends TerminalMountDevs {
@@ -203,6 +209,13 @@ declare namespace Uart {
         uart: string
         AT: boolean
         ICCID: string
+        connecting: boolean,
+        lock: boolean
+        PID: string
+        ver: string
+        Gver: string
+        iotStat: string
+
     }
     // 节点websocket透传信息
     interface WebSocketInfo {
