@@ -99,6 +99,8 @@ class Check {
 
   // 设置用户的告警配置缓存
   private setUserSetup(user: string, protocol: string) {
+    console.log('更新check缓存', user, protocol);
+
     // 获取用户个性化配置实例
     const UserSetup = Event.Cache.CacheUserSetup.get(user)
     // 协议参数阀值,状态
@@ -181,7 +183,7 @@ class Check {
         const tags = query.mac + query.pid + el.name
         const n = this.CacheAlarmNum.get(tags)
         if (n && n > 10) {
-          console.log('checkSmsSend', el, this.CacheAlarmNum);
+          // console.log('checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
         }
       }
@@ -266,11 +268,24 @@ class Check {
       const Dev = Event.getClientDtuMountDev(mac, pid)
       const setup = this.userSetup.get(info.user.user)!.get(Dev.protocol)!
       const ck = setup.Threshold.get(tag.name!)
-      const str = ck ? `参考值::max=${ck.max},min=${ck.min},` : ''
+      const str = ck ? `min=${ck.min} max=${ck.max}` : ''
 
-      const body = `尊敬的${info.user.name},您的DTU [${info.terminalInfo.name}] 挂载的 [${Dev.mountDev}]于${new Date().toLocaleString()}告警,事件: ${event},${str}
+      /* const body = `尊敬的${info.user.name},您的DTU [${info.terminalInfo.name}] 挂载的 [${Dev.mountDev}]于${new Date().toLocaleString()}告警,事件: ${event},${str}
                     您可登录透传服务平台查看处理https://uart.ladishb.com,或使用微信小程序查看`
-      return Send(mails.join(","), "Ladis透传平台", "透传设备告警事件", body)
+       */
+      const body = `<p><strong>尊敬的${info.user.name}</strong></p>
+      <hr />
+      <p><strong>您的DTU <em>${info.terminalInfo.name}</em> 挂载的 ${Dev.mountDev} 告警</strong></p>
+      <p><strong>告警时间:&nbsp; </strong>${new Date().toLocaleString()}</p>
+      <p><strong>告警事件:</strong>&nbsp; ${event}</p>
+      <p><strong>参考值: </strong>&nbsp;${str}</p>
+      <p>您可登录 <a title="透传服务平台" href="https://uart.ladishb.com" target="_blank" rel="noopener">LADS透传服务平台</a> 查看处理(右键选择在新标签页中打开)</p>
+      <hr />
+      <p>&nbsp;</p>
+      <p>扫码使用微信小程序查看</p>
+      <p><img src="https://uart.ladishb.com/_nuxt/img/LADS_Uart.0851912.png" alt="weapp" width="430" height="430" /></p>
+      <p>&nbsp;</p>`
+      return Send(mails.join(","), "Ladis透传平台", "设备告警", body)
     }
     //SendMailAlarm(userInfo.mails, `尊敬的${userInfo.user},您的DTU${query.mac}挂载的${query.mountDev}于${new Date().toLocaleString()}告警,关键词` + event);
 

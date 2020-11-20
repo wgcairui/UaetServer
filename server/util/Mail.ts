@@ -11,8 +11,9 @@ let transporter = createTransport({
     auth: {
         user: key.user,
         // 这里密码不是qq密码，是你设置的smtp授权码
-        pass: key.pass
-    }
+        pass: key.pass,
+    },
+
 });
 
 /**
@@ -31,13 +32,13 @@ export const Send = async (mail: string, title: string, subject: string, body: s
     if (title == "重置密码") body = `重置验证码：<strong>${body}</strong>`;
     subject = subject ? subject + title : "test";
     let mailOptions = {
-        from: `"${title}" <260338538@qq.com>`, // sender address
+        from: `"${title}" <${key.user}>`, // sender address
         to: mail, // list of receivers
         subject, // Subject line
         html: body // 发送text或者html格式 // text: 'Hello world?', // plain text body
     };
 
-    await new Promise<Uart.mailResponse>((res, rej) => {
+    return await new Promise<Uart.mailResponse>((res, rej) => {
         transporter.sendMail(mailOptions, (error, info: Uart.mailResponse) => {
             if (error) rej(error);
             res(info);
@@ -49,13 +50,15 @@ export const Send = async (mail: string, title: string, subject: string, body: s
             Success: el
         }
         new LogMailSend(data).save()
+        return data
     }).catch(e => {
         const data: Uart.logMailSend = {
             mails: mail.split(","),
             sendParams: mailOptions,
-            Error: e
+            Error: e.response
         }
         new LogMailSend(data).save()
+        return data
     })
 
 

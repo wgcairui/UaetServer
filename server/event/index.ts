@@ -4,8 +4,7 @@ import ClientCache from "./ClientCache"
 import { DefaultContext } from "koa";
 import { Server } from "http";
 import { LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins } from "../mongoose/Log";
-import config from "../config";
-import { SmsDTUDevTimeOut, SmsDTU } from "../util/SMS";
+import { SmsDTU } from "../util/SMS";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
@@ -14,6 +13,10 @@ import { Uart } from "typing";
 import { Terminal } from "../mongoose";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
+
+type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
+type CacheFuns = RemoveNonFunctionProps<Cache>
+type CacheMap = keyof Omit<Cache, CacheFuns>
 
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
@@ -94,8 +97,23 @@ export class Event extends EventEmitter.EventEmitter {
     console.info(`WS Server(namespace:/wx) runing`)
   }
 
+  // 获取Cache入口
+  public GetCacheMaps(cacheName: CacheMap, key: string) {
+    const Map = this.Cache[cacheName].get(key)
+    return Map
+
+  }
+
+  // 
+  public GetCacheFun(fun: CacheFuns, ...c: Parameters<Cache[CacheFuns]>) {
+
+  }
+  
+
   // 发送设备操作指令查询
   DTU_OprateInstruct(Query: Uart.instructQuery) {
+    this.GetCacheFun("RefreshCacheTerminal",)
+    const a = this.GetCacheMaps("CacheAlarmSendNum", 'a')
     if (this.uartSocket) {
       return this.uartSocket.InstructQuery(Query)
     } else {

@@ -58,17 +58,16 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             return await RegisterTerminal.find({ mountNode: NodeName })
         },
         // 终端信息
-        async Terminal(root, { DevMac }, ctx) {
+        Terminal(root, { DevMac }, ctx) {
             valadationMac(ctx, DevMac)
-            return await Terminal.findOne({ DevMac });
+            return ctx.$Event.Cache.CacheTerminal.get(DevMac)
         },
         // 检索在线的终端
-        async TerminalOnline(root, { DevMac }, ctx) {
+        TerminalOnline(root, { DevMac }, ctx) {
             const terminals = ctx.$Event.Cache.CacheTerminal.get(DevMac)
-            if (!terminals || !terminals.online) return null
-            if (terminals.online) return terminals
+            return terminals?.online ? terminals : null
         },
-        async Terminals(root, arg, ctx) {
+        Terminals(root, arg, ctx) {
             return ctx.$Event.Cache.CacheTerminal.values()
         },
         // 环控终端信息
@@ -113,19 +112,10 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         async UartTerminalData(root, { DevMac, pid }, ctx) {
             valadationMac(ctx, DevMac)
             // 获取mac协议
-            const protocol = ctx.$Event.Cache.CacheTerminal.get(DevMac)?.mountDevs.find(el => el.pid === pid)?.protocol as string
+            const protocol = ctx.$Event.getClientDtuMountDev(DevMac, pid).protocol
             // 获取配置显示常量参数
-            const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag as string[]
-            const data = await TerminalClientResultSingle.findOne({
-                mac: DevMac,
-                pid
-            }).lean<Uart.queryResult>()
-            /* const data = await TerminalClientResultSingle.aggregate().match({ mac: DevMac, pid }).unwind('result').match({ 'result.name': { '$in': ShowTag } })
-                .group({
-                    _id: "$_id", result: { '$push': "$result" }
-                }).limit(1)
-            console.log(data); */
-
+            const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag || []
+            const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid }).lean<Uart.queryResult>()
             // 刷选
             data!.result = ShowTag ? (data!.result?.filter(el => ShowTag?.includes(el.name))) : data!.result
             return data
@@ -138,8 +128,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             if (datatime === "") {
                 result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").limit(100).lean() as any;
             } else {
-                const start = new Date(datatime + " 00:00:00");
-                const end = new Date(datatime + " 23:59:59");
+                const [start, end] = [new Date(datatime + " 00:00:00"), new Date(datatime + " 23:59:59")];
                 result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
                     .where("timeStamp")
                     .gte(start.getTime())
@@ -193,9 +182,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
         // 获取用户tel
         async getUserTel(root, arg, ctx) {
-            const user = ctx.$Event.Cache.CacheUser.get(ctx.user)
-            const tel = Tool.Mixtel(user!.tel)
-            return tel
+            return Tool.Mixtel(ctx.$Event.Cache.CacheUser.get(ctx.user)!.tel)
         },
         // 获取socket node状态
         getSocketNode(root, arg, ctx) {
@@ -363,7 +350,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         // 检查挂载设备是否在超时列表中
         checkDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx) {
             if (!ctx.$Event.Cache.CacheTerminal.get(mac)?.online) return 'DTUOFF'
-            if (!ctx.$Event.Cache.CacheTerminal.get(mac)!.mountDevs.find(el => el.pid)?.online) return 'TimeOut'
+            if (!ctx.$Event.getClientDtuMountDev(mac, pid).online) return 'TimeOut'
             return 'online'
         }
     },
