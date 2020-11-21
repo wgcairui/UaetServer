@@ -127,7 +127,6 @@ class Check {
     }
     // 获取用户+协议 缓存实例
     const setup = this.userSetup.get(user)!.get(protocol)!
-
     // 如果用户有阈值设置&&阈值设置有protocol,迭代用户设置加入到缓存
     if (UserSetup?.ThresholdMap && UserSetup.ThresholdMap.has(protocol)) {
       UserSetup.ThresholdMap.get(protocol)!.forEach(el => {
@@ -151,7 +150,7 @@ class Check {
     if (result && result.length > 0 && user) {
       // const dataMap = new Map(result.map(el=>[el.name,el]))
       const setup = this.getUserSetup(user, query.protocol)
-
+      // console.log('check',result,setup);
       if (setup.Threshold.size > 0) {
         this.checkThreshold(result, setup.Threshold).forEach(el => {
           el.alarm = true
@@ -243,7 +242,9 @@ class Check {
     // 缓存告警记录
     const n = this.CacheAlarmNum.get(tags) || 0;
     this.CacheAlarmNum.set(tags, n + 1);
+    // console.log('sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (n === 10) {
+      Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag)
       this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event)

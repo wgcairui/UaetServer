@@ -26,6 +26,7 @@ declare namespace Uart {
         $Event: Event
         $token: string
         operationName: string
+        req: Request
     }
 
     // page auery

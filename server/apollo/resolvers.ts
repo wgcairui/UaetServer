@@ -125,35 +125,35 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             valadationMac(ctx, DevMac)
             let result: Uart.queryResultSave[]
             // 如果没有日期参数,默认检索最新的100条数据
+            const Query = TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").lean<Uart.queryResultSave>()
             if (datatime === "") {
-                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").limit(100).lean() as any;
+                result = await Query.limit(100)
             } else {
                 const [start, end] = [new Date(datatime + " 00:00:00"), new Date(datatime + " 23:59:59")];
-                result = await TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
-                    .where("timeStamp")
-                    .gte(start.getTime())
-                    .lte(end.getTime())
-                    .sort("-timeStamp")
-                    .lean()
+                const resultLen = await TerminalClientResult.find({ mac: DevMac, pid }).where("timeStamp").gte(start.getTime()).lte(end.getTime()).countDocuments();
+                result = resultLen > 100 ? await Query.where("timeStamp").gte(start.getTime()).lte(end.getTime()).exec() : await Query.where("timeStamp").lte(end.getTime()).limit(1000)
             }
-            // 把结果拆分为块
-            const len = Number.parseInt((result.length / 10).toFixed(0))
-            //console.log({len,length:result.length});
-            const resultChunk = _.chunk(result, len < 10 ? 10 : len)
-            // 遍历切块,刷选出指定字段的结果集,
-            const res = resultChunk.map(el => {
-                // 刷选切块,如果值相同则抛弃
-                let def: Uart.queryResultSave = el[0]
-                //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
-                return el.reduce((pre, cur) => {
-                    // 获取最后一个值
-                    const last = _.last(pre) as Uart.queryResultSave
-                    //cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
-                    if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
-                    return pre
-                }, [def])
-            }).flat()
-            return res
+            if (result.length < 50) return result
+            else {
+                // 把结果拆分为块
+                const len = Number.parseInt((result.length / 10).toFixed(0))
+                //console.log({len,length:result.length});
+                const resultChunk = _.chunk(result, len < 10 ? 10 : len)
+                // 遍历切块,刷选出指定字段的结果集,
+                const res = resultChunk.map(el => {
+                    // 刷选切块,如果值相同则抛弃
+                    let def: Uart.queryResultSave = el[0]
+                    //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
+                    return el.reduce((pre, cur) => {
+                        // 获取最后一个值
+                        const last = _.last(pre) as Uart.queryResultSave
+                        //cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
+                        if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
+                        return pre
+                    }, [def])
+                }).flat()
+                return res
+            }
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx) {

@@ -195,12 +195,12 @@ export default async (Ctx: ParameterizedContext) => {
     // 获取用户挂载设备
     case 'getuserMountDev':
 
-      const Bind = ctx.$Event.Cache.CacheBind.get(ctx.user)
-      if (Bind) {
+      const Bind = ctx.$Event.Cache.CacheBind.get(tokenUser.user)
+      if (Bind && Bind.UTs) {
         const UTs = [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => Bind.UTs.includes(el.DevMac))
-        ctx.body = { ok: 1, arg: UTs } as Uart.ApolloMongoResult;
+        ctx.body = { ok: 1, arg: { UTs } } as Uart.ApolloMongoResult;
       } else {
-        ctx.body = { ok: 0, msg: 'user no bindDev' } as Uart.ApolloMongoResult
+        ctx.body = { ok: 0, arg: { UTs: [] } } as Uart.ApolloMongoResult
       }
 
       break
@@ -681,6 +681,7 @@ export default async (Ctx: ParameterizedContext) => {
         }
         ctx.assert(validationUserPermission(tokenUser.user, dtu), 402, '用户越权操作dtu')
         const result = await Terminal.updateOne({ DevMac: dtu }, { $set: { name } }).exec()
+        ctx.$Event.Cache.RefreshCacheTerminal(dtu)
         ctx.body = result
       }
       break
