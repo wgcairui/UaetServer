@@ -105,6 +105,7 @@ export default class Cache {
   // 重置terminal终端设备在线状态
   private async resetTerminalStat() {
     await Terminal.updateMany({}, { $set: { onlien: false } })
+    return this
   }
 
   // 
@@ -122,6 +123,7 @@ export default class Cache {
       this.CacheProtocol.delete(protocol)
     }
     this.Events.ResetUartSocketQueryIntruct()
+    return this
   }
   //
   async RefreshCacheDevType(DevModel?: string) {
@@ -130,6 +132,7 @@ export default class Cache {
     res.forEach(el => {
       this.CacheDevsType.set(el.DevModel, el)
     })
+    return this
   }
   //
   async RefreshCacheNode() {
@@ -138,6 +141,7 @@ export default class Cache {
     this.CacheNode = new Map(res.map(el => [el.IP, el]))
     this.CacheNodeName = new Map(res.map(el => [el.Name, el]))
     // this.CacheNodeTerminal = new Map(res.map(el => [el.Name, new Map()]))
+    return this
   }
   //
   async RefreshCacheTerminal(DevMac?: string) {
@@ -160,6 +164,7 @@ export default class Cache {
       // 触发终端更新事件
       this.Events.UpdateTerminal(DevMac)
     }
+    return this
   }
   //
   async RefreshCacheConstant(protocol?: string) {
@@ -172,6 +177,7 @@ export default class Cache {
     if (res.length === 0 && protocol) {
       this.CacheConstant.delete(protocol)
     }
+    return this
   }
   //
   async RefreshCacheBind(user?: string) {
@@ -183,6 +189,7 @@ export default class Cache {
         this.CacheBindUart.set(els as string, el.user)
       })
     })
+    return this
   }
   //
   async RefreshCacheUser(user?: string) {
@@ -191,6 +198,7 @@ export default class Cache {
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
     })
+    return this
   }
   //
   async RefreshCacheUserSetup(user?: string) {
@@ -214,5 +222,6 @@ export default class Cache {
       this.CacheUserSetup.set(el.user, el);
       [...el.ProtocolSetupMap.keys()].forEach(key => this.Events.emit("updateUserSetup", el.user, key))
     })
+    return this
   }
 }

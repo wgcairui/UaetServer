@@ -3,6 +3,7 @@ const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'lo
 
 export { mongoose, Schema };
 
+
 mongoose.connect(DB_URL, {
   useUnifiedTopology: true,
   useNewUrlParser: true,

@@ -11,12 +11,14 @@ import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
 import { Uart } from "typing";
 import { Terminal } from "../mongoose";
+import { getUserBindDev } from "../util/util";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
-
 type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
 type CacheFuns = RemoveNonFunctionProps<Cache>
 type CacheMap = keyof Omit<Cache, CacheFuns>
+
+type ElementOf<T> = T extends Array<infer P> ? P : never
 
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
@@ -98,22 +100,39 @@ export class Event extends EventEmitter.EventEmitter {
   }
 
   // 获取Cache入口
-  public GetCacheMaps(cacheName: CacheMap, key: string) {
-    const Map = this.Cache[cacheName].get(key)
-    return Map
-
+  public GetCacheMap<T extends CacheMap>(tag: string, cacheName: T, key: Parameters<Cache[T]['get']>[0]): ReturnType<Cache[T]['get']> {
+    console.log(`GetCacheMap ;; tag:${tag}`);
+    return this.Cache[cacheName].get(key) as any
   }
 
+  // 获取Cache入口
+  public DelCacheMap<T extends CacheMap>(tag: string, cacheName: T, key: Parameters<Cache[T]['get']>[0]) {
+    console.log(`DelCacheMap ;; tag:${tag}`);
+    return this.Cache[cacheName].delete(key)
+  }
+
+  // 获取Cache入口
+  public GetCacheMaps<T extends CacheMap>(tag: string, cacheName: T): ReturnType<Cache[T]['values']> {
+    console.log(`GetCacheMaps ;; tag:${tag}`);
+    return this.Cache[cacheName].values() as any
+  }
   // 
-  public GetCacheFun(fun: CacheFuns, ...c: Parameters<Cache[CacheFuns]>) {
-
+  public GetCacheFun<T extends CacheFuns>(tag: string, fun: T, c?: ElementOf<Parameters<Cache[T]>>): ReturnType<Cache[T]> {
+    console.log(`GetCacheFun ;; tag:${tag}`);
+    return this.Cache[fun](c) as any
   }
-  
+  // 获取用户绑定设备
+  public getUserBindDev(user: string) {
+    this.GetCacheFun('ss', 'RefreshCacheProtocol')
+    return getUserBindDev(user)
+  }
+
 
   // 发送设备操作指令查询
   DTU_OprateInstruct(Query: Uart.instructQuery) {
-    this.GetCacheFun("RefreshCacheTerminal",)
-    const a = this.GetCacheMaps("CacheAlarmSendNum", 'a')
+
+    const aa = this.GetCacheMaps('test', "CacheProtocol")
+
     if (this.uartSocket) {
       return this.uartSocket.InstructQuery(Query)
     } else {

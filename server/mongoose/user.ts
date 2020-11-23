@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-/* jshint esversion:8 */
 import { mongoose, Schema } from "./index";
 import { Schema_DevConstant } from "./DeviceParameterConstant";
 
@@ -29,7 +27,7 @@ const Schema_Users = new Schema({
   address: String,
   status: { type: Boolean, default: true },
   messageId: String,
-});
+})
 
 // 用户绑定设备
 const SchemaUserBindDevice = new Schema({

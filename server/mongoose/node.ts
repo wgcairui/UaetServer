@@ -6,7 +6,7 @@ const SchemaNodeClient = new Schema({
   IP: String,
   Port: Number,
   MaxConnections: Number
-});
+})
 // 节点websocket设备
 const SchemaWebSocketTerminal = new Schema(
   {
@@ -103,7 +103,7 @@ const SchemaTerminalClientResultSingle = new Schema({
   Interval: Number,
   useTime: Number
 }, { timestamps: true });
-export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient);
+export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient)
 
 export const TerminalClientResults = mongoose.model(
   "ClientResult",
