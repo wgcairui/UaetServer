@@ -79,6 +79,8 @@ export default async (Ctx: ParameterizedContext) => {
                   ctx.$Event.Cache.RefreshCacheTerminal(mac)
                   ctx.$Event.ChangeTerminalStat(mac, connecting)
                 })
+              } else {
+                Terminal.updateOne({ DevMac: mac }, { $set: { uptime: updateTime } })
               }
             }
             /* // 根据设备在线状态修改
