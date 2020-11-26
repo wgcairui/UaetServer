@@ -55,7 +55,7 @@ export default async (ctx: ParameterizedContext) => {
       break;
     case "logout":
       {
-        ctx.body = await new Promise(resolve => { resolve({ state: "logout success" }); });
+        ctx.body = { state: "logout success" }
       }
       break;
     // 用户登陆提供给用户的加密hash
