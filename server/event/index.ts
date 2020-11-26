@@ -12,6 +12,8 @@ import wxUtil from "../util/wxUtil";
 import { Uart } from "typing";
 import { Terminal } from "../mongoose";
 import { getUserBindDev } from "../util/util";
+// Cron
+import * as Cron from "../cron/index";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
@@ -40,6 +42,7 @@ export class Event extends EventEmitter.EventEmitter {
       .on("error", console.error);
     //
     wxUtil.get_AccessToken()
+    Cron.start()
 
   }
   // 挂载监听到koa ctx

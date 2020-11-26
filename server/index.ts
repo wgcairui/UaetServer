@@ -13,8 +13,6 @@ import ApolloServer from "./apollo/apollo";
 import router from "./router/index";
 // Event
 import Event from "./event/index";
-// Cron
-import * as Cron from "./cron/index";
 
 const app = new Koa();
 // compress
@@ -34,9 +32,7 @@ const app = new Koa();
 // attach
 Event.attach(app);
 // new apollo
-ApolloServer.applyMiddleware({ app, path: "/graphql" });
-// cron start
-Cron.start()
+ApolloServer.applyMiddleware({ app, path: "/graphql" })
 // use
 // app.use(koaLogger());
 app.use(body());

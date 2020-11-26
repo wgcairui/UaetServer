@@ -178,7 +178,6 @@ declare namespace Uart {
     //协议查询结果
     interface queryResult extends queryObject {
         contents: IntructQueryResult[]
-        parse?: queryResultParse
         result?: queryResultArgument[];
         time?: string;
         useBytes?: number

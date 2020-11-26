@@ -248,8 +248,7 @@ export default async (Ctx: ParameterizedContext) => {
         const query = LogUartTerminalDataTransfinite.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
         // 如果未清洗的数据查询结果的大于N条,则先清洗数据
         if (await query.countDocuments() > 2000) {
-          const cur = query.cursor()
-          await Cron.Uartterminaldatatransfinites(cur)
+          await Cron.Uartterminaldatatransfinites()
         }
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
         const logCur = LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs } }).where("createdAt").gte(start).lte(end)
@@ -312,10 +311,8 @@ export default async (Ctx: ParameterizedContext) => {
           const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
           // 刷选
           if (ShowTag) {
-            const objFilter = _.pick(data.parse, [...ShowTag])
-            data.result = _.values(objFilter) as Uart.queryResultArgument[] //(data.result?.filter(el => ShowTag.has(el.name)))
+            data.result = data.result!.filter(el => ShowTag.has(el.name))
           }
-          data.parse = {}
           ctx.body = { ok: 1, arg: data } as Uart.ApolloMongoResult
         } else {
           ctx.body = { ok: 0, msg: '设备没有运行数据' } as Uart.ApolloMongoResult

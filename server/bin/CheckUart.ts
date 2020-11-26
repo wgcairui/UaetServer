@@ -99,7 +99,7 @@ class Check {
 
   // 设置用户的告警配置缓存
   private setUserSetup(user: string, protocol: string) {
-    console.log('更新check缓存', user, protocol);
+    // console.log('更新check缓存', user, protocol);
 
     // 获取用户个性化配置实例
     const UserSetup = Event.Cache.CacheUserSetup.get(user)

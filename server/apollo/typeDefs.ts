@@ -307,6 +307,8 @@ const typeDefs: DocumentNode = gql`
     loguserlogins(start:Date,end:Date):JSON
     # 获取终端日志
     loguserrequsts(start:Date,end:Date):JSON
+    # 获取定时清理日志
+    logdataclean(start:Date,end:Date):JSON
     # 获取设备使用流量
     logterminaluseBtyes(mac:String):JSON
     # 获取聚合设备

@@ -25,7 +25,7 @@ const SchemaDev = new Schema({
 const SchemaProtocols = new Schema({
   Type: { type: Number, enum: [485, 232] },
   Protocol: String, // 协议名称
-  ProtocolType: { type: String, enum: ["ups", "air", "em", "th"] },
+  ProtocolType: { type: String, enum: ["ups", "air", "em", "th", "io"] },
   instruct: [
     new Schema(
       {

@@ -76,10 +76,10 @@ const SchemaTerminals = new Schema({
 }, { timestamps: true })
 // 数据清洗
 const SchemaDataClean = new Schema({
-    NumUartterminaldatatransfinites: Number,
-    NumUserRequst: Number,
-    NumClientresults: Number,
-    NumClientresultcolltion: Number,
+    NumUartterminaldatatransfinites: String,
+    NumUserRequst: String,
+    NumClientresults: String,
+    NumClientresultcolltion: String,
     lastDate: Date
 }, { timestamps: true })
 

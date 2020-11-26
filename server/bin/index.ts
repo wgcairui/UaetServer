@@ -27,7 +27,7 @@ export default async (queryResultArray: Uart.queryResult[]) => {
                 // 把数据发给检查器,检查数据是否有故障,保存数据单例
                 const checkData = CheckUart.check(data)
                 // 把结果转换为对象
-                data.parse = Object.assign({}, ...checkData.result!.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
+                // data.parse = Object.assign({}, ...checkData.result!.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
                 // console.log({checkData});
                 // 保存对象
                 // console.log(data.result);

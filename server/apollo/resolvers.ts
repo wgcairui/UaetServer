@@ -7,7 +7,7 @@ import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongo
 import { BcryptDo } from "../util/bcrypt";
 import { DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
-import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -237,8 +237,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             const query = LogUartTerminalDataTransfinite.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
             if (await query.countDocuments() > 2000) {
-                const cur = query.cursor()
-                await Cron.Uartterminaldatatransfinites(cur)
+                await Cron.Uartterminaldatatransfinites()
             }
             if (ctx.userGroup === "user") {
                 //获取用户绑定设备列表
@@ -280,14 +279,18 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             const query = LogUserRequst.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
             if (await query.countDocuments() > 2000) {
-                const cur = query.cursor()
-                await Cron.CleanUserRequst(cur)
+                await Cron.CleanUserRequst()
             }
             return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
         },
         // 获取设备使用流量
         async logterminaluseBtyes(root, { mac }, ctx) {
             return await LogUseBytes.find({ mac }).exec()
+        },
+
+        // 获取定时清理记录
+        async logdataclean(root, { start, end }: { start: Date, end: Date }){
+            return await LogDataClean.find().where("createdAt").gte(start).lte(end).exec()
         },
         // id获取用户聚合设备
         async Aggregation(root, { id }, ctx) {
@@ -300,7 +303,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 // ter.parse = _.pick(ter.parse,constantVals) as any
                 const constantParse = {} as { [x in string]: Uart.queryResultArgument }
                 for (let key in constantVals) {
-                    constantParse[key] = (ter.parse as any)[constantVals[key]]
+                    constantParse[key] = ter.result!.find(el=>el.name === constantVals[key])!
                 }
                 // console.log({ constantParse });
                 return Object.assign(el, { parse: constantParse })
