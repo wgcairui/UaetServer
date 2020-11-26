@@ -114,7 +114,7 @@ async function CleanClientresults() {
     for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid
         const _id = Types.ObjectId((doc as any)._id)
-        if (dtus.has(tag + doc.mountDev)) {
+        if (dtus.has(tag + doc.protocol)) {
             const oldDoc = MapClientresults.get(tag)
             if (oldDoc) {
                 // 比较每个content查询下buffer.data的数据，有不一致则更新缓存，一致的话计入待删除array
@@ -213,6 +213,6 @@ function clientresultcolltionsToMap(clientResults: Uart.queryResult): clientresu
 // 统计所有dtu挂载设备，
 function allDtus() {
     const terminals = Event.Cache.CacheTerminal
-    const hashs = [...terminals.values()].map(el => el.mountDevs ? el.mountDevs.map(el2 => el.DevMac + el2.pid + el2.mountDev) : []).flat()
+    const hashs = [...terminals.values()].map(el => el.mountDevs ? el.mountDevs.map(el2 => el.DevMac + el2.pid + el2.protocol) : []).flat()
     return new Set(hashs)
 }
