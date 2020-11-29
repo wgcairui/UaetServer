@@ -31,8 +31,12 @@ const Constant = new Schema(
     ResidualCapacity: String,
     BatteryVoltage: String,
     OutputFrequency: String,
-    OutputLoad: String
+    OutputLoad: String,
     // EM
+
+    // IO
+    di: [String],
+    do: [String]
   },
   { _id: false }
 );
@@ -47,7 +51,8 @@ const OprateInstruct = new Schema({
   name: String,
   value: String,
   bl: { type: String, default: '1' },
-  readme: String
+  readme: String,
+  tag: String
 }, { _id: false })
 
 const AlarmStat = new Schema({

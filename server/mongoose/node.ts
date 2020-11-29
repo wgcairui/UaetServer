@@ -91,7 +91,8 @@ const SchemaTerminalClientResultSingle = new Schema({
       {
         name: String,
         value: String,
-        unit: String
+        unit: String,
+        alarm: Boolean
       },
       { _id: false }
     )
@@ -103,29 +104,25 @@ const SchemaTerminalClientResultSingle = new Schema({
   Interval: Number,
   useTime: Number
 }, { timestamps: true });
-export const NodeClient = mongoose.model("NodeClient", SchemaNodeClient)
+const NodeClient = mongoose.model("NodeClient", SchemaNodeClient)
 
-export const TerminalClientResults = mongoose.model(
+const TerminalClientResults = mongoose.model(
   "ClientResult",
   SchemaTerminalClientResults,
 );
 
-export const TerminalClientResult = mongoose.model(
+const TerminalClientResult = mongoose.model(
   "ClientResultColltion",
   SchemaTerminalClientResult,
 );
 
-export const TerminalClientResultSingle = mongoose.model(
+const TerminalClientResultSingle = mongoose.model(
   "ClientResultSingle",
   SchemaTerminalClientResultSingle,
 );
 
-export const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
+const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
 
-export const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)
+const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)
 
-TerminalClientResult.countDocuments({ mac: '11' }).then(el => {
-  console.log({ el });
-
-})
-
+export { WebSocketTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo }

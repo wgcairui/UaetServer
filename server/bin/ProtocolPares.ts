@@ -97,7 +97,7 @@ class ProtocolParse {
                 // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
                 if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
                 else {
-                  Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
+                  // Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
                   console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
                   return false
                 }

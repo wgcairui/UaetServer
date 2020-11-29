@@ -8,7 +8,6 @@ import { Uart } from "typing";
 export default async (ctx: ParameterizedContext) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body
   const type = ctx.params.type;
-  // console.log({ type, body });
   switch (type) {
     case "login":
       {

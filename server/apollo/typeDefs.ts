@@ -194,12 +194,16 @@ const typeDefs: DocumentNode = gql`
     BatteryVoltage: String
     OutputFrequency: String
     OutputLoad: String
+    # io
+    di:[String]
+    do:[String]
   }
  # 操作指令
  type OprateInstruct{
     name:String
     value:String
     bl:String
+    tag: String
     readme:String
   }
   # 协议告警状态

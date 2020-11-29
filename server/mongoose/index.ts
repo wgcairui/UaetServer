@@ -1,9 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017/UartServer`; /** * 连接 */
 
-export { mongoose, Schema };
-
-
 mongoose.connect(DB_URL, {
   useUnifiedTopology: true,
   useNewUrlParser: true,
@@ -44,14 +41,29 @@ export interface Token {
   creatTime: number
 }
 
-export const AMapLoctionCache = mongoose.model("AMap.LoctionCache", AMapLoctionCacheScheme)
-export const Tokens = mongoose.model('Token', Token)
+const AMapLoctionCache = mongoose.model("AMap.LoctionCache", AMapLoctionCacheScheme)
+const Tokens = mongoose.model('Token', Token)
 
-export { Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table } from "./DevEc";
-export { DeviceProtocol, DevsType } from "./DeviceAndProtocol";
-export { DevConstant, } from "./DeviceParameterConstant";
-export { EcTerminal } from "./EnvironmentalControl";
-export { LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes } from "./Log";
-export { Terminal, RegisterTerminal } from "./Terminal";
-export { NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal } from "./node";
-export { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "./user";
+
+import { Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table } from "./DevEc";
+import { DeviceProtocol, DevsType } from "./DeviceAndProtocol";
+import { DevConstant } from "./DeviceParameterConstant";
+import { EcTerminal } from "./EnvironmentalControl";
+import { LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes } from "./Log";
+import { Terminal, RegisterTerminal } from "./Terminal";
+import { NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal } from "./node";
+import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "./user";
+
+export { mongoose, Schema, DeviceProtocol, DevsType, Tokens, AMapLoctionCache, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table, DevConstant, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, Terminal, RegisterTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, Users, UserBindDevice, UserAlarmSetup, UserAggregation }
+
+export const DocmentCount = async () => {
+  const models = [Tokens, AMapLoctionCache, DeviceProtocol, DevsType, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_Table, DevConstant, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, Terminal, RegisterTerminal,UserAlarmSetup, UserAggregation, Users, UserBindDevice, NodeRunInfo,]// NodeClient,TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, ]
+  // Tokens.
+  const result = models.map(async mode => {
+    const name = mode?.collection?.collectionName
+    // console.log({name});
+    return { mode,name, count: await mode?.countDocuments() }
+  })
+  //
+  return await Promise.all(result)
+}

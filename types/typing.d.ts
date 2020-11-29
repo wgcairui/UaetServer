@@ -287,6 +287,7 @@ declare namespace Uart {
     }
     // EM
     interface DevConstant_EM { }
+    // UPS
     interface DevConstant_Ups {
         UPSModels: string
         BatteryTemperature: string
@@ -295,11 +296,17 @@ declare namespace Uart {
         OutputFrequency: string
         OutputLoad: string
     }
+    // TH
     interface DevConstant_TH {
         Temperature: string;
         Humidity: string;
     }
-    interface DevConstant extends DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups { }
+    // IO
+    interface DevConstant_IO {
+        di: string[];
+        do: string[];
+    }
+    interface DevConstant extends DevConstant_Air, DevConstant_EM, DevConstant_TH, DevConstant_Ups, DevConstant_IO { }
     // 协议参数阀值
     interface Threshold {
         name: string
@@ -317,6 +324,7 @@ declare namespace Uart {
         bl: string
         val?: number
         readme: string
+        tag: string
     }
     // 协议参数-常量参数阀值
     interface ProtocolConstantThreshold {

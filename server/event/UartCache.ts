@@ -182,7 +182,7 @@ export default class Cache {
   //
   async RefreshCacheBind(user?: string) {
     const res = await UserBindDevice.find(user ? { user } : {}).lean<Uart.BindDevice>()
-    console.log(`更新绑定设备缓存......`);
+    console.log(`更新绑定设备缓存......`, user);
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
       el?.UTs.forEach(els => {
@@ -193,7 +193,7 @@ export default class Cache {
   }
   //
   async RefreshCacheUser(user?: string) {
-    console.log(`更新用户信息缓存......`);
+    console.log(`更新用户信息缓存......`, user);
     const users = await Users.find(user ? { user } : {}).lean<Uart.UserInfo>()
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
@@ -203,7 +203,7 @@ export default class Cache {
   //
   async RefreshCacheUserSetup(user?: string) {
     const res = await UserAlarmSetup.find(user ? { user } : {}).lean<Uart.userSetup>()
-    console.log(`更新用户个性化配置......`);
+    console.log(`更新用户个性化配置......`, user);
     res.forEach(el => {
       // 如果用户没有自定义告警阀值,生成空map   
       el.ProtocolSetupMap = new Map()

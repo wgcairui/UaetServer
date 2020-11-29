@@ -117,7 +117,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag || []
             const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid }).lean<Uart.queryResult>()
             // 刷选
-            data!.result = ShowTag ? (data!.result?.filter(el => ShowTag?.includes(el.name))) : data!.result
+            // console.log({ShowTag,r:data!.result});
+            data!.result = ShowTag?.length > 0 ? (data!.result?.filter(el => ShowTag?.includes(el.name))) : data!.result
             return data
         },
         // 获取透传设备数据-多条
@@ -289,7 +290,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
 
         // 获取定时清理记录
-        async logdataclean(root, { start, end }: { start: Date, end: Date }){
+        async logdataclean(root, { start, end }: { start: Date, end: Date }) {
             return await LogDataClean.find().where("createdAt").gte(start).lte(end).exec()
         },
         // id获取用户聚合设备
@@ -303,7 +304,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 // ter.parse = _.pick(ter.parse,constantVals) as any
                 const constantParse = {} as { [x in string]: Uart.queryResultArgument }
                 for (let key in constantVals) {
-                    constantParse[key] = ter.result!.find(el=>el.name === constantVals[key])!
+                    constantParse[key] = ter.result!.find(el => el.name === constantVals[key])!
                 }
                 // console.log({ constantParse });
                 return Object.assign(el, { parse: constantParse })
@@ -691,19 +692,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
             }
             // 获取协议指令
-            const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
-            // 检查操作指令是否含有自定义参数
-            if (/(%i)/.test(item.value)) {
-                // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
-                if (/%i%i/.test(item.value)) {
-                    const b = Buffer.allocUnsafe(2)
-                    b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
-                    item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
-                } else {
-                    item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
-                }
-                console.log({ msg: '发送查询指令', item });
-            }
+            const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol)!
             // 携带事件名称，触发指令查询
             const Query: Uart.instructQuery = {
                 protocol: query.protocol,
@@ -711,8 +700,22 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 pid: query.pid,
                 type: protocol.Type,
                 events: 'oprate' + Date.now() + query.DevMac,
-                content: item.value
+                content: ''
             }
+            // 检查操作指令是否含有自定义参数
+            if (/(%i)/.test(item.value)) {
+                // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
+                if (/%i%i/.test(item.value)) {
+                    const b = Buffer.allocUnsafe(2)
+                    b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
+                    Query.content = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
+                } else {
+                    const val = ParseCoefficient(item.bl, Number(item.val)).toString(16)
+                    Query.content = item.value.replace(/(%i)/, val.length < 2 ? val.padStart(2, '0') : val)
+                }
+                console.log({ msg: '发送查询指令', Query });
+            }
+
             const result = await ctx.$Event.DTU_OprateInstruct(Query)
             return result
         },
@@ -897,7 +900,7 @@ export default resolvers
 function valadationMac(ctx: Uart.ApolloCtx, mac: string) {
     if (validationUserPermission(ctx.user, mac)) return true
     else {
-        console.log("user premission Error", ctx.userGroup, ctx.user, ctx.operationName);
+        console.log("user premission Error", ctx.userGroup, ctx.user, mac, ctx.operationName);
         throw new Error("user premission Error");
     }
 }
