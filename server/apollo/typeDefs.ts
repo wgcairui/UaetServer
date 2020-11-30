@@ -154,6 +154,7 @@ const typeDefs: DocumentNode = gql`
     name: String
     value: String
     unit: String
+    alarm: Boolean
   }
   # 透传设备数据
   type UartTerminalData {
@@ -166,7 +167,6 @@ const typeDefs: DocumentNode = gql`
     protocol: String
     content: String
     result: [terminalData]
-    parse:JSON
     Interval: Int
     useTime: Int
   }
@@ -188,12 +188,11 @@ const typeDefs: DocumentNode = gql`
     Temperature: String
     Humidity: String
     # ups
-    UPSModels: String
-    BatteryTemperature: String
-    ResidualCapacity: String
-    BatteryVoltage: String
-    OutputFrequency: String
-    OutputLoad: String
+    WorkMode: String
+    UpsStat: [String]
+    BettyStat: [String]
+    InputStat: [String]
+    OutStat: [String]
     # io
     di:[String]
     do:[String]
@@ -335,6 +334,7 @@ const typeDefs: DocumentNode = gql`
     deleteNode(IP: String): result
     # 配置协议
     setProtocol(arg: JSON): result
+    TestScriptStart(arg: JSON): result
     # 删除协议
     deleteProtocol(Protocol: String): result
     # 添加设备类型

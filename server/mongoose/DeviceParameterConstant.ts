@@ -26,12 +26,11 @@ const Constant = new Schema(
     Temperature: String,
     Humidity: String,
     // ups
-    UPSModels: String,
-    BatteryTemperature: String,
-    ResidualCapacity: String,
-    BatteryVoltage: String,
-    OutputFrequency: String,
-    OutputLoad: String,
+    WorkMode: String,
+    UpsStat: [String],
+    BettyStat: [String],
+    InputStat: [String],
+    OutStat: [String],
     // EM
 
     // IO

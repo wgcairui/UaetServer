@@ -13,7 +13,7 @@ import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
 import { getUserBindDev, validationUserPermission } from "../util/util";
-import { ParseCoefficient } from "../util/func";
+import { ParseCoefficient, ParseFunction } from "../util/func";
 import { Uart } from "typing";
 import config from "../config";
 
@@ -399,6 +399,15 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             );
             await ctx.$Event.Cache.RefreshCacheProtocol(Protocol);
             return result;
+        },
+        // 设置协议
+        async TestScriptStart(root, { arg }: { arg: Uart.protocolInstruct }, ctx) {
+            const Fun = ParseFunction(arg.scriptStart)
+            const msg = Fun(1, arg.name)
+            return {
+                ok: 1,
+                msg
+            } as Uart.ApolloMongoResult
         },
         // 删除协议
         async deleteProtocol(root, { Protocol }, ctx) {

@@ -289,12 +289,11 @@ declare namespace Uart {
     interface DevConstant_EM { }
     // UPS
     interface DevConstant_Ups {
-        UPSModels: string
-        BatteryTemperature: string
-        ResidualCapacity: string
-        BatteryVoltage: string
-        OutputFrequency: string
-        OutputLoad: string
+        WorkMode: string
+        UpsStat: string[]
+        BettyStat: string[]
+        InputStat: string[]
+        OutStat: string[]
     }
     // TH
     interface DevConstant_TH {
