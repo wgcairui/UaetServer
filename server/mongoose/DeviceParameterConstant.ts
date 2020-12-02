@@ -3,6 +3,8 @@ import { Schema, mongoose } from "./index";
 // 各个类型设备的常量
 const Constant = new Schema(
   {
+    WorkMode: String,
+    Switch: String,
     // air
     //热通道温度
     HeatChannelTemperature: String,
@@ -27,7 +29,7 @@ const Constant = new Schema(
     Temperature: String,
     Humidity: String,
     // ups
-    WorkMode: String,
+
     UpsStat: [String],
     BettyStat: [String],
     InputStat: [String],

@@ -267,6 +267,7 @@ declare namespace Uart {
     // 设备协议参数-常量
     // 空调
     interface DevConstant_Air {
+        Switch: string
         WorkMode: string
         //热通道温度
         HeatChannelTemperature: string;
@@ -280,17 +281,18 @@ declare namespace Uart {
         // 风速
         Speed: string;
         //制热模式
-       /*  HeatModel: string;
-        ColdModel: string;
-        //除湿
-        Dehumidification: string;
-        // 加湿
-        Humidification: string; */
+        /*  HeatModel: string;
+         ColdModel: string;
+         //除湿
+         Dehumidification: string;
+         // 加湿
+         Humidification: string; */
     }
     // EM
     interface DevConstant_EM { }
     // UPS
     interface DevConstant_Ups {
+        Switch: string
         WorkMode: string
         UpsStat: string[]
         BettyStat: string[]

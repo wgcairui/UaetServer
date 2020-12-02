@@ -709,7 +709,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
-                return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
+                //return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
             }
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol)!
@@ -720,7 +720,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 pid: query.pid,
                 type: protocol.Type,
                 events: 'oprate' + Date.now() + query.DevMac,
-                content: ''
+                content: item.value
             }
             // 检查操作指令是否含有自定义参数
             if (/(%i)/.test(item.value)) {
@@ -733,8 +733,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                     const val = ParseCoefficient(item.bl, Number(item.val)).toString(16)
                     Query.content = item.value.replace(/(%i)/, val.length < 2 ? val.padStart(2, '0') : val)
                 }
-                console.log({ msg: '发送查询指令', Query });
             }
+            console.log({ msg: '发送查询指令', Query });
 
             const result = await ctx.$Event.DTU_OprateInstruct(Query)
             return result

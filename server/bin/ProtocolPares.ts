@@ -147,14 +147,17 @@ class ProtocolParse {
                 // 处理整形
                 case "hex":
                 case "short":
-                  // 转换为带一位小数点的浮点数
-                  result.value = ParseCoefficient(el2.bl, buffer.readIntBE(start - 1, len)).toString()//.toFixed(1)
+                  // 如果是浮点数则转换为带一位小数点的浮点数
+                  const num =ParseCoefficient(el2.bl, buffer.readIntBE(start - 1, len))
+                  const str = num.toString()
+                  result.value = /\./.test(str)?num.toFixed(1):str
                   break;
                 // 处理单精度浮点数
                 case "float":
-                  result.value = Tool.HexToSingle(buffer.slice(start - 1, start + len - 1)).toString()//.toFixed(2)
+                  result.value = Tool.HexToSingle(buffer.slice(start - 1, start + len - 1)).toFixed(2)
                   break;
               }
+
               return result
             })
           }).flat()

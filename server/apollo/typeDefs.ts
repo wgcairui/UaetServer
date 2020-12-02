@@ -173,6 +173,8 @@ const typeDefs: DocumentNode = gql`
   }
   # 设备常量
   type Constant{
+    WorkMode: String
+    Switch: String
     #air
     HeatChannelTemperature: String
     HeatChannelHumidity: String
@@ -189,7 +191,7 @@ const typeDefs: DocumentNode = gql`
     Temperature: String
     Humidity: String
     # ups
-    WorkMode: String
+    
     UpsStat: [String]
     BettyStat: [String]
     InputStat: [String]
