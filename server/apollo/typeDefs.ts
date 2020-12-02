@@ -155,6 +155,7 @@ const typeDefs: DocumentNode = gql`
     value: String
     unit: String
     alarm: Boolean
+    alias: String
   }
   # 透传设备数据
   type UartTerminalData {
@@ -324,6 +325,8 @@ const typeDefs: DocumentNode = gql`
     userlogterminals(start:Date,end:Date,mac:String):[LogTerminal]
     # 检查挂载设备是否在超时列表
     checkDevTimeOut(mac:String,pid:String):String
+    # 获取设备设备别名
+    getAlias(mac:String,pid:String,protocol:String):JSON
   }
 
   #mutation
@@ -398,6 +401,8 @@ const typeDefs: DocumentNode = gql`
     sendSocketInfo(user:String,msg:String):result
     #删除用户配置
     deleteUsersetup(user:String):result
+    # 设备设备别名
+    setAlias(mac:String,pid:String,protocol:String,name:String,alias:String):result
   }
 
   # Subscription

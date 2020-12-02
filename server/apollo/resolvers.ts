@@ -5,7 +5,7 @@ import { Terminal, RegisterTerminal } from "../mongoose/Terminal";
 import { EcTerminal } from "../mongoose/EnvironmentalControl";
 import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongoose/user";
 import { BcryptDo } from "../util/bcrypt";
-import { DevConstant } from "../mongoose/DeviceParameterConstant";
+import { DevArgumentAlias, DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
 import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
@@ -111,14 +111,21 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         // 获取透传设备数据-单条
         async UartTerminalData(root, { DevMac, pid }, ctx) {
             valadationMac(ctx, DevMac)
-            // 获取mac协议
-            const protocol = ctx.$Event.getClientDtuMountDev(DevMac, pid).protocol
-            // 获取配置显示常量参数
-            const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag || []
             const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid }).lean<Uart.queryResult>()
-            // 刷选
-            // console.log({ShowTag,r:data!.result});
-            data!.result = ShowTag?.length > 0 ? (data!.result?.filter(el => ShowTag?.includes(el.name))) : data!.result
+            if (data && data.result) {
+                // 获取mac协议
+                const protocol = ctx.$Event.getClientDtuMountDev(DevMac, pid).protocol
+                // 获取配置显示常量参数
+                const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag
+                // 刷选
+                if (ShowTag) data.result = data.result.filter(el => ShowTag?.includes(el.name))
+                // 检查设备是否有别名
+                const alias = ctx.$Event.Cache.CacheAlias.get(DevMac + pid + protocol)
+                if (alias) data.result = data.result.map(el => {
+                    el.alias = alias.get(el.name) || el.name
+                    return el
+                })
+            }
             return data
         },
         // 获取透传设备数据-多条
@@ -356,6 +363,10 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             if (!ctx.$Event.Cache.CacheTerminal.get(mac)?.online) return 'DTUOFF'
             if (!ctx.$Event.getClientDtuMountDev(mac, pid).online) return 'TimeOut'
             return 'online'
+        },
+        // 获取设备设备别名
+        async getAlias(root, { mac, pid, protocol }, ctx) {
+            return await DevArgumentAlias.findOne({ mac, pid, protocol })
         }
     },
 
@@ -898,6 +909,20 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         async deleteUsersetup(root, { user }, ctx) {
             valadationRoot(ctx)
             return await UserAlarmSetup.deleteOne({ user }).exec()
+        },
+        // 设备设备别名
+        async setAlias(root, arg: { mac: string, pid: string, protocol: string, name: string, alias: string }, ctx) {
+            const { mac, pid, protocol, name, alias } = arg
+            const data = ctx.$Event.Cache.CacheAlias.get(mac + pid + protocol) //await DevArgumentAlias.findOne({ mac, pid, protocol, 'alias.name': name }).lean<Uart.DevArgumentAlias>()
+            let result;
+            // $数组操作符需要查询匹配到数组数据，否则会报错误
+            if (data && data.has(name)) {
+                result = await DevArgumentAlias.updateOne({ mac, pid, protocol, 'alias.name': name }, { $set: { 'alias.$.alias': alias } }, { multi: true })
+            } else {
+                result = await DevArgumentAlias.updateOne({ mac, pid, protocol }, { $push: { alias: { name, alias } } }, { upsert: true })
+            }
+            await ctx.$Event.Cache.RefreshCacheAlias({ mac, pid: Number(pid), protocol })
+            return result
         }
     },
 

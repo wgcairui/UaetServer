@@ -2,13 +2,9 @@
 /* 
 数据执行器部分，更新协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
 */
-import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
-import { Terminal } from "../mongoose/Terminal";
-import { NodeClient } from "../mongoose/node";
-import { DevConstant } from "../mongoose/DeviceParameterConstant";
-import { UserBindDevice, UserAlarmSetup, Users } from "../mongoose/user";
 import { Event as event } from "./index";
 import { Uart } from "typing";
+import { Terminal, DeviceProtocol, DevsType, NodeClient, DevConstant, UserBindDevice, Users, UserAlarmSetup, DevArgumentAlias } from "../mongoose";
 
 export interface sendQuery {
   IP: string;
@@ -23,18 +19,10 @@ export default class Cache {
   CacheDevsType: Map<string, Uart.DevsType>;
   // 透传终端缓存mac=>terminal
   CacheTerminal: Map<string, Uart.Terminal>;
-  // Node节点=》终端缓存
-  // CacheNodeTerminal: Map<string, Map<string, Uart.Terminal>>;
   // Node节点缓存ip=>nodeclient
   CacheNode: Map<string, Uart.NodeClient>;
   // Node节点缓存name=>nodeclient
   CacheNodeName: Map<string, Uart.NodeClient>;
-  // 缓存每个节点的查询定时器缓存 ip,timeInterl
-  //CacheQueryNode: Map<string, NodeJS.Timeout>;
-  // 缓存每个节点在线的设备ip->terminal
-  // CacheNodeTerminalOnline: Set<string>
-  // 缓存节点查询终端设备超时的指令
-  // CacheTerminalQueryIntructTimeout: Map<string, Set<string>>
   // 缓存协议的常量设置,protocol=>Constant
   CacheConstant: Map<string, Uart.ProtocolConstantThreshold>
   // 缓存用户绑定
@@ -43,23 +31,18 @@ export default class Cache {
   CacheBindUart: Map<string, string>
   // 缓存绑定透传设备mac=>user
   CacheBindEt: Map<string, string>
-
   // 缓存用户 user=》user
   CacheUser: Map<string, Uart.UserInfo>
   // 缓存用户配置 user=>setup
   CacheUserSetup: Map<string, Uart.userSetup>
-  // 用户uart挂载终端缓存
-  // QueryTerminal: Map<NodeName, Map<TerminalPid, TerminalMountDevsEX>>
   // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
   QueryTerminaluseTime: Map<string, number[]>
   // 每个手机号发送告警的次数tel=>number
   CacheAlarmSendNum: Map<string, number>
-  // DTU下挂载的设备指令超时, mac[instruct,num]
-  // TimeOutMonutDevINstruct: Map<string, Map<string, number>>
-  // DTU下挂载的设备指令超时Set
-  // TimeOutMonutDevINstructSet: Set<string>
   // 缓存协议指令转换关系 010300010009abcd => 0300010009
   CacheInstructContents: Map<string, string>
+  // 缓存设备参数别名 mac+pid+protocol => name => alias
+  CacheAlias: Map<string, Map<string, string>>
   private Events: event;
   // CacheSocket: any;
   constructor(Events: event) {
@@ -68,26 +51,19 @@ export default class Cache {
     this.CacheProtocol = new Map();
     this.CacheDevsType = new Map();
     this.CacheTerminal = new Map();
-    // this.CacheNodeTerminal = new Map();
     this.CacheNode = new Map();
     this.CacheNodeName = new Map()
-    // this.CacheQueryNode = new Map()
-    // this.CacheNodeTerminalOnline = new Set()
     this.CacheConstant = new Map()
-    // this.CacheTerminalQueryIntructTimeout = new Map()
     this.CacheBind = new Map()
     this.CacheBindUart = new Map()
     this.CacheBindEt = new Map()
     this.CacheUser = new Map()
     this.CacheUserSetup = new Map()
-    // this.QueryTerminal = new Map()
     this.QueryTerminaluseTime = new Map()
     this.CacheAlarmSendNum = new Map()
-
-    // this.TimeOutMonutDevINstruct = new Map()
-    // this.TimeOutMonutDevINstructSet = new Set()
     // 对应解析指令0103000000013a4a => 0300000001
     this.CacheInstructContents = new Map()
+    this.CacheAlias = new Map()
   }
   //
   async start(): Promise<void> {
@@ -100,6 +76,7 @@ export default class Cache {
     await this.RefreshCacheBind();
     await this.RefreshCacheUserSetup()
     await this.RefreshCacheUser()
+    await this.RefreshCacheAlias()
   }
 
   // 重置terminal终端设备在线状态
@@ -223,5 +200,15 @@ export default class Cache {
       [...el.ProtocolSetupMap.keys()].forEach(key => this.Events.emit("updateUserSetup", el.user, key))
     })
     return this
+  }
+  // 刷选设备参数别名缓存
+  async RefreshCacheAlias(alias?: Pick<Uart.DevArgumentAlias, "mac" | "pid" | "protocol">) {
+    const res = await DevArgumentAlias.find(alias ? { mac: alias.mac, pid: alias.pid, protocol: alias.protocol } : {}).lean<Uart.DevArgumentAlias>()
+    console.log(`更新设备参数别名配置......`, alias?.mac);
+    res.forEach(el => {
+      const tag = el.mac + el.pid + el.protocol
+      const aliasMap = new Map(el.alias.filter(el2 => el2.alias).map(el3 => [el3.name, el3.alias]))
+      this.CacheAlias.set(tag, aliasMap)
+    })
   }
 }

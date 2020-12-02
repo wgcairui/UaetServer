@@ -170,6 +170,7 @@ declare namespace Uart {
         unit: string | null;
         issimulate?: boolean
         alarm?: boolean
+        alias?: string
     }
     //
     interface queryResultParse {
@@ -266,6 +267,7 @@ declare namespace Uart {
     // 设备协议参数-常量
     // 空调
     interface DevConstant_Air {
+        WorkMode: string
         //热通道温度
         HeatChannelTemperature: string;
         HeatChannelHumidity: string;
@@ -278,12 +280,12 @@ declare namespace Uart {
         // 风速
         Speed: string;
         //制热模式
-        HeatModel: string;
+       /*  HeatModel: string;
         ColdModel: string;
         //除湿
         Dehumidification: string;
         // 加湿
-        Humidification: string;
+        Humidification: string; */
     }
     // EM
     interface DevConstant_EM { }
@@ -334,6 +336,17 @@ declare namespace Uart {
         AlarmStat: ConstantAlarmStat[]
         ShowTag: string[]
         OprateInstruct: OprateInstruct[]
+    }
+    interface alias {
+        name: string,
+        alias: string
+    }
+    // 相同设备下的参数字段别名
+    interface DevArgumentAlias {
+        mac: string,
+        pid: number,
+        protocol: string,
+        alias: alias[]
     }
     // 用户自定义配置
     interface userSetup {

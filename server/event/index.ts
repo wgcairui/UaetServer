@@ -102,7 +102,7 @@ export class Event extends EventEmitter.EventEmitter {
     console.info(`WS Server(namespace:/wx) runing`)
   }
 
-  // 获取Cache入口
+  /* // 获取Cache入口
   public GetCacheMap<T extends CacheMap>(tag: string, cacheName: T, key: Parameters<Cache[T]['get']>[0]): ReturnType<Cache[T]['get']> {
     console.log(`GetCacheMap ;; tag:${tag}`);
     return this.Cache[cacheName].get(key) as any
@@ -123,19 +123,16 @@ export class Event extends EventEmitter.EventEmitter {
   public GetCacheFun<T extends CacheFuns>(tag: string, fun: T, c?: ElementOf<Parameters<Cache[T]>>): ReturnType<Cache[T]> {
     console.log(`GetCacheFun ;; tag:${tag}`);
     return this.Cache[fun](c) as any
-  }
+  } */
   // 获取用户绑定设备
   public getUserBindDev(user: string) {
-    this.GetCacheFun('ss', 'RefreshCacheProtocol')
+    //this.GetCacheFun('ss', 'RefreshCacheProtocol')
     return getUserBindDev(user)
   }
 
 
   // 发送设备操作指令查询
   DTU_OprateInstruct(Query: Uart.instructQuery) {
-
-    const aa = this.GetCacheMaps('test', "CacheProtocol")
-
     if (this.uartSocket) {
       return this.uartSocket.InstructQuery(Query)
     } else {

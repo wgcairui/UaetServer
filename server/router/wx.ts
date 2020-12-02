@@ -299,24 +299,37 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const { mac, pid } = body
         ctx.assert(validationUserPermission(tokenUser.user, mac), 402, '用户越权操作dtu')
-
-        const data = await TerminalClientResultSingle.findOne({
-          mac: mac,
-          pid
-        }).lean<Uart.queryResult>()
-        if (data) {
+        const data = await TerminalClientResultSingle.findOne({ mac: mac, pid }).lean<Uart.queryResult>()
+        if (data && data.result) {
           // 获取mac协议
-          const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
+          const protocol = ctx.$Event.getClientDtuMountDev(mac, pid).protocol
           // 获取配置显示常量参数
-          const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
+          const ShowTag = ctx.$Event.Cache.CacheConstant.get(protocol)?.ShowTag
           // 刷选
-          if (ShowTag) {
-            data.result = data.result!.filter(el => ShowTag.has(el.name))
-          }
+          if (ShowTag) data.result = data.result.filter(el => ShowTag?.includes(el.name))
+          // 检查设备是否有别名
+          const alias = ctx.$Event.Cache.CacheAlias.get(mac + pid + protocol)
+          if (alias) data.result = data.result.map(el => {
+            el.alias = alias.get(el.name) || el.name
+            return el
+          })
           ctx.body = { ok: 1, arg: data } as Uart.ApolloMongoResult
         } else {
           ctx.body = { ok: 0, msg: '设备没有运行数据' } as Uart.ApolloMongoResult
         }
+        /*  if (data) {
+           // 获取mac协议
+           const protocol = ctx.$Event.Cache.CacheTerminal.get(mac)?.mountDevs.find(el => el.pid === Number(pid))?.protocol as string
+           // 获取配置显示常量参数
+           const ShowTag = ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user)?.ShowTagMap.get(protocol)
+           // 刷选
+           if (ShowTag) {
+             data.result = data.result!.filter(el => ShowTag.has(el.name))
+           }
+           ctx.body = { ok: 1, arg: data } as Uart.ApolloMongoResult
+         } else {
+           ctx.body = { ok: 0, msg: '设备没有运行数据' } as Uart.ApolloMongoResult
+         } */
       }
       break
     // 获取设备历史运行数据
