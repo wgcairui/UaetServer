@@ -761,54 +761,83 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             return result
         },
         // 设置用户自定义设置(协议配置)
-        async setUserSetupProtocol(root, {
-            ProtocolType,
-            Protocol,
-            type,
-            arg
-        }: {
-            ProtocolType: string;
-            Protocol: string;
-            type: Uart.ConstantThresholdType
-            arg:
-            | Uart.DevConstant_Air
-            | Uart.DevConstant_Ups
-            | Uart.DevConstant_EM
-            | Uart.DevConstant_TH
-            | string[]
-            | Uart.OprateInstruct
-
-        }, ctx
-        ) {
-            let Up
-            switch (type) {
-                case "Constant":
-                    Up = { "ProtocolSetup.$.Constant": arg }
-                    break
-                case "Threshold":
-                    Up = { "ProtocolSetup.$.Threshold": arg }
-                    break
-                case "ShowTag":
-                    Up = { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) }
-                    break
-                case "AlarmStat":
-                    Up = { "ProtocolSetup.$.AlarmStat": arg }
-                    break
-                case "Oprate":
-                    Up = { OprateInstruct: arg }
-                    break
-            }
+        async setUserSetupProtocol(root, { Protocol, type, arg }: { Protocol: string, type: Uart.ConstantThresholdType, arg: any }, ctx) {
             const isNull = await UserAlarmSetup.findOne({ user: ctx.user, "ProtocolSetup.Protocol": Protocol }).exec()
             if (!isNull) {
-                await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }).exec()
+                await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
             }
-            // console.log({ isNull, user: ctx.user });
+            let result;
+            switch (type) {
+                case "Threshold":
+                    {
+                        const { type, data }: { type: 'del' | 'add', data: Uart.Threshold } = arg
+                        if (type === 'del') {
+                            result = await UserAlarmSetup.updateOne(
+                                { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
+                                { $pull: { "ProtocolSetup.$.Threshold": { name: data.name } } }
+                            )
+                        } else {
+                            const has = await UserAlarmSetup.findOne({ user: ctx.user, ProtocolSetup: { $elemMatch: { "Protocol": Protocol, "Threshold.name": data.name } } })
+                            if (has) {
+                                // https://www.cnblogs.com/zhongchengyi/p/12162792.html
+                                result = await UserAlarmSetup.updateOne(
+                                    { user: ctx.user },
+                                    { $set: { "ProtocolSetup.$[i1].AlarmStat.$[i2]": data } },
+                                    {
+                                        arrayFilters: [
+                                            { "i1.Protocol": Protocol },
+                                            { "i2.name": name }
+                                        ]
+                                    }
+                                )
+                            } else {
+                                result = await UserAlarmSetup.updateOne(
+                                    { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
+                                    { $push: { "ProtocolSetup.$.Threshold": data } },
+                                    { upsert: true }
+                                )
+                            }
 
-            const result = await UserAlarmSetup.updateOne(
-                { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
-                { $set: Up },
-                { upsert: true }
-            )
+                        }
+                    }
+                    break
+                case "ShowTag":
+                    {
+                        result = await UserAlarmSetup.updateOne(
+                            { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
+                            { $set: { "ProtocolSetup.$.ShowTag": _.compact(arg as string[]) } },
+                            { upsert: true }
+                        )
+                    }
+                    break
+                case "AlarmStat":
+                    {
+                        const { name, alarmStat } = arg
+                        // 检查系统中是否含有name的配置
+                        const has = await UserAlarmSetup.findOne({ user: ctx.user, ProtocolSetup: { $elemMatch: { "Protocol": Protocol, "AlarmStat.name": name } } })
+                        if (has) {
+                            // https://www.cnblogs.com/zhongchengyi/p/12162792.html
+                            result = await UserAlarmSetup.updateOne(
+                                { user: ctx.user },
+                                { $set: { "ProtocolSetup.$[i1].AlarmStat.$[i2].alarmStat": alarmStat } },
+                                {
+                                    arrayFilters: [
+                                        { "i1.Protocol": Protocol },
+                                        { "i2.name": name }
+                                    ]
+                                }
+                            )
+                        } else {
+                            result = await UserAlarmSetup.updateOne(
+                                { user: ctx.user, "ProtocolSetup.Protocol": Protocol },
+                                { $push: { "ProtocolSetup.$.AlarmStat": { name, alarmStat } } },
+                                { upsert: true }
+                            )
+                        }
+                    }
+                    break
+            }
+
             ctx.$Event.Cache.RefreshCacheUserSetup(ctx.user)
             return result;
         },
