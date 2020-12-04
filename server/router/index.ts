@@ -6,6 +6,7 @@ import APPs from "./app";
 import WX from "./wx"
 import wxPublic from "./wxPublic";
 import Util from "./util";
+import OPEN from "./open";
 
 rout.all("/api/app/:type", APPs);
 rout.post("/api/Node/:type", nodeApi);
@@ -13,6 +14,7 @@ rout.all("/api/auth/:type", Auth);
 rout.all("/api/wx/:type", WX)
 rout.all("/api/wxPublic", wxPublic)
 rout.all("/api/util/:type1/:type2", Util)
+rout.post("/api/open/:type", OPEN)
 
 // 微信公众号之前的服务器配置
 /* 
