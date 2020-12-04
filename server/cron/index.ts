@@ -6,7 +6,7 @@ import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
 import { Uart } from "typing";
 
 // 数据清洗,清除告警数据中连续的重复的
-const DataClean = new CronJob('0 0 3 * * *', async () => {
+const DataClean = new CronJob('0 0 19 * * *', async () => {
     console.log(`${new Date().toString()} ### start clean Data.....`);
     const count = {
         NumUserRequst: await CleanUserRequst(),

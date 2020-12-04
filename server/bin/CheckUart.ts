@@ -1,5 +1,5 @@
 import Event from "../event/index";
-import { getDtuInfo } from "../util/util";
+import { getDtuInfo, parseTime } from "../util/util";
 import wxUtil from "../util/wxUtil";
 import { Uart } from "typing";
 import { SendSms } from "../util/SMS";
@@ -154,7 +154,7 @@ class Check {
       if (setup.Threshold.size > 0) {
         this.checkThreshold(result, setup.Threshold).forEach(el => {
           el.alarm = true
-          this.sendSmsAlarm(query, `${el.name}超限[${el.value}]`, el,)
+          this.sendAlarm(query, `${el.name}超限[${el.value}]`, el,)
         })
       }
 
@@ -163,7 +163,7 @@ class Check {
           const value = this.GetUnit(el.unit!)[el.value]
           if (value) {
             el.alarm = true
-            this.sendSmsAlarm(query, `${el.name}[${value}]`, el);
+            this.sendAlarm(query, `${el.name}[${value}]`, el);
           }
         })
       }
@@ -184,6 +184,7 @@ class Check {
         if (n && n > 10) {
           // console.log('checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
+          this.sendAlarm(query, `${el.name}[告警恢复]`, el);
         }
       }
     })
@@ -225,7 +226,7 @@ class Check {
             if (kk !== 'OK') {
               const event = this.hashtable[Buffer.from(kk).toJSON().data[0]]
               console.log(`### 发送其他故障消息:${Query.mac}/${Query.pid}/${Query.mountDev}, event:QFS(${event})`);
-              this.sendSmsAlarm(Query, event || '未知错误', { name: event })
+              this.sendAlarm(Query, event || '未知错误', { name: event })
             }
           }
         }
@@ -236,7 +237,7 @@ class Check {
   // 发送告警日志
   // 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日（如您是在发短信通知时提示业务限流，建议根据以上业务调整接口调用时间）
   // 发送告警推送,短信,邮件
-  private async sendSmsAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>) {
+  private async sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>) {
     // 创建tag
     const tags = query.mac + query.pid + tag.name;
     // 缓存告警记录
@@ -246,7 +247,7 @@ class Check {
     if (n === 10) {
       Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
-      this.SendMailAlarm(query.mac, query.pid, event, tag)
+      this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
       this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event)
       // 保存为日志
       Event.savelog<Uart.uartAlarmObject>('DataTransfinite', {
@@ -262,7 +263,7 @@ class Check {
   }
 
   // 发送告警邮件
-  private SendMailAlarm(mac: string, pid: number | string, event: string, tag: Partial<Uart.queryResultArgument>) {
+  private SendMailAlarm(mac: string, pid: number | string, event: string, tag: Partial<Uart.queryResultArgument>, timeStamp: number) {
     const info = getDtuInfo(mac)
     const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
     if (mails.length > 0) {
@@ -277,7 +278,7 @@ class Check {
       const body = `<p><strong>尊敬的${info.user.name}</strong></p>
       <hr />
       <p><strong>您的DTU <em>${info.terminalInfo.name}</em> 挂载的 ${Dev.mountDev} 告警</strong></p>
-      <p><strong>告警时间:&nbsp; </strong>${new Date().toLocaleString()}</p>
+      <p><strong>告警时间:&nbsp; </strong>${parseTime(timeStamp)}</p>
       <p><strong>告警事件:</strong>&nbsp; ${event}</p>
       <p><strong>参考值: </strong>&nbsp;${str}</p>
       <p>您可登录 <a title="透传服务平台" href="https://uart.ladishb.com" target="_blank" rel="noopener">LADS透传服务平台</a> 查看处理(右键选择在新标签页中打开)</p>

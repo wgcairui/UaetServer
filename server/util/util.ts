@@ -6,6 +6,17 @@ export const parseToken = (token: string) => {
   return token.replace(/(bearer)/, "").trim();
 };
 
+export const parseTime = (time?: string | number | Date) => {
+  if (time) {
+    const date = new Date(time)
+    const h = date.getHours()
+    const m = date.getMinutes()
+    const s = date.getSeconds()
+    return `${date.toLocaleDateString()} ${h}:${m}:${s}`
+  }
+  else return ''
+}
+
 // 通过DevMac获取设备的信息和绑定用户
 export const getDtuInfo = (DevMac: string) => {
   const User = Event.Cache.CacheBindUart.get(DevMac) as string
