@@ -782,7 +782,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                                 // https://www.cnblogs.com/zhongchengyi/p/12162792.html
                                 result = await UserAlarmSetup.updateOne(
                                     { user: ctx.user },
-                                    { $set: { "ProtocolSetup.$[i1].AlarmStat.$[i2]": data } },
+                                    { $set: { "ProtocolSetup.$[i1].Threshold.$[i2]": data } },
                                     {
                                         arrayFilters: [
                                             { "i1.Protocol": Protocol },
