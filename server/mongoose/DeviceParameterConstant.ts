@@ -35,7 +35,10 @@ const Constant = new Schema(
     InputStat: [String],
     OutStat: [String],
     // EM
-
+    battery: String,
+    voltage: [String],
+    current: [String],
+    factor: [String],
     // IO
     di: [String],
     do: [String]

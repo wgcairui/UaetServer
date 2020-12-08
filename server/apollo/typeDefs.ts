@@ -196,6 +196,11 @@ const typeDefs: DocumentNode = gql`
     BettyStat: [String]
     InputStat: [String]
     OutStat: [String]
+    # EM
+    battery: String,
+    voltage: [String],
+    current: [String],
+    factor: [String],
     # io
     di:[String]
     do:[String]

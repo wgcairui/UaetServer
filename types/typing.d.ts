@@ -280,16 +280,14 @@ declare namespace Uart {
         RefrigerationHumidity: string;
         // 风速
         Speed: string;
-        //制热模式
-        /*  HeatModel: string;
-         ColdModel: string;
-         //除湿
-         Dehumidification: string;
-         // 加湿
-         Humidification: string; */
     }
     // EM
-    interface DevConstant_EM { }
+    interface DevConstant_EM {
+        battery: string
+        voltage: string[],
+        current: string[],
+        factor: string[]
+    }
     // UPS
     interface DevConstant_Ups {
         Switch: string
