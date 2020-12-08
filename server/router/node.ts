@@ -1,8 +1,8 @@
 import { ParameterizedContext } from "koa";
-import UartDataParsingSave from "../bin";
 import { Uart } from "typing";
-import { Terminal, NodeRunInfo } from "../mongoose";
+import { Terminal, NodeRunInfo, LogUseBytes, TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose";
 import tool from "../util/tool"
+import Event from "../event";
 type DataTypes = 'UartData' | 'RunData'
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
@@ -13,8 +13,47 @@ export default async (Ctx: ParameterizedContext) => {
     // 透传设备数据上传接口
     case "UartData":
       {
-        const UartData: Uart.uartData = body;
-        UartDataParsingSave(UartData.data)
+        const queryResultArray = (<Uart.uartData>body).data;
+        if (queryResultArray.length > 0) {
+          // 保存每个终端使用的数字节数
+          // 保存每个查询指令使用的字节，以天为单位
+          const date = new Date().toLocaleDateString()
+          for (let el of queryResultArray) {
+            await LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes: el.useBytes } }, { upsert: true }).exec()
+          }
+
+          // 保存原始数据
+          TerminalClientResults.insertMany(queryResultArray);
+          // 翻转结果数组,已新的结果为准
+          const UartData = queryResultArray.reverse()
+          // 解析结果
+          const ParseData = UartData.map(el => Event.Parse.parse(el))
+          // 保存解析后的数据
+          TerminalClientResult.insertMany(ParseData);
+          // 保存单例数据库
+          // 创建缓存,保存每条数据的Set
+          const MacID: Set<string> = new Set()
+          ParseData.forEach(data => {
+            const ID = data.mac + data.pid
+            // 如果数据重复,抛弃旧数据
+            if (!MacID.has(ID)) {
+              MacID.add(ID)
+              // 把数据发给检查器,检查数据是否有故障,保存数据单例
+              const checkData = Event.Check.check(data)
+              // 把结果转换为对象
+              // data.parse = Object.assign({}, ...checkData.result!.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
+              // console.log({checkData});
+              // 保存对象
+              // console.log(data.result);
+
+              TerminalClientResultSingle.updateOne(
+                { mac: checkData.mac, pid: checkData.pid },
+                checkData,
+                { upsert: true }
+              ).exec()
+            }
+          })
+        }
         ctx.body = { code: 200 }
       }
       break;

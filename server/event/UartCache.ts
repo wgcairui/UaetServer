@@ -35,12 +35,9 @@ export default class Cache {
   CacheUser: Map<string, Uart.UserInfo>
   // 缓存用户配置 user=>setup
   CacheUserSetup: Map<string, Uart.userSetup>
-  // 设备的查询时间,mac+pid=>[1,2,3,8,4,...]
-  QueryTerminaluseTime: Map<string, number[]>
   // 每个手机号发送告警的次数tel=>number
   CacheAlarmSendNum: Map<string, number>
-  // 缓存协议指令转换关系 010300010009abcd => 0300010009
-  CacheInstructContents: Map<string, string>
+  
   // 缓存设备参数别名 mac+pid+protocol => name => alias
   CacheAlias: Map<string, Map<string, string>>
   private Events: event;
@@ -59,10 +56,7 @@ export default class Cache {
     this.CacheBindEt = new Map()
     this.CacheUser = new Map()
     this.CacheUserSetup = new Map()
-    this.QueryTerminaluseTime = new Map()
     this.CacheAlarmSendNum = new Map()
-    // 对应解析指令0103000000013a4a => 0300000001
-    this.CacheInstructContents = new Map()
     this.CacheAlias = new Map()
   }
   //
@@ -128,10 +122,6 @@ export default class Cache {
       if (!el.mountDevs) el.mountDevs = []
       this.CacheTerminal.set(el.DevMac, el)
       this.Events.emit("updateTerminal", el.DevMac)
-      // this.CacheNodeTerminal.get(el.mountNode)?.set(el.DevMac, el)
-      el.mountDevs.forEach(el2 => {
-        this.QueryTerminaluseTime.set(el.DevMac + el2.pid, [])
-      })
     })
     if (res.length == 0 && DevMac) {
       this.CacheTerminal.delete(DevMac)

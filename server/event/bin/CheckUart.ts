@@ -1,10 +1,10 @@
-import Event from "../event/index";
-import { getDtuInfo, parseTime } from "../util/util";
-import wxUtil from "../util/wxUtil";
+import { Event } from "../index";
+import { getDtuInfo, parseTime } from "../../util/util";
+import wxUtil from "../../util/wxUtil";
 import { Uart } from "typing";
-import { SendSms } from "../util/SMS";
-import Tool from "../util/tool";
-import { Send } from "../util/Mail";
+import { SendSms } from "../../util/SMS";
+import Tool from "../../util/tool";
+import { Send } from "../../util/Mail";
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
 interface userSetupMap {
   Threshold: Map<string, Uart.Threshold>,
@@ -25,12 +25,13 @@ class Check {
   private CacheAlarmNum: Map<string, number>
   // 序列化参数单位解析
   private CacheParseUnit: Map<string, { [x in string]: string }>
+  Event: Event;
 
-  constructor() {
+  constructor(Event: Event) {
     this.userSetup = new Map()
     this.CacheAlarmNum = new Map()
     this.CacheParseUnit = new Map()
-
+    this.Event = Event
     this.hashtable = {
       0x01: '规定时间内，bus电压未达到设定值',
       0x02: 'Bus电压超过上限值',
@@ -102,9 +103,9 @@ class Check {
     // console.log('更新check缓存', user, protocol);
 
     // 获取用户个性化配置实例
-    const UserSetup = Event.Cache.CacheUserSetup.get(user)
+    const UserSetup = this.Event.Cache.CacheUserSetup.get(user)
     // 协议参数阀值,状态
-    const Constant = Event.Cache.CacheConstant.get(protocol)
+    const Constant = this.Event.Cache.CacheConstant.get(protocol)
     // 获取系统设置-阈值
     const sysThreshold = Constant?.Threshold || []
     // 获取系统设置-状态
@@ -145,7 +146,7 @@ class Check {
 
   // 判断
   public check(query: Uart.queryResult) {
-    const user = Event.Cache.CacheBindUart.get(query.mac);
+    const user = this.Event.Cache.CacheBindUart.get(query.mac);
     const result = query.result!;
     if (result && result.length > 0 && user) {
       // const dataMap = new Map(result.map(el=>[el.name,el]))
@@ -220,7 +221,7 @@ class Check {
         // 在 b4位置的数据位为1还是0，为1时表示UPS有故障了，则使用“QFS”故障查询指令，查询UPS故障信息。返回的信息数据				
         if (b4) {
           // console.log({ b9, b8, b7, b6, b5, b4, b3, b2, b1, b0, a9, a8 });
-          const { ok, upserted } = await Event.DTU_OprateInstruct({ DevMac: Query.mac, protocol: Query.protocol, pid: Query.pid, type: Query.type, content: 'QFS', events: Date.now() + 'QFS' })
+          const { ok, upserted } = await this.Event.DTU_OprateInstruct({ DevMac: Query.mac, protocol: Query.protocol, pid: Query.pid, type: Query.type, content: 'QFS', events: Date.now() + 'QFS' })
           if (ok) {
             const [kk, pp, ff, oo, ee, ll, cc, hh, nn, bb, tt, ss] = Buffer.from(upserted).toString('utf8', 1).split(' ')
             if (kk !== 'OK') {
@@ -245,12 +246,12 @@ class Check {
     this.CacheAlarmNum.set(tags, n + 1);
     // console.log('sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (n === 10) {
-      Event.SendUserAlarm({ mac: query.mac, msg: event })
+      this.Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
       this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event)
       // 保存为日志
-      Event.savelog<Uart.uartAlarmObject>('DataTransfinite', {
+      this.Event.savelog<Uart.uartAlarmObject>('DataTransfinite', {
         mac: query.mac,
         pid: query.pid,
         devName: query.mountDev,
@@ -267,7 +268,7 @@ class Check {
     const info = getDtuInfo(mac)
     const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
     if (mails.length > 0) {
-      const Dev = Event.getClientDtuMountDev(mac, pid)
+      const Dev = this.Event.getClientDtuMountDev(mac, pid)
       const setup = this.userSetup.get(info.user.user)!.get(Dev.protocol)!
       const ck = setup.Threshold.get(tag.name!)
       const str = ck ? `min=${ck.min} max=${ck.max}` : ''
@@ -296,7 +297,7 @@ class Check {
   // 发送设备告警记录
   private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string) => {
     const info = getDtuInfo(mac)
-    const { userId } = Event.Cache.CacheUser.get(info.user.user)!
+    const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
     /* if (userId) {
         const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 运行故障，故障信息:${remind}`
         const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
@@ -344,5 +345,5 @@ class Check {
 
 }
 
-export default new Check()
+export default Check
 

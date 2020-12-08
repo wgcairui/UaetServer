@@ -4,16 +4,20 @@ import ClientCache from "./ClientCache"
 import { DefaultContext } from "koa";
 import { Server } from "http";
 import { LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins } from "../mongoose/Log";
-import { SmsDTU } from "../util/SMS";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
 import { Uart } from "typing";
 import { Terminal } from "../mongoose";
-import { getUserBindDev } from "../util/util";
+import { getDtuInfo, getUserBindDev, parseTime } from "../util/util";
 // Cron
 import * as Cron from "../cron/index";
+import ProtocolPares from "./bin/ProtocolPares";
+import { SmsDTU, SmsDTUDevTimeOut } from "../util/SMS";
+import Tool from "../util/tool";
+import { Send } from "../util/Mail";
+import Check from "./bin/CheckUart";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
@@ -22,6 +26,18 @@ type CacheMap = keyof Omit<Cache, CacheFuns>
 
 type ElementOf<T> = T extends Array<infer P> ? P : never
 
+interface timeOut {
+  mac: string,
+  pid: string | number,
+  devName: string,
+  event: '超时' | '恢复'
+}
+
+interface On2Off {
+  mac: string,
+  event: '恢复上线' | '离线'
+}
+
 export class Event extends EventEmitter.EventEmitter {
   Cache: Cache;
   ClientCache: ClientCache
@@ -29,11 +45,17 @@ export class Event extends EventEmitter.EventEmitter {
   clientSocket!: webClientSocketIO
   wxSocket!: Wxws
   private timeOut: number;
+  Parse: ProtocolPares;
+  Check: Check;
   constructor() {
     super();
     this.timeOut = 60000 * 5
     // Node节点,透传协议，设备...缓存
     this.Cache = new Cache(this);
+    // 协议解析methons
+    this.Parse = new ProtocolPares(this)
+    // 
+    this.Check = new Check(this)
     // web客户端socket缓存
     this.ClientCache = new ClientCache()
     // start Query,加载数据缓存
@@ -43,7 +65,6 @@ export class Event extends EventEmitter.EventEmitter {
     //
     wxUtil.get_AccessToken()
     Cron.start()
-
   }
   // 挂载监听到koa ctx
   attach(app: DefaultContext) {
@@ -54,16 +75,17 @@ export class Event extends EventEmitter.EventEmitter {
           // 迭代查询缓存，检查每个挂载设备的指令耗时数组(往后60个采样)，采用其最大值+500ms,
           this.uartSocket.CacheSocket.forEach(node => {
             node.cache.forEach((terEX, hash) => {
-              // if (this.Cache.TimeOutMonutDev.has(hash)) return
-              const useTimeArray = this.Cache.QueryTerminaluseTime.get(hash) as number[]
-              const len = useTimeArray.length
-              const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
-              const maxTime = Math.max(...yxuseTimeArray) || 4000
-              // 获取设备间隔值
-              const interval = this.getMountDevInterval(terEX.TerminalMac)
-              // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
-              terEX.Interval = maxTime < interval ? interval : (maxTime + 1000) - (maxTime % 500)
-              this.Cache.QueryTerminaluseTime.set(hash, [])
+              // 判断设备是否在线，不在线则不重置查询间隔
+              const isOnline = this.getClientDtuMountDev(terEX.TerminalMac, terEX.pid).online
+              if (isOnline) {
+                // 获取设备查询设备查询使用时间
+                const maxTime = this.Parse.getQueryuseTime(terEX.TerminalMac, terEX.pid)
+                // 获取设备间隔值
+                const interval = this.getMountDevInterval(terEX.TerminalMac)
+                // 如果查询最大值大于5秒,查询间隔调整为最近60次查询耗时中的最大值步进500ms
+                terEX.Interval = maxTime < interval ? interval : (maxTime + 1000) - (maxTime % 500)
+                this.Parse.clearQueryuseTime(terEX.TerminalMac, terEX.pid)
+              }
             })
           })
         }
@@ -74,14 +96,14 @@ export class Event extends EventEmitter.EventEmitter {
         const date = Date.now() // 当前时间
         DTUOfflineTime.forEach(async (time, mac) => {
           if (date - time.getTime() > this.timeOut) {
-            await SmsDTU(mac, '离线')
+            this.sendDevTimeOut2On({ mac, event: '离线' })
             DTUOfflineTime.delete(mac)
           }
         })
 
         DTUOnlineTime.forEach(async (time, mac) => {
           if (date - time.getTime() > this.timeOut) {
-            await SmsDTU(mac, '恢复上线')
+            this.sendDevTimeOut2On({ mac, event: '恢复上线' })
             DTUOnlineTime.delete(mac)
           }
         })
@@ -159,7 +181,11 @@ export class Event extends EventEmitter.EventEmitter {
   getMountDevInterval(mac: string) {
     const terminal = this.Cache.CacheTerminal.get(mac)!
     // 统计挂载的设备协议指令数量
-    const MountDevLens = new Map(terminal.mountDevs.map(el => [el.pid, this.Cache.CacheProtocol.get(el.protocol)!.instruct.length]))
+    const MountDevLens = new Map(terminal.mountDevs.map(el => {
+      // 如果设备在线则统计所有指令条数，不在线则记为1
+      const instructLen = el.online ? this.Cache.CacheProtocol.get(el.protocol)!.instruct.length : 0
+      return [el.pid, instructLen]
+    }))
     // 基数
     const baseNum = terminal.ICCID ? 1000 : 500
     // 指令合计数量
@@ -253,14 +279,38 @@ export class Event extends EventEmitter.EventEmitter {
 
   // 设置透传节点下dtu对象下挂载节点上线
   setClientDtuMountDevOnline(mac: string, pid: string | number, online: boolean) {
+
+
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal) {
-      Terminal.updateOne({ DevMac: mac, "MountDevs.pid": pid }, { $set: { "MountDevs.$.online": online } }).then(_el => {
-        this.getClientDtuMountDev(mac, pid).online = online
-        if (online) {
-          this.emit("timeOutRestore", mac, pid)
-        }
-      })
+      if (online && !terminal.online) this.ChangeTerminalStat(mac, true)
+      const mountDev = this.getClientDtuMountDev(mac, pid)
+      // console.log({ mac, pid, online, mountDev });
+      if (mountDev.online !== online) {
+        Terminal.updateOne({ DevMac: mac, "MountDevs.pid": pid }, { $set: { "MountDevs.$.online": online } }).then(_el => {
+          mountDev.online = online
+          if (online) {
+            this.emit("timeOutRestore", mac, pid)
+          }
+        })
+      }
+    }
+  }
+
+  // 发送设备超时，恢复，上线，下线信息
+  sendDevTimeOut2On(arg: timeOut | On2Off) {
+    switch (arg.event) {
+      case "恢复":
+      case "超时":
+        SmsDTUDevTimeOut(arg.mac, arg.pid, arg.devName, arg.event)
+        this.sendMailAlarm(arg.mac, arg.pid, arg.event)
+        break;
+
+      case "恢复上线":
+      case "离线":
+        SmsDTU(arg.mac, arg.event)
+        this.sendMailAlarm(arg.mac, null, arg.event)
+        break
     }
   }
 
@@ -293,6 +343,28 @@ export class Event extends EventEmitter.EventEmitter {
     }
     if (this.wxSocket) {
       this.wxSocket.SendInfo(user, msg)
+    }
+  }
+
+  // 发送邮件
+  private sendMailAlarm(mac: string, pid: number | string | null, event: string) {
+    const info = getDtuInfo(mac)
+    const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
+    if (mails.length > 0) {
+      const mountDev = pid ? '挂载的 ' + this.getClientDtuMountDev(mac, pid).mountDev : ''
+
+      const body = `<p><strong>尊敬的${info.user.name}</strong></p>
+      <hr />
+      <p><strong>您的DTU <em>${info.terminalInfo.name}</em> ${mountDev} 告警</strong></p>
+      <p><strong>告警时间:&nbsp; </strong>${parseTime(Date.now())}</p>
+      <p><strong>告警事件:</strong>&nbsp; ${event}</p>
+      <p>您可登录 <a title="透传服务平台" href="https://uart.ladishb.com" target="_blank" rel="noopener">LADS透传服务平台</a> 查看处理(右键选择在新标签页中打开)</p>
+      <hr />
+      <p>&nbsp;</p>
+      <p>扫码使用微信小程序查看</p>
+      <p><img src="https://uart.ladishb.com/_nuxt/img/LADS_Uart.0851912.png" alt="weapp" width="430" height="430" /></p>
+      <p>&nbsp;</p>`
+      return Send(mails.join(","), "Ladis透传平台", "设备告警", body)
     }
   }
 

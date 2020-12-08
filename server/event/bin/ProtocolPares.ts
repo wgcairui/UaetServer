@@ -1,21 +1,26 @@
-import Event from "../event/index";
-import Tool from "../util/tool";
-import { ParseFunctionEnd, ParseCoefficient } from "../util/func";
+import { Event } from "../index";
+import Tool from "../../util/tool";
+import { ParseFunctionEnd, ParseCoefficient } from "../../util/func";
 import { Uart } from "typing";
 
 class ProtocolParse {
   // 缓存协议方法
   private protocolInstructMap: Map<string, Map<string, Uart.protocolInstruct>>
   // 缓存每个设备查询消耗的时间
-  QueryTerminaluseTime: Map<string, number[]>
+  private QueryTerminaluseTime: Map<string, number[]>
   // 序列化参数regx解析
   private CacheParseRegx: Map<string, [number, number]>
-  constructor() {
+  // 缓存协议指令转换关系 010300010009abcd => 0300010009
+  private InstructContents: Map<string, string>
+  Event: Event;
+  constructor(Event:Event) {
+    this.Event = Event
     this.protocolInstructMap = new Map()
     this.QueryTerminaluseTime = new Map()
     this.CacheParseRegx = new Map()
+    this.InstructContents = new Map()
     // 监听协议更新事件，更新协议
-    Event.on("updateProtocol",(protocol:string)=>this.setProtocolInstruct(protocol))
+    this.Event.on("updateProtocol",(protocol:string)=>this.setProtocolInstruct(protocol))
   }
 
   // 获取协议解析结果
@@ -28,7 +33,7 @@ class ProtocolParse {
   }
   // 设置协议解析
   private setProtocolInstruct(protocol: string) {
-    const Protocol = Event.Cache.CacheProtocol.get(protocol)!
+    const Protocol = this.Event.Cache.CacheProtocol.get(protocol)!
     //console.log({protocol,Protocol});
     
     // 缓存协议方法
@@ -41,6 +46,25 @@ class ProtocolParse {
     const useTimes = this.QueryTerminaluseTime.get(hash)
     if (useTimes) useTimes.push(R.useTime)
     else this.QueryTerminaluseTime.set(hash, [R.useTime])
+  }
+
+  // 获取查询使用时间使用时间
+  public getQueryuseTime(mac:string,pid:string|number){
+    const hash = mac + pid
+    const useTimeArray = this.QueryTerminaluseTime.get(hash)! || []
+    const len = useTimeArray.length
+    const yxuseTimeArray = len > 60 ? useTimeArray.slice(len - 60, len) : useTimeArray
+    return Math.max(...yxuseTimeArray) || 4000
+  }
+
+  // 重置查询计时
+  public clearQueryuseTime(mac:string,pid:string|number){
+    this.QueryTerminaluseTime.set(mac+pid,[])
+  }
+
+  // 设置指令字符串对应指令
+  public setContentToInstructName(content:string,instruct:string){
+    this.InstructContents.set(content,instruct)
   }
 
   // 协议解析，数据存取数量尺寸缓存
@@ -59,7 +83,7 @@ class ProtocolParse {
     return IntructResult.filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
       .map(el => {
       // 解析规则
-      const instructs = InstructMap.get(el.content) as Uart.protocolInstruct;
+      const instructs = InstructMap.get(el.content)!
       // 把buffer转换为utf8字符串并掐头去尾
       const parseStr = Buffer.from(el.buffer)
         .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length)
@@ -84,23 +108,24 @@ class ProtocolParse {
           // 3,检查标准modbus协议,协议返回的控制字符与查询指令一致,结果数据长度与结果中声明的数据长度一致
           // 
           const ResultFilter = IntructResult.filter(el => {
-            const instructName = Event.Cache.CacheInstructContents.get(el.content) || '' //0300010002
-            const protocolInstruct = InstructMap.get(instructName)
-            // 指令是此协议中的
-            if (protocolInstruct) {
+            const instructName = this.InstructContents.get(el.content) //0300010002
+            // 如果程序重启后接受到数据，缓存中可能还没有指令对照
+            if (instructName) {
+              const protocolInstruct = InstructMap.get(instructName)!
               // 如果是非标协议且含有后处理脚本，由脚本校验结果buffer
               if (protocolInstruct.noStandard && protocolInstruct.scriptEnd) {
                 const Fun = ParseFunctionEnd(protocolInstruct.scriptEnd)
                 return Fun(el.content, el.buffer.data) as Boolean
               } else {
-                const FunctionCode = parseInt(el.content.slice(2, 4))
                 // 结果对象需要满足对应操作指令,是此协议中的指令,数据长度和结果中声明的一致
-                if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
+                const FunctionCode = parseInt(el.content.slice(2, 4))
+                return (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length)
+                /* if (el.buffer.data[1] === FunctionCode && el.buffer.data[2] + 5 === el.buffer.data.length) return true
                 else {
                   // Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: R.mac, devName: R.mountDev, pid: R.pid, protocol: R.protocol, tag: '结果数据错误', timeStamp: Date.now(), msg: `指令${instructName}返回的格式不对:err:${el.buffer.data}` })
                   console.log({ instruct: el.content, buffer: el.buffer, bufferlength: el.buffer.data.length, msg: '指令返回的格式不对' });
                   return false
-                }
+                } */
               }
             } else return false
 
@@ -108,8 +133,8 @@ class ProtocolParse {
           //console.log(ResultFilter);
           // 根据协议指令解析类型的不同,转换裁减Array<number>为Array<number>,把content换成指令名称
           const ParseInstructResultType = ResultFilter.map(el => {
-            el.content = Event.Cache.CacheInstructContents.get(el.content) as string
-            const instructs = InstructMap.get(el.content) as Uart.protocolInstruct
+            el.content = this.InstructContents.get(el.content)!
+            const instructs = InstructMap.get(el.content)!
             const data = el.buffer.data.slice(instructs.shift ? instructs.shiftNum : 3, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length - 2)
             switch (instructs.resultType) {
               case 'bit2':
@@ -181,13 +206,13 @@ class ProtocolParse {
     }
     if (R.result && R.result.length > 0) {
       // 设备请求结果,发送设备正常查询
-      Event.setClientDtuMountDevOnline(R.mac,R.pid,true)
+      this.Event.setClientDtuMountDevOnline(R.mac,R.pid,true)
     }
     return R;
   }
 }
 
-export default new ProtocolParse()
+export default ProtocolParse
 /* 
 export default async (R: Uart.queryResult) => {
   // 检查请求指令和返回结果是否数目一致,不一致则发送数据数据查询间隔过短事件

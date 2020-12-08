@@ -2,7 +2,6 @@ import IO, { ServerOptions, Socket } from "socket.io"
 import { Server } from "http";
 import Event, { Event as event } from "../event/index";
 import tool from "../util/tool";
-import { SmsDTUDevTimeOut } from "../util/SMS";
 import { ParseFunction } from "../util/func";
 import { Uart } from "typing";
 
@@ -39,6 +38,7 @@ export default class NodeSocketIO {
                 if (client) {
                     console.log(`${Name} 重新上线`);
                     client.socket = socket
+                    // 重新注册socket事件监听
                     client.startlisten()
                 }
                 else this.CacheSocket.set(Name, new nodeClient(socket, this.Event, this.CacheQueryIntruct, Node))
@@ -48,6 +48,28 @@ export default class NodeSocketIO {
                 // 添加日志
                 this.Event.savelog<Uart.logNodes>('node', { ID, IP, type: "非法连接请求", Name: 'null' })
             }
+        })
+
+        this.Event.on("timeOutRestore", (mac: string, pid: string) => {
+            const terminal = this.Event.Cache.CacheTerminal.get(mac)
+            if (terminal) {
+                const node = this.CacheSocket.get(terminal.mountNode)
+                if (node) {
+                    const hash = mac + pid
+                    const terEx = node.cache.get(hash)
+                    if (terEx) {
+                        // console.log({ mac, pid, mas: 'terminal恢复' }, this.TimeOutMonutDevSmsSend.has(hash));
+                        // 如果短信发送记录为true,发送超时恢复短信提醒
+                        if (node.TimeOutMonutDevSmsSend.has(hash)) {
+                            // console.log({ mac, pid, mas: 'terminal恢复' });
+                            this.Event.sendDevTimeOut2On({ mac, pid, devName: terEx.mountDev, event: '恢复' })
+                            node.TimeOutMonutDevSmsSend.delete(hash)
+                        }
+                    }
+                }
+
+            }
+
         })
     }
     // 发送程序变更指令，公开
@@ -122,9 +144,9 @@ class nodeClient {
     private Event: event;
     private CacheQueryIntruct: Map<string, string>;
     private ID: string;
-    private interVal: NodeJS.Timeout;
+    private interVal?: NodeJS.Timeout;
     // 查询超时告警发送模式 hash state
-    private TimeOutMonutDevSmsSend: Set<string>
+    TimeOutMonutDevSmsSend: Set<string>
     private count: number;
     // 标识每个dtu的工作是否繁忙
     private dtuWorkBusy: Set<string>
@@ -142,49 +164,20 @@ class nodeClient {
         this.TimeOutMonutDevSmsSend = new Set()
         this.dtuWorkBusy = new Set()
         // 注册socket事件
-        this.interVal = setInterval(async () => {
-            this.cache.forEach((mountDev) => {
-                // 判断轮询计算结果是否是正整数,是的话发送查询指令
-                if (Number.isInteger(this.count / mountDev.Interval)) {
-                    this._SendQueryIntruct(mountDev)
-                }
-            })
-            this.count += 500
-            // 最大值为20day
-            if (this.count > 1600000000) this.count = 0
-        }, 500)
-
-        this.Event.on("timeOutRestore", (mac: string, pid: string) => {
-            // const { mountDev, online } = this.Event.getClientDtuMountDev(mac, pid)
-            const hash = mac + pid
-            const terEx = this.cache.get(hash)
-            if (terEx) {
-                // console.log({ mac, pid, mas: 'terminal恢复' }, this.TimeOutMonutDevSmsSend.has(hash));
-                // 如果短信发送记录为true,发送超时恢复短信提醒
-                if (this.TimeOutMonutDevSmsSend.has(hash)) {
-                    // console.log({ mac, pid, mas: 'terminal恢复' });
-                    SmsDTUDevTimeOut(mac, pid, terEx.mountDev, '恢复')
-                    this.TimeOutMonutDevSmsSend.delete(hash)
-                }
-            }
-        })
         this.startlisten()
     }
-
     // 
     startlisten() {
         this.socket
-            .on('register', _regster => {
-                // 发送节点注册信息
-                this.socket.emit('registerSuccess', this.property)
-            })
-            // 节点离线
+            // 发送节点注册信息
+            .on('register', _regster => this.socket.emit('registerSuccess', this.property))
+            // 节点离线,清理缓存
             .on("disconnect", () => {
                 console.log(`${new Date().toLocaleTimeString()}## 节点：${this.property.Name}断开连接，清除定时操作`);
                 const macs = [...this.Event.Cache.CacheTerminal].filter(([mac, term]) => term.mountNode === this.property.Name).map(el => el[0])
                 this.Event.ChangeTerminalStat(macs, false)
                 this.cache.clear()
-                //clearInterval(this.interVal)
+                if (this.interVal) clearInterval(this.interVal)
                 // 添加日志
                 this.Event.savelog<Uart.logNodes>('node', { type: "断开", ID: this.ID, IP: this.property.IP, Name: this.property.Name })
             })
@@ -207,10 +200,8 @@ class nodeClient {
                 if (terminal) {
                     this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: data[0], type: "连接" })
                 }
-                this.Event.ChangeTerminalStat(data)
+                this.Event.ChangeTerminalStat(data, true)
                 data.forEach(mac => this.dtuWorkBusy.delete(mac))
-                // console.log(this.Event.Cache.CacheTerminal);
-
                 // 如果是重连，加入缓存
                 if (reline) DTUOnlineTime.set(data[0], date)
                 console.info(`${date.toLocaleTimeString()}##${this.property.Name} DTU:/${data.join("|")}/ 已上线,模式:${reline},重连设备数：${DTUOnlineTime.size}`);
@@ -239,20 +230,27 @@ class nodeClient {
                 const hash = mac + pid
                 const Query = this.cache.get(hash)
                 if (Query) {
-
-                    console.log('------全部指令超时', this.TimeOutMonutDevSmsSend, mac, pid, timeOut);
-
+                    console.log('------全部指令超时', this.TimeOutMonutDevSmsSend, mac, pid, timeOut, Query.Interval);
                     // console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
-                    if (Query.Interval < 300000) Query.Interval += 1000
+                    // 如果查询间隔小于五分钟则每次查询间隔修改为+10000
+                    // if (Query.Interval < 3e5) Query.Interval += 10000
                     // 如果超时次数>10和短信发送状态为false
-                    if (timeOut > 10 && !this.TimeOutMonutDevSmsSend.has(hash)) {
+                    if (timeOut > 10) {
+                        // 把查询超时间隔修改为10分钟
+                        Query.Interval = 6e5
                         console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${Query.Interval}`);
-                        this.TimeOutMonutDevSmsSend.add(hash)
-                        await SmsDTUDevTimeOut(Query.TerminalMac, Query.pid, Query.mountDev, '超时')
-                        const terminal = this.Event.Cache.CacheTerminal.get(Query.TerminalMac)
-                        if (terminal) { // 添加日志
-                            this.Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: terminal.DevMac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}/${Query.pid}/${Query.mountDev} 查询超时`, timeStamp: Date.now() })
-                            this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: terminal.DevMac, type: "查询超时", query: Query })
+                        if (!this.TimeOutMonutDevSmsSend.has(hash)) {
+                            // 发送设备查询超时短信
+                            this.Event.sendDevTimeOut2On({ mac: Query.TerminalMac, pid: Query.pid, devName: Query.mountDev, event: '超时' })
+                            // await SmsDTUDevTimeOut(Query.TerminalMac, Query.pid, Query.mountDev, '超时')
+                            // 添加短信发送记录
+                            this.TimeOutMonutDevSmsSend.add(hash)
+
+                            const terminal = this.Event.Cache.CacheTerminal.get(Query.TerminalMac)
+                            if (terminal) { // 添加日志
+                                this.Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { mac: terminal.DevMac, devName: terminal.name, pid: 0, protocol: '', tag: '连接', msg: `${terminal.name}/${Query.pid}/${Query.mountDev} 查询超时`, timeStamp: Date.now() })
+                                this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: terminal.DevMac, type: "查询超时", query: Query })
+                            }
                         }
                     }
                 }
@@ -274,7 +272,20 @@ class nodeClient {
                         })
                     }
                 })
-                console.log(`${new Date().toLocaleTimeString()}##节点: ${this.property.Name} 上线,载入设备缓存Size: ${this.cache.size}`);
+                // 设置定时器
+                if (this.interVal) clearInterval(this.interVal)
+                this.interVal = setInterval(async () => {
+                    this.cache.forEach((mountDev) => {
+                        // 判断轮询计算结果是否是正整数,是的话发送查询指令
+                        if (Number.isInteger(this.count / mountDev.Interval)) {
+                            this._SendQueryIntruct(mountDev)
+                        }
+                    })
+                    this.count += 500
+                    // 最大值为20day
+                    if (this.count > 16e8) this.count = 0
+                }, 500)
+                console.log(`${new Date().toLocaleTimeString()}##节点: ${this.property.Name} 上线,载入设备缓存Size: ${this.cache.size},定时器:${this.interVal}`);
             })
     }
 
@@ -286,10 +297,8 @@ class nodeClient {
         // 判断挂载设备是否空闲和是否在线
         if (!this.dtuWorkBusy.has(mac) && this.Event.Cache.CacheTerminal.get(mac)?.online) {
             // console.log("send" + mac, Query.Interval, this.Event.getClientDtuMountDev(Query.TerminalMac, Query.pid));
-            // 生成时间戳
-            const timeStamp = Date.now()
             // 获取设备协议
-            const Protocol = <Uart.protocol>this.Event.Cache.CacheProtocol.get(Query.protocol)
+            const Protocol = this.Event.Cache.CacheProtocol.get(Query.protocol)!
             // 获取协议指令生成缓存
             const CacheQueryIntruct = this.CacheQueryIntruct
             // 迭代设备协议获取多条查询数据
@@ -318,7 +327,7 @@ class nodeClient {
                             break;
                     }
                     CacheQueryIntruct.set(IntructName, content)
-                    this.Event.Cache.CacheInstructContents.set(content, ProtocolInstruct.name)
+                    this.Event.Parse.setContentToInstructName(content, ProtocolInstruct.name)
                     return content
                 }
             })
@@ -328,7 +337,7 @@ class nodeClient {
                 mountDev: Query.mountDev,
                 protocol: Query.protocol,
                 pid: Query.pid,
-                timeStamp,
+                timeStamp: Date.now(),
                 content,
                 Interval: Query.Interval,
                 useTime: 0
