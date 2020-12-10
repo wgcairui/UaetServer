@@ -230,7 +230,7 @@ class nodeClient {
                 const hash = mac + pid
                 const Query = this.cache.get(hash)
                 if (Query) {
-                    console.log('------全部指令超时', this.TimeOutMonutDevSmsSend, mac, pid, timeOut, Query.Interval);
+                    console.log('------全部指令超时', Query.mountDev, this.TimeOutMonutDevSmsSend, mac, pid, timeOut, Query.Interval);
                     // console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${QueryTerminal.Interval}`);
                     // 如果查询间隔小于五分钟则每次查询间隔修改为+10000
                     // if (Query.Interval < 3e5) Query.Interval += 10000
@@ -344,8 +344,7 @@ class nodeClient {
             }
             this.socket.emit('query', query);
         } else {
-            // console.log({ mac, busy: this.dtuWorkBusy.has(mac), online: this.Event.Cache.CacheTerminal.get(mac)?.online, interval: Query.Interval });
-
+            console.log({ msg: 'uart发送查询失败', mac, mountDev: Query.mountDev, busy: this.dtuWorkBusy.has(mac), online: this.Event.Cache.CacheTerminal.get(mac)?.online, interval: Query.Interval });
         }
     }
 }

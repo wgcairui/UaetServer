@@ -80,6 +80,7 @@ const SchemaDataClean = new Schema({
     NumUserRequst: String,
     NumClientresults: String,
     NumClientresultcolltion: String,
+    CleanClientresultsTimeOut: String,
     lastDate: Date
 }, { timestamps: true })
 

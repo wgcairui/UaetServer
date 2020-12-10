@@ -197,6 +197,8 @@ class ProtocolParse {
     switch (R.type) {
       // 232一般适用于UPS设备
       case 232:
+        console.log(R);
+        
         R.result = this.parse232(IntructResult,R.protocol)
         break;
       // 适用于modbus协议

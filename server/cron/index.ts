@@ -13,6 +13,7 @@ const DataClean = new CronJob('0 0 19 * * *', async () => {
         NumUartterminaldatatransfinites: await Uartterminaldatatransfinites(),
         NumClientresults: await CleanClientresults(),
         NumClientresultcolltion: "0",//await CleanClientresultcolltion(),
+        CleanClientresultsTimeOut: await CleanClientresultsTimeOut(),
         lastDate: DataClean.lastDate()
     }
     console.log(`${new Date().toString()} ### end clean Data.....`, count);
@@ -142,6 +143,35 @@ async function CleanClientresults() {
     // 更新标签
     await TerminalClientResults.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 } }).exec()
     console.timeEnd('CleanClientresults')
+    return deleteids.length + '/' + len
+}
+
+// 清洗设备原始Result
+// 把所有一个月前的设备结果集删除
+async function CleanClientresultsTimeOut() {
+    console.time('CleanClientresultsTimeOut')
+    const MapClientresults: Map<string, clientResults> = new Map()
+    const Query = TerminalClientResults.find({ "__v": 1 })
+    const cur = Query.cursor()
+    const len = await Query.countDocuments()
+    const deleteids: any[] = []
+
+    // 记录文档时间戳
+    const timeStamps: number[] = []
+    // 
+    const nowTime = Date.now()
+
+    for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
+        const _id = Types.ObjectId((doc as any)._id)
+        if (nowTime - doc.timeStamp > 432e5) {
+            deleteids.push(_id)
+            timeStamps.push(doc.timeStamp)
+        }
+    }
+    // 批量删除超期的数据
+    await TerminalClientResults.deleteMany({ _id: { $in: deleteids } })//.exec().then(el => console.log(el))
+    // await TerminalClientResult.deleteMany({ timeStamp: { $in: timeStamps } })//.exec().then(el => console.log(el))
+    console.timeEnd('CleanClientresultsTimeOut')
     return deleteids.length + '/' + len
 }
 

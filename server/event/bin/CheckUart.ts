@@ -144,6 +144,14 @@ class Check {
     return setup
   }
 
+  // 获取设备的别名
+  private getProtocolAlias(mac: string, pid: string | number, protocol: string, name: string) {
+    const alias = this.Event.Cache.CacheAlias.get(mac + pid + protocol)
+    if (alias && alias.has(name)) {
+      return alias.get(name)
+    } else name
+  }
+
   // 判断
   public check(query: Uart.queryResult) {
     const user = this.Event.Cache.CacheBindUart.get(query.mac);
@@ -155,7 +163,8 @@ class Check {
       if (setup.Threshold.size > 0) {
         this.checkThreshold(result, setup.Threshold).forEach(el => {
           el.alarm = true
-          this.sendAlarm(query, `${el.name}超限[${el.value}]`, el,)
+          const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
+          this.sendAlarm(query, `${alias}超限[${el.value}]`, el,)
         })
       }
 
@@ -164,7 +173,8 @@ class Check {
           const value = this.GetUnit(el.unit!)[el.value]
           if (value) {
             el.alarm = true
-            this.sendAlarm(query, `${el.name}[${value}]`, el);
+            const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
+            this.sendAlarm(query, `${alias}[${value}]`, el);
           }
         })
       }
@@ -185,7 +195,8 @@ class Check {
         if (n && n > 10) {
           // console.log('checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
-          this.sendAlarm(query, `${el.name}[告警恢复]`, el);
+          const alias = this.getProtocolAlias(query.mac,query.pid,query.protocol,el.name)
+          this.sendAlarm(query, `${alias}[告警恢复]`, el);
         }
       }
     })

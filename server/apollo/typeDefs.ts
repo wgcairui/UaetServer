@@ -141,6 +141,7 @@ const typeDefs: DocumentNode = gql`
     address: String
     status: Boolean
     messageId: String 
+    rgtype: String
   }
   # 用户绑定的设备
   type BindDevice {
@@ -410,6 +411,8 @@ const typeDefs: DocumentNode = gql`
     deleteUsersetup(user:String):result
     # 设备设备别名
     setAlias(mac:String,pid:String,protocol:String,name:String,alias:String):result
+    #删除用户
+    deleteUser(user:String,hash:String):result
   }
 
   # Subscription

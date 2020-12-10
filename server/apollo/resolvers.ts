@@ -935,6 +935,24 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             return { ok: 1 } as Uart.ApolloMongoResult
         },
         // 删除用户配置
+        async deleteUser(root, { user, hash }, ctx) {
+            valadationRoot(ctx)
+            // 获取删除用户的信息
+            const userInfo = await Users.findOne({ user }).lean<Uart.UserInfo>()
+            if (userInfo!.userGroup == 'user' && hash === 'lgups@123') {
+                await UserAggregation.deleteOne({ user }).exec()
+                await UserAlarmSetup.deleteOne({ user }).exec()
+                await UserBindDevice.deleteOne({ user }).exec()
+                return await Users.deleteOne({ user }).exec()
+            } else {
+                return {
+                    ok: 0,
+                    msg: '只能删除用户信息'
+                }
+            }
+
+        },
+        // 删除用户配置
         async deleteUsersetup(root, { user }, ctx) {
             valadationRoot(ctx)
             return await UserAlarmSetup.deleteOne({ user }).exec()
