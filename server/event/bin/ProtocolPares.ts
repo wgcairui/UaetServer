@@ -189,7 +189,7 @@ class ProtocolParse {
   }
 
   // 解析查询结果
-  public parse(R: Uart.queryResult) {
+  public async parse(R: Uart.queryResult) {
     this.addQueryTerminaluseTime(R)
     // 结果集数组
     const IntructResult = R.contents;
@@ -197,8 +197,6 @@ class ProtocolParse {
     switch (R.type) {
       // 232一般适用于UPS设备
       case 232:
-        console.log(R);
-        
         R.result = this.parse232(IntructResult,R.protocol)
         break;
       // 适用于modbus协议

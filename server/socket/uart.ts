@@ -266,9 +266,10 @@ class nodeClient {
                 this.Event.Cache.CacheTerminal.forEach(terminal => {
                     if (terminal.mountNode === this.property.Name) {
                         terminal.mountDevs.forEach(mountDev => {
-                            // 获取设备协议
-                            // const Protocol = <Uart.protocol>this.Event.Cache.CacheProtocol.get(mountDev.protocol)!
-                            this.cache.set(terminal.DevMac + mountDev.pid, { ...mountDev, TerminalMac: terminal.DevMac, Interval: this.Event.getMountDevInterval(terminal.DevMac) })
+                            // 乐观估计所有设备都是在线的，
+                            this.Event.setClientDtuMountDevOnline(terminal.DevMac, mountDev.pid, true)
+                            const Interval = this.Event.getMountDevInterval(terminal.DevMac)
+                            this.cache.set(terminal.DevMac + mountDev.pid, { ...mountDev, TerminalMac: terminal.DevMac, Interval })
                         })
                     }
                 })

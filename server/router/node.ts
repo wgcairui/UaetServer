@@ -15,44 +15,58 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const queryResultArray = (<Uart.uartData>body).data;
         if (queryResultArray.length > 0) {
-          // 保存每个终端使用的数字节数
-          // 保存每个查询指令使用的字节，以天为单位
-          const date = new Date().toLocaleDateString()
-          for (let el of queryResultArray) {
-            await LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes: el.useBytes } }, { upsert: true }).exec()
-          }
-
           // 保存原始数据
           TerminalClientResults.insertMany(queryResultArray);
-          // 翻转结果数组,已新的结果为准
-          const UartData = queryResultArray.reverse()
-          // 解析结果
-          const ParseData = UartData.map(el => Event.Parse.parse(el))
-          // 保存解析后的数据
-          TerminalClientResult.insertMany(ParseData);
-          // 保存单例数据库
-          // 创建缓存,保存每条数据的Set
-          const MacID: Set<string> = new Set()
-          ParseData.forEach(data => {
-            const ID = data.mac + data.pid
-            // 如果数据重复,抛弃旧数据
-            if (!MacID.has(ID)) {
-              MacID.add(ID)
-              // 把数据发给检查器,检查数据是否有故障,保存数据单例
-              const checkData = Event.Check.check(data)
-              // 把结果转换为对象
-              // data.parse = Object.assign({}, ...checkData.result!.map(el => ({ [el.name]: el })) as { [x: string]: Uart.queryResultArgument }[])
-              // console.log({checkData});
-              // 保存对象
-              // console.log(data.result);
+          // 解析结果,同步处理所有的数据
+          const date = new Date().toLocaleDateString()
+          queryResultArray.reverse().forEach(async el => {
+            // 保存每个终端使用的数字节数
+            // 保存每个查询指令使用的字节，以天为单位
+            LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes: el.useBytes } }, { upsert: true }).exec()
+            const parse = await Event.Parse.parse(el)
 
+            // 判断是否有解析结果，没有结果则不处理数据
+            if (parse.result) {
+              // 获得解析数据首先写入数据库
               TerminalClientResultSingle.updateOne(
-                { mac: checkData.mac, pid: checkData.pid },
-                checkData,
+                { mac: parse.mac, pid: parse.pid },
+                parse,
                 { upsert: true }
               ).exec()
-            }
+              Event.Check.check(parse).then(check => {
+                // 保存到历史数据
+                new TerminalClientResult(parse).save()
+                // 检查是否有alarm,有的话更新数据库单例
+                check.result!.forEach((val, index) => {
+                  if (val.alarm) {
+                    TerminalClientResultSingle.updateOne(
+                      { timeStamp: check.time, mac: check.mac, pid: check.pid },
+                      { $set: { [`result.${index}.alarm`]: val.alarm } }
+                    ).exec()
+                  }
+                })
+              })
+            } else console.log(`解析流程出错,parse:${parse.mac, parse.pid, parse.timeStamp} 未得到处理数据`)
           })
+          //
+          /* Promise.all(ParseData).then(el => {
+            // 保存解析后的数据
+            TerminalClientResult.insertMany(el);
+            // 保存单例数据库
+            // 创建缓存,保存每条数据的Set
+            const MacID: Set<string> = new Set()
+            el.forEach(data => {
+              const ID = data.mac + data.pid
+              // 如果数据重复,抛弃旧数据
+              if (!MacID.has(ID)) {
+                MacID.add(ID)
+                // 把数据发给检查器,检查数据是否有故障,保存数据单例
+                const checkData = Event.Check.check(data)
+                
+              }
+            })
+          }) */
+
         }
         ctx.body = { code: 200 }
       }

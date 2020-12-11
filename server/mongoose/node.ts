@@ -71,9 +71,13 @@ const SchemaTerminalClientResult = new Schema({
   result: [
     new Schema(
       {
-        name: String,
+        name: {
+          type: String,
+          index: true
+        },
         value: String,
-        unit: String
+        unit: String,
+        alarm: Boolean
       },
       { _id: false }
     )
@@ -89,7 +93,10 @@ const SchemaTerminalClientResultSingle = new Schema({
   result: [
     new Schema(
       {
-        name: String,
+        name: {
+          type: String,
+          index: true
+        },
         value: String,
         unit: String,
         alarm: Boolean

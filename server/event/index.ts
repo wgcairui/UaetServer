@@ -194,7 +194,7 @@ export class Event extends EventEmitter.EventEmitter {
     const PidProtocolInstructNum = MountDevLens.get(Pid)!
     // 
     return (PidProtocolInstructNum * baseNum) + ((LensCount * baseNum) * (PidProtocolInstructNum / LensCount)) */
-    return (LensCount || 1) * baseNum
+    return (LensCount) * baseNum
   }
 
   // 更新terminal在线状态

@@ -153,7 +153,7 @@ class Check {
   }
 
   // 判断
-  public check(query: Uart.queryResult) {
+  public async check(query: Uart.queryResult) {
     const user = this.Event.Cache.CacheBindUart.get(query.mac);
     const result = query.result!;
     if (result && result.length > 0 && user) {
