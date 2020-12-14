@@ -4,6 +4,7 @@ import Event, { Event as event } from "../event/index";
 import tool from "../util/tool";
 import { ParseFunction } from "../util/func";
 import { Uart } from "typing";
+import { LogDtuBusy, LogInstructQuery } from "../mongoose";
 
 export default class NodeSocketIO {
     private io: IO.Server;
@@ -258,6 +259,7 @@ class nodeClient {
             // 接收dtu空闲状态变更,如果busy是true则把mac加入到繁忙设备列表
             .on("busy", (mac: string, busy: boolean, n: number) => {
                 busy ? this.dtuWorkBusy.add(mac) : this.dtuWorkBusy.delete(mac)
+                new LogDtuBusy({ mac, stat: busy, n, timeStamp: Date.now() }).save()
                 // console.log(`### DTU:${mac} stat:${busy ? 'busy' : 'free'}`, this.dtuWorkBusy, n);
             })
             // 节点注册成功,初始化设备列表缓存
@@ -343,9 +345,10 @@ class nodeClient {
                 Interval: Query.Interval,
                 useTime: 0
             }
+            LogInstructQuery.updateOne({ mac: query.mac, pid: query.pid }, query,{upsert:true}).exec()
             this.socket.emit('query', query);
-        } else {
+        } /* else {
             console.log({ msg: 'uart发送查询失败', mac, mountDev: Query.mountDev, busy: this.dtuWorkBusy.has(mac), online: this.Event.Cache.CacheTerminal.get(mac)?.online, interval: Query.Interval });
-        }
+        } */
     }
 }

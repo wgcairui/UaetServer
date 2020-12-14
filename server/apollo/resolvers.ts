@@ -7,7 +7,7 @@ import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongo
 import { BcryptDo } from "../util/bcrypt";
 import { DevArgumentAlias, DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
-import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean } from "../mongoose/Log";
+import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean, LogDtuBusy, LogInstructQuery } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
@@ -300,24 +300,35 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         async logdataclean(root, { start, end }: { start: Date, end: Date }) {
             return await LogDataClean.find().where("createdAt").gte(start).lte(end).exec()
         },
+
+        // 获取dtu繁忙状态记录
+        async logDtuBusy(root, { mac, start, end }, ctx) {
+            return await LogDtuBusy.find({ mac }).where("timeStamp").gt(new Date(start).getTime()).lt(new Date(end).getTime()).exec()
+        },
+
+        // 获取dtu发送指令记录
+        async logInstructQuery(root, { mac }, ctx) {
+            return await LogInstructQuery.find({ mac }).exec()
+        },
+        // 获取在线节点指令缓存
+        getNodeInstructQuery(root, arg, ctx) {
+            return [...ctx.$Event.uartSocket.CacheSocket].map(([node, client]) => {
+                return { node, instruct: [...client.cache.values()] }
+            })
+        },
         // id获取用户聚合设备
         async Aggregation(root, { id }, ctx) {
             const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean<Uart.Aggregation>()
             if (!agg) return agg
             const query = agg.aggregations.map(async el => {
-                const constant = await DevConstant.findOne({ Protocol: el.protocol }).select("Constant").lean() as Uart.ProtocolConstantThreshold
-                const constantVals = _.pickBy(constant.Constant, Boolean) as any
-                const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid }).select("parse time").lean() as Uart.queryResult
-                // ter.parse = _.pick(ter.parse,constantVals) as any
-                const constantParse = {} as { [x in string]: Uart.queryResultArgument }
-                for (let key in constantVals) {
-                    constantParse[key] = ter.result!.find(el => el.name === constantVals[key])!
-                }
-                // console.log({ constantParse });
-                return Object.assign(el, { parse: constantParse })
+                const constant = ctx.$Event.Cache.CacheConstant.get(el.protocol)!
+                const constantVals = new Set(Object.values(constant.Constant).map(el=>Array.isArray(el)?el:[el]).flat())
+                const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid }).lean<Uart.queryResult>()
+                el.result = ter!.result?.filter(el=>constantVals.has(el.name))
+                return el
             })
-            agg.devs = await Promise.all(query) as any
-            return agg
+             await Promise.all(query)
+             return agg
         },
         // 获取后台运行状态
         async runingState(root, arg, ctx) {

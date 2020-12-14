@@ -279,8 +279,6 @@ export class Event extends EventEmitter.EventEmitter {
 
   // 设置透传节点下dtu对象下挂载节点上线
   setClientDtuMountDevOnline(mac: string, pid: string | number, online: boolean) {
-
-
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal) {
       if (online && !terminal.online) this.ChangeTerminalStat(mac, true)

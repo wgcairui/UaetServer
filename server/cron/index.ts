@@ -152,6 +152,9 @@ async function CleanClientresultsTimeOut() {
     const lastM = Date.now() - 2.592e9
     const len = await TerminalClientResults.countDocuments()
     const result = await TerminalClientResults.deleteMany({ "__v": 1, timeStamp: { $lte: lastM } })
+
+    // 删除告警记录
+    await LogUartTerminalDataTransfinite.deleteMany({timeStamp: { $lte: lastM } })
     return result.deletedCount + '/' + len
 }
 

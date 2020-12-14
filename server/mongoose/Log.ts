@@ -90,6 +90,25 @@ const SchemaUseBytes = new Schema({
     date: String,
     useBytes: Number
 })
+// dtu繁忙状态变更记录
+const SchemaDtuBusy = new Schema({
+    mac: String,
+    stat: Boolean,
+    n: Number,
+    timeStamp: Number
+})
+
+// dtu发送指令记录
+const SchemaInstructQuery = new Schema({
+    mac: String,
+    type: Number,
+    mountDev: String,
+    protocol: String,
+    pid: Number,
+    timeStamp: Number,
+    content: [String],
+    Interval: Number,
+})
 export const LogSmsSend = mongoose.model("LogSmsSend", SchemaSmsSend)
 export const LogMailSend = mongoose.model("LogMailSend", SchemaMailSend)
 export const LogUartTerminalDataTransfinite = mongoose.model("LogUartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
@@ -101,3 +120,7 @@ export const LogTerminals = mongoose.model("LogTerminal", SchemaTerminals)
 export const LogDataClean = mongoose.model("LogDataClean", SchemaDataClean)
 
 export const LogUseBytes = mongoose.model("LoguseBytes", SchemaUseBytes)
+
+export const LogDtuBusy = mongoose.model("Log.DtuBusy", SchemaDtuBusy)
+
+export const LogInstructQuery = mongoose.model("Log.InstructQuery", SchemaInstructQuery)

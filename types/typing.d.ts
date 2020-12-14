@@ -499,6 +499,7 @@ declare namespace Uart {
     }
     // 聚合设备
     interface AggregationDev extends TerminalMountDevs {
+        result: queryResultArgument[] | undefined;
         DevMac: string
         name: string
         online: boolean

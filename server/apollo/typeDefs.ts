@@ -323,9 +323,15 @@ const typeDefs: DocumentNode = gql`
     logdataclean(start:Date,end:Date):JSON
     # 获取设备使用流量
     logterminaluseBtyes(mac:String):JSON
+    # 获取dtu繁忙状态记录
+    logDtuBusy(mac:String,start:Date,end:Date):JSON
+    # 获取dtu发送指令记录
+    logInstructQuery(mac:String):JSON
+    # 获取在线节点指令缓存
+    getNodeInstructQuery:JSON
     # 获取聚合设备
-    Aggregation(id:String):aggregation
-    Aggregations:[aggregation]
+    Aggregation(id:String):JSON
+    Aggregations:JSON
     # 获取后台运行状态
     runingState:JSON
     # 用户获取终端上下线数据
