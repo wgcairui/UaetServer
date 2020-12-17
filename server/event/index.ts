@@ -86,6 +86,10 @@ export class Event extends EventEmitter.EventEmitter {
                 terEX.Interval = maxTime < interval ? interval : (maxTime + 1000) - (maxTime % 500)
                 this.Parse.clearQueryuseTime(terEX.TerminalMac, terEX.pid)
               }
+              if(terEX.Interval === 0){
+                console.log(terEX);
+                terEX.Interval = 1000
+              }
             })
           })
         }
@@ -285,8 +289,8 @@ export class Event extends EventEmitter.EventEmitter {
       const mountDev = this.getClientDtuMountDev(mac, pid)
       // console.log({ mac, pid, online, mountDev });
       if (mountDev.online !== online) {
+        mountDev.online = online
         Terminal.updateOne({ DevMac: mac, "MountDevs.pid": pid }, { $set: { "MountDevs.$.online": online } }).then(_el => {
-          mountDev.online = online
           if (online) {
             this.emit("timeOutRestore", mac, pid)
           }

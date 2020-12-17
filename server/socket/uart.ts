@@ -227,7 +227,6 @@ class nodeClient {
             })
             // 设备挂载节点查询超时
             .on('terminalMountDevTimeOut', async (mac: string, pid: number, timeOut: number) => {
-                this.Event.setClientDtuMountDevOnline(mac, pid, false)
                 const hash = mac + pid
                 const Query = this.cache.get(hash)
                 if (Query) {
@@ -237,6 +236,7 @@ class nodeClient {
                     // if (Query.Interval < 3e5) Query.Interval += 10000
                     // 如果超时次数>10和短信发送状态为false
                     if (timeOut > 10) {
+                        this.Event.setClientDtuMountDevOnline(mac, pid, false)
                         // 把查询超时间隔修改为10分钟
                         Query.Interval = 6e5
                         console.log(`${hash} 查询超时次数:${timeOut},查询间隔：${Query.Interval}`);
@@ -259,7 +259,7 @@ class nodeClient {
             // 接收dtu空闲状态变更,如果busy是true则把mac加入到繁忙设备列表
             .on("busy", (mac: string, busy: boolean, n: number) => {
                 busy ? this.dtuWorkBusy.add(mac) : this.dtuWorkBusy.delete(mac)
-                new LogDtuBusy({ mac, stat: busy, n, timeStamp: Date.now() }).save()
+                LogDtuBusy.updateOne({ mac, timeStamp: Date.now() }, { $set: { stat: busy, n } }, { upsert: true }).exec()
                 // console.log(`### DTU:${mac} stat:${busy ? 'busy' : 'free'}`, this.dtuWorkBusy, n);
             })
             // 节点注册成功,初始化设备列表缓存
@@ -345,7 +345,7 @@ class nodeClient {
                 Interval: Query.Interval,
                 useTime: 0
             }
-            LogInstructQuery.updateOne({ mac: query.mac, pid: query.pid }, query,{upsert:true}).exec()
+            LogInstructQuery.updateOne({ mac: query.mac, pid: query.pid }, query, { upsert: true }).exec()
             this.socket.emit('query', query);
         } /* else {
             console.log({ msg: 'uart发送查询失败', mac, mountDev: Query.mountDev, busy: this.dtuWorkBusy.has(mac), online: this.Event.Cache.CacheTerminal.get(mac)?.online, interval: Query.Interval });

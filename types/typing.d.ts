@@ -532,6 +532,30 @@ declare namespace Uart {
         content: AT | string
         result?: string
     }
+
+    // agg聚合设备布局对象
+    interface AggregationLayoutNode {
+        x: number
+        y: number
+        id: string
+        name: string
+        bind: {
+            mac: string,
+            pid: number,
+            name: string
+        }
+        color: string
+        result?: queryResultArgument
+    }
+
+    // 用户布局设置
+    interface userLayout {
+        user: string,
+        type: string,
+        id: string,
+        bg: string,
+        Layout: AggregationLayoutNode[]
+    }
     //
     namespace WX {
         // wx

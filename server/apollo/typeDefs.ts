@@ -250,6 +250,31 @@ const typeDefs: DocumentNode = gql`
     createdAt:Date
   }
 
+  # 、、
+  type LayoutBind{
+        mac: String
+        pid: Int
+        name: String
+      }
+
+  # 聚合设备布局配置
+  type Layout{
+      x: Float
+      y: Float
+      id: String
+      name: String
+      color: String
+      bind: LayoutBind
+  }
+  # 用户聚合设备
+  type UserLayout{
+    user: String
+    type: String
+    id: String
+    bg: String
+    Layout: [Layout]
+  }
+
   #Query
   type Query {
     #tool
@@ -341,6 +366,8 @@ const typeDefs: DocumentNode = gql`
     checkDevTimeOut(mac:String,pid:String):String
     # 获取设备设备别名
     getAlias(mac:String,pid:String,protocol:String):JSON
+    # 获取用户布局配置
+    getUserLayout(id:String):UserLayout
   }
 
   #mutation
@@ -419,6 +446,8 @@ const typeDefs: DocumentNode = gql`
     setAlias(mac:String,pid:String,protocol:String,name:String,alias:String):result
     #删除用户
     deleteUser(user:String,hash:String):result
+    # 设置用户聚合设备
+    setUserLayout(id:String,type:String,bg:String,Layout:JSON):result
   }
 
   # Subscription

@@ -61,8 +61,32 @@ const SchemaUserAlarmSetup = new Schema({
   ProtocolSetup: [Schema_DevConstant]
 })
 
+// 用户布局设置
+const SchemaUserLayout = new Schema({
+  user: String,
+  type: String,
+  id: String,
+  bg: String,
+  Layout: [
+    new Schema({
+      x: Number,
+      y: Number,
+      id: String,
+      name: String,
+      color: String,
+      bind: {
+        mac: String,
+        pid: Number,
+        name: String
+      }
+
+    }, { _id: false })
+  ]
+})
+
 const Users = mongoose.model("users", Schema_Users);
 const UserBindDevice = mongoose.model("UserBindDevice", SchemaUserBindDevice);
-const UserAlarmSetup = mongoose.model("userAlarmSetup", SchemaUserAlarmSetup)
-const UserAggregation = mongoose.model("useraggregation", SchemaUserAggregation)
-export { Users, UserBindDevice, UserAlarmSetup, UserAggregation };
+const UserAlarmSetup = mongoose.model("user.AlarmSetup", SchemaUserAlarmSetup)
+const UserAggregation = mongoose.model("user.aggregation", SchemaUserAggregation)
+const UserLayout = mongoose.model("user.Layout", SchemaUserLayout)
+export { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout };

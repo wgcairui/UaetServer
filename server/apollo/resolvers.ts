@@ -3,7 +3,7 @@ import { NodeClient, NodeRunInfo, TerminalClientResultSingle, TerminalClientResu
 import { DeviceProtocol, DevsType } from "../mongoose/DeviceAndProtocol";
 import { Terminal, RegisterTerminal } from "../mongoose/Terminal";
 import { EcTerminal } from "../mongoose/EnvironmentalControl";
-import { Users, UserBindDevice, UserAlarmSetup, UserAggregation } from "../mongoose/user";
+import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout } from "../mongoose/user";
 import { BcryptDo } from "../util/bcrypt";
 import { DevArgumentAlias, DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
@@ -322,13 +322,13 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             if (!agg) return agg
             const query = agg.aggregations.map(async el => {
                 const constant = ctx.$Event.Cache.CacheConstant.get(el.protocol)!
-                const constantVals = new Set(Object.values(constant.Constant).map(el=>Array.isArray(el)?el:[el]).flat())
+                const constantVals = new Set(Object.values(constant.Constant).map(el => Array.isArray(el) ? el : [el]).flat())
                 const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid }).lean<Uart.queryResult>()
-                el.result = ter!.result?.filter(el=>constantVals.has(el.name))
+                el.result = ter!.result?.filter(el => constantVals.has(el.name))
                 return el
             })
-             await Promise.all(query)
-             return agg
+            await Promise.all(query)
+            return agg
         },
         // 获取后台运行状态
         async runingState(root, arg, ctx) {
@@ -378,6 +378,10 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         // 获取设备设备别名
         async getAlias(root, { mac, pid, protocol }, ctx) {
             return await DevArgumentAlias.findOne({ mac, pid, protocol })
+        },
+        // 获取用户布局配置
+        async getUserLayout(root, { id }, ctx) {
+            return await UserLayout.findOne({ id, user: ctx.user })
         }
     },
 
@@ -981,6 +985,11 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
             await ctx.$Event.Cache.RefreshCacheAlias({ mac, pid: Number(pid), protocol })
             return result
+        },
+        // 设置用户布局配置
+        async setUserLayout(root, arg: { id: string, type: string, bg: string, Layout: Uart.AggregationLayoutNode[] }, ctx) {
+            const { id, type, bg, Layout } = arg
+            return await UserLayout.updateOne({ id, user: ctx.user }, { $set: { type, bg, Layout } }, { upsert: true }).lean<Uart.userLayout>()
         }
     },
 
