@@ -72,6 +72,6 @@ const SchemaProtocols = new Schema({
   ]
 });
 
-const DevsType = mongoose.model("DevType", SchemaDev);
-const DeviceProtocol = mongoose.model("DeviceProtocol", SchemaProtocols);
+const DevsType = mongoose.model("Device.Type", SchemaDev);
+const DeviceProtocol = mongoose.model("Device.Protocol", SchemaProtocols);
 export { DeviceProtocol, DevsType };

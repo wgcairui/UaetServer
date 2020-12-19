@@ -42,14 +42,14 @@ const Schema_Dev_Table = new Schema({
   websocket_uri: String
 });
 
-const Dev_all = mongoose.model("dev_all", Schema_Dev_all, "Dev_all");
-const Dev_ups = mongoose.model("dev_ups", Schema_Dev_ups, "Dev_ups");
-const Dev_ac = mongoose.model("dev_ac", Schema_Dev_ac, "Dev_ac");
-const Dev_power = mongoose.model("dev_power", Schema_Dev_power, "Dev_power");
-const Dev_io = mongoose.model("dev_io", Schema_Dev_io, "Dev_io");
-const Dev_th = mongoose.model("dev_th", Schema_Dev_th, "Dev_th");
-const Dev_Alarm = mongoose.model("dev_Alarm", Schema_Dev_Alarm, "Dev_Alarm");
-const Dev_Table = mongoose.model("dev_table", Schema_Dev_Table);
+const Dev_all = mongoose.model("EC.all", Schema_Dev_all);
+const Dev_ups = mongoose.model("EC.ups", Schema_Dev_ups);
+const Dev_ac = mongoose.model("EC.ac", Schema_Dev_ac);
+const Dev_power = mongoose.model("EC.power", Schema_Dev_power);
+const Dev_io = mongoose.model("EC.io", Schema_Dev_io);
+const Dev_th = mongoose.model("EC.th", Schema_Dev_th);
+const Dev_Alarm = mongoose.model("EC.Alarm", Schema_Dev_Alarm);
+const Dev_Table = mongoose.model("EC.table", Schema_Dev_Table);
 
 const Dev_list = {
   ups: Dev_ups,

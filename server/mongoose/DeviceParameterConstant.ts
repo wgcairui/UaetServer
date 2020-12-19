@@ -93,10 +93,9 @@ const Schema_DevArgumentAlias = new Schema({
   alias: [alias]
 })
 const DevConstant = mongoose.model(
-  "DevConstant",
-  Schema_DevConstant,
-  "DevConstant"
+  "Device.Constant",
+  Schema_DevConstant
 );
 
-const DevArgumentAlias = mongoose.model('DevArgumentAlia', Schema_DevArgumentAlias)
+const DevArgumentAlias = mongoose.model('Device.ArgumentAlia', Schema_DevArgumentAlias)
 export { DevConstant, DevArgumentAlias }

@@ -45,5 +45,5 @@ const SchemaTerminal = new Schema({
 
 export const Terminal = mongoose.model("Terminal", SchemaTerminal);
 
-export const RegisterTerminal = mongoose.model("RegisterTerminal", SchemaRegisterTerminal)
+export const RegisterTerminal = mongoose.model("Terminal.Register", SchemaRegisterTerminal)
 

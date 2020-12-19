@@ -497,6 +497,17 @@ declare namespace Uart {
         date: string
         useBytes: number
     }
+
+    // 设备流量使用量
+    interface logDtuBusy {
+        "_id": any
+        mac: string
+        date: boolean
+        n: number
+        timeStamp: number
+        "__v": number
+    }
+
     // 聚合设备
     interface AggregationDev extends TerminalMountDevs {
         result: queryResultArgument[] | undefined;

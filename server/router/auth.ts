@@ -8,6 +8,8 @@ import { Uart } from "typing";
 export default async (ctx: ParameterizedContext) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body
   const type = ctx.params.type;
+  console.log({body});
+  
   switch (type) {
     case "login":
       {
@@ -64,6 +66,8 @@ export default async (ctx: ParameterizedContext) => {
         ctx.assert(user, 406, "提交参数无效")
         const isUser = <Uart.UserInfo>await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
         ctx.assert(isUser, 400, "账号不存在");
+        console.log({user,isUser});
+        
         const hash = await JwtSign({ user, timeStamp: Date.now() });
         (ctx as Uart.KoaCtx).$Event.ClientCache.CacheUserLoginHash.set(user, hash)
         ctx.body = { hash }

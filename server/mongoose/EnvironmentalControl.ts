@@ -6,6 +6,6 @@ const SchemaEC = new Schema({
   model: String
 });
 
-const EcTerminal = mongoose.model("EcTerminal", SchemaEC);
+const EcTerminal = mongoose.model("EC.Terminal", SchemaEC);
 
 export { EcTerminal };

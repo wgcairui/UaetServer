@@ -73,7 +73,7 @@ export default async (Ctx: ParameterizedContext) => {
                 mails: user.mail ? [user.mail] : []
               }
               new UserAlarmSetup(setup).save()
-              // 添加日志记录
+              // 添加日志记录 
               new LogUserLogins({ user: user.user, type: '用户注册' } as Uart.logUserLogins).save()
               ctx.$Event.Cache.RefreshCacheUser(user.user)
               return { ok: 1, msg: "账号注册成功" };

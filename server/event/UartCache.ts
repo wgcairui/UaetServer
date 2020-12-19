@@ -37,7 +37,7 @@ export default class Cache {
   CacheUserSetup: Map<string, Uart.userSetup>
   // 每个手机号发送告警的次数tel=>number
   CacheAlarmSendNum: Map<string, number>
-  
+
   // 缓存设备参数别名 mac+pid+protocol => name => alias
   CacheAlias: Map<string, Map<string, string>>
   private Events: event;
@@ -169,9 +169,22 @@ export default class Cache {
   }
   //
   async RefreshCacheUserSetup(user?: string) {
+    /* // 获取所有普通用户
+    const users = await Users.find({userGroup:'user'}).lean<Uart.UserInfo>()
+    users.forEach(user=>{
+      // 生成用户新的自定义配置
+      const setup: Partial<Uart.userSetup> = {
+        user: user.user,
+        tels: user.tel ? [String(user.tel)] : [],
+        mails: user.mail ? [user.mail] : []
+      }
+      new UserAlarmSetup(setup).save()
+    }) */
+    //
     const res = await UserAlarmSetup.find(user ? { user } : {}).lean<Uart.userSetup>()
     console.log(`更新用户个性化配置......`, user);
-    res.forEach(el => {
+    res.forEach(async el => {
+
       // 如果用户没有自定义告警阀值,生成空map   
       el.ProtocolSetupMap = new Map()
       el.ThresholdMap = new Map()

@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
 import Event from "../event/index";
-import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst } from "../mongoose/Log";
+import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst, LogDtuBusy } from "../mongoose/Log";
 import { Types } from "mongoose";
 import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
 import { Uart } from "typing";
@@ -16,6 +16,7 @@ const DataClean = new CronJob('0 0 19 * * *', async () => {
         CleanClientresultsTimeOut: await CleanClientresultsTimeOut(),
         lastDate: DataClean.lastDate()
     }
+    await CleanDtuBusy()
     console.log(`${new Date().toString()} ### end clean Data.....`, count);
     new LogDataClean(count).save()
 
@@ -154,8 +155,25 @@ async function CleanClientresultsTimeOut() {
     const result = await TerminalClientResults.deleteMany({ "__v": 1, timeStamp: { $lte: lastM } })
 
     // 删除告警记录
-    await LogUartTerminalDataTransfinite.deleteMany({timeStamp: { $lte: lastM } })
+    await LogUartTerminalDataTransfinite.deleteMany({ timeStamp: { $lte: lastM } })
     return result.deletedCount + '/' + len
+}
+
+// 清洗dtuBusy
+async function CleanDtuBusy() {
+    const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
+    const cur = LogDtuBusy.find({ "__v": 0 }).cursor()
+    const deleteIds: any[] = []
+    const allIds: any[] = []
+    for (let doc = await cur.next() as Uart.logDtuBusy; doc != null; doc = await cur.next()) {
+        const old = BusyMap.get(doc.mac)
+        if (old && doc.timeStamp === old.timeStamp) {
+            deleteIds.push(old._id)
+            BusyMap.set(doc.mac, doc)
+        } else allIds.push(doc._id)
+    }
+    await LogDtuBusy.remove({ _id: { $in: deleteIds } })
+    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } })
 }
 
 // 清洗设备解析Result

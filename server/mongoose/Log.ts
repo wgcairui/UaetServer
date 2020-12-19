@@ -109,17 +109,17 @@ const SchemaInstructQuery = new Schema({
     content: [String],
     Interval: Number,
 })
-export const LogSmsSend = mongoose.model("LogSmsSend", SchemaSmsSend)
-export const LogMailSend = mongoose.model("LogMailSend", SchemaMailSend)
-export const LogUartTerminalDataTransfinite = mongoose.model("LogUartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
-export const LogUserRequst = mongoose.model("LogUserRequst", SchemaUserRequst)
-export const LogUserLogins = mongoose.model("LogUserLogin", SchemaUserLogins)
-export const LogNodes = mongoose.model("LogNode", SchemaNodes)
-export const LogTerminals = mongoose.model("LogTerminal", SchemaTerminals)
+export const LogSmsSend = mongoose.model("Log.SmsSend", SchemaSmsSend)
+export const LogMailSend = mongoose.model("Log.MailSend", SchemaMailSend)
+export const LogUartTerminalDataTransfinite = mongoose.model("Log.UartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
+export const LogUserRequst = mongoose.model("Log.UserRequst", SchemaUserRequst)
+export const LogUserLogins = mongoose.model("Log.UserLogin", SchemaUserLogins)
+export const LogNodes = mongoose.model("Log.Node", SchemaNodes)
+export const LogTerminals = mongoose.model("Log.Terminal", SchemaTerminals)
 
-export const LogDataClean = mongoose.model("LogDataClean", SchemaDataClean)
+export const LogDataClean = mongoose.model("Log.DataClean", SchemaDataClean)
 
-export const LogUseBytes = mongoose.model("LoguseBytes", SchemaUseBytes)
+export const LogUseBytes = mongoose.model("Log.useBytes", SchemaUseBytes)
 
 export const LogDtuBusy = mongoose.model("Log.DtuBusy", SchemaDtuBusy)
 

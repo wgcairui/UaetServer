@@ -148,8 +148,8 @@ class Check {
   private getProtocolAlias(mac: string, pid: string | number, protocol: string, name: string) {
     const alias = this.Event.Cache.CacheAlias.get(mac + pid + protocol)
     if (alias && alias.has(name)) {
-      return alias.get(name)
-    } else name
+      return alias.get(name)!
+    } else return name
   }
 
   // 判断

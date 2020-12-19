@@ -111,25 +111,25 @@ const SchemaTerminalClientResultSingle = new Schema({
   Interval: Number,
   useTime: Number
 }, { timestamps: true });
-const NodeClient = mongoose.model("NodeClient", SchemaNodeClient)
+const NodeClient = mongoose.model("Node.Client", SchemaNodeClient)
 
 const TerminalClientResults = mongoose.model(
-  "ClientResult",
+  "Client.Result",
   SchemaTerminalClientResults,
 );
 
 const TerminalClientResult = mongoose.model(
-  "ClientResultColltion",
+  "Client.ResultColltion",
   SchemaTerminalClientResult,
 );
 
 const TerminalClientResultSingle = mongoose.model(
-  "ClientResultSingle",
+  "Client.ResultSingle",
   SchemaTerminalClientResultSingle,
 );
 
-const NodeRunInfo = mongoose.model("NodeRunInfo", SchemaNodeRunInfo);
+const NodeRunInfo = mongoose.model("Node.RunInfo", SchemaNodeRunInfo);
 
-const WebSocketTerminal = mongoose.model("WebSocketTerminal", SchemaWebSocketTerminal)
+const WebSocketTerminal = mongoose.model("Terminal.WebSocketinfo", SchemaWebSocketTerminal)
 
 export { WebSocketTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo }

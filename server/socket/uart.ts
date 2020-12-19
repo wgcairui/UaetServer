@@ -259,7 +259,8 @@ class nodeClient {
             // 接收dtu空闲状态变更,如果busy是true则把mac加入到繁忙设备列表
             .on("busy", (mac: string, busy: boolean, n: number) => {
                 busy ? this.dtuWorkBusy.add(mac) : this.dtuWorkBusy.delete(mac)
-                LogDtuBusy.updateOne({ mac, timeStamp: Date.now() }, { $set: { stat: busy, n } }, { upsert: true }).exec()
+                new LogDtuBusy({ mac, stat: busy, n, timeStamp: Date.now() }).save()
+                // LogDtuBusy.updateOne({ mac, timeStamp: Date.now() }, { $set: { stat: busy, n } }, { upsert: true }).exec()
                 // console.log(`### DTU:${mac} stat:${busy ? 'busy' : 'free'}`, this.dtuWorkBusy, n);
             })
             // 节点注册成功,初始化设备列表缓存
