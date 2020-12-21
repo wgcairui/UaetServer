@@ -8,8 +8,8 @@ import { Uart } from "typing";
 export default async (ctx: ParameterizedContext) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body
   const type = ctx.params.type;
-  console.log({body});
-  
+  // console.log({ body });
+
   switch (type) {
     case "login":
       {
@@ -66,11 +66,40 @@ export default async (ctx: ParameterizedContext) => {
         ctx.assert(user, 406, "提交参数无效")
         const isUser = <Uart.UserInfo>await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
         ctx.assert(isUser, 400, "账号不存在");
-        console.log({user,isUser});
-        
+        console.log({ user, isUser });
+
         const hash = await JwtSign({ user, timeStamp: Date.now() });
         (ctx as Uart.KoaCtx).$Event.ClientCache.CacheUserLoginHash.set(user, hash)
         ctx.body = { hash }
+      }
+      break
+    // 二维码登录获取编码内容
+    case "QrText":
+      {
+        const QrText = await JwtSign({ rand: Math.random(), timeStamp: Date.now() });
+        (ctx as Uart.KoaCtx).$Event.ClientCache.CacheQR.set(QrText, '')
+        ctx.body = QrText
+      }
+      break
+    // 循环获取二维码登录状态
+    case "getScanStat":
+      {
+        const QrText = body.QrText as string
+        ctx.assert(QrText, 410, 'QrText must string')
+        const wxToken = (ctx as Uart.KoaCtx).$Event.ClientCache.CacheQR.get(QrText)
+        if (wxToken) {
+          const u: Uart.UserInfo = await JwtVerify(wxToken).catch(err => ctx.throw(400));
+          (ctx as Uart.KoaCtx).$Event.ClientCache.CacheQR.delete(QrText)
+          ctx.body = {
+            ok: 1,
+            token: await JwtSign({ user: u.user, userGroup: u.userGroup })
+          }
+        } else {
+          ctx.body = {
+            ok: 0
+          }
+        }
+
       }
       break
     default:

@@ -49,6 +49,7 @@ type url =
   | "addVm"
   | "modifyDTUName"
   | "updateGps"
+  | 'webLogin'
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
@@ -310,9 +311,9 @@ export default async (Ctx: ParameterizedContext) => {
           // 融合显示常量
           //const ShowTag = new Set([...userShowTag, ...sysShowTag])
           //console.log(ShowTag);
-          
+
           // 刷选
-          if(userShowTag) data.result = data.result.filter(el => userShowTag.has(el.name))
+          if (userShowTag) data.result = data.result.filter(el => userShowTag.has(el.name))
           // 检查设备是否有别名
           const alias = ctx.$Event.Cache.CacheAlias.get(mac + pid + protocol)
           if (alias) {
@@ -720,6 +721,16 @@ export default async (Ctx: ParameterizedContext) => {
         }
         ctx.assert(validationUserPermission(tokenUser.user, dtu), 402, '用户越权操作dtu')
         ctx.body = await Terminal.updateOne({ DevMac: dtu }, { $set: { jw } }).exec()
+      }
+      break
+
+    // 微信登录
+    case "webLogin":
+      {
+        const { code, token } = body
+        ctx.assert(ctx.$Event.ClientCache.CacheQR.has(code), 411, '请刷新网站重试')
+        ctx.$Event.ClientCache.CacheQR.set(code, token)
+        ctx.body = { ok: 1 }
       }
       break
   }

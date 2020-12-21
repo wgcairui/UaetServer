@@ -18,6 +18,7 @@ import { SmsDTU, SmsDTUDevTimeOut } from "../util/SMS";
 import Tool from "../util/tool";
 import { Send } from "../util/Mail";
 import Check from "./bin/CheckUart";
+import { JwtVerify } from "../util/Secret";
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]
@@ -86,7 +87,7 @@ export class Event extends EventEmitter.EventEmitter {
                 terEX.Interval = maxTime < interval ? interval : (maxTime + 1000) - (maxTime % 500)
                 this.Parse.clearQueryuseTime(terEX.TerminalMac, terEX.pid)
               }
-              if(terEX.Interval === 0){
+              if (terEX.Interval === 0) {
                 console.log(terEX);
                 terEX.Interval = 1000
               }
@@ -109,6 +110,28 @@ export class Event extends EventEmitter.EventEmitter {
           if (date - time.getTime() > this.timeOut) {
             this.sendDevTimeOut2On({ mac, event: '恢复上线' })
             DTUOnlineTime.delete(mac)
+          }
+        })
+      }
+
+      // 校正左右设备状态设备
+      {
+        this.Cache.CacheTerminal.forEach(terminal => {
+          if (!terminal.online && terminal.mountDevs) {
+            terminal.mountDevs.forEach(el => {
+              this.setClientDtuMountDevOnline(terminal.DevMac, el.pid, false)
+            })
+          }
+        })
+      }
+      // 清理所有qr缓存
+      {
+        // 迭代每个键，判断键的创建时间，超过规定时间删除键，避免缓存过大
+        const now = Date.now()
+        this.ClientCache.CacheQR.forEach(async (Qr, key) => {
+          const { timeStamp } = await JwtVerify(key).catch(() => false)
+          if (!timeStamp || now - timeStamp > this.timeOut) {
+            this.ClientCache.CacheQR.delete(key)
           }
         })
       }
@@ -198,7 +221,7 @@ export class Event extends EventEmitter.EventEmitter {
     const PidProtocolInstructNum = MountDevLens.get(Pid)!
     // 
     return (PidProtocolInstructNum * baseNum) + ((LensCount * baseNum) * (PidProtocolInstructNum / LensCount)) */
-    return (LensCount) * baseNum
+    return (LensCount || 1) * baseNum
   }
 
   // 更新terminal在线状态
