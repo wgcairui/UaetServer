@@ -27,6 +27,7 @@ declare namespace Uart {
         $token: string
         operationName: string
         req: Request
+        language: string
     }
 
     // page auery
@@ -361,6 +362,7 @@ declare namespace Uart {
     }
     // 协议解析结果集
     interface queryResultSave {
+        [x: string]: any;
         mac: string
         pid: number
         timeStamp: number

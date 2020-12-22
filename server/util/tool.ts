@@ -177,4 +177,5 @@ export default class Tool {
   static RegexMail(mail: string) {
     return /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/.test(mail)
   }
+  //
 }

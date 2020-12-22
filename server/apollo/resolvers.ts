@@ -12,7 +12,7 @@ import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
-import { getUserBindDev, validationUserPermission } from "../util/util";
+import { getUserBindDev, localToUtc, validationUserPermission } from "../util/util";
 import { ParseCoefficient, ParseFunction } from "../util/func";
 import { Uart } from "typing";
 import config from "../config";
@@ -133,24 +133,27 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             valadationMac(ctx, DevMac)
             let result: Uart.queryResultSave[]
             // 如果没有日期参数,默认检索最新的100条数据
-            const Query = TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 }).sort("-timeStamp").lean<Uart.queryResultSave>()
+            const Query = TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })//.sort("-timeStamp").lean<Uart.queryResultSave>()
             if (datatime === "") {
-                result = await Query.limit(100)
+                return await Query.limit(50)
             } else {
-                const [start, end] = [new Date(datatime + " 00:00:00"), new Date(datatime + " 23:59:59")];
-                const resultLen = await TerminalClientResult.find({ mac: DevMac, pid }).where("timeStamp").gte(start.getTime()).lte(end.getTime()).countDocuments();
-                result = resultLen > 100 ? await Query.where("timeStamp").gte(start.getTime()).lte(end.getTime()).exec() : await Query.where("timeStamp").lte(end.getTime()).limit(1000)
-            }
-            if (result.length < 50) return result
-            else {
-                // 把结果拆分为块
-                const len = Number.parseInt((result.length / 10).toFixed(0))
-                //console.log({len,length:result.length});
-                const resultChunk = _.chunk(result, len < 10 ? 10 : len)
+                const [start, end] = [localToUtc(datatime + " 0:0:0", ctx.language), localToUtc(datatime + " 23:59:59", ctx.language)];
+                /* const resultLen = await TerminalClientResult.find({ mac: DevMac, pid }).where("timeStamp").gte(start).lte(end).countDocuments();
+                result = resultLen > 100 ? await Query.where("timeStamp").gte(start).lte(end).exec() : await Query.where("timeStamp").lte(end) */
+                const result = await Query.where("timeStamp").gte(start).lte(end).lean<Uart.queryResultSave>()
+                if (result.length < 50) {
+                    return _.sortBy(result, 'timeStamp')
+                }
+                // 把结果拆分为块,50等分
+                const len = Number.parseInt((result.length / 50).toFixed(0))
+                const resultChunk = _.chunk(result.map(els => {
+                    els.tempValue = els.result[0].value
+                    return els
+                }), len < 10 ? 10 : len)
                 // 遍历切块,刷选出指定字段的结果集,
-                const res = resultChunk.map(el => {
+                /*const res = resultChunk.map(el => {
                     // 刷选切块,如果值相同则抛弃
-                    let def: Uart.queryResultSave = el[0]
+                     let def: Uart.queryResultSave = el[0]
                     //def.result = [def.result.find(el2 => el2.name === name) as queryResultArgument]
                     return el.reduce((pre, cur) => {
                         // 获取最后一个值
@@ -158,10 +161,15 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                         //cur.result = [cur.result.find(el2 => el2.name === name) as queryResultArgument]
                         if (cur.result[0] && last.result[0].value !== cur.result[0].value) pre.push(cur)
                         return pre
-                    }, [def])
-                }).flat()
-                return res
+                    }, [def]) 
+                }).flat()*/
+
+                // console.log({ len, result: result.length, resultChunk: resultChunk.length });
+                // 遍历切块，获取每块中数值最大的记录和数值最小的记录
+                const arrs = resultChunk.map(el => [_.maxBy(el, 'tempValue')!, _.minBy(el, 'tempValue')!]).flat()
+                return _.sortBy(arrs, 'timeStamp')
             }
+
         },
         // 获取设备在线状态
         getDevState(root, { mac, node }, ctx) {

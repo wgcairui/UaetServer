@@ -18,6 +18,7 @@ export default new ApolloServer({
   context: async ({ ctx }: { ctx: Uart.KoaCtx }) => {
     // 获取Token
     const token = ctx.request.header.authorization
+    const language = (<string>ctx.request.header['accept-language']).split(";")[0]
     const apolloRequest = ctx.request.body as GraphQLRequest
     // 没有token则检查body，注册和重置页面的请求则通过
     if (!token || token === "false") {
@@ -45,7 +46,7 @@ export default new ApolloServer({
 
     // 保存所有的操作日志
     ctx.$Event.savelog<Uart.logUserRequst>('request', { user: user.user, userGroup: user.userGroup || 'group', type: apolloRequest.operationName || '', argument: apolloRequest.variables })
-    return { ...user, loggedIn: true, $Event: ctx.$Event, $token: token, operationName: apolloRequest.operationName, req: ctx.request };
+    return { ...user, loggedIn: true, $Event: ctx.$Event, $token: token, operationName: apolloRequest.operationName, req: ctx.request,language };
 
   }
 });

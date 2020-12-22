@@ -588,28 +588,30 @@ export default async (Ctx: ParameterizedContext) => {
           break
         }
         // 获取协议指令
-        const Protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
+        const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol) as Uart.protocol
+        // 携带事件名称，触发指令查询
+        const Query: Uart.instructQuery = {
+          protocol: query.protocol,
+          DevMac: query.DevMac,
+          pid: query.pid,
+          type: protocol.Type,
+          events: 'oprate' + Date.now() + query.DevMac,
+          content: item.value
+        }
         // 检查操作指令是否含有自定义参数
         if (/(%i)/.test(item.value)) {
           // 如果识别字为%i%i,则把值转换为四个字节的hex字符串,否则转换为两个字节
           if (/%i%i/.test(item.value)) {
             const b = Buffer.allocUnsafe(2)
             b.writeIntBE(ParseCoefficient(item.bl, Number(item.val)), 0, 2)
-            item.value = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
+            Query.content = item.value.replace(/(%i%i)/, b.slice(0, 2).toString("hex"))
           } else {
-            item.value = item.value.replace(/(%i)/, ParseCoefficient(item.bl, Number(item.val)).toString(16))
+            const val = ParseCoefficient(item.bl, Number(item.val)).toString(16)
+            Query.content = item.value.replace(/(%i)/, val.length < 2 ? val.padStart(2, '0') : val)
           }
           console.log({ msg: '发送查询指令', item });
         }
-        // 携带事件名称，触发指令查询
-        const Query: Uart.instructQuery = {
-          protocol: query.protocol,
-          DevMac: query.DevMac,
-          pid: query.pid,
-          type: Protocol.Type,
-          events: 'oprate' + Date.now() + query.DevMac,
-          content: item.value
-        }
+
         const result = await ctx.$Event.DTU_OprateInstruct(Query)
         console.log(result);
         ctx.body = result

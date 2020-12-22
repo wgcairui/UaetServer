@@ -5,7 +5,7 @@ import config from "../config";
 export const parseToken = (token: string) => {
   return token.replace(/(bearer)/, "").trim();
 };
-
+// 序列化时间
 export const parseTime = (time?: string | number | Date) => {
   if (time) {
     const date = new Date(time)
@@ -15,6 +15,18 @@ export const parseTime = (time?: string | number | Date) => {
     return `${date.toLocaleDateString()} ${h}:${m}:${s}`
   }
   else return ''
+}
+
+// 把本地时间转换为标准时间
+export const localToUtc = (date: string | Date | number, zone: string = "zh") => {
+  const time = new Date(date)
+  // 获取服务器本地时间与标准时间的分钟差
+  const zoneOffSet = (~time.getTimezoneOffset() + 1) * 6e4
+  const timeStamp = time.getTime()
+  //
+  
+  return /^zh/.test(zone) ? timeStamp - (288e5 - zoneOffSet) : timeStamp
+  //return timeStamp
 }
 
 // 通过DevMac获取设备的信息和绑定用户
