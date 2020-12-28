@@ -28,6 +28,7 @@ const DataClean = new CronJob('0 0 19 * * *', async () => {
 
 // 清洗告警数据
 async function Uartterminaldatatransfinites() {
+    console.log('清洗告警数据');
     console.time('Uartterminaldatatransfinites')
     const MapUartterminaldatatransfinites: Map<string, Uart.uartAlarmObject> = new Map()
     const Query = LogUartTerminalDataTransfinite.find({ "__v": 0 })
@@ -64,6 +65,7 @@ async function Uartterminaldatatransfinites() {
 
 // 清洗请求数据
 async function CleanUserRequst() {
+    console.log('清洗请求数据');
     console.time('CleanUserRequst')
     const MapUserRequst: Map<string, Uart.logUserRequst> = new Map()
     const Query = LogUserRequst.find({ "__v": 0 })
@@ -100,6 +102,7 @@ async function CleanUserRequst() {
 // 清洗设备原始Result
 // 把所有不在现有dtu列表的设备结果集删除
 async function CleanClientresults() {
+    console.log('清洗设备原始Result');
     console.time('CleanClientresults')
     const MapClientresults: Map<string, clientResults> = new Map()
     const Query = TerminalClientResults.find({ "__v": 0 })
@@ -147,12 +150,17 @@ async function CleanClientresults() {
     return deleteids.length + '/' + len
 }
 
-// 清洗设备原始Result
 // 把所有一个月前的设备结果集删除
 async function CleanClientresultsTimeOut() {
+    console.log('把所有一个月前的设备结果集删除');
     const lastM = Date.now() - 2.592e9
     const len = await TerminalClientResults.countDocuments()
-    const result = await TerminalClientResults.deleteMany({ "__v": 1, timeStamp: { $lte: lastM } })
+    const cur = TerminalClientResults.find({ "__v": 1, timeStamp: { $lte: lastM } }, { "_id": 1 }).cursor()
+    const ids = []
+    for (let doc = await cur.next() as any; doc != null; doc = await cur.next()) {
+        ids.push(doc._id)
+    }
+    const result = await TerminalClientResults.deleteMany({ _id: { $in: ids } })
 
     // 删除告警记录
     await LogUartTerminalDataTransfinite.deleteMany({ timeStamp: { $lte: lastM } })
@@ -161,6 +169,7 @@ async function CleanClientresultsTimeOut() {
 
 // 清洗dtuBusy
 async function CleanDtuBusy() {
+    console.log('清洗dtuBusy');
     const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
     const cur = LogDtuBusy.find({ "__v": 0 }).cursor()
     const deleteIds: any[] = []

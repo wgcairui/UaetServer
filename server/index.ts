@@ -34,7 +34,7 @@ Event.attach(app);
 // new apollo
 ApolloServer.applyMiddleware({ app, path: "/graphql" })
 // use
-app.use(koaLogger());
+// app.use(koaLogger());
 app.use(body());
 app.use(cors());
 app.use(router.routes()).use(router.allowedMethods());
@@ -51,3 +51,6 @@ Http.listen(port, host, undefined, () => {
   });
 });
 
+process.on("SIGINT",()=>{
+  Http.close()
+})
