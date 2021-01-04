@@ -16,9 +16,10 @@ const DataClean = new CronJob('0 0 19 * * *', async () => {
         CleanClientresultsTimeOut: await CleanClientresultsTimeOut(),
         lastDate: DataClean.lastDate()
     }
-    await CleanDtuBusy()
     console.log(`${new Date().toString()} ### end clean Data.....`, count);
     new LogDataClean(count).save()
+    await CleanDtuBusy()
+
 
     // 数据缓存重置
 
@@ -170,7 +171,7 @@ async function CleanClientresultsTimeOut() {
 // 清洗dtuBusy
 async function CleanDtuBusy() {
     console.log('清洗dtuBusy');
-    const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
+    /* const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
     const cur = LogDtuBusy.find({ "__v": 0 }).cursor()
     const deleteIds: any[] = []
     const allIds: any[] = []
@@ -178,11 +179,13 @@ async function CleanDtuBusy() {
         const old = BusyMap.get(doc.mac)
         if (old && doc.timeStamp === old.timeStamp) {
             deleteIds.push(old._id)
+            await LogDtuBusy.deleteOne({ _id: old._id })
             BusyMap.set(doc.mac, doc)
         } else allIds.push(doc._id)
     }
-    await LogDtuBusy.remove({ _id: { $in: deleteIds } })
-    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } })
+    // await LogDtuBusy.remove({ _id: { $in: deleteIds } })
+    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } }) */
+    await LogDtuBusy.deleteMany({})
 }
 
 // 清洗设备解析Result
