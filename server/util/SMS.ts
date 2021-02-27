@@ -33,7 +33,11 @@ const client = new core(
 )
 
 
-// 发送校验码
+/**
+ * 短信发送校验码
+ * @param tel 手机号 
+ * @param code 验证码
+ */
 export const SendValidation = (tel: string, code: string) => {
     if (!tel || tel.length !== 11) {
         return { ok: 0, msg: `电话号码错误,${tel}` } as Uart.ApolloMongoResult
@@ -49,7 +53,10 @@ export const SendValidation = (tel: string, code: string) => {
     return SendSms(params)
 }
 
-// 发送短信
+/**
+ * 发送短信
+ * @param params  
+ */
 export const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoResult>> => {
     const CacheAlarmSendNum = Event.Cache.CacheAlarmSendNum
     //const tels = params.PhoneNumbers.split(",")
@@ -85,7 +92,13 @@ export const SendSms = async (params: params): Promise<Partial<Uart.ApolloMongoR
     return result
 }
 
-// 发送设备超时下线
+/**
+ * 发送设备超时下线
+ * @param mac 
+ * @param pid 
+ * @param devName 设备名称
+ * @param event 事件
+ */
 export const SmsDTUDevTimeOut = (mac: string, pid: string | number, devName: string, event: '超时' | '恢复') => {
     const info = getDtuInfo(mac)
     /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
@@ -118,7 +131,11 @@ export const SmsDTUDevTimeOut = (mac: string, pid: string | number, devName: str
 }
 
 
-// 发送设备超时下线
+/**
+ * 发送设备超时下线
+ * @param mac 
+ * @param event 事件
+ */
 export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     const info = getDtuInfo(mac)
     /* const { userId } = Event.Cache.CacheUser.get(info.user.user)!
@@ -153,7 +170,10 @@ export const SmsDTU = (mac: string, event: '恢复上线' | '离线') => {
     } else return false
 }
 
-// 发送告警短信
+/**
+ * 发送告警短信
+ * @param query 
+ */
 export const SendUartAlarm = async (query: Uart.smsUartAlarm) => {
     const smsCode = {
         透传设备下线提醒: "SMS_189710812",

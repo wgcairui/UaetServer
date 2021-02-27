@@ -18,15 +18,28 @@ interface params {
   TemplateCode: string;
   TemplateParam: string;
 }
+/**
+ * 检查解析后的设备数据,对比约束设置,设备是否运行异常
+ */
 class Check {
+  /**
+   * 用于配置
+   */
   private userSetup: Map<string, Map<string, userSetupMap>>
   private hashtable: any
-  // 缓存告警参数次数 tag=>number
+  /**
+   * 缓存告警参数次数 tag=>number
+   */
   private CacheAlarmNum: Map<string, number>
-  // 序列化参数单位解析
+  /**
+   * 序列化参数单位解析
+   */
   private CacheParseUnit: Map<string, { [x in string]: string }>
   Event: Event;
-
+  /**
+   * 
+   * @param Event 事件总线
+   */
   constructor(Event: Event) {
     this.userSetup = new Map()
     this.CacheAlarmNum = new Map()
@@ -88,7 +101,11 @@ class Check {
       })
   }
 
-  // 获取用户告警配置
+  /**
+   * 获取用户告警配置
+   * @param user 用户名称
+   * @param protocol 设备协议名称
+   */
   private getUserSetup(user: string, protocol: string) {
     const setup = this.userSetup.get(user)?.get(protocol)
     if (!setup) {
@@ -98,7 +115,11 @@ class Check {
     }
   }
 
-  // 设置用户的告警配置缓存
+  /**
+   * 设置用户的告警配置缓存
+   * @param user 用户名称
+   * @param protocol 设备协议名称
+   */
   private setUserSetup(user: string, protocol: string) {
     // console.log('更新check缓存', user, protocol);
 
@@ -144,7 +165,13 @@ class Check {
     return setup
   }
 
-  // 获取设备的别名
+  /**
+   *  获取设备的别名
+   * @param mac 设备mac
+   * @param pid 设备pid
+   * @param protocol 设备协议
+   * @param name 设备名称
+   */
   private getProtocolAlias(mac: string, pid: string | number, protocol: string, name: string) {
     const alias = this.Event.Cache.CacheAlias.get(mac + pid + protocol)
     if (alias && alias.has(name)) {
@@ -152,7 +179,10 @@ class Check {
     } else return name
   }
 
-  // 判断
+  /**
+   * 检查参数
+   * @param query 设备参数集
+   */
   public async check(query: Uart.queryResult) {
     const user = this.Event.Cache.CacheBindUart.get(query.mac);
     const result = query.result!;
@@ -185,8 +215,11 @@ class Check {
     } else return query
   }
 
-  // 告警恢复
-  // 检查参数，如果没有带alarm，则去掉告警缓存
+  /**
+   * 告警恢复
+   *  检查参数，如果没有带alarm，则去掉告警缓存
+   * @param query 设备参数集
+   */
   private checkSmsSend(query: Uart.queryResult) {
     query.result!.forEach(el => {
       if (!el.alarm) {
@@ -195,14 +228,18 @@ class Check {
         if (n && n > 10) {
           // console.log('checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
-          const alias = this.getProtocolAlias(query.mac,query.pid,query.protocol,el.name)
+          const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
           this.sendAlarm(query, `${alias}[告警恢复]`, el);
         }
       }
     })
   }
 
-  // 检查参数阈值
+  /**
+   * 检查参数阈值
+   * @param result 设备参数集
+   * @param setup 用户告警设置
+   */
   private checkThreshold(result: Uart.queryResultArgument[], setup: Map<string, Uart.Threshold>) {
     return result.filter(el => {
       const ther = setup.get(el.name)
@@ -213,7 +250,11 @@ class Check {
     })
   }
 
-  // 遍历结果集，比较告警设置是否包含参数值，返回符合条件的参数
+  /**
+   * 遍历结果集，比较告警设置是否包含参数值，返回符合条件的参数
+   * @param result 设备参数集
+   * @param setup 用户告警设置
+   */
   private checkAlarm(result: Uart.queryResultArgument[], setup: Map<string, Uart.ConstantAlarmStat>) {
     return result.filter(el => {
       const alarm = setup.get(el.name)
@@ -221,7 +262,10 @@ class Check {
     })
   }
 
-  // 检查UPS
+  /**
+   * 检查UPS
+   * @param Query 
+   */
   private async checkUPS(Query: Uart.queryResult) {
     // 4、判断UPS是否有故障信息：每1秒钟查询一下指令QGS，检测返回的信息(MMM.M HH.H LLL.L NN.N QQQ.Q DDD KKK.K VVV.V SSS.S XXX.X TTT.T b9b8b7b6b5b4b3b2b1b0<cr>,
     if (Query.type === 232 && Query.content.includes('QGS')) {
@@ -246,9 +290,14 @@ class Check {
     }
   }
 
-  // 发送告警日志
-  // 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日（如您是在发短信通知时提示业务限流，建议根据以上业务调整接口调用时间）
-  // 发送告警推送,短信,邮件
+  /**
+   * 发送告警日志
+   * 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日（如您是在发短信通知时提示业务限流，建议根据以上业务调整接口调用时间）
+   * 发送告警推送,短信,邮件
+   * @param query 设备参数解析对象
+   * @param event 告警事件
+   * @param tag 告警标签
+   */
   private async sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>) {
     // 创建tag
     const tags = query.mac + query.pid + tag.name;
@@ -274,7 +323,14 @@ class Check {
     }
   }
 
-  // 发送告警邮件
+  /**
+   * 发送告警邮件
+   * @param mac 设备mac
+   * @param pid 设备pid
+   * @param event 告警事件
+   * @param tag 标签
+   * @param timeStamp 时间戳 
+   */
   private SendMailAlarm(mac: string, pid: number | string, event: string, tag: Partial<Uart.queryResultArgument>, timeStamp: number) {
     const info = getDtuInfo(mac)
     const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
@@ -305,7 +361,13 @@ class Check {
 
   }
 
-  // 发送设备告警记录
+  /**
+   * 发送设备告警记录
+   * @param mac 
+   * @param pid 
+   * @param devName 设备名称 
+   * @param remind 备注信息
+   */
   private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string) => {
     const info = getDtuInfo(mac)
     const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
@@ -338,7 +400,10 @@ class Check {
     } else return false
   }
 
-  // 单位缓存
+  /**
+   * 获取参数单位缓存
+   * @param unit 单位 
+   */
   private GetUnit(unit: string) {
     const Cache = this.CacheParseUnit
     const unitCache = Cache.get(unit)

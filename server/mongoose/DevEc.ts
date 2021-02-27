@@ -8,6 +8,9 @@ import {
 } from "./DevType";
 import { mongoose, Schema } from "./index";
 
+/**
+ * 
+ */
 const Schema_Dev_all = new Schema({
   devType: String,
   devid: String,

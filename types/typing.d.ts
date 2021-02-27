@@ -3,7 +3,7 @@ import { Event } from "../server/event/index"
 // apollo server result
 
 declare namespace Uart {
-    /* protocol */
+    /** protocol */
     type communicationType = 232 | 485;
     type protocolType = "ups" | "air" | "em" | "th";
     type characterType = "utf8" | "hex" | "float" | "short" | "int" | "HX" | 'bit2'
@@ -15,12 +15,12 @@ declare namespace Uart {
         upserted: any,
         arg?: any
     }
-    // koa ctx
+    /**  koa ctx */
     interface KoaCtx extends ParameterizedContext {
         $Event: Event
     }
 
-    // apollo ctx
+    /** apollo ctx */
     interface ApolloCtx extends UserInfo {
         loggedIn: boolean
         $Event: Event
@@ -30,7 +30,7 @@ declare namespace Uart {
         language: string
     }
 
-    // page auery
+    /** page auery */
     interface PageQuery {
         DevMac: String,
         pid: String,
@@ -38,7 +38,7 @@ declare namespace Uart {
         protocol: String
     }
 
-    // 协议指令解析格式化
+    /**  协议指令解析格式化 */
     interface protocolInstructFormrize {
         name: string;
         enName?: string;
@@ -47,7 +47,7 @@ declare namespace Uart {
         unit: string | null;
         isState: boolean;
     }
-    // 协议指令
+    /** 协议指令 */
     interface protocolInstruct {
         name: string; // 指令名称--GQS
         resultType: characterType;
@@ -67,14 +67,14 @@ declare namespace Uart {
         // 后处理脚本
         scriptEnd: string
     }
-    // 协议
+    /** 协议 */
     interface protocol {
         Type: communicationType;
         Protocol: string;
         ProtocolType: protocolType;
         instruct: protocolInstruct[];
     }
-    // 设备类型
+    /** 设备类型 */
     interface DevsType {
         Type: string;
         DevModel: string;
@@ -83,12 +83,12 @@ declare namespace Uart {
             Protocol: string;
         }[];
     }
-    // 登记注册终端
+    /** 登记注册终端 */
     interface RegisterTerminal {
         DevMac: string;
         mountNode: string;
     }
-    // 终端挂载设备
+    /** 终端挂载设备 */
     interface TerminalMountDevs {
         Type: string
         online?: boolean
@@ -96,7 +96,7 @@ declare namespace Uart {
         protocol: string;
         pid: number;
     }
-    // 终端
+    /** 终端 */
     interface Terminal extends RegisterTerminal {
         tag?: string[];
         DevMac: string
@@ -121,7 +121,7 @@ declare namespace Uart {
         TerminalMac: string
         Interval: number
     }
-    // Node节点
+    /** Node节点 */
     interface NodeClient {
         Name: string;
         IP: string;
@@ -129,14 +129,14 @@ declare namespace Uart {
         MaxConnections: number;
         count?: number
     }
-    // 用户绑定设备
+    /** 用户绑定设备 */
     interface BindDevice {
         user: string
         ECs: string[]
         UTs: (string | Terminal)[]
     }
 
-    // Node节点硬件top
+    /** Node节点硬件top */
     interface SocketRegisterInfo {
         hostname: string;
         totalmem: string;
@@ -152,7 +152,7 @@ declare namespace Uart {
             shell: string
         }
     }
-    // 对节点发出的协议查询指令
+    /** 对节点发出的协议查询指令 */
     interface queryObject {
         mac: string;
         type: number;
@@ -164,7 +164,7 @@ declare namespace Uart {
         Interval: number
         useTime: number
     }
-    // 协议查询结果解析存储结构
+    /** 协议查询结果解析存储结构 */
     interface queryResultArgument {
         name: string;
         value: any;
@@ -177,7 +177,7 @@ declare namespace Uart {
     interface queryResultParse {
         [x: string]: queryResultArgument
     }
-    //协议查询结果
+    /** 协议查询结果 */
     interface queryResult extends queryObject {
         contents: IntructQueryResult[]
         result?: queryResultArgument[];
@@ -197,12 +197,12 @@ declare namespace Uart {
         num: number
     }
 
-    // UartData数据
+    /** UartData数据 */
     interface uartData extends NodeClient {
         data: queryResult[]
     }
 
-    // 透传 api 数据 
+    /** 透传 api 数据   */
     interface socketNetInfo {
         ip: string;
         port: number;
@@ -219,13 +219,13 @@ declare namespace Uart {
         iotStat: string
 
     }
-    // 节点websocket透传信息
+    /** 节点websocket透传信息 */
     interface WebSocketInfo {
         NodeName: string;
         Connections: number | Error;
         SocketMaps: socketNetInfo[];
     }
-    // 节点上传信息
+    /** 节点上传信息 */
     interface nodeInfo {
         hostname: string;
         totalmem: string;
@@ -240,7 +240,7 @@ declare namespace Uart {
 
     type registerType = "wx" | "web" | "app"
 
-    /* 用户信息 */
+    /** 用户信息 */
     interface UserInfo {
         avanter?: string
         userId: string

@@ -4,15 +4,41 @@ import { Uart } from "typing";
 import { Token, Tokens } from "../mongoose";
 const wxSecret = require("../key/wxSecret.json");
 
-// 微信解密数据
+/**
+ * 微信小程序服务端api
+ */
 class WX {
+  /**
+   * 小程序id
+   */
   appid: string;
+  /**
+   * 小程序密匙
+   */
   secret: string;
+  /**
+   * 小程序access
+   */
   AccessToken: string;
+  /**
+   * 服务号id
+   */
   appidPublic: any;
+  /**
+   * 服务号密匙
+   */
   secretPublic: any;
+  /**
+   * 服务号access
+   */
   AccessTokenPublic: string;
+  /**
+   * 行业分类-大类
+   */
   primary_industry_first: string;
+  /**
+   * 行业分类-二类
+   */
   primary_industry_second: string;
   constructor() {
     this.appid = wxSecret.appid;
@@ -25,7 +51,9 @@ class WX {
     this.primary_industry_first = '3' //{ first_class: 'IT科技', second_class: 'IT硬件与设备' }
     this.primary_industry_second = '4' //{ first_class: 'IT科技', second_class: '电子技术' }
   }
-  // 获取AccessToken
+  /**
+   * 获取AccessToken
+   */
   async get_AccessToken() {
     // 雷迪司透传平台accessToken
     const token = await Tokens.findOne({ type: 'wxapp' }).lean<Token>();
@@ -66,14 +94,25 @@ class WX {
   }
 
 
-  // 获取用户openid
+  /**
+   * 获取用户openid
+   * @param code 
+   */
   async UserOpenID(code: string) {
     const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${this.appid}&secret=${this.secret}&js_code=${code}&grant_type=authorization_code`;
     await this.get_AccessToken()
     return await this.fecth<Uart.WX.wxRequestCode2Session>({ url, method: 'GET' })
   }
 
-  // 发送订阅消息-设备告警-雷迪司公众号-智能设备报警提醒
+  /**
+   * 发送订阅消息-设备告警-雷迪司公众号-智能设备报警提醒
+   * @param UserOpenID appid
+   * @param time 时间
+   * @param content 事件
+   * @param Devname 设备名称
+   * @param DTUname dtu名称
+   * @param Alarmtype 告警类型
+   */
   async SendsubscribeMessageDevAlarmPublic(UserOpenID: string, time: string | number, content: string, Devname: string, DTUname: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${this.AccessTokenPublic}`
     const postData: Uart.WX.wxsubscribeMessage = {
@@ -116,7 +155,15 @@ class WX {
     return await this.fecth({ url, method: 'POST', data: postData })
   }
 
-  // 发送订阅消息-设备告警
+  /**
+   * 发送订阅消息-设备告警
+   * @param UserOpenID 
+   * @param time 
+   * @param content 
+   * @param Devname 
+   * @param DevId 
+   * @param Alarmtype 
+   */
   async SendsubscribeMessageDevAlarm(UserOpenID: string, time: string | number, content: string, Devname: string, DevId: string, Alarmtype: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
     const postData: Uart.WX.wxsubscribeMessage = {
@@ -145,7 +192,14 @@ class WX {
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
-  // 发送订阅消息-用户注册
+  /**
+   * 发送订阅消息-用户注册
+   * @param UserOpenID 
+   * @param user 
+   * @param name 
+   * @param time 
+   * @param tip 
+   */
   async SendsubscribeMessageRegister(UserOpenID: string, user: string, name: string, time: string, tip: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
     const postData: Uart.WX.wxsubscribeMessage = {
@@ -171,7 +225,12 @@ class WX {
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
-  // 解密微信加密数据
+  /**
+   * 解密微信加密数据
+   * @param SessionKey seccess 
+   * @param encryptedData 加密数据
+   * @param iv 
+   */
   BizDataCryptdecryptData(SessionKey: string, encryptedData: string, iv: string) {
     const sessionKey = Buffer.from(SessionKey, "base64");
     const BufferEncryptedData = Buffer.from(encryptedData, "base64");
@@ -199,7 +258,10 @@ class WX {
     }
     return decodeParse;
   }
-  // 把时间转换为标准格式
+  /**
+   * 把时间转换为标准格式
+   * @param time 
+   */
   private _formatTime(time: string | number | undefined) {
     const times = time ? new Date(time) : new Date()
     const year = times.getFullYear()

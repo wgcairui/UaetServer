@@ -2,15 +2,25 @@ import { Event } from "../index";
 import Tool from "../../util/tool";
 import { ParseFunctionEnd, ParseCoefficient } from "../../util/func";
 import { Uart } from "typing";
-
+/**
+ * 解析设备查询数据
+ */
 class ProtocolParse {
-  // 缓存协议方法
+  /**
+   *  缓存协议方法
+   */
   private protocolInstructMap: Map<string, Map<string, Uart.protocolInstruct>>
-  // 缓存每个设备查询消耗的时间
+  /**
+   * 缓存每个设备查询消耗的时间
+   */
   private QueryTerminaluseTime: Map<string, number[]>
-  // 序列化参数regx解析
+  /**
+   * 序列化参数regx解析
+   */
   private CacheParseRegx: Map<string, [number, number]>
-  // 缓存协议指令转换关系 010300010009abcd => 0300010009
+  /**
+   * 缓存协议指令转换关系 010300010009abcd => 0300010009
+   */
   private InstructContents: Map<string, string>
   Event: Event;
   constructor(Event:Event) {
@@ -23,7 +33,10 @@ class ProtocolParse {
     this.Event.on("updateProtocol",(protocol:string)=>this.setProtocolInstruct(protocol))
   }
 
-  // 获取协议解析结果
+  /**
+   * 获取协议解析结果
+   * @param protocol 设备协议
+   */
   private getProtocolInstruct(protocol: string) {
     const instructMap = this.protocolInstructMap.get(protocol)
     if (!instructMap) {
@@ -31,7 +44,10 @@ class ProtocolParse {
     }
     return this.protocolInstructMap.get(protocol)!
   }
-  // 设置协议解析
+  /**
+   * 设置协议解析
+   * @param protocol 设备协议 
+   */
   private setProtocolInstruct(protocol: string) {
     const Protocol = this.Event.Cache.CacheProtocol.get(protocol)!
     //console.log({protocol,Protocol});
@@ -40,7 +56,10 @@ class ProtocolParse {
     this.protocolInstructMap.set(protocol, new Map(Protocol.instruct.map(el => [el.name, el])))
   }
 
-  // 添加设备查询时间使用数组
+  /**
+   * 添加设备查询时间使用数组
+   * @param R 设备查询结果
+   */
   private addQueryTerminaluseTime(R: Pick<Uart.queryResult, "mac" | "pid" | "useTime">) {
     const hash = R.mac + R.pid
     const useTimes = this.QueryTerminaluseTime.get(hash)
@@ -48,7 +67,11 @@ class ProtocolParse {
     else this.QueryTerminaluseTime.set(hash, [R.useTime])
   }
 
-  // 获取查询使用时间使用时间
+  /**
+   * 获取查询使用时间使用时间
+   * @param mac 
+   * @param pid 
+   */
   public getQueryuseTime(mac:string,pid:string|number){
     const hash = mac + pid
     const useTimeArray = this.QueryTerminaluseTime.get(hash)! || []
@@ -57,17 +80,28 @@ class ProtocolParse {
     return Math.max(...yxuseTimeArray) || 4000
   }
 
-  // 重置查询计时
+  /**
+   * 重置查询计时
+   * @param mac 
+   * @param pid 
+   */
   public clearQueryuseTime(mac:string,pid:string|number){
     this.QueryTerminaluseTime.set(mac+pid,[])
   }
 
-  // 设置指令字符串对应指令
+  /**
+   * 设置指令字符串对应指令
+   * @param content 
+   * @param instruct 
+   */
   public setContentToInstructName(content:string,instruct:string){
     this.InstructContents.set(content,instruct)
   }
 
-  // 协议解析，数据存取数量尺寸缓存
+  /**
+   * 协议解析，数据存取数量尺寸缓存
+   * @param regx 尺寸:2-2
+   */
   private getProtocolRegx(regx: string){
     const Regx = this.CacheParseRegx.get(regx)
     if (!Regx) {
@@ -77,7 +111,11 @@ class ProtocolParse {
     return this.CacheParseRegx.get(regx)!
   }
 
-  // 处理232协议
+  /**
+   * 处理232协议
+   * @param IntructResult 设备结果集
+   * @param protocol 协议
+   */
   private parse232(IntructResult: Uart.IntructQueryResult[],protocol:string){
     const InstructMap = this.getProtocolInstruct(protocol)
     return IntructResult.filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
@@ -99,7 +137,11 @@ class ProtocolParse {
     .flat()
   }
 
-  // 处理485协议
+  /**
+   * 处理485协议
+   * @param IntructResult 设备结果集
+   * @param R 设备结果对象
+   */
   private parse485(IntructResult: Uart.IntructQueryResult[],R:Uart.queryResult){
     const InstructMap = this.getProtocolInstruct(R.protocol);
     // 刷选阶段,协议指令查询返回的结果不一定是正确的,可能存在返回报警数据,其他设备返回的数据
@@ -188,7 +230,10 @@ class ProtocolParse {
           }).flat()
   }
 
-  // 解析查询结果
+  /**
+   * 解析查询结果
+   * @param R 设备查询结果
+   */
   public async parse(R: Uart.queryResult) {
     this.addQueryTerminaluseTime(R)
     // 结果集数组

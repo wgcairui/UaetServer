@@ -6,17 +6,33 @@ import { ParseFunction } from "../util/func";
 import { Uart } from "typing";
 import { LogDtuBusy, LogInstructQuery } from "../mongoose";
 
+/**
+ * 管理node节点socket连接
+ */
 export default class NodeSocketIO {
     private io: IO.Server;
     private Event: event;
-    // 缓存查询指令 0300000001=>010300000001ba4c
+    /**
+     * 缓存查询指令 0300000001=>010300000001ba4c
+     */
     CacheQueryIntruct: Map<string, string>
-    // 缓存所有Socket连接,name=>socket
+    /**
+     * 缓存所有Socket连接,name=>socket
+     */
     CacheSocket: Map<string, nodeClient>
-    // DTU设备下线时间
+    /**
+     * DTU设备下线时间
+     */
     DTUOfflineTime: Map<string, Date>
-    // DTU设备上线时间
+    /**
+     *  DTU设备上线时间
+     */
     DTUOnlineTime: Map<string, Date>
+    /**
+     * 
+     * @param server http
+     * @param opt socket option
+     */
     constructor(server: Server, opt: ServerOptions) {
         this.io = IO(server, opt)
         this.Event = Event
@@ -73,7 +89,10 @@ export default class NodeSocketIO {
 
         })
     }
-    // 发送程序变更指令，公开
+    /**
+     * 发送程序变更指令
+     * @param Query 指令对象
+     */
     public InstructQuery(Query: Uart.instructQuery) {
         return new Promise<Partial<Uart.ApolloMongoResult>>((resolve) => {
             // 在在线设备中查找
@@ -112,7 +131,10 @@ export default class NodeSocketIO {
         })
     }
 
-    // 下发操作指令到DTU
+    /**
+     * 下发操作指令到DTU
+     * @param Query 指令对象
+     */
     public async OprateDTU(Query: Uart.DTUoprate) {
         return new Promise<Partial<Uart.ApolloMongoResult>>((resolve) => {
             // 在在线设备中查找
@@ -139,6 +161,9 @@ export default class NodeSocketIO {
     }
 }
 
+/**
+ * node节点对象
+ */
 class nodeClient {
     socket: Socket;
     cache: Map<string, Uart.TerminalMountDevsEX>;
@@ -146,12 +171,23 @@ class nodeClient {
     private CacheQueryIntruct: Map<string, string>;
     private ID: string;
     private interVal?: NodeJS.Timeout;
-    // 查询超时告警发送模式 hash state
+    /**
+     * 查询超时告警发送模式 hash state
+     */
     TimeOutMonutDevSmsSend: Set<string>
     private count: number;
-    // 标识每个dtu的工作是否繁忙
+    /**
+     * 标识每个dtu的工作是否繁忙
+     */
     private dtuWorkBusy: Set<string>
     property: Uart.NodeClient;
+    /**
+     * 
+     * @param socket node socket对象
+     * @param event 事件总线
+     * @param CacheQueryIntruct 指令组装缓存 
+     * @param node node节点信息
+     */
     constructor(socket: Socket, event: event, CacheQueryIntruct: Map<string, string>, node: Uart.NodeClient) {
         // console.log(socket);
         this.socket = socket
@@ -167,7 +203,9 @@ class nodeClient {
         // 注册socket事件
         this.startlisten()
     }
-    // 
+    /**
+     * 绑定socket事件
+     */ 
     startlisten() {
         this.socket
             // 发送节点注册信息
@@ -295,7 +333,10 @@ class nodeClient {
 
     // 删除超时
 
-    // 发送查询指令
+    /**
+     * 发送查询指令
+     * @param Query 
+     */
     private _SendQueryIntruct(Query: Uart.TerminalMountDevsEX) {
         const mac = Query.TerminalMac
         // 判断挂载设备是否空闲和是否在线

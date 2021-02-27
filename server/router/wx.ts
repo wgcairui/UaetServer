@@ -72,7 +72,7 @@ export default async (Ctx: ParameterizedContext) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
-        // console.log(wxGetseesion);
+        console.log({wxGetseesion});
 
         // 包含错误
         ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);

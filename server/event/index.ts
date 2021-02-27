@@ -39,13 +39,34 @@ interface On2Off {
   event: '恢复上线' | '离线'
 }
 
+/**
+ * 事件总线
+ */
 export class Event extends EventEmitter.EventEmitter {
+  /**
+   * 基础数据缓存
+   */
   Cache: Cache;
+  /**
+   * 用户数据缓存
+   */
   ClientCache: ClientCache
+  /**
+   * 节点socket
+   */
   uartSocket!: NodeSocketIO
+  /**
+   * 用户socket
+   */
   clientSocket!: webClientSocketIO
+  /**
+   * 微信端socket
+   */
   wxSocket!: Wxws
   private timeOut: number;
+  /**
+   * 
+   */
   Parse: ProtocolPares;
   Check: Check;
   constructor() {
@@ -67,7 +88,10 @@ export class Event extends EventEmitter.EventEmitter {
     wxUtil.get_AccessToken()
     Cron.start()
   }
-  // 挂载监听到koa ctx
+  /**
+   * 挂载监听到koa ctx
+   * @param app koa实例
+   */
   attach(app: DefaultContext) {
     app.context.$Event = this;
     setInterval(() => {
@@ -138,7 +162,10 @@ export class Event extends EventEmitter.EventEmitter {
     }, this.timeOut)
   }
 
-  // 初始化socket监听
+  /**
+   * 初始化socket监听
+   * @param Http http监听对象
+   */
   CreateSocketServer(Http: Server) {
     // Node_Socket节点挂载
     this.uartSocket = new NodeSocketIO(Http, { path: "/Node" })
@@ -173,14 +200,20 @@ export class Event extends EventEmitter.EventEmitter {
     console.log(`GetCacheFun ;; tag:${tag}`);
     return this.Cache[fun](c) as any
   } */
-  // 获取用户绑定设备
+  /**
+   *  获取用户绑定设备
+   * @param user 用户名称
+   */
   public getUserBindDev(user: string) {
     //this.GetCacheFun('ss', 'RefreshCacheProtocol')
     return getUserBindDev(user)
   }
 
 
-  // 发送设备操作指令查询
+  /**
+   * 发送设备操作指令查询
+   * @param Query 指令对象
+   */
   DTU_OprateInstruct(Query: Uart.instructQuery) {
     if (this.uartSocket) {
       return this.uartSocket.InstructQuery(Query)
@@ -191,7 +224,10 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 发送设备DTU AT查询指令
+  /**
+   * 发送设备DTU AT查询指令
+   * @param Query 指令对象
+   */
   DTU_ATInstruct(Query: Uart.DTUoprate) {
     if (this.uartSocket) {
       return this.uartSocket.OprateDTU(Query)
@@ -202,9 +238,12 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 获取每个dtu下的设备预估耗时（查询间隔）时间
-  // 计算方式为4G模块时间为设备指令条数*1000,其它为*500
-  // 结果为基数x合计指令数量
+  /**
+   * 获取每个dtu下的设备预估耗时（查询间隔）时间
+  * 计算方式为4G模块时间为设备指令条数*1000,其它为*500
+  * 结果为基数x合计指令数量
+   * @param mac dtu设备mac
+   */
   getMountDevInterval(mac: string) {
     const terminal = this.Cache.CacheTerminal.get(mac)!
     // 统计挂载的设备协议指令数量
@@ -224,7 +263,11 @@ export class Event extends EventEmitter.EventEmitter {
     return (LensCount || 1) * baseNum
   }
 
-  // 更新terminal在线状态
+  /**
+   * 更新terminal在线状态
+   * @param macs dtumac
+   * @param online 在线状态
+   */
   ChangeTerminalStat(macs: string | string[], online: boolean = true) {
     const { DTUOfflineTime, DTUOnlineTime } = this.uartSocket
     if (Array.isArray(macs)) {
@@ -254,7 +297,10 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 更新设备查询日志
+  /**
+   * 更新设备查询日志
+   * @param mac 
+   */
   UpdateTerminal(mac: string) {
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal) {
@@ -286,7 +332,11 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 重置设备超时查询
+  /**
+   * 重置设备超时查询
+   * @param mac 
+   * @param pid 
+   */
   ResetTimeOutMonutDev(mac: string, pid: number) {
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal && this.uartSocket) {
@@ -297,14 +347,21 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 重置协议指令处理缓存
+  /**
+   * 重置协议指令处理缓存
+   */
   ResetUartSocketQueryIntruct() {
     if (this.uartSocket) {
       this.uartSocket.CacheQueryIntruct.clear()
     }
   }
 
-  // 设置透传节点下dtu对象下挂载节点上线
+  /**
+   * 设置透传节点下dtu对象下挂载节点上线
+   * @param mac 
+   * @param pid 
+   * @param online 
+   */
   setClientDtuMountDevOnline(mac: string, pid: string | number, online: boolean) {
     const terminal = this.Cache.CacheTerminal.get(mac)
     if (terminal) {
@@ -322,7 +379,10 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 发送设备超时，恢复，上线，下线信息
+  /**
+   * 发送设备超时，恢复，上线，下线信息
+   * @param arg 
+   */
   sendDevTimeOut2On(arg: timeOut | On2Off) {
     switch (arg.event) {
       case "恢复":
@@ -339,19 +399,29 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 获取透传节点下client对象
+  /**
+   * 获取透传节点下client对象
+   * @param mac 
+   * @param pid 
+   */
   getClientDtuMountDev(mac: string, pid: string | number) {
     const terminal = this.Cache.CacheTerminal.get(mac)!
     return terminal.mountDevs.find(el => el.pid == pid)!
   }
 
-  // 获取uart实例下client对象
+  /**
+   * 获取uart实例下client对象
+   * @param mac 
+   */
   getUartClient(mac: string) {
     const terminal = this.Cache.CacheTerminal.get(mac)!
     return this.uartSocket.CacheSocket.get(terminal.mountNode)!
   }
 
-  // 触发客户端告警提醒事件
+  /**
+   * 触发客户端告警提醒事件
+   * @param alarm 
+   */
   SendUserAlarm(alarm: { mac: string, msg: string }) {
     if (this.clientSocket) {
       this.clientSocket.SendUserAlarm(alarm)
@@ -361,7 +431,11 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 触发客户端告警提醒事件
+  /**
+   * 触发客户端告警提醒事件
+   * @param user 
+   * @param msg 
+   */
   SendUserSocketInfo(user: string, msg: string) {
     if (this.clientSocket) {
       this.clientSocket.SendUserInfo(user, msg)
@@ -371,7 +445,12 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 发送邮件
+  /**
+   * 发送邮件
+   * @param mac 
+   * @param pid 
+   * @param event 
+   */
   private sendMailAlarm(mac: string, pid: number | string | null, event: string) {
     const info = getDtuInfo(mac)
     const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
@@ -393,7 +472,11 @@ export class Event extends EventEmitter.EventEmitter {
     }
   }
 
-  // 保存日志
+  /**
+   * 保存日志
+   * @param event 
+   * @param body 
+   */
   savelog<T extends Uart.uartAlarmObject | Uart.logLogins | Uart.logNodes | Uart.logTerminals | Uart.logUserRequst>(event: eventsName, body: T) {
     switch (event) {
       case 'DataTransfinite':

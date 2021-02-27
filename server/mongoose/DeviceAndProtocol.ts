@@ -7,7 +7,9 @@
   }
 */
 import { mongoose, Schema } from "./index";
-
+/**
+ * 设备信息
+ */
 const SchemaDev = new Schema({
   Type: String,
   DevModel: String,
@@ -22,6 +24,9 @@ const SchemaDev = new Schema({
   ]
 });
 
+/**
+ * 协议信息
+ */
 const SchemaProtocols = new Schema({
   Type: { type: Number, enum: [485, 232] },
   Protocol: String, // 协议名称

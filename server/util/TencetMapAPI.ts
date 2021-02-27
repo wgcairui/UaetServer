@@ -14,27 +14,43 @@ interface result {
 import axios from "axios";
 import { MD5 } from "crypto-js";
 
+/**
+ * 腾讯地图api
+ */
 export default class TencetMap {
     static key = '7LGBZ-JLHWW-UCHRM-OIJG6-PNBLV-6ZBCN'
     static apiUrl = 'https://apis.map.qq.com'
     static SK = 'VNXI1sCXNvFIAZFeRT7ghlnLeOuiZWt'
 
-    // 由坐标到坐标所在位置的文字描述的转换  location= 39.984154,116.307490
+    /**
+     * 由坐标到坐标所在位置的文字描述的转换  location= 39.984154,116.307490
+     * @param location 
+     */
     static geocoder(location: string) {
         return this.fecth('geocoder/v1', { location })
     }
 
-    //通过终端设备IP地址获取其当前所在地理位置
+    /**
+     * 通过终端设备IP地址获取其当前所在地理位置
+     * @param ip 
+     */
     static ip(ip: string) {
         return this.fecth('location/v1/ip', { ip })
     }
 
-    //实现从其它地图供应商坐标系或标准GPS坐标系，批量转换到腾讯地图坐标系
+    /**
+     * 实现从其它地图供应商坐标系或标准GPS坐标系，批量转换到腾讯地图坐标系
+     * @param locations 
+     * @param type 
+     */
     static translate(locations: string | string[], type: string = '1') {
         return this.fecth('coord/v1/translate', { lacations: Array.isArray(locations) ? locations.join(";") : locations, type })
     }
 
-    //本接口提供由地址描述到所述位置坐标的转换，与逆地址解析的过程正好相反
+    /**
+     * /本接口提供由地址描述到所述位置坐标的转换，与逆地址解析的过程正好相反
+     * @param address 
+     */
     static addressTolacatin(address: string) {
         return this.fecth("geocoder/v1", { address })
     }

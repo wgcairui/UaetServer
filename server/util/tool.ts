@@ -1,7 +1,13 @@
 import { crc16modbus } from "crc";
 import os from "os";
 import { Uart } from "typing";
+/**
+ * tool
+ */
 export default class Tool {
+  /**
+   * 获取服务器运行状态
+   */
   static NodeInfo(): Uart.nodeInfo {
     const hostname: string = os.hostname();
     const totalmem: number = os.totalmem() / 1024 / 1024 / 1024;
@@ -22,7 +28,11 @@ export default class Tool {
       usemen: 100 - parseFloat(freemem.toFixed(2))
     };
   }
-  // 生成modbus16校验码
+  /**
+   * 生成modbus16校验码
+   * @param address pid
+   * @param instruct 指令
+   */
   static Crc16modbus(address: number, instruct: string): string {
     const body = address.toString(16).padStart(2, "0") + instruct;
     const crc = crc16modbus(Buffer.from(body, "hex"))
@@ -32,6 +42,11 @@ export default class Tool {
     return body + c + d + a + b;
   }
 
+  /**
+   * 海信空调协议专用
+   * @param address 
+   * @param instruct 
+   */
   static HX(address: number = 0, instruct: string) {
     const content = ("AA" + address.toString(16).padStart(2, "0") + instruct).replace(/\s*/g, "");
     const num = 255 - (Buffer.from(content, 'hex').toJSON().data.reduce((pre, cur) => pre + cur))
@@ -40,7 +55,13 @@ export default class Tool {
     return content + crc.slice(1, 2).toString("hex").padStart(2, '0')
   }
 
-  // 填充字符串数据
+  /**
+   * 
+   * @param t 
+   * @param c 
+   * @param n 
+   * @param b 
+   */
   static FillString(
     t: string | Buffer,
     c: string,
@@ -54,7 +75,10 @@ export default class Tool {
     }
     return t;
   }
-  // 16进制转单精度浮点数
+  /**
+   * 16进制转单精度浮点数
+   * @param t 
+   */
   static HexToSingle(t = Buffer.from([0, 0, 0, 0])): number {
     if (t.byteLength !== 4) return 0;
     let t1: string = parseInt(t.toString("hex"), 16).toString(2);
@@ -82,7 +106,10 @@ export default class Tool {
 
     return Number.parseFloat(m1.toFixed(2));
   }
-  // 单精度浮点数转Hex
+  /**
+   * 单精度浮点数转Hex
+   * @param t 
+   */
   static SingleToHex(t: number = 0) {
     if (t === 0) return "00000000";
     let s: number, e: number, m: string;
@@ -110,7 +137,10 @@ export default class Tool {
     let r1 = <string>Tool.FillString(r, "0", 8, true);
     return Buffer.from(r1, "hex");
   }
-  // 整数转高低字节
+  /**
+   * 整数转高低字节
+   * @param str 
+   */
   static Value2BytesInt16(str: number = 0) {
     const arr: number[] = [];
     // 创建一个空buffer，
@@ -121,7 +151,11 @@ export default class Tool {
     buffer.forEach((el) => arr.push(el));
     return arr;
   }
-  // Buffer转单精度浮点数
+  /**
+   * Buffer转单精度浮点数
+   * @param buffer 
+   * @param start 
+   */
   static BufferToFlot(buffer: Buffer, start: number) {
     // buffer转换为字符串,截取4位值
     const buf = buffer.toString('hex', start, 4)
@@ -150,30 +184,49 @@ export default class Tool {
     }).join("") : ''
   }
 
-  // 正则匹配经纬度
+  /**
+   * 正则匹配经纬度
+   * @param location 经纬度
+   * @param reserver 是否反转经纬
+   */
   static RegexLocation(location: string, reserver: boolean = false) {
     const str = reserver ? location.split(',').reverse().join(',') : location
     return /^-?1[0-8][0-9]\.[0-9]{6,7}\,-?[0-9]{2}\.[0-9]{6,7}$/.test(str)
   }
-  // 正则匹配ip
+  /**
+   * 正则匹配ip
+   * @param ip 
+   */
   static RegexIP(ip: string) {
     return /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/.test(ip)
   }
-  // 正则匹配dtu通讯参数
+  /**
+   * 正则匹配dtu通讯参数
+   * @param uart 
+   */
   static RegexUart(uart: string) {
     return /^([0-9]{4}|[0-9]{5})\,[0-9]\,[0-9]\,.*/.test(uart)
   }
-  // 正则匹配ICCID
+  /**
+   * 正则匹配ICCID
+   * @param ICCID 
+   */
   static RegexICCID(ICCID: string) {
     return /[0-9]{18,22}/.test(ICCID)
   }
 
-  // 正则匹配手机号码
+  /**
+   * 正则匹配手机号码
+   * @param tel 
+   */
   static RegexTel(tel: string) {
     return /^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/.test(tel)
   }
 
-  // 正则匹配邮箱账号
+  /**
+   * 正则匹配邮箱账号
+   * @param mail 
+   */
   static RegexMail(mail: string) {
     return /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/.test(mail)
   }

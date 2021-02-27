@@ -5,7 +5,9 @@ import { Types } from "mongoose";
 import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
 import { Uart } from "typing";
 
-// 数据清洗,清除告警数据中连续的重复的
+/**
+ * 数据清洗,清除告警数据中连续的重复的
+ */
 const DataClean = new CronJob('0 0 19 * * *', async () => {
     console.log(`${new Date().toString()} ### start clean Data.....`);
     const count = {
@@ -27,7 +29,9 @@ const DataClean = new CronJob('0 0 19 * * *', async () => {
     Event.Cache.CacheAlarmSendNum = new Map()
 })
 
-// 清洗告警数据
+/**
+ * 清洗告警数据
+ */
 async function Uartterminaldatatransfinites() {
     console.log('清洗告警数据');
     console.time('Uartterminaldatatransfinites')
@@ -64,7 +68,9 @@ async function Uartterminaldatatransfinites() {
     return deleteids.length + '/' + len
 }
 
-// 清洗请求数据
+/**
+ * 清洗请求数据
+ */
 async function CleanUserRequst() {
     console.log('清洗请求数据');
     console.time('CleanUserRequst')
@@ -100,8 +106,10 @@ async function CleanUserRequst() {
     return deleteids.length + '/' + len
 }
 
-// 清洗设备原始Result
-// 把所有不在现有dtu列表的设备结果集删除
+/**
+ * 清洗设备原始Result
+ * 把所有不在现有dtu列表的设备结果集删除
+ */
 async function CleanClientresults() {
     console.log('清洗设备原始Result');
     console.time('CleanClientresults')
@@ -151,7 +159,9 @@ async function CleanClientresults() {
     return deleteids.length + '/' + len
 }
 
-// 把所有一个月前的设备结果集删除
+/**
+ * 把所有一个月前的设备结果集删除
+ */
 async function CleanClientresultsTimeOut() {
     console.log('把所有一个月前的设备结果集删除');
     const lastM = Date.now() - 2.592e9
@@ -168,7 +178,9 @@ async function CleanClientresultsTimeOut() {
     return result.deletedCount + '/' + len
 }
 
-// 清洗dtuBusy
+/**
+ * 清洗dtuBusy
+ */
 async function CleanDtuBusy() {
     console.log('清洗dtuBusy');
     /* const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
@@ -189,7 +201,7 @@ async function CleanDtuBusy() {
 }
 
 // 清洗设备解析Result
-/* 思路，比较相同mac,pid的数据，已前者为基准，
+/** 思路，比较相同mac,pid的数据，已前者为基准，
     和后者的result中相同的参数值做比较，
     如果值相同，删除后者reult数组中参数，
     不相同的话后者参数值替换掉前者的基准参数值作为比较 
@@ -235,16 +247,22 @@ export const start = () => {
 export { Uartterminaldatatransfinites, CleanUserRequst }
 
 
-// 用于临时保存clientresults缓存对象
+/** 用于临时保存clientresults缓存对象 */
 interface clientResults extends Pick<Uart.queryResult, "pid" | "mac" | "contents" | "timeStamp"> {
     maps: Map<string, number[]>
 }
+/**
+ * 
+ * @param clientResults 
+ */
 function clientResultsToMap(clientResults: Uart.queryResult): clientResults {
     const maps = new Map(clientResults.contents.map(el => [el.content, el.buffer.data]))
     return { maps, ...clientResults }
 }
 
-// 用于临时保存clientresultcolltion缓存对象
+/**
+ * 用于临时保存clientresultcolltion缓存对象
+ */
 interface clientresultcolltions extends Pick<Uart.queryResult, "pid" | "mac" | "contents" | "timeStamp"> {
     maps: Map<string, Uart.queryResultArgument>
 }
@@ -253,7 +271,9 @@ function clientresultcolltionsToMap(clientResults: Uart.queryResult): clientresu
     return { maps, ...clientResults }
 }
 
-// 统计所有dtu挂载设备，
+/**
+ * 统计所有dtu挂载设备，
+ */
 function allDtus() {
     const terminals = Event.Cache.CacheTerminal
     const hashs = [...terminals.values()].map(el => el.mountDevs ? el.mountDevs.map(el2 => el.DevMac + el2.pid + el2.protocol) : []).flat()

@@ -12,33 +12,61 @@ export interface sendQuery {
   socket: SocketIO.Socket;
 }
 
+/**
+ * 基础数据缓存
+ */
 export default class Cache {
-  // 协议缓存protocol=>
+  /**
+   * 协议缓存protocol=>
+   */
   CacheProtocol: Map<string, Uart.protocol>;
-  // 设备类型缓存devmodal=>
+  /**
+   * 设备类型缓存devmodal=>
+   */
   CacheDevsType: Map<string, Uart.DevsType>;
-  // 透传终端缓存mac=>terminal
+  /**
+   * 透传终端缓存mac=>terminal
+   */
   CacheTerminal: Map<string, Uart.Terminal>;
-  // Node节点缓存ip=>nodeclient
+  /**
+   * Node节点缓存ip=>nodeclient
+   */
   CacheNode: Map<string, Uart.NodeClient>;
-  // Node节点缓存name=>nodeclient
+  /**
+   * Node节点缓存name=>nodeclient
+   */
   CacheNodeName: Map<string, Uart.NodeClient>;
-  // 缓存协议的常量设置,protocol=>Constant
+  /**
+   * 缓存协议的常量设置,protocol=>Constant
+   */
   CacheConstant: Map<string, Uart.ProtocolConstantThreshold>
-  // 缓存用户绑定
+  /**
+   * 缓存用户绑定
+   */
   CacheBind: Map<string, Uart.BindDevice>
-  // 缓存绑定透传设备mac=>user
+  /**
+   * 缓存绑定透传设备mac=>user
+   */
   CacheBindUart: Map<string, string>
-  // 缓存绑定透传设备mac=>user
+  /**
+   * 缓存绑定透传设备mac=>user
+   */
   CacheBindEt: Map<string, string>
-  // 缓存用户 user=》user
+  /**
+   * 缓存用户 user=》user
+   */
   CacheUser: Map<string, Uart.UserInfo>
-  // 缓存用户配置 user=>setup
+  /**
+   * 缓存用户配置 user=>setup
+   */
   CacheUserSetup: Map<string, Uart.userSetup>
-  // 每个手机号发送告警的次数tel=>number
+  /**
+   * 每个手机号发送告警的次数tel=>number
+   */
   CacheAlarmSendNum: Map<string, number>
-
-  // 缓存设备参数别名 mac+pid+protocol => name => alias
+  /**
+   *  缓存设备参数别名 mac+pid+protocol => name => alias
+   */
   CacheAlias: Map<string, Map<string, string>>
   private Events: event;
   // CacheSocket: any;
@@ -73,7 +101,9 @@ export default class Cache {
     await this.RefreshCacheAlias()
   }
 
-  // 重置terminal终端设备在线状态
+  /**
+   * 重置terminal终端设备在线状态
+   */
   private async resetTerminalStat() {
     await Terminal.updateMany({}, { $set: { onlien: false } })
     return this

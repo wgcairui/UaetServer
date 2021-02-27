@@ -13,6 +13,9 @@ interface socketArgument {
 
 }
 
+/**
+ * web网站使用socket服务器
+ */
 export default class webClientSocketIO {
     io: IO.Server;
     Event: event;
@@ -46,18 +49,28 @@ export default class webClientSocketIO {
             socket.on("disconnect", () => this._disconnect(Node))
         })
     }
-    // 发送用户告警信息
+    /**
+     * 发送用户告警信息
+     * @param alarm 
+     */
     SendUserAlarm(alarm: { mac: string, msg: string }) {
         const { user } = getDtuInfo(alarm.mac)
         if (user && user.user) {
             this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
         }
     }
-    // 发送用户提醒
+    /**
+     * 发送用户提醒
+     * @param user 
+     * @param msg 
+     */
     SendUserInfo(user: string, msg: string) {
         this.io.to(user).emit("UartTerminalDataTransfinite", msg)
     }
-    // 缓存socket
+    /**
+     * 缓存socket
+     * @param Node 
+     */
     private _connect(Node: socketArgument) {
         // 缓存id
         this.CacheSocketidUser.set(Node.ID, Node.User)
@@ -78,7 +91,10 @@ export default class webClientSocketIO {
         // 发送效验成功事件        
         Node.socket.to(Node.User).emit("valdationSuccess", { user: Node.User })
     }
-    // 断开socket，清除缓存
+    /**
+     * 断开socket，清除缓存
+     * @param Node 
+     */
     private _disconnect(Node: socketArgument) {
         // 离开房间user
         Node.socket.leave(Node.User)

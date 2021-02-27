@@ -4,6 +4,9 @@ import { JwtVerify } from "../util/Secret";
 import { getDtuInfo } from "../util/util";
 import { Uart } from "typing";
 
+/**
+ * 微信小程序使用wss服务端
+ */
 class WXws {
     private ws: ws.Server;
     clients: Map<string, client>
@@ -31,12 +34,18 @@ class WXws {
         })
     }
 
-    // 清除缓存
+    /**
+     * 清除缓存
+     * @param user 
+     */
     clean(user: string) {
         this.clients.delete(user)
     }
 
-    // 发送告警信息
+    /**
+     * 发送告警信息
+     * @param alarm 
+     */
     SendAlarm(alarm: { mac: string, msg: string }) {
         const { user } = getDtuInfo(alarm.mac)
         if (user && user.user && this.clients.has(user.user)) {
@@ -44,7 +53,11 @@ class WXws {
             // this.io.to(user.user).emit("UartTerminalDataTransfinite", alarm.msg)
         }
     }
-    // 发送提醒信息
+    /**
+     *  发送提醒信息
+     * @param user 
+     * @param msg 
+     */
     SendInfo(user: string, msg: string) {
         if (this.clients.has(user)) {
             this.clients.get(user)?.ws.send(msg)

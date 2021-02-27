@@ -64,6 +64,11 @@ export const Send = async (mail: string, title: string, subject: string, body: s
 
 };
 
+/**
+ * 发送邮箱验证码
+ * @param mail 邮箱
+ * @param code 验证码
+ */
 export const SendValidation = async (mail: string, code: string) => {
     const title = "Ladis"
     return await Send(mail, title, "验证码", code)
