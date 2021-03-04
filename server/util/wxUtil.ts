@@ -52,7 +52,8 @@ class WX {
     this.primary_industry_second = '4' //{ first_class: 'IT科技', second_class: '电子技术' }
   }
   /**
-   * 获取AccessToken
+  * @method 获取AccessToken
+  * @returns viod
    */
   async get_AccessToken() {
     // 雷迪司透传平台accessToken
@@ -95,7 +96,7 @@ class WX {
 
 
   /**
-   * 获取用户openid
+   * @method 获取用户openid
    * @param code 
    */
   async UserOpenID(code: string) {
@@ -105,7 +106,7 @@ class WX {
   }
 
   /**
-   * 发送订阅消息-设备告警-雷迪司公众号-智能设备报警提醒
+   * @method 发送订阅消息-设备告警-雷迪司公众号-智能设备报警提醒
    * @param UserOpenID appid
    * @param time 时间
    * @param content 事件
@@ -156,7 +157,7 @@ class WX {
   }
 
   /**
-   * 发送订阅消息-设备告警
+   * @method 发送订阅消息-设备告警
    * @param UserOpenID 
    * @param time 
    * @param content 
@@ -193,12 +194,13 @@ class WX {
     return await this.fecth({ url, method: 'POST', data: postData })
   }
   /**
-   * 发送订阅消息-用户注册
+   * @method 发送订阅消息-用户注册
    * @param UserOpenID 
    * @param user 
    * @param name 
    * @param time 
    * @param tip 
+   * @callback 返回发送订阅之后的状态
    */
   async SendsubscribeMessageRegister(UserOpenID: string, user: string, name: string, time: string, tip: string) {
     const url = `https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=${this.AccessToken}`
@@ -226,10 +228,11 @@ class WX {
     return await this.fecth({ url, method: 'POST', data: postData })
   }
   /**
-   * 解密微信加密数据
+   * @method 解密微信加密数据
    * @param SessionKey seccess 
    * @param encryptedData 加密数据
    * @param iv 
+   * @returns 返回解密之后的对象
    */
   BizDataCryptdecryptData(SessionKey: string, encryptedData: string, iv: string) {
     const sessionKey = Buffer.from(SessionKey, "base64");
@@ -258,6 +261,26 @@ class WX {
     }
     return decodeParse;
   }
+
+
+  /**
+   * 
+   * @method 请求小程序url Scheme码
+   * @param query {path:小程序路径,query:请求参数}
+   * @host https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-scheme/urlscheme.generate.html
+   */
+
+  public urlScheme(query:Pick<Uart.WX.urlScheme, "jump_wxa">){
+    const url = `https://api.weixin.qq.com/wxa/generatescheme`
+    const data:Uart.WX.urlScheme = {
+      access_token:this.AccessToken,
+      is_expire:true,
+      expire_time:1606737600,
+      jump_wxa:query.jump_wxa
+    }
+    return this.fecth<Uart.WX.urlSchemeRequest>({url,method:"POST",data})
+  }
+
   /**
    * 把时间转换为标准格式
    * @param time 

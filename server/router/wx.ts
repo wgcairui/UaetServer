@@ -12,6 +12,7 @@ import Tool from "../util/tool";
 import { SendValidation } from "../util/SMS";
 import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
 import config from "../config";
+import HF from "../util/HF";
 
 type url =
   | 'getuserMountDev'
@@ -50,6 +51,7 @@ type url =
   | "modifyDTUName"
   | "updateGps"
   | 'webLogin'
+  | 'iotRemoteUrl'
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
@@ -58,7 +60,7 @@ export default async (Ctx: ParameterizedContext) => {
   console.log({ type, body: _.pickBy(body, (_val, key) => key !== 'token') });
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
-  const token = body.token
+  const token = ctx.header.token//body.token
   const tokenUser: Uart.UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
   ctx.$Event.savelog<Uart.logUserRequst>('request', { user: tokenUser.user, userGroup: tokenUser.userGroup || 'group', type, argument: body })
@@ -72,7 +74,7 @@ export default async (Ctx: ParameterizedContext) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
-        console.log({wxGetseesion});
+        console.log({ wxGetseesion });
 
         // 包含错误
         ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
@@ -237,9 +239,11 @@ export default async (Ctx: ParameterizedContext) => {
     case "getAlarmunconfirmed":
       {
         const BindDevs: string[] = getUserBindDev(tokenUser.user)
-        const logCur = await LogUartTerminalDataTransfinite.countDocuments({ mac: { $in: BindDevs }, isOk: false })
+        const logCur = await LogUartTerminalDataTransfinite.find({ mac: { $in: BindDevs }, isOk: false }).lean()
+        const len = logCur.length
+        const alarm = logCur.slice(0, len > 5 ? 5 : len)
         // const logCurCount = await logCur.countDocuments()
-        ctx.body = { ok: 1, arg: logCur } as Uart.ApolloMongoResult
+        ctx.body = { ok: 1, arg: { len, alarm } } as Uart.ApolloMongoResult
       }
       break
     // 获取用户告警信息
@@ -735,5 +739,12 @@ export default async (Ctx: ParameterizedContext) => {
         ctx.body = { ok: 1 }
       }
       break
+
+    // 获取iot设备远程配置地址
+    case 'iotRemoteUrl':
+      {
+        const { mac } = body
+        ctx.body = await HF.macRemote(mac)
+      }
   }
 };

@@ -52,5 +52,7 @@ Http.listen(port, host, undefined, () => {
 });
 
 process.on("SIGINT",()=>{
+  console.log(`监听到关闭指令`);
   Http.close()
+  process.exit()
 })

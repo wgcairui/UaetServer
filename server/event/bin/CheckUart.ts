@@ -324,7 +324,7 @@ class Check {
   }
 
   /**
-   * 发送告警邮件
+   * @method 发送告警邮件
    * @param mac 设备mac
    * @param pid 设备pid
    * @param event 告警事件
@@ -339,6 +339,7 @@ class Check {
       const setup = this.userSetup.get(info.user.user)!.get(Dev.protocol)!
       const ck = setup.Threshold.get(tag.name!)
       const str = ck ? `min=${ck.min} max=${ck.max}` : ''
+      // 获取小程序
 
       /* const body = `尊敬的${info.user.name},您的DTU [${info.terminalInfo.name}] 挂载的 [${Dev.mountDev}]于${new Date().toLocaleString()}告警,事件: ${event},${str}
                     您可登录透传服务平台查看处理https://uart.ladishb.com,或使用微信小程序查看`
@@ -352,8 +353,8 @@ class Check {
       <p>您可登录 <a title="透传服务平台" href="https://uart.ladishb.com" target="_blank" rel="noopener">LADS透传服务平台</a> 查看处理(右键选择在新标签页中打开)</p>
       <hr />
       <p>&nbsp;</p>
-      <p>扫码使用微信小程序查看</p>
-      <p><img src="https://uart.ladishb.com/_nuxt/img/LADS_Uart.0851912.png" alt="weapp" width="430" height="430" /></p>
+      <p>扫码或点击程序码使用微信小程序查看</p>
+      <a href="weixin://dl/business/?t=203U27hghyu" target="_blank"><img src="https://uart.ladishb.com/_nuxt/img/LADS_Uart.0851912.png" alt="weapp" width="430" height="430" /></a>
       <p>&nbsp;</p>`
       return Send(mails.join(","), "Ladis透传平台", "设备告警", body)
     }

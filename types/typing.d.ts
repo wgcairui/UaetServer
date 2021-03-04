@@ -569,25 +569,41 @@ declare namespace Uart {
         bg: string,
         Layout: AggregationLayoutNode[]
     }
-    //
+    /**
+     * 微信服务端类型
+     */
     namespace WX {
-        // wx
+        /**
+         * wx返回结果报错信息
+         */
         interface wxRequest {
             errcode?: number
             errmsg?: string
         }
-        // https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+        /**
+         * 微信服务端返回的appid 
+         * https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+         */
+
         interface wxRequestCode2Session extends wxRequest {
             openid: string
             session_key: string
             unionid: string
         }
-        // https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html
+        /**
+         * 微信服务端返回的session
+         *  https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/access-token/auth.getAccessToken.html 
+         */
+
         interface wxRequestAccess_token extends wxRequest {
             access_token: string
             expires_in: number
         }
-        // https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+        /**
+         * 微信小程序订阅消息
+         * https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/subscribe-message/subscribeMessage.send.html
+         */
+
         interface wxsubscribeMessage {
             touser: string
             template_id: string
@@ -604,7 +620,9 @@ declare namespace Uart {
                 }
             }
         }
-        // 公众号行业
+        /**
+         * 公众号行业
+         */
         interface wxRequest_industry extends wxRequest {
             primary_industry: {
                 "first_class": string,
@@ -614,6 +632,27 @@ declare namespace Uart {
                 "first_class": string,
                 "second_class": string
             }
+        }
+
+        /** 
+         * 微信url码请求格式
+         * https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-scheme/urlscheme.generate.html
+         */
+        interface urlScheme {
+            access_token:string,
+            "jump_wxa": {
+                "path"?: string
+                "query"?: string
+            }
+            "is_expire"?: boolean
+            "expire_time"?: number
+        }
+
+        /**
+         * 微信url码结果
+         */
+        interface urlSchemeRequest extends wxRequest{
+            openlink:string
         }
     }
 
