@@ -52,6 +52,9 @@ type url =
   | "updateGps"
   | 'webLogin'
   | 'iotRemoteUrl'
+  | 'updateAvanter'
+
+
 export default async (Ctx: ParameterizedContext) => {
   const ctx: Uart.KoaCtx = Ctx as any;
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
@@ -126,8 +129,9 @@ export default async (Ctx: ParameterizedContext) => {
     // 获取用户信息
     case "getUserInfo":
       {
+        const user = ctx.$Event.Cache.CacheUser.get(tokenUser.user)
         ctx.body = {
-          ok: 1, arg: _.pickBy(tokenUser, (_val, key) => {
+          ok: 1, arg: _.pickBy(user, (_val, key) => {
             return key !== 'passwd'
           })
         } as Uart.ApolloMongoResult
@@ -735,7 +739,8 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const { code, token } = body
         ctx.assert(ctx.$Event.ClientCache.CacheQR.has(code), 411, '请刷新网站重试')
-        ctx.$Event.ClientCache.CacheQR.set(code, token)
+        ctx.$Event.clientSocket.io.to(code).emit('login', { token })
+        // ctx.$Event.ClientCache.CacheQR.set(code, token)
         ctx.body = { ok: 1 }
       }
       break
@@ -746,5 +751,16 @@ export default async (Ctx: ParameterizedContext) => {
         const { mac } = body
         ctx.body = await HF.macRemote(mac)
       }
+      break
+
+    // 更新用户头像和昵称
+    case 'updateAvanter':
+      {
+        const { nickName, avanter } = body
+        const res = await Users.updateOne({ user: tokenUser.user }, { $set: { name: nickName, avanter } })
+        ctx.$Event.Cache.RefreshCacheUser(tokenUser.user)
+        ctx.body = res
+      }
+      break
   }
 };

@@ -59,7 +59,7 @@ class WX {
     // 雷迪司透传平台accessToken
     const token = await Tokens.findOne({ type: 'wxapp' }).lean<Token>();
     // 如果有token和token未失效
-    if (token && (token.expires * 1000) > (Date.now() - token.creatTime)+5000) {
+    if (token && (token.expires * 1000) > (Date.now() - token.creatTime) + 5000) {
       this.AccessToken = token.token
     } else {
       const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${this.appid}&secret=${this.secret}`
@@ -115,7 +115,7 @@ class WX {
    * @param Alarmtype 告警类型
    */
   async SendsubscribeMessageDevAlarmPublic(UserOpenID: string, time: string | number, content: string, Devname: string, DTUname: string, Alarmtype: string) {
-    const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${this.AccessTokenPublic}`
+    const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${this.AccessToken}`
     const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: 'rIFS7MnXotNoNifuTfFpfh4vFGzCGlhh-DmWZDcXpWg',
@@ -152,7 +152,9 @@ class WX {
         } */
       }
     }
-    //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    console.log(postData);
+    
+    await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
 
@@ -170,7 +172,7 @@ class WX {
     const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: '8NX6ji8ABlNAOEMcU7v2jtD4sgCB7NMHguWzxZn3HO4',
-      page: "/pages/index/index",
+      page: "/pages/index/alarm/alarm",
       data: {
         date1: {
           value: this._formatTime(time)
@@ -190,6 +192,8 @@ class WX {
       }
     }
     //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
+    console.log(postData);
+    
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
@@ -213,7 +217,7 @@ class WX {
           value: user
         },
         name2: {
-          value: name
+          value: name.replace(/[0-9]/g, '*')
         },
         date3: {
           value: this._formatTime(time)
@@ -223,6 +227,8 @@ class WX {
         }
       }
     }
+    // console.log(postData);
+
     //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
@@ -270,15 +276,15 @@ class WX {
    * @host https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-scheme/urlscheme.generate.html
    */
 
-  public urlScheme(query:Pick<Uart.WX.urlScheme, "jump_wxa">){
+  public urlScheme(query: Pick<Uart.WX.urlScheme, "jump_wxa">) {
     const url = `https://api.weixin.qq.com/wxa/generatescheme`
-    const data:Uart.WX.urlScheme = {
-      access_token:this.AccessToken,
-      is_expire:true,
-      expire_time:1606737600,
-      jump_wxa:query.jump_wxa
+    const data: Uart.WX.urlScheme = {
+      access_token: this.AccessToken,
+      is_expire: true,
+      expire_time: 1606737600,
+      jump_wxa: query.jump_wxa
     }
-    return this.fecth<Uart.WX.urlSchemeRequest>({url,method:"POST",data})
+    return this.fecth<Uart.WX.urlSchemeRequest>({ url, method: "POST", data })
   }
 
   /**

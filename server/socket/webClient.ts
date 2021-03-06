@@ -29,24 +29,41 @@ export default class webClientSocketIO {
         // middleware
         // 每个socket连接会有query.token,检查token是否合法
         this.io.use((socket, next) => {
-            const token = parseToken(socket.handshake.query.token)
-            JwtVerify(token)
-                .then(() => next())
-                .catch((err) => {
-                    socket.disconnect()
-                    next(new Error('socket no find token'))
-                })
+            const { qr, token } = socket.handshake.query
+            // 查看参数是否带qr,是的话注册socket
+            if (qr && this.Event.ClientCache.CacheQR.has(qr)) {
+                next()
+            } else {
+                JwtVerify(parseToken(token))
+                    .then(() => next())
+                    .catch((err) => {
+                        socket.disconnect()
+                        next(new Error('socket no find token'))
+                    })
+            }
+
         });
         // 监听所有连接事件
         this.io.on("connect", async socket => {
-            const token = parseToken(socket.handshake.query.token)
-            const { user }: Uart.UserInfo = await JwtVerify(token)
-            const id = socket.id
-            const ip = socket.conn.remoteAddress
-            const Node: socketArgument = { User: user as string, ID: id, socket, IP: ip }
-            this._connect(Node)
-            //为每个socket注册事件
-            socket.on("disconnect", () => this._disconnect(Node))
+            const { qr, token } = socket.handshake.query
+            // 如果是带二维码连接的就把二维码加入到房间
+            if (qr) {
+                socket
+                    .join(qr)
+                    .on("disconnect", () => {
+                        socket
+                            .disconnect()
+                            .leaveAll()
+                    })
+            } else {
+                const { user }: Uart.UserInfo = await JwtVerify(parseToken(token))
+                const id = socket.id
+                const ip = socket.conn.remoteAddress
+                const Node: socketArgument = { User: user as string, ID: id, socket, IP: ip }
+                this._connect(Node)
+                //为每个socket注册事件
+                socket.on("disconnect", () => this._disconnect(Node))
+            }
         })
     }
     /**

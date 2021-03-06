@@ -372,16 +372,17 @@ class Check {
   private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string) => {
     const info = getDtuInfo(mac)
     const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
-    /* if (userId) {
-        const content = `您的DTU:${info.terminalInfo.name} 挂载的设备${Query.mountDev}/${Query.pid} 运行故障，故障信息:${remind}`
-        const DevType = info.terminalInfo.mountDevs.find(el => el.pid == Query.pid)
-        wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Query.timeStamp, content, info.terminalInfo.name, Query.mac, DevType?.Type + '运行异常')
-    } */
+    // 时间参数,长度限制20字节
+    const time = new Date()
+    const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+    if (userId) {
+      const Dev = info.terminalInfo.mountDevs.find(el => el.pid == pid)!
+      const content = `${info.terminalInfo.name}/${pid}/${Dev.mountDev} 运行故障，故障信息:${remind}`.slice(-20)
+      wxUtil.SendsubscribeMessageDevAlarm(userId, d, content, (info.terminalInfo.name + '/' + Dev.mountDev).slice(0, 20), info.terminalInfo.DevMac + '-' + Dev.pid, Dev.Type + '运行异常')
+    }
     const tels = (info.userInfo?.tels || []).filter(tel => Tool.RegexTel(tel))
     if (tels.length > 0) {
-      // 时间参数,长度限制20字节
-      const time = new Date()
-      const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+
       const TemplateParam = JSON.stringify({
         name: info.user.name,
         DTU: info.terminalInfo.name,
