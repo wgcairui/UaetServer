@@ -153,7 +153,7 @@ class WX {
       }
     }
     console.log(postData);
-    
+
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
@@ -193,7 +193,7 @@ class WX {
     }
     //const res = await axios.post<any, AxiosResponse<wxRequest>>(url, postData)
     console.log(postData);
-    
+
     await this.get_AccessToken()
     return await this.fecth({ url, method: 'POST', data: postData })
   }
@@ -293,6 +293,10 @@ class WX {
    */
   private _formatTime(time: string | number | undefined) {
     const times = time ? new Date(time) : new Date()
+    // 生产环境在docker,时间是漂亮国时间,换算成中国+8小时
+    if (process.env.NODE_ENV === 'production') {
+      times.setHours(times.getHours() + 8)
+    }
     const year = times.getFullYear()
     const month = times.getMonth() + 1
     const day = times.getDate()

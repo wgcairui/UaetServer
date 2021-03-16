@@ -11,6 +11,9 @@ interface userSetupMap {
   AlarmStat: Map<string, Uart.ConstantAlarmStat>,
 }
 
+/**
+ * 短信id
+ */
 interface params {
   RegionId: string;
   PhoneNumbers: string;
@@ -35,7 +38,7 @@ class Check {
    * 序列化参数单位解析
    */
   private CacheParseUnit: Map<string, { [x in string]: string }>
-  Event: Event;
+  private Event: Event;
   /**
    * 
    * @param Event 事件总线
@@ -89,7 +92,7 @@ class Check {
       0x48: '控制板韧体版本不兼容'
     }
 
-    Event
+    this.Event
       // 监听用户和系统的协议配置变动，有则更新缓存
       .on("updateUserSetup", (user: string, protocol: string) => this.setUserSetup(user, protocol))
       .on("updateSysSetup", (protocol: string) => {
@@ -171,12 +174,11 @@ class Check {
    * @param pid 设备pid
    * @param protocol 设备协议
    * @param name 设备名称
+   * @returns 别名
    */
   private getProtocolAlias(mac: string, pid: string | number, protocol: string, name: string) {
     const alias = this.Event.Cache.CacheAlias.get(mac + pid + protocol)
-    if (alias && alias.has(name)) {
-      return alias.get(name)!
-    } else return name
+    return alias?.get(name) || name
   }
 
   /**
@@ -186,12 +188,12 @@ class Check {
   public async check(query: Uart.queryResult) {
     const user = this.Event.Cache.CacheBindUart.get(query.mac);
     const result = query.result!;
-    if (result && result.length > 0 && user) {
+    if (user && result && result.length > 0) {
       // const dataMap = new Map(result.map(el=>[el.name,el]))
       const setup = this.getUserSetup(user, query.protocol)
       // console.log('check',result,setup);
       if (setup.Threshold.size > 0) {
-        this.checkThreshold(result, setup.Threshold).forEach(el => {
+      const alarms =  this.checkThreshold(result, setup.Threshold).forEach(el => {
           el.alarm = true
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
           this.sendAlarm(query, `${alias}超限[${el.value}]`, el,)
@@ -211,8 +213,8 @@ class Check {
       // console.log(result);
       this.checkUPS(query)
       this.checkSmsSend(query)
-      return query
-    } else return query
+    } 
+    return query
   }
 
   /**
@@ -239,6 +241,7 @@ class Check {
    * 检查参数阈值
    * @param result 设备参数集
    * @param setup 用户告警设置
+   * @returns 超出阈值的参数结果数组
    */
   private checkThreshold(result: Uart.queryResultArgument[], setup: Map<string, Uart.Threshold>) {
     return result.filter(el => {
@@ -254,6 +257,7 @@ class Check {
    * 遍历结果集，比较告警设置是否包含参数值，返回符合条件的参数
    * @param result 设备参数集
    * @param setup 用户告警设置
+   *  @returns 超出阈值的参数结果数组
    */
   private checkAlarm(result: Uart.queryResultArgument[], setup: Map<string, Uart.ConstantAlarmStat>) {
     return result.filter(el => {
@@ -354,7 +358,7 @@ class Check {
       <hr />
       <p>&nbsp;</p>
       <p>扫码或点击程序码使用微信小程序查看</p>
-      <a href="weixin://dl/business/?t=203U27hghyu" target="_blank"><img src="https://uart.ladishb.com/_nuxt/img/LADS_Uart.0851912.png" alt="weapp" width="430" height="430" /></a>
+      <a href="weixin://dl/business/?t=203U27hghyu" target="_blank"><img src="http://www.ladishb.com/upload/3162021__LADS_Uart.5df2cc6.png" alt="weapp" width="430" height="430" /></a>
       <p>&nbsp;</p>`
       return Send(mails.join(","), "Ladis透传平台", "设备告警", body)
     }
