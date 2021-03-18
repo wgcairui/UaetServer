@@ -60,7 +60,7 @@ export default async (Ctx: ParameterizedContext) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
-  console.log({ type, body: _.pickBy(body, (_val, key) => key !== 'token') });
+  // console.log({ type, body: _.pickBy(body, (_val, key) => key !== 'token') });
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
   const token = ctx.header.token//body.token
@@ -184,7 +184,8 @@ export default async (Ctx: ParameterizedContext) => {
             const setup: Partial<Uart.userSetup> = {
               user: user.user,
               tels: user.tel ? [String(user.tel)] : [],
-              mails: user.mail ? [user.mail] : []
+              mails: user.mail ? [user.mail] : [],
+              ProtocolSetup: []
             };
             new UserAlarmSetup(setup).save();
             // 添加日志记录
@@ -427,19 +428,26 @@ export default async (Ctx: ParameterizedContext) => {
             Up = { "ProtocolSetup.$.AlarmStat": arg }
             break
         }
-        const userSetup = await UserAlarmSetup.findOne({ user }).lean<Uart.userSetup>()
-
+        /* 
+        const setup = await UserAlarmSetup.findOne({ user }).lean<Uart.userSetup>()
         if (!userSetup) {
           await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
         } else if (!userSetup.ProtocolSetup.find(el => el.Protocol === Protocol)) {
           console.log(userSetup);
           await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }).exec()
           // await UserAlarmSetup.updateOne({ user }, { ProtocolSetup: { "$addToSet": { Protocol } } }).exec()
-        }
-        /* if (!ctx.$Event.Cache.CacheUserSetup.get(tokenUser.user as string)?.ProtocolSetupMap.has(Protocol)) {
-          await UserAlarmSetup.updateOne({ user }, { "$addToSet": { ProtocolSetup: { Protocol } } }).exec()
         } */
-
+        // 获取用户告警配置
+        const setup = await UserAlarmSetup.findOne({ user }).lean<Pick<Uart.userSetup, 'user' | 'mails' | 'tels' | 'ProtocolSetup'>>()!
+        // 如果没有初始配置则新建
+        if (!setup) {
+          await new UserAlarmSetup({ user, mails: [], tels: [], ProtocolSetup: [] }).save()
+        }
+        // 如果如果没有ProtocolSetup属性或ProtocolSetup中没有此协议则加入
+        if (!setup?.ProtocolSetup || setup.ProtocolSetup.findIndex(el => el.Protocol === Protocol) === -1) {
+          await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
+        }
+        
         const result = await UserAlarmSetup.updateOne(
           { user, "ProtocolSetup.Protocol": Protocol },
           { $set: Up }

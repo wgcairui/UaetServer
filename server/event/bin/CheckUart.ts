@@ -228,7 +228,7 @@ class Check {
         const tags = query.mac + query.pid + el.name
         const n = this.CacheAlarmNum.get(tags)
         if (n && n > 10) {
-          // console.log('checkSmsSend', el, this.CacheAlarmNum);
+          console.log('### 检查短信 checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
           this.sendAlarm(query, `${alias}[告警恢复]`, el);
@@ -308,7 +308,7 @@ class Check {
     // 缓存告警记录
     const n = this.CacheAlarmNum.get(tags) || 0;
     this.CacheAlarmNum.set(tags, n + 1);
-    // console.log('sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
+    console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (n === 10) {
       this.Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件

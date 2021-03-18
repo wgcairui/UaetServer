@@ -368,6 +368,8 @@ const typeDefs: DocumentNode = gql`
     getAlias(mac:String,pid:String,protocol:String):JSON
     # 获取用户布局配置
     getUserLayout(id:String):UserLayout
+    # 获取iot设备远程调试地址
+    iotRemoteUrl(mac:String):String
   }
 
   #mutation

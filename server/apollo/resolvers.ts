@@ -16,79 +16,189 @@ import { getUserBindDev, localToUtc, validationUserPermission } from "../util/ut
 import { ParseCoefficient, ParseFunction } from "../util/func";
 import { Uart } from "typing";
 import config from "../config";
+import HF from "../util/HF";
 
 const resolvers: IResolvers<any, Uart.ApolloCtx> = {
     Query: {
-        // 节点状态
+        /**
+         * 节点状态
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 指定节点信息
+         */
         async Node(root, { IP, Name }, ctx) {
 
             return await NodeClient.findOne({
                 $or: [{ IP: IP || "" }, { Name: Name || "" }]
             });
         },
-        // 
+        /**
+         * 获取所有节点信息
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async Nodes(root, arg, ctx) {
             return ctx.$Event.Cache.CacheNode.values();
         },
-        // 协议
+
+        /**
+         * 获取协议
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async Protocol(root, { Protocol }) {
             return await DeviceProtocol.findOne({ Protocol });
         },
+
+        /**
+         * 获取所有协议
+         * @returns 
+         */
         async Protocols() {
             return await DeviceProtocol.find();
         },
-        // 获取协议常量
+
+        /**
+         * 获取协议常量
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async getDevConstant(root, { Protocol }) {
             return await DevConstant.findOne({ Protocol })
         },
-        // 设备类型
+
+        /**
+         * 设备类型
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async DevType(root, { DevModel }) {
             return await DevsType.findOne({ DevModel });
         },
+
+        /**
+         * 所有设备类型
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async DevTypes(root, { Type }, ctx) {
             const Types = Type ? { Type } : {}
             return await DevsType.find(Types);
         },
-        //查询注册终端设备的节点
+
+        /**
+         * 查询注册终端设备的节点
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async RegisterTerminal(root, { DevMac }) {
             return await RegisterTerminal.findOne({ DevMac })
         },
-        // 查询节点所属终端
+
+        /**
+         * 查询节点所属终端
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async RegisterTerminals(root, { NodeName }) {
             return await RegisterTerminal.find({ mountNode: NodeName })
         },
-        // 终端信息
+
+        /**
+         * 终端信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         Terminal(root, { DevMac }, ctx) {
             valadationMac(ctx, DevMac)
             return ctx.$Event.Cache.CacheTerminal.get(DevMac)
         },
-        // 检索在线的终端
+
+        /**
+         * 检索在线的终端
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         TerminalOnline(root, { DevMac }, ctx) {
             const terminals = ctx.$Event.Cache.CacheTerminal.get(DevMac)
             return terminals?.online ? terminals : null
         },
+
+        /**
+         * 获取所有终端信息
+         */
         Terminals(root, arg, ctx) {
             return ctx.$Event.Cache.CacheTerminal.values()
         },
-        // 环控终端信息
+
+        /**
+         * 环控终端信息
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async ECterminal(root, { ECid }) {
             return await EcTerminal.findOne({ ECid });
         },
+
+        /**
+         * 环控终端信息
+         * @returns 
+         */
         async EcTerminals() {
             return await EcTerminal.find({});
         },
-        // 节点信息
+
+        /**
+         * 节点信息
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async NodeInfo(root, { NodeName }) {
             return await NodeRunInfo.find(NodeName ? { NodeName } : {});
         },
-        // 用户
+
+        /**
+         * 用户
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async User(root, { user }, ctx) {
             return await Users.findOne({ user: ctx.user });
         },
+
+        /**
+         * 获取所有用户
+         * @returns 
+         */
         async Users() {
             return await Users.find();
         },
-        // 绑定设备信息
+
+        /**
+         * 绑定设备信息
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async BindDevice(root, arg, ctx) {
             const Bind = ctx.$Event.Cache.CacheBind.get(ctx.user)
             if (!Bind) return null;
@@ -101,14 +211,33 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 AGG
             };
         },
+
+        /**
+         * 绑定设备信息
+         * @returns 
+         */
         async BindDevices() {
             return await UserBindDevice.find({}).lean();
         },
-        // 获取用户组
+
+        /**
+         * 获取用户组
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         userGroup(root, arg, ctx) {
             return ctx.userGroup;
         },
-        // 获取透传设备数据-单条
+
+        /**
+         * 获取透传设备数据-单条
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async UartTerminalData(root, { DevMac, pid }, ctx) {
             valadationMac(ctx, DevMac)
             const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid }).lean<Uart.queryResult>()
@@ -128,7 +257,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
             return data
         },
-        // 获取透传设备数据-多条
+
+        /**
+         * 获取透传设备数据-多条
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async UartTerminalDatas(root, { DevMac, name, pid, datatime }, ctx) {
             valadationMac(ctx, DevMac)
             let result: Uart.queryResultSave[]
@@ -171,40 +307,93 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
 
         },
-        // 获取设备在线状态
+
+        /**
+         * 获取设备在线状态
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         getDevState(root, { mac, node }, ctx) {
             return ctx.$Event.Cache.CacheTerminal.get(mac)?.online || false
         },
-        // 获取用户自定义配置
+
+        /**
+         * 获取用户自定义配置
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async getUserSetup(root, arg, ctx) {
             return await UserAlarmSetup.findOne({ user: ctx.user })
         },
-        // 获取用户自定义配置
+
+        /**
+         * 获取用户自定义配置
+         * @returns 
+         */
         async getUserSetups() {
             return await UserAlarmSetup.find()
         },
-        // 获取协议常量
+
+        /**
+         * 获取协议常量
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async getUserDevConstant(root, { Protocol }, ctx) {
             const userSetup = ctx.$Event.Cache.CacheUserSetup.get(ctx.user)!
             const res = userSetup.ProtocolSetupMap.get(Protocol)
             return res
         },
-        // 获取用户设备日志
+
+        /**
+         * 获取用户设备日志
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async getLogTerminal(root, arg, ctx) {
             //获取用户绑定设备列表
             const BindDevs = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs || []
             const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })
             return result
         },
-        // 获取用户tel
+
+        /**
+         * 获取用户tel
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async getUserTel(root, arg, ctx) {
             return Tool.Mixtel(ctx.$Event.Cache.CacheUser.get(ctx.user)!.tel)
         },
-        // 获取socket node状态
+
+        /**
+         * 获取socket node状态
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         getSocketNode(root, arg, ctx) {
             return [...ctx.$Event.Cache.CacheTerminal.values()].filter(el => el.online)
         },
-        // 获取socket user状态
+
+        /**
+         * 获取socket user状态
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         getUserNode(root, arg, ctx) {
             const userids = new Map() as Map<string, Set<string>>
             if (ctx.$Event.clientSocket) {
@@ -225,30 +414,62 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
 
             return Array.from(userids).map(([user, set]) => ({ user, set: Array.from(set) }))
         },
-        // 获取节点日志
+
+        /**
+         * 获取节点日志
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async lognodes(root, { start, end }: { start: Date, end: Date }) {
             return await LogNodes.find().where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取终端日志
+
+        /**
+         * 获取终端日志
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async logterminals(root, { start, end }: { start: Date, end: Date }) {
             return await LogTerminals.find().where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取终端日志
+
+        /**
+         * 获取终端日志
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async userlogterminals(root, { start, end, mac }: { start: Date, end: Date, mac: string }, ctx) {
             const UserBindDevice = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs as string[]
             if (!UserBindDevice || (mac && !UserBindDevice.includes(mac))) return null
             const types = ['连接', '断开']
             return await LogTerminals.find({ TerminalMac: mac, type: { $in: types } }).where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取短信日志
+
+        /**
+         * 获取短信日志
+         */
         async logsmssends(root, { start, end }: { start: Date, end: Date }) {
             return (await LogSmsSend.find().where("createdAt").gte(start).lte(end).lean<Uart.logMailSend>())
         },
-        // 获取邮件日志
+
+        /**
+         * 获取邮件日志
+         */
         async logmailsends(root, { start, end }: { start: Date, end: Date }) {
             return await LogMailSend.find().where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取设备告警日志
+
+        /**
+         * 获取设备告警日志
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }, ctx) {
             const query = LogUartTerminalDataTransfinite.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
@@ -286,11 +507,23 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return await LogUartTerminalDataTransfinite.find().where("createdAt").gte(start).lte(end).exec()
             }
         },
-        // 获取用户登陆日志
+
+        /**
+         * 获取用户登陆日志
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async loguserlogins(root, { start, end }: { start: Date, end: Date }) {
             return await LogUserLogins.find().where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取用户请求日志
+
+        /**
+         * 获取用户请求日志
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async loguserrequsts(root, { start, end }: { start: Date, end: Date }) {
             const query = LogUserRequst.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
@@ -299,32 +532,70 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
             return await LogUserRequst.find().where("createdAt").gte(start).lte(end).exec()
         },
-        // 获取设备使用流量
+
+        /**
+         * 获取设备使用流量
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async logterminaluseBtyes(root, { mac }, ctx) {
             return await LogUseBytes.find({ mac }).exec()
         },
 
-        // 获取定时清理记录
+        /**
+         * 获取定时清理记录
+         * @param root 
+         * @param param1 
+         * @returns 
+         */
         async logdataclean(root, { start, end }: { start: Date, end: Date }) {
             return await LogDataClean.find().where("createdAt").gte(start).lte(end).exec()
         },
 
-        // 获取dtu繁忙状态记录
+        /**
+         * 获取dtu繁忙状态记录
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async logDtuBusy(root, { mac, start, end }, ctx) {
             return await LogDtuBusy.find({ mac }).where("timeStamp").gt(new Date(start).getTime()).lt(new Date(end).getTime()).exec()
         },
 
-        // 获取dtu发送指令记录
+        /**
+         * 获取dtu发送指令记录
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async logInstructQuery(root, { mac }, ctx) {
             return await LogInstructQuery.find({ mac }).exec()
         },
-        // 获取在线节点指令缓存
+
+        /**
+         * 获取在线节点指令缓存
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         getNodeInstructQuery(root, arg, ctx) {
             return [...ctx.$Event.uartSocket.CacheSocket].map(([node, client]) => {
                 return { node, instruct: [...client.cache.values()] }
             })
         },
-        // id获取用户聚合设备
+
+        /**
+         * id获取用户聚合设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async Aggregation(root, { id }, ctx) {
             const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean<Uart.Aggregation>()
             if (!agg) return agg
@@ -338,7 +609,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await Promise.all(query)
             return agg
         },
-        // 获取后台运行状态
+
+        /**
+         * 获取后台运行状态
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async runingState(root, arg, ctx) {
             if (ctx.userGroup === 'root') {
                 const Event = ctx.$Event
@@ -377,33 +655,70 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
             else return null
         },
-        // 检查挂载设备是否在超时列表中
+
+        /**
+         * 检查挂载设备是否在超时列表中
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         checkDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx) {
             if (!ctx.$Event.Cache.CacheTerminal.get(mac)?.online) return 'DTUOFF'
             if (!ctx.$Event.getClientDtuMountDev(mac, pid).online) return 'TimeOut'
             return 'online'
         },
-        // 获取设备设备别名
+
+        /**
+         * 获取设备设备别名
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async getAlias(root, { mac, pid, protocol }, ctx) {
             return await DevArgumentAlias.findOne({ mac, pid, protocol })
         },
-        // 获取用户布局配置
+
+        /**
+         * 获取用户布局配置
+         */
         async getUserLayout(root, { id }, ctx) {
             return await UserLayout.findOne({ id, user: ctx.user })
+        },
+
+        /**
+         * 获取dtu远程调试地址
+         */
+        async iotRemoteUrl(root, { mac }, ctx) {
+            valadationRoot(ctx)
+            return await HF.macRemote(mac)
         }
     },
 
-    /* 
-    
-    
-    
 
-    
-    
-    
-    */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     Mutation: {
-        // 设置节点
+
+        /**
+         * 设置节点
+         */
         async setNode(root, { arg }, ctx) {
             valadationRoot(ctx)
             const { Name, IP, Port, MaxConnections } = JSON.parse(arg);
@@ -415,14 +730,24 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheNode();
             return result;
         },
-        // 删除节点
+
+        /**
+         * 删除节点
+         */
         async deleteNode(root, { IP }, ctx) {
             valadationRoot(ctx)
             const result = await NodeClient.deleteOne({ IP });
             await ctx.$Event.Cache.RefreshCacheNode();
             return result;
         },
-        // 设置协议
+
+        /**
+         * 设置协议
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async setProtocol(root, { arg }, ctx) {
             valadationRoot(ctx)
             const { Type, ProtocolType, Protocol, instruct } = arg;
@@ -434,7 +759,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheProtocol(Protocol);
             return result;
         },
-        // 设置协议
+
+        /**
+         * 设置协议
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async TestScriptStart(root, { arg }: { arg: Uart.protocolInstruct }, ctx) {
             const Fun = ParseFunction(arg.scriptStart)
             const msg = Fun(1, arg.name)
@@ -443,14 +775,28 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 msg
             } as Uart.ApolloMongoResult
         },
-        // 删除协议
+
+        /**
+         * 删除协议
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async deleteProtocol(root, { Protocol }, ctx) {
             valadationRoot(ctx)
             const result = await DeviceProtocol.deleteOne({ Protocol });
             ctx.$Event.Cache.CacheProtocol.delete(Protocol)
             return result;
         },
-        // 添加设备类型
+
+        /**
+         * 添加设备类型
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addDevType(root, { arg }, ctx) {
             valadationRoot(ctx)
             const { Type, DevModel, Protocols } = arg;
@@ -462,14 +808,24 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheDevType(DevModel);
             return result;
         },
-        // 添加设备类型
+
+        /**
+         * 添加设备类型
+         */
         async deleteDevModel(root, { DevModel }, ctx) {
             valadationRoot(ctx)
             const result = await DevsType.deleteOne({ DevModel });
             ctx.$Event.Cache.CacheDevsType.delete(DevModel)
             return result;
         },
-        // 添加登记设备
+
+        /**
+         * 添加登记设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addRegisterTerminal(root, { DevMac, mountNode }, ctx) {
             valadationRoot(ctx)
             await new RegisterTerminal({ DevMac, mountNode }).save()
@@ -481,7 +837,10 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
-        // 删除登记设备 
+
+        /**
+         * 删除登记设备
+         */
         async deleteRegisterTerminal(root, { DevMac }, ctx) {
             valadationRoot(ctx)
             // 如果没有被绑定则删除
@@ -501,7 +860,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return result
             }
         },
-        // 添加终端信息
+
+        /**
+         * 添加终端信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addTerminal(root, { arg }, ctx) {
             const { DevMac, name, mountNode, mountDevs } = arg;
             const result = await Terminal.updateOne(
@@ -512,7 +878,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
-        // 修改终端
+
+        /**
+         * 修改终端
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async modifyTerminal(root, { DevMac, arg }, ctx) {
             if (ctx.userGroup === 'user') {
                 valadationMac(ctx, DevMac)
@@ -525,7 +898,10 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
-        // 删除终端信息
+
+        /**
+         * 删除终端信息
+         */
         async deleteTerminal(root, { DevMac }, ctx) {
             valadationRoot(ctx)
             // 如果没有被绑定则删除
@@ -545,7 +921,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return result
             }
         },
-        // 添加终端挂载信息
+
+        /**
+         * 添加终端挂载信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addTerminalMountDev(root, { arg }, ctx) {
             const { DevMac, Type, mountNode, mountDev, protocol, pid } = arg;
             const result = await Terminal.updateOne(
@@ -564,21 +947,42 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
             return result;
         },
-        // 删除终端挂载设备
+
+        /**
+         * 删除终端挂载设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async delTerminalMountDev(root, { DevMac, mountDev, pid }, ctx) {
             valadationMac(ctx, DevMac)
             const result = await Terminal.updateOne({ DevMac }, { $pull: { mountDevs: { mountDev, pid } } })
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
             return result
         },
-        // 修改终端挂载设备
+
+        /**
+         * 修改终端挂载设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async modifyTerminalMountDev(root, { DevMac, pid, arg }, ctx) {
             valadationMac(ctx, DevMac)
             const result = await Terminal.updateOne({ DevMac, 'mountDevs.pid': pid }, { $set: { "mountDevs.$": arg } })
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac)
             return result
         },
-        // 添加用户
+
+        /**
+         * 添加用户
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addUser(root, { arg }, ctx) {
             if (await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
             if (await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
@@ -603,7 +1007,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 })
                 .catch((e) => console.log(e));
         },
-        //
+
+        /**
+         * 修改用户信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async modifyUserInfo(root, { arg }, ctx) {
             const keys = Object.keys(arg)
             if (keys.includes('user')) return { ok: 0, msg: '不能修改用户名' } as Uart.ApolloMongoResult
@@ -613,7 +1024,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             ctx.$Event.Cache.RefreshCacheUser(ctx.user)
             return res
         },
-        // 添加用户绑定终端
+
+        /**
+         * 添加用户绑定终端
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addUserTerminal(root, { type, id }, ctx) {
             switch (type) {
                 case "UT":
@@ -652,7 +1070,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                     }
             }
         },
-        // 添加用户绑定终端
+
+        /**
+         * 添加用户绑定终端
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async delUserTerminal(root, { type, id }, ctx) {
             switch (type) {
                 case "UT":
@@ -678,7 +1103,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                     }
             }
         },
-        // 添加设备协议常量配置
+
+        /**
+         * 添加设备协议常量配置
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addDevConstent(
             root,
             {
@@ -727,7 +1159,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             ctx.$Event.Cache.RefreshCacheConstant(Protocol)
             return result;
         },
-        //  固定发送设备操作指令
+
+        /**
+         * 固定发送设备操作指令
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async SendProcotolInstructSet(root, { query, item }: { query: Uart.instructQueryArg, item: Uart.OprateInstruct }, ctx) {
             // 验证客户是否校验过权限
             const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
@@ -763,7 +1202,13 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             return result
         },
 
-        //  固定发送DTU AT指令
+        /**
+         * 固定发送DTU AT指令
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async Send_DTU_AT_InstructSet(root, { DevMac, content }: { DevMac: string, content: string }, ctx) {
             valadationRoot(ctx)
             // 获取协议指令
@@ -777,17 +1222,36 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             return result
         },
 
-        // 设置用户自定义设置(联系方式)
+        /**
+         * 设置用户自定义设置(联系方式)
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async setUserSetupContact(root, { tels, mails }: { tels: string[], mails: string[] }, ctx) {
             const result = await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { tels: tels || [ctx.tel], mails: mails || [ctx.mail] } }, { upsert: true })
             ctx.$Event.Cache.RefreshCacheUserSetup(ctx.user)
             return result
         },
-        // 设置用户自定义设置(协议配置)
+
+        /**
+         * 设置用户自定义设置(协议配置)
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async setUserSetupProtocol(root, { Protocol, type, arg }: { Protocol: string, type: Uart.ConstantThresholdType, arg: any }, ctx) {
-            const isNull = await UserAlarmSetup.findOne({ user: ctx.user, "ProtocolSetup.Protocol": Protocol }).exec()
-            if (!isNull) {
-                await UserAlarmSetup.updateOne({ user: ctx.user }, { $set: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
+            // 获取用户告警配置
+            const setup = await UserAlarmSetup.findOne({ user: ctx.user }).lean<Pick<Uart.userSetup, 'user' | 'mails' | 'tels' | 'ProtocolSetup'>>()!
+            // 如果没有初始配置则新建
+            if (!setup) {
+                await new UserAlarmSetup({ user: ctx.user, mails: [], tels: [], ProtocolSetup: [] }).save()
+            }
+            // 如果如果没有ProtocolSetup属性或ProtocolSetup中没有此协议则加入
+            if (!setup?.ProtocolSetup || setup.ProtocolSetup.findIndex(el => el.Protocol === Protocol) === -1) {
+                await UserAlarmSetup.updateOne({ user: ctx.user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
             }
             let result;
             switch (type) {
@@ -864,14 +1328,27 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             ctx.$Event.Cache.RefreshCacheUserSetup(ctx.user)
             return result;
         },
-        // 发送验证码
+        /**
+         * 发送验证码
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async sendValidationSms(root, arg, ctx) {
             const user = await Users.findOne({ user: ctx.user }).lean<Uart.UserInfo>()
             const code = (Math.random() * 10000).toFixed(0)
             ctx.$Event.ClientCache.CacheUserValidationCode.set(ctx.$token, code)
             return await SendValidation(String(user!.tel), code)
         },
-        // 校验验证码,校验通过缓存授权
+
+        /**
+         * 校验验证码,校验通过缓存授权
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         ValidationCode(root, { code }, ctx) {
             const userCode = ctx.$Event.ClientCache.CacheUserValidationCode.get(ctx.$token)
             if (!userCode || !code) return { ok: 0, msg: '校验码不存在,请重新发送校验码' } as Uart.ApolloMongoResult
@@ -880,7 +1357,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             ctx.$Event.ClientCache.CacheUserJurisdiction.set(ctx.user as string, ctx.$token)
             return { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
         },
-        // 重置用户密码
+
+        /**
+         * 重置用户密码
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async resetUserPasswd(root, { user }, ctx) {
             const User = await Users.findOne({ $or: [{ user }, { mail: user }] }).lean<Uart.UserInfo>()
             if (User) {
@@ -893,7 +1377,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return { ok: 0, msg: '账号不存在,请和对账号' } as Uart.ApolloMongoResult
             }
         },
-        //校验用户验证码
+
+        /**
+         * 校验用户验证码
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async resetValidationCode(root, { user, code }, ctx) {
             const codeMap = ctx.$Event.ClientCache.CacheUserValidationCode
             if (codeMap.has('reset' + user)) {
@@ -908,14 +1399,28 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return { ok: 0, msg: '没有校验码' } as Uart.ApolloMongoResult
             }
         },
-        // 重置用户密码
+
+        /**
+         * 重置用户密码
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async setUserPasswd(root, { hash, passwd }: { hash: string, passwd: string }, ctx) {
             const { user } = await JwtVerify(hash)
             if (!user) return { ok: 0, msg: 'token出错' } as Uart.ApolloMongoResult
             ctx.$Event.ClientCache.CacheUserValidationCode.delete('reset' + user)
             return await Users.updateOne({ user }, { $set: { passwd: await BcryptDo(passwd) } })
         },
-        // 添加聚合设备
+
+        /**
+         * 添加聚合设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async addAggregation(root, { name, aggs }: { name: string, aggs: Uart.AggregationDev[] }, ctx) {
             const aggObj: Uart.Aggregation = {
                 user: ctx.user as string,
@@ -928,16 +1433,38 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             const result = await UserAggregation.updateOne({ name, user: ctx.user }, { $set: { id: agg._id } })
             return result
         },
+
+        /**
+         * 删除聚合设备
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async deleteAggregation(root, { id }, ctx) {
             const result = await UserAggregation.deleteOne({ user: ctx.user, id })
             return result
         },
-        // 重置设备超时状态
+
+        /**
+         * 重置设备超时状态
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         refreshDevTimeOut(root, { mac, pid }: { mac: string, pid: string }, ctx) {
             ctx.$Event.ResetTimeOutMonutDev(mac, parseInt(pid))
             return { ok: 1 } as Uart.ApolloMongoResult
         },
-        // 确认用户告警
+
+        /**
+         * 确认用户告警
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async confrimAlarm(root, { id }, ctx) {
             const BindDevs: string[] = getUserBindDev(ctx.user)
             if (id) {
@@ -951,13 +1478,27 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
                 return await LogUartTerminalDataTransfinite.updateMany({ mac: { $in: BindDevs } }, { $set: { isOk: true } }).exec()
             }
         },
-        // 发送用户socket信息
+
+        /**
+         * 发送用户socket信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         sendSocketInfo(root, { user, msg }: { user: string, msg: string }, ctx) {
             valadationRoot(ctx)
             ctx.$Event.SendUserSocketInfo(user, msg)
             return { ok: 1 } as Uart.ApolloMongoResult
         },
-        // 删除用户配置
+
+        /**
+         * 删除用户配置
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async deleteUser(root, { user, hash }, ctx) {
             valadationRoot(ctx)
             // 获取删除用户的信息
@@ -975,12 +1516,26 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }
 
         },
-        // 删除用户配置
+
+        /**
+         * 删除用户配置
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
         async deleteUsersetup(root, { user }, ctx) {
             valadationRoot(ctx)
             return await UserAlarmSetup.deleteOne({ user }).exec()
         },
-        // 设备设备别名
+
+        /**
+         * 设备设备别名
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async setAlias(root, arg: { mac: string, pid: string, protocol: string, name: string, alias: string }, ctx) {
             const { mac, pid, protocol, name, alias } = arg
             const data = ctx.$Event.Cache.CacheAlias.get(mac + pid + protocol) //await DevArgumentAlias.findOne({ mac, pid, protocol, 'alias.name': name }).lean<Uart.DevArgumentAlias>()
@@ -994,7 +1549,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             await ctx.$Event.Cache.RefreshCacheAlias({ mac, pid: Number(pid), protocol })
             return result
         },
-        // 设置用户布局配置
+
+        /**
+         * 设置用户布局配置
+         * @param root 
+         * @param arg 
+         * @param ctx 
+         * @returns 
+         */
         async setUserLayout(root, arg: { id: string, type: string, bg: string, Layout: Uart.AggregationLayoutNode[] }, ctx) {
             const { id, type, bg, Layout } = arg
             return await UserLayout.updateOne({ id, user: ctx.user }, { $set: { type, bg, Layout } }, { upsert: true }).lean<Uart.userLayout>()
@@ -1005,7 +1567,12 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
 
 export default resolvers
 
-// 验证普通用户是否是越权操作他人的设备
+/**
+ * 验证普通用户是否是越权操作他人的设备
+ * @param ctx 用户对象句柄
+ * @param mac 设备mac
+ * @returns 
+ */
 function valadationMac(ctx: Uart.ApolloCtx, mac: string) {
     if (validationUserPermission(ctx.user, mac)) return true
     else {
@@ -1014,7 +1581,11 @@ function valadationMac(ctx: Uart.ApolloCtx, mac: string) {
     }
 }
 
-// 验证普通用户是否是越权
+/**
+ * 验证普通用户是否是越权
+ * @param ctx 
+ * @returns 
+ */
 function valadationRoot(ctx: Uart.ApolloCtx) {
     const group = ctx.userGroup!
     const g = new Set(['root', 'admin'])

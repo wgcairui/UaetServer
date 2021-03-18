@@ -179,7 +179,7 @@ export default class Cache {
   //
   async RefreshCacheBind(user?: string) {
     const res = await UserBindDevice.find(user ? { user } : {}).lean<Uart.BindDevice>()
-    console.log(`更新绑定设备缓存......`, user);
+    console.log(`更新绑定设备缓存......`, user || '');
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
       el?.UTs.forEach(els => {
@@ -190,7 +190,7 @@ export default class Cache {
   }
   //
   async RefreshCacheUser(user?: string) {
-    console.log(`更新用户信息缓存......`, user);
+    console.log(`更新用户信息缓存......`, user || '');
     const users = await Users.find(user ? { user } : {}).lean<Uart.UserInfo>()
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
@@ -212,7 +212,7 @@ export default class Cache {
     }) */
     //
     const res = await UserAlarmSetup.find(user ? { user } : {}).lean<Uart.userSetup>()
-    console.log(`更新用户个性化配置......`, user);
+    // console.log(`更新用户个性化配置......`, user);
     res.forEach(async el => {
 
       // 如果用户没有自定义告警阀值,生成空map   
@@ -237,7 +237,7 @@ export default class Cache {
   // 刷选设备参数别名缓存
   async RefreshCacheAlias(alias?: Pick<Uart.DevArgumentAlias, "mac" | "pid" | "protocol">) {
     const res = await DevArgumentAlias.find(alias ? { mac: alias.mac, pid: alias.pid, protocol: alias.protocol } : {}).lean<Uart.DevArgumentAlias>()
-    console.log(`更新设备参数别名配置......`, alias?.mac);
+    console.log(`更新设备参数别名配置......`, alias?.mac || '');
     res.forEach(el => {
       const tag = el.mac + el.pid + el.protocol
       const aliasMap = new Map(el.alias.filter(el2 => el2.alias).map(el3 => [el3.name, el3.alias]))
