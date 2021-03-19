@@ -44,7 +44,7 @@ const SchemaNodeRunInfo = new Schema({
 const SchemaTerminalClientResults = new Schema({
   pid: { type: Number, min: 0, max: 255, default: 0 },
   time: String,
-  timeStamp: Number,
+  timeStamp: { type: Number, index: true },
   mac: String,
   type: Number,
   protocol: String,

@@ -534,6 +534,37 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         },
 
         /**
+         * 获取设备原始数据
+         * @param root 
+         * @param param1 
+         */
+        async ClientResults(root, { start, end }: { start: Date, end: Date }) {
+            const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
+            return await TerminalClientResults.find().where("timeStamp").gte(startStamp).lte(endStamp)
+        },
+
+        /**
+         * 获取设备解析数据
+         * @param root 
+         * @param param1 
+         */
+        async ClientResult(root, { start, end }: { start: Date, end: Date }) {
+            const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
+            console.log({start, end,startStamp, endStamp});
+            
+            return await TerminalClientResult.find().where("timeStamp").gte(startStamp).lte(endStamp)
+        },
+
+        /**
+         * 获取设备单例数据
+         * @param root 
+         * @param param1 
+         */
+        async ClientResultSingle() {
+            return await TerminalClientResultSingle.find()
+        },
+
+        /**
          * 获取设备使用流量
          * @param root 
          * @param param1 

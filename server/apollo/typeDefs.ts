@@ -370,6 +370,10 @@ const typeDefs: DocumentNode = gql`
     getUserLayout(id:String):UserLayout
     # 获取iot设备远程调试地址
     iotRemoteUrl(mac:String):String
+    # 数据池
+    ClientResults(start:Date,end:Date):JSON
+    ClientResult(start:Date,end:Date):JSON
+    ClientResultSingle:JSON
   }
 
   #mutation
