@@ -193,7 +193,7 @@ class Check {
       const setup = this.getUserSetup(user, query.protocol)
       // console.log('check',result,setup);
       if (setup.Threshold.size > 0) {
-      const alarms =  this.checkThreshold(result, setup.Threshold).forEach(el => {
+        const alarms = this.checkThreshold(result, setup.Threshold).forEach(el => {
           el.alarm = true
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
           this.sendAlarm(query, `${alias}超限[${el.value}]`, el,)
@@ -213,7 +213,7 @@ class Check {
       // console.log(result);
       this.checkUPS(query)
       this.checkSmsSend(query)
-    } 
+    }
     return query
   }
 
@@ -227,11 +227,11 @@ class Check {
       if (!el.alarm) {
         const tags = query.mac + query.pid + el.name
         const n = this.CacheAlarmNum.get(tags)
-        if (n && n > 10) {
+        if (n && n >= 10) {
           console.log('### 检查短信 checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
-          this.sendAlarm(query, `${alias}[告警恢复]`, el);
+          this.sendAlarm(query, `${alias}[告警恢复]`, el, false);
         }
       }
     })
@@ -301,15 +301,16 @@ class Check {
    * @param query 设备参数解析对象
    * @param event 告警事件
    * @param tag 告警标签
+   * @param validation 检查发送告警频次,默认达到十次才发生
    */
-  private async sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>) {
+  private async sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>, validation: boolean = true) {
     // 创建tag
     const tags = query.mac + query.pid + tag.name;
     // 缓存告警记录
     const n = this.CacheAlarmNum.get(tags) || 0;
     this.CacheAlarmNum.set(tags, n + 1);
     console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
-    if (n === 10) {
+    if (!validation || n === 10) {
       this.Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
