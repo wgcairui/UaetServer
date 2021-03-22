@@ -14,7 +14,7 @@
     "@alicloud/pop-core": "^1.7.9",
     "@koa/cors": "^3.1.0",
     "apollo-server-koa": "^2.19.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "bcryptjs": "^2.4.3",
     "consola": "^2.15.0",
     "crc": "^3.8.0",
