@@ -550,8 +550,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          */
         async ClientResult(root, { start, end }: { start: Date, end: Date }) {
             const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
-            console.log({start, end,startStamp, endStamp});
-            
+            console.log({ start, end, startStamp, endStamp });
+
             return await TerminalClientResult.find().where("timeStamp").gte(startStamp).lte(endStamp)
         },
 
@@ -652,10 +652,9 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             if (ctx.userGroup === 'root') {
                 const Event = ctx.$Event
                 const Cache = Event.Cache
-                const CacheClient = Event.ClientCache
                 // 在线用户
                 const User = {
-                    online: CacheClient.CacheSocketidUser.size - 1,
+                    online: new Set([...Event.clientSocket.CacheSocketidUser.values(), ...Event.wxSocket.clients.keys()]).size,
                     all: await Users.countDocuments().exec()
                 }
                 // 在线节点
