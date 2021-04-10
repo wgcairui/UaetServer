@@ -15,6 +15,9 @@ export default async (Ctx: ParameterizedContext) => {
     const body = ctx.request.body as { [x: string]: any }
     const type = ctx.params.type;
 
+    console.log({ type, body });
+
+
     switch (type) {
         case "CRC":
             {
@@ -43,7 +46,11 @@ export default async (Ctx: ParameterizedContext) => {
                 }
             }
             break;
-
+        case "protocol":
+            {
+                ctx.body = [...ctx.$Event.Cache.CacheProtocol.values()]
+            }
+            break
         default:
             break;
     }
