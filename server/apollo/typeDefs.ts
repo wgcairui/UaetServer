@@ -454,6 +454,10 @@ const typeDefs: DocumentNode = gql`
     deleteUser(user:String,hash:String):result
     # 设置用户聚合设备
     setUserLayout(id:String,type:String,bg:String,Layout:JSON):result
+    # 下载设备协议
+    downProtocol(protocol:[String]):result
+    # 更新协议
+    updateProtocol(protocol:JSON):result
   }
 
   # Subscription

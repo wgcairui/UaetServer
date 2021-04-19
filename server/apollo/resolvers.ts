@@ -7,6 +7,7 @@ import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout } fr
 import { BcryptDo } from "../util/bcrypt";
 import { DevArgumentAlias, DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
+import fs from "fs"
 import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean, LogDtuBusy, LogInstructQuery } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
@@ -1590,6 +1591,30 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         async setUserLayout(root, arg: { id: string, type: string, bg: string, Layout: Uart.AggregationLayoutNode[] }, ctx) {
             const { id, type, bg, Layout } = arg
             return await UserLayout.updateOne({ id, user: ctx.user }, { $set: { type, bg, Layout } }, { upsert: true }).lean<Uart.userLayout>()
+        },
+
+        /**
+         * 下载设备协议
+         * @param protocol 
+         */
+        async downProtocol(root, arg: { protocol: [String] }, ctx) {
+            const protocols = await DeviceProtocol.find({ Protocol: { $in: arg.protocol } }).lean<Uart.protocol>()
+
+            // const stream = fs.createReadStream()
+        },
+
+        /**
+         * 更新协议
+         * @param protocol 
+         */
+        async updateProtocol(root, arg: { protocol: Uart.protocol }, ctx) {
+            const { Protocol, ProtocolType, instruct } = arg.protocol
+            const result = await DeviceProtocol.updateOne({ Protocol, ProtocolType }, { $set: { instruct } }) as Uart.ApolloMongoResult
+            if (result.ok) {
+                ctx.$Event.Cache.RefreshCacheProtocol(Protocol)
+            }
+            return result
+
         }
     },
 
