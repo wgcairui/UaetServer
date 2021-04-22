@@ -499,6 +499,27 @@ export class Event extends EventEmitter.EventEmitter {
         break
     }
   }
+
+  /**
+   * 
+   * @param unit 协议参数单位
+   * @val 值
+   */
+  parseUnit(unit: string, val: string) {
+    if (this.Cache.CacheUnit.has(unit)) {
+      const ob = this.Cache.CacheUnit.get(unit)!
+      return ob[val] || ''
+    } else {
+      const arr = unit
+        .replace(/(\{|\}| )/g, "")
+        .split(",")
+        .map(el => el.split(":"))
+        .map(el => ({ [el[0]]: el[1] }));
+      const ob = Object.assign({}, ...arr)
+      this.Cache.CacheUnit.set(unit, ob)
+      return ob[val] as string || ''
+    }
+  }
 }
 
 export default new Event();

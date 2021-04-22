@@ -21,6 +21,10 @@ interface params {
   TemplateCode: string;
   TemplateParam: string;
 }
+
+interface queryResultAlarmEvents extends Uart.queryResult {
+  AlarmEvents?: (Uart.uartAlarmObject | undefined | null)[]
+}
 /**
  * 检查解析后的设备数据,对比约束设置,设备是否运行异常
  */
@@ -34,10 +38,6 @@ class Check {
    * 缓存告警参数次数 tag=>number
    */
   private CacheAlarmNum: Map<string, number>
-  /**
-   * 序列化参数单位解析
-   */
-  private CacheParseUnit: Map<string, { [x in string]: string }>
   private Event: Event;
   /**
    * 
@@ -46,7 +46,6 @@ class Check {
   constructor(Event: Event) {
     this.userSetup = new Map()
     this.CacheAlarmNum = new Map()
-    this.CacheParseUnit = new Map()
     this.Event = Event
     this.hashtable = {
       0x01: '规定时间内，bus电压未达到设定值',
@@ -181,40 +180,39 @@ class Check {
     return alias?.get(name) || name
   }
 
+
+
   /**
    * 检查参数
    * @param query 设备参数集
    */
-  public async check(query: Uart.queryResult) {
-    const user = this.Event.Cache.CacheBindUart.get(query.mac);
-    const result = query.result!;
-    if (user && result && result.length > 0) {
-      // const dataMap = new Map(result.map(el=>[el.name,el]))
-      const setup = this.getUserSetup(user, query.protocol)
-      // console.log('check',result,setup);
-      if (setup.Threshold.size > 0) {
-        const alarms = this.checkThreshold(result, setup.Threshold).forEach(el => {
+  public async check(user: string, query: Uart.queryResult, result: Uart.queryResultArgument[]) {
+    const AlarmEvents: Promise<(Uart.uartAlarmObject | undefined)>[] = []
+    const setup = this.getUserSetup(user, query.protocol)
+    // console.log('check',result,setup);
+    if (setup.Threshold.size > 0) {
+      this.checkThreshold(result, setup.Threshold).forEach(el => {
+        el.alarm = true
+        const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
+        AlarmEvents.push(Promise.resolve(this.sendAlarm(query, `${alias}超限[${el.value}]`, el)))
+      })
+    }
+
+    if (setup.AlarmStat.size > 0) {
+      this.checkAlarm(result, setup.AlarmStat).forEach(el => {
+        const value = this.Event.parseUnit(el.unit!, el.value)
+        if (value) {
           el.alarm = true
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
-          this.sendAlarm(query, `${alias}超限[${el.value}]`, el,)
-        })
-      }
-
-      if (setup.AlarmStat.size > 0) {
-        this.checkAlarm(result, setup.AlarmStat).forEach(el => {
-          const value = this.GetUnit(el.unit!)[el.value]
-          if (value) {
-            el.alarm = true
-            const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
-            this.sendAlarm(query, `${alias}[${value}]`, el);
-          }
-        })
-      }
-      // console.log(result);
-      this.checkUPS(query)
-      this.checkSmsSend(query)
+          AlarmEvents.push(Promise.resolve(this.sendAlarm(query, `${alias}[${value}]`, el)))
+        }
+      })
     }
-    return query
+    // console.log(result);
+    AlarmEvents.push(this.checkUPS(query))
+    AlarmEvents.push(...this.checkSmsSend(query, result).map(el => Promise.resolve(el)))
+
+    return { alarm: AlarmEvents, result }
   }
 
   /**
@@ -222,19 +220,19 @@ class Check {
    *  检查参数，如果没有带alarm，则去掉告警缓存
    * @param query 设备参数集
    */
-  private checkSmsSend(query: Uart.queryResult) {
-    query.result!.forEach(el => {
-      if (!el.alarm) {
+  private checkSmsSend(query: Uart.queryResult, result: Uart.queryResultArgument[]) {
+    return result
+      .filter(el => !el.alarm)
+      .map(el => {
         const tags = query.mac + query.pid + el.name
         const n = this.CacheAlarmNum.get(tags)
         if (n && n >= 10) {
           console.log('### 检查短信 checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
-          this.sendAlarm(query, `${alias}[告警恢复]`, el, false);
-        }
-      }
-    })
+          return this.sendAlarm(query, `${alias}[告警恢复]`, el, false);
+        } return undefined
+      })
   }
 
   /**
@@ -286,12 +284,12 @@ class Check {
             if (kk !== 'OK') {
               const event = this.hashtable[Buffer.from(kk).toJSON().data[0]]
               console.log(`### 发送其他故障消息:${Query.mac}/${Query.pid}/${Query.mountDev}, event:QFS(${event})`);
-              this.sendAlarm(Query, event || '未知错误', { name: event })
-            }
-          }
-        }
-      }
-    }
+              return this.sendAlarm(Query, event || '未知错误', { name: event })
+            } else return undefined
+          } else return undefined
+        } else return undefined
+      } else return undefined
+    } else return undefined
   }
 
   /**
@@ -303,7 +301,7 @@ class Check {
    * @param tag 告警标签
    * @param validation 检查发送告警频次,默认达到十次才发生
    */
-  private async sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>, validation: boolean = true) {
+  private sendAlarm(query: Uart.queryResult, event: string, tag: Partial<Uart.queryResultArgument>, validation: boolean = true) {
     // 创建tag
     const tags = query.mac + query.pid + tag.name;
     // 缓存告警记录
@@ -315,8 +313,8 @@ class Check {
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
       this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event)
-      // 保存为日志
-      this.Event.savelog<Uart.uartAlarmObject>('DataTransfinite', {
+
+      return {
         mac: query.mac,
         pid: query.pid,
         devName: query.mountDev,
@@ -324,7 +322,7 @@ class Check {
         timeStamp: query.timeStamp,
         tag: tag.name!,
         msg: event
-      })
+      } as Uart.uartAlarmObject
     }
   }
 
@@ -405,25 +403,6 @@ class Check {
       }
       return SendSms(params)
     } else return false
-  }
-
-  /**
-   * 获取参数单位缓存
-   * @param unit 单位 
-   */
-  private GetUnit(unit: string) {
-    const Cache = this.CacheParseUnit
-    const unitCache = Cache.get(unit)
-    if (unitCache) return unitCache
-    else {
-      const arr = unit
-        .replace(/(\{|\}| )/g, "")
-        .split(",")
-        .map(el => el.split(":"))
-        .map(el => ({ [el[0]]: el[1] }));
-      Cache.set(unit, Object.assign({}, ...arr))
-      return Cache.get(unit) as { [x in string]: string }
-    }
   }
 
 }

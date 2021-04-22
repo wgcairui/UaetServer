@@ -168,6 +168,7 @@ declare namespace Uart {
     interface queryResultArgument {
         name: string;
         value: any;
+        parseValue: string,
         unit: string | null;
         issimulate?: boolean
         alarm?: boolean
@@ -394,6 +395,7 @@ declare namespace Uart {
 
     // 透传设备告警对象
     interface uartAlarmObject {
+        parentId?: string
         mac: string
         devName: string
         pid: number
@@ -639,7 +641,7 @@ declare namespace Uart {
          * https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/url-scheme/urlscheme.generate.html
          */
         interface urlScheme {
-            access_token:string,
+            access_token: string,
             "jump_wxa": {
                 "path"?: string
                 "query"?: string
@@ -651,8 +653,8 @@ declare namespace Uart {
         /**
          * 微信url码结果
          */
-        interface urlSchemeRequest extends wxRequest{
-            openlink:string
+        interface urlSchemeRequest extends wxRequest {
+            openlink: string
         }
     }
 

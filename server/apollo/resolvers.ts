@@ -539,9 +539,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param root 
          * @param param1 
          */
-        async ClientResults(root, { start, end }: { start: Date, end: Date }) {
-            const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
-            return await TerminalClientResults.find().where("timeStamp").gte(startStamp).lte(endStamp)
+        async ClientResults(root, { start, end, id }: { start: Date, end: Date, id: string }) {
+            if (id) {
+                return [await TerminalClientResults.findById(id)]
+            } else {
+                const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
+                return await TerminalClientResults.find().where("timeStamp").gte(startStamp).lte(endStamp)
+            }
+
         },
 
         /**
@@ -549,11 +554,13 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param root 
          * @param param1 
          */
-        async ClientResult(root, { start, end }: { start: Date, end: Date }) {
-            const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
-            console.log({ start, end, startStamp, endStamp });
-
-            return await TerminalClientResult.find().where("timeStamp").gte(startStamp).lte(endStamp)
+        async ClientResult(root, { start, end, id }: { start: Date, end: Date, id: string }) {
+            if (id) {
+                return [await TerminalClientResult.findById(id)]
+            } else {
+                const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
+                return await TerminalClientResult.find().where("timeStamp").gte(startStamp).lte(endStamp)
+            }
         },
 
         /**

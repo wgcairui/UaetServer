@@ -32,6 +32,7 @@ const SchemaMailSend = new Schema({
 }, { timestamps: true })
 // 设备参数超限记录
 const SchemaUartTerminalDataTransfinite = new Schema({
+    parentId: String,
     type: String,
     mac: String,
     devName: String,

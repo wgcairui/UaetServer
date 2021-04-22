@@ -64,7 +64,13 @@ const SchemaTerminalClientResults = new Schema({
       },
       { _id: false }
     )
-  ]
+  ],
+  // 是否包含告警记录
+  hasAlarm: {
+    index: true,
+    type: Number,
+    default:0
+  }
 });
 // 终端设备上传数据=>解析数据集合
 const SchemaTerminalClientResult = new Schema({
@@ -76,8 +82,12 @@ const SchemaTerminalClientResult = new Schema({
           index: true
         },
         value: String,
+        parseValue: String,
         unit: String,
-        alarm: Boolean
+        alarm: {
+          type: Boolean,
+          default: false
+        }
       },
       { _id: false }
     )
@@ -86,7 +96,14 @@ const SchemaTerminalClientResult = new Schema({
   pid: { type: Number, index: true },
   mac: { type: String, index: true },
   Interval: Number,
-  useTime: Number
+  useTime: Number,
+  parentId: String,
+  // 是否包含告警记录
+  hasAlarm: {
+    index: true,
+    type: Number,
+    default:0
+  }
 });
 // 终端设备上传数据=>解析数据单例
 const SchemaTerminalClientResultSingle = new Schema({
@@ -98,8 +115,12 @@ const SchemaTerminalClientResultSingle = new Schema({
           index: true
         },
         value: String,
+        parseValue: String,
         unit: String,
-        alarm: Boolean
+        alarm: {
+          type: Boolean,
+          default: false
+        }
       },
       { _id: false }
     )
@@ -109,7 +130,8 @@ const SchemaTerminalClientResultSingle = new Schema({
   time: String,
   mac: { type: String, index: true },
   Interval: Number,
-  useTime: Number
+  useTime: Number,
+  parentId: String
 }, { timestamps: true });
 const NodeClient = mongoose.model("Node.Client", SchemaNodeClient)
 

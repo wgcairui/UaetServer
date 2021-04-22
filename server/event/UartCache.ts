@@ -68,6 +68,12 @@ export default class Cache {
    *  缓存设备参数别名 mac+pid+protocol => name => alias
    */
   CacheAlias: Map<string, Map<string, string>>
+
+
+  /**
+     * 序列化参数单位解析
+     */
+  CacheUnit: Map<string, { [x in string]: string }>
   private Events: event;
   // CacheSocket: any;
   constructor(Events: event) {
@@ -86,6 +92,7 @@ export default class Cache {
     this.CacheUserSetup = new Map()
     this.CacheAlarmSendNum = new Map()
     this.CacheAlias = new Map()
+    this.CacheUnit = new Map()
   }
   //
   async start(): Promise<void> {

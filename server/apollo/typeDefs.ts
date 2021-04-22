@@ -155,6 +155,7 @@ const typeDefs: DocumentNode = gql`
     name: String
     value: String
     unit: String
+    parseValue: String
     alarm: Boolean
     alias: String
   }
@@ -371,8 +372,8 @@ const typeDefs: DocumentNode = gql`
     # 获取iot设备远程调试地址
     iotRemoteUrl(mac:String):String
     # 数据池
-    ClientResults(start:Date,end:Date):JSON
-    ClientResult(start:Date,end:Date):JSON
+    ClientResults(start:Date,end:Date,id:String):JSON
+    ClientResult(start:Date,end:Date,id:String):JSON
     ClientResultSingle:JSON
   }
 
