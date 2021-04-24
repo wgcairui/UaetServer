@@ -158,6 +158,7 @@ const typeDefs: DocumentNode = gql`
     parseValue: String
     alarm: Boolean
     alias: String
+    issimulate: Boolean
   }
   # 透传设备数据
   type UartTerminalData {
