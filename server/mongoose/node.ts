@@ -69,7 +69,7 @@ const SchemaTerminalClientResults = new Schema({
   hasAlarm: {
     index: true,
     type: Number,
-    default:0
+    default: 0
   }
 });
 // 终端设备上传数据=>解析数据集合
@@ -102,7 +102,7 @@ const SchemaTerminalClientResult = new Schema({
   hasAlarm: {
     index: true,
     type: Number,
-    default:0
+    default: 0
   }
 });
 // 终端设备上传数据=>解析数据单例
@@ -120,12 +120,15 @@ const SchemaTerminalClientResultSingle = new Schema({
         alarm: {
           type: Boolean,
           default: false
+        },
+        issimulate: {
+          type: Boolean,
+          default: false
         }
       },
       { _id: false }
     )
   ],
-  parse: Object,
   pid: { type: Number, index: true },
   time: String,
   mac: { type: String, index: true },
