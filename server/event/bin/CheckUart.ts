@@ -1,5 +1,5 @@
 import { Event } from "../index";
-import { getDtuInfo, parseTime } from "../../util/util";
+import { getDtuInfo, localToUtc, parseTime } from "../../util/util";
 import wxUtil from "../../util/wxUtil";
 import { Uart } from "typing";
 import { SendSms } from "../../util/SMS";
@@ -307,12 +307,12 @@ class Check {
     // 缓存告警记录
     const n = this.CacheAlarmNum.get(tags) || 0;
     this.CacheAlarmNum.set(tags, n + 1);
-    console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
+    // console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (!validation || n === 10) {
       this.Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
-      this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event)
+      this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event,query.timeStamp)
 
       return {
         mac: query.mac,
@@ -357,7 +357,7 @@ class Check {
       <hr />
       <p>&nbsp;</p>
       <p>扫码或点击程序码使用微信小程序查看</p>
-      <a href="weixin://dl/business/?t=203U27hghyu" target="_blank"><img src="http://www.ladishb.com/upload/3162021__LADS_Uart.5df2cc6.png" alt="weapp" width="430" height="430" /></a>
+      <a href="weixin://dl/business/?t=203U27hghyu" target="_blank"><img src="https://www.ladishb.com/admin/upload/3312021__LADS_Uart.5df2cc6.png" alt="weapp" width="430" height="430" /></a>
       <p>&nbsp;</p>`
       return Send(mails.join(","), "Ladis透传平台", "设备告警", body)
     }
@@ -372,11 +372,11 @@ class Check {
    * @param devName 设备名称 
    * @param remind 备注信息
    */
-  private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string) => {
+  private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string,timeStamp:number) => {
     const info = getDtuInfo(mac)
     const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
     // 时间参数,长度限制20字节
-    const time = new Date()
+    const time = new Date(timeStamp)
     const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
     if (userId) {
       const Dev = info.terminalInfo.mountDevs.find(el => el.pid == pid)!

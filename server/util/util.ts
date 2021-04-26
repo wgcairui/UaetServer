@@ -18,7 +18,7 @@ export const parseTime = (time?: string | number | Date) => {
     const h = date.getHours()
     const m = date.getMinutes()
     const s = date.getSeconds()
-    return `${date.toLocaleDateString()} ${h}:${m}:${s}`
+    return `${date.toDateString()} ${h}:${m}:${s}`
   }
   else return ''
 }
@@ -35,7 +35,7 @@ export const localToUtc = (date: string | Date | number, zone: string = "zh") =>
   const timeStamp = time.getTime()
   //
   
-  return /^zh/.test(zone) ? timeStamp - (288e5 - zoneOffSet) : timeStamp
+  return /^zh/.test(zone) ? timeStamp + (288e5 - zoneOffSet) : timeStamp
   //return timeStamp
 }
 
