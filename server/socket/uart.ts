@@ -205,7 +205,7 @@ class nodeClient {
     }
     /**
      * 绑定socket事件
-     */ 
+     */
     startlisten() {
         this.socket
             // 发送节点注册信息
@@ -213,6 +213,10 @@ class nodeClient {
             // 节点离线,清理缓存
             .on("disconnect", () => {
                 console.log(`${new Date().toLocaleTimeString()}## 节点：${this.property.Name}断开连接，清除定时操作`);
+                this.socket.disconnect();
+                console.log('socket disconnected Stat:', this.socket.disconnected);
+
+                (this.socket as any) = null
                 const macs = [...this.Event.Cache.CacheTerminal].filter(([mac, term]) => term.mountNode === this.property.Name).map(el => el[0])
                 this.Event.ChangeTerminalStat(macs, false)
                 this.cache.clear()
