@@ -1,5 +1,6 @@
 import { mongoose, Schema } from "./index";
 import { Schema_DevConstant } from "./DeviceParameterConstant";
+import { Uart } from "typing";
 
 // 用户信息
 const Schema_Users = new Schema({
@@ -87,6 +88,6 @@ const SchemaUserLayout = new Schema({
 const Users = mongoose.model("users", Schema_Users);
 const UserBindDevice = mongoose.model("User.BindDevice", SchemaUserBindDevice);
 const UserAlarmSetup = mongoose.model("user.AlarmSetup", SchemaUserAlarmSetup)
-const UserAggregation = mongoose.model("user.aggregation", SchemaUserAggregation)
+const UserAggregation = mongoose.model<Uart.Aggregation & mongoose.Document>("user.aggregation", SchemaUserAggregation)
 const UserLayout = mongoose.model("user.Layout", SchemaUserLayout)
 export { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout };

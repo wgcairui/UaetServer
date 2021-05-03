@@ -1,5 +1,5 @@
-import IO, { ServerOptions, Socket } from "socket.io"
-import { Server } from "http";
+import { Server, ServerOptions, Socket } from "socket.io"
+import http from "http";
 import Event, { Event as event } from "../event/index";
 import tool from "../util/tool";
 import { ParseFunction } from "../util/func";
@@ -10,7 +10,6 @@ import { LogDtuBusy, LogInstructQuery } from "../mongoose";
  * 管理node节点socket连接
  */
 export default class NodeSocketIO {
-    private io: IO.Server;
     private Event: event;
     /**
      * 缓存查询指令 0300000001=>010300000001ba4c
@@ -28,13 +27,14 @@ export default class NodeSocketIO {
      *  DTU设备上线时间
      */
     DTUOnlineTime: Map<string, Date>
+    io: Server;
     /**
      * 
      * @param server http
      * @param opt socket option
      */
-    constructor(server: Server, opt: ServerOptions) {
-        this.io = IO(server, opt)
+    constructor(server: http.Server, opt: ServerOptions) {
+        this.io = new Server(server, opt)
         this.Event = Event
         //this.Cache = Event.Cache.QueryTerminal
         this.CacheQueryIntruct = new Map()

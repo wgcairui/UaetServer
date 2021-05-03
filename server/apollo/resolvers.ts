@@ -7,7 +7,6 @@ import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout } fr
 import { BcryptDo } from "../util/bcrypt";
 import { DevArgumentAlias, DevConstant } from "../mongoose/DeviceParameterConstant";
 import _ from "lodash"
-import fs from "fs"
 import { LogUserLogins, LogTerminals, LogNodes, LogSmsSend, LogUartTerminalDataTransfinite, LogUserRequst, LogMailSend, LogUseBytes, LogDataClean, LogDtuBusy, LogInstructQuery } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
@@ -241,7 +240,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          */
         async UartTerminalData(root, { DevMac, pid }, ctx) {
             valadationMac(ctx, DevMac)
-            const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid }).lean<Uart.queryResult>()
+            const data = await TerminalClientResultSingle.findOne({ mac: DevMac, pid });
             if (data && data.result) {
                 // 获取mac协议
                 const protocol = ctx.$Event.getClientDtuMountDev(DevMac, pid).protocol
@@ -270,14 +269,12 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             valadationMac(ctx, DevMac)
             let result: Uart.queryResultSave[]
             // 如果没有日期参数,默认检索最新的100条数据
-            const Query = TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })//.sort("-timeStamp").lean<Uart.queryResultSave>()
+            const Query = TerminalClientResult.find({ mac: DevMac, pid, "result.name": name }, { "result.$": 1, timeStamp: 1 })
             if (datatime === "") {
                 return await Query.limit(50)
             } else {
                 const [start, end] = [localToUtc(datatime + " 0:0:0", ctx.language), localToUtc(datatime + " 23:59:59", ctx.language)];
-                /* const resultLen = await TerminalClientResult.find({ mac: DevMac, pid }).where("timeStamp").gte(start).lte(end).countDocuments();
-                result = resultLen > 100 ? await Query.where("timeStamp").gte(start).lte(end).exec() : await Query.where("timeStamp").lte(end) */
-                const result = await Query.where("timeStamp").gte(start).lte(end).lean<Uart.queryResultSave>()
+                const result = await Query.where("timeStamp").gte(start).lte(end)
                 if (result.length < 50) {
                     return _.sortBy(result, 'timeStamp')
                 }
@@ -361,8 +358,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          */
         async getLogTerminal(root, arg, ctx) {
             //获取用户绑定设备列表
-            const BindDevs = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs || []
-            const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })
+            const BindDevs = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs as string[] || [] as string[]
+            const result = await LogTerminals.find({ TerminalMac: { $in: BindDevs } })//.find({ TerminalMac: { $in: BindDevs } })
             return result
         },
 
@@ -432,7 +429,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async logterminals(root, { start, end }: { start: Date, end: Date }) {
+        async logterminals(root, { start, end }: { start: number, end: Date }) {
             return await LogTerminals.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -446,15 +443,15 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         async userlogterminals(root, { start, end, mac }: { start: Date, end: Date, mac: string }, ctx) {
             const UserBindDevice = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs as string[]
             if (!UserBindDevice || (mac && !UserBindDevice.includes(mac))) return null
-            const types = ['连接', '断开']
+            const types = ['连接', '断开'] as any[]
             return await LogTerminals.find({ TerminalMac: mac, type: { $in: types } }).where("createdAt").gte(start).lte(end).exec()
         },
 
         /**
          * 获取短信日志
          */
-        async logsmssends(root, { start, end }: { start: Date, end: Date }) {
-            return (await LogSmsSend.find().where("createdAt").gte(start).lte(end).lean<Uart.logMailSend>())
+        async logsmssends(root, { start, end }: { start: number, end: number }) {
+            return await LogSmsSend.find().where("createdAt").gte(start).lte(end)
         },
 
         /**
@@ -636,8 +633,9 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @returns 
          */
         async Aggregation(root, { id }, ctx) {
-            const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean<Uart.Aggregation>()
+            const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean()
             if (!agg) return agg
+
             const query = agg.aggregations.map(async el => {
                 const constant = ctx.$Event.Cache.CacheConstant.get(el.protocol)!
                 const constantVals = new Set(Object.values(constant.Constant).map(el => Array.isArray(el) ? el : [el]).flat())

@@ -1,3 +1,4 @@
+import { Uart } from "typing";
 import { mongoose, Schema } from "./index";
 
 // 节点信息
@@ -143,12 +144,12 @@ const TerminalClientResults = mongoose.model(
   SchemaTerminalClientResults,
 );
 
-const TerminalClientResult = mongoose.model(
+const TerminalClientResult = mongoose.model<Uart.queryResultSave & mongoose.Document>(
   "Client.ResultColltion",
   SchemaTerminalClientResult,
 );
 
-const TerminalClientResultSingle = mongoose.model(
+const TerminalClientResultSingle = mongoose.model<Uart.queryResult & mongoose.Document>(
   "Client.ResultSingle",
   SchemaTerminalClientResultSingle,
 );
