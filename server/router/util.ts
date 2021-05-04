@@ -1,22 +1,11 @@
-import { ParameterizedContext } from "koa";
 import AMapAPI from "../util/AMapAPI";
-import { Uart } from "typing";
 
 type type1 = 'AMap'
 
-interface ctx extends Uart.KoaCtx {
-    body: {
-        code: number
-        msg?: string
-        query: object
-        result: any
-    }
-}
-
-export default async (Ctx: ParameterizedContext) => {
-    const ctx: ctx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware: KoaIMiddleware = async (ctx) => {
     const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
-    const type1: type1 = ctx.params.type1;
+    const type1: type1 = ctx.params.type1 as any;
     const type2 = ctx.params.type2 as string;
 
     if (!body?.token) {
@@ -26,7 +15,7 @@ export default async (Ctx: ParameterizedContext) => {
         ctx.throw("token Error")
     }
     // console.log({body});
-    
+
     switch (type1) {
         case "AMap":
             {
@@ -60,3 +49,5 @@ export default async (Ctx: ParameterizedContext) => {
     }
 
 }
+
+export default Middleware

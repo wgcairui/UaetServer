@@ -3,7 +3,7 @@ import { GraphQLRequest } from "apollo-server-types";
 import { JwtVerify } from "../util/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
-import { Uart } from "typing";
+import { KoaCtx } from "typing";
 /* const userOprateSet = new Set(['Protocol', 'DevType', 'DevTypes', 'Terminal', 'EcTerminals',
   'BindDevice', 'userGroup', 'UartTerminalData', 'UartTerminalDatas', 'getDevState', 'getUserSetup',
   'getUserDevConstant', 'getLogTerminal', 'getUserTel', 'Aggregation', 'Aggregations',
@@ -15,7 +15,7 @@ import { Uart } from "typing";
 export default new ApolloServer({
   typeDefs: typeDefs,
   resolvers: resolvers,
-  context: async ({ ctx }: { ctx: Uart.KoaCtx }) => {
+  context: async ({ ctx }: { ctx: KoaCtx }) => {
     // 获取Token
     const token = ctx.request.header.authorization
     const language = (<string>ctx.request.header['accept-language']).split(";")[0]

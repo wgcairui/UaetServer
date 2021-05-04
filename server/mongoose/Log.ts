@@ -1,4 +1,3 @@
-import { Uart } from "typing";
 import { mongoose, Schema } from "./index";
 
 // 发送短信记录
@@ -113,16 +112,16 @@ const SchemaInstructQuery = new Schema({
 })
 export const LogSmsSend = mongoose.model<mongoose.Document & Uart.logMailSend>("Log.SmsSend", SchemaSmsSend)
 export const LogMailSend = mongoose.model<mongoose.Document & Uart.logMailSend>("Log.MailSend", SchemaMailSend)
-export const LogUartTerminalDataTransfinite = mongoose.model<mongoose.Document & >("Log.UartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
-export const LogUserRequst = mongoose.model<mongoose.Document & >("Log.UserRequst", SchemaUserRequst)
-export const LogUserLogins = mongoose.model<mongoose.Document & >("Log.UserLogin", SchemaUserLogins)
-export const LogNodes = mongoose.model<mongoose.Document & >("Log.Node", SchemaNodes)
+export const LogUartTerminalDataTransfinite = mongoose.model<mongoose.Document & Uart.uartAlarmObject>("Log.UartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
+export const LogUserRequst = mongoose.model<mongoose.Document & Uart.logUserRequst>("Log.UserRequst", SchemaUserRequst)
+export const LogUserLogins = mongoose.model<mongoose.Document & Uart.logUserLogins>("Log.UserLogin", SchemaUserLogins)
+export const LogNodes = mongoose.model<mongoose.Document & Uart.logNodes>("Log.Node", SchemaNodes)
 export const LogTerminals = mongoose.model<mongoose.Document & Uart.logTerminals>("Log.Terminal", SchemaTerminals)
 
-export const LogDataClean = mongoose.model<mongoose.Document & >("Log.DataClean", SchemaDataClean)
+export const LogDataClean = mongoose.model<mongoose.Document & any>("Log.DataClean", SchemaDataClean)
 
-export const LogUseBytes = mongoose.model<mongoose.Document & >("Log.useBytes", SchemaUseBytes)
+export const LogUseBytes = mongoose.model<mongoose.Document & any>("Log.useBytes", SchemaUseBytes)
 
-export const LogDtuBusy = mongoose.model<mongoose.Document & >("Log.DtuBusy", SchemaDtuBusy)
+export const LogDtuBusy = mongoose.model<mongoose.Document & Uart.logDtuBusy>("Log.DtuBusy", SchemaDtuBusy)
 
-export const LogInstructQuery = mongoose.model<mongoose.Document & >("Log.InstructQuery", SchemaInstructQuery)
+export const LogInstructQuery = mongoose.model<mongoose.Document & Uart.queryObject>("Log.InstructQuery", SchemaInstructQuery)

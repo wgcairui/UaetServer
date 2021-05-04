@@ -1,12 +1,10 @@
-import { ParameterizedContext } from "koa";
 import _ from "lodash"
-import { Uart } from "typing";
 import { Terminal, NodeRunInfo, LogUseBytes, TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose";
 import tool from "../util/tool"
 import Event from "../event";
 type DataTypes = 'UartData' | 'RunData'
-export default async (Ctx: ParameterizedContext) => {
-  const ctx: Uart.KoaCtx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware: KoaIMiddleware = async (ctx) => {
   const type = ctx.params.type as DataTypes
   const body = ctx.request.body;
 
@@ -20,7 +18,8 @@ export default async (Ctx: ParameterizedContext) => {
           queryResultArray.forEach(async el => {
             // 保存每个终端使用的数字节数
             // 保存每个查询指令使用的字节，以天为单位
-            LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes: el.useBytes } }, { upsert: true }).exec()
+            const useBytes = el.useBytes! as any
+            LogUseBytes.updateOne({ mac: el.mac, date }, { $inc: { useBytes } }, { upsert: true }).exec()
             const docResults = await new TerminalClientResults(el).save()
             const parentId = docResults._id
             //console.log({ el, docResults, parentId });
@@ -30,9 +29,9 @@ export default async (Ctx: ParameterizedContext) => {
             const clientData = { ...el, parentId, result: parse }
 
 
-            
 
-            const { _id ,parentId:id} = await new TerminalClientResult(clientData).save() as any
+
+            const { _id, parentId: id } = await new TerminalClientResult(clientData).save() as any
             // if (el.type === 232) console.log(id);
             // 如果设备有用户绑定则进入检查流程
             const user = Event.Cache.CacheBindUart.get(el.mac);
@@ -59,7 +58,7 @@ export default async (Ctx: ParameterizedContext) => {
                   check.forEach(alarm => {
                     if (alarm) {
                       Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { ...alarm, parentId: _id })
-                      TerminalClientResult.findByIdAndUpdate(_id, { $inc: { hasAlarm: 1 } }).exec()
+                      TerminalClientResult.findByIdAndUpdate(_id, { $inc: { hasAlarm: 1 as any } }).exec()
                       TerminalClientResults.findByIdAndUpdate(parentId, { $inc: { hasAlarm: 1 } }).exec()
                     }
                   })
@@ -215,3 +214,5 @@ export default async (Ctx: ParameterizedContext) => {
       break;
   }
 };
+
+export default Middleware

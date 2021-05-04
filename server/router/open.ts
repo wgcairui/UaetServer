@@ -1,8 +1,4 @@
-/* app端用api */
-import { ParameterizedContext } from "koa";
 import Tool from "../util/tool";
-import { Uart } from "typing";
-
 interface CRC {
     protocolType: number
     pid: number
@@ -10,8 +6,8 @@ interface CRC {
     address: number
     value: number
 }
-export default async (Ctx: ParameterizedContext) => {
-    const ctx: Uart.KoaCtx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware: KoaIMiddleware = async (ctx) => {
     const body = ctx.request.body as { [x: string]: any }
     const type = ctx.params.type;
 
@@ -56,3 +52,5 @@ export default async (Ctx: ParameterizedContext) => {
     }
 
 };
+
+export default Middleware

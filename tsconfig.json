@@ -10,7 +10,8 @@
       ]
     },
     "types": [
-      "socket.io"
+      "socket.io",
+      "types-uart"
     ],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true

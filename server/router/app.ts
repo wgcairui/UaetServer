@@ -1,5 +1,4 @@
 /* app端用api */
-import { ParameterizedContext } from "koa";
 import { JwtVerify, JwtSign } from "../util/Secret";
 import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
 import { Users, UserAlarmSetup } from "../mongoose/user";
@@ -7,9 +6,8 @@ import { BcryptDo } from "../util/bcrypt";
 import { LogUserLogins } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
-import { Uart } from "typing";
-export default async (Ctx: ParameterizedContext) => {
-  const ctx: Uart.KoaCtx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware:KoaIMiddleware =  async (ctx) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type;
   // 所有的请求都需要检查token，没有token返回err
@@ -117,3 +115,6 @@ export default async (Ctx: ParameterizedContext) => {
     }
   }
 };
+
+
+export default Middleware

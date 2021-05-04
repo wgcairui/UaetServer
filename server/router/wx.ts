@@ -1,4 +1,3 @@
-import { ParameterizedContext } from "koa";
 import WX from "../util/wxUtil";
 import TencetMapAPI from "../util/TencetMapAPI";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
@@ -7,7 +6,6 @@ import _ from "lodash";
 import * as Cron from "../cron/index";
 import { getUserBindDev, validationUserPermission } from "../util/util";
 import { ParseCoefficient } from "../util/func";
-import { Uart } from "typing";
 import Tool from "../util/tool";
 import { SendValidation } from "../util/SMS";
 import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
@@ -54,16 +52,15 @@ type url =
   | 'iotRemoteUrl'
   | 'updateAvanter'
 
-
-export default async (Ctx: ParameterizedContext) => {
-  const ctx: Uart.KoaCtx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware: KoaIMiddleware = async (ctx) => {
   const body: { token: string, [x: string]: any } = ctx.method === "GET" ? ctx.query : ctx.request.body;
   const type = ctx.params.type as url;
   const ClientCache = ctx.$Event.ClientCache;
   // console.log({ type, body: _.pickBy(body, (_val, key) => key !== 'token') });
   // 校验用户cookie
   const noCookieTypeArray = ['code2Session', 'getphonenumber', 'register', 'userlogin']
-  const token = ctx.header.token//body.token
+  const token = ctx.header.token as string
   const tokenUser: Uart.UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
   ctx.$Event.savelog<Uart.logUserRequst>('request', { user: tokenUser.user, userGroup: tokenUser.userGroup || 'group', type, argument: body })
@@ -89,7 +86,7 @@ export default async (Ctx: ParameterizedContext) => {
         const user = await Users.findOne({ userId: openid }).lean<Uart.UserInfo>();
         if (user) {
           //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
-          const address = ctx.header['x-real-ip'] || ctx.ip
+          const address = (ctx.header['x-real-ip'] || ctx.ip) as string
           console.log({ address, a: ctx.header['x-real-ip'] });
 
           Users.updateOne({ user: user.user }, { $set: { modifyTime: new Date(), address } }).exec()
@@ -117,7 +114,7 @@ export default async (Ctx: ParameterizedContext) => {
             ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as Uart.ApolloMongoResult
             return
           }
-          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: ctx.header['x-real-ip'] || ctx.ip, userId: openid, avanter } }).exec()
+          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: (ctx.header['x-real-ip'] || ctx.ip) as string, userId: openid, avanter } }).exec()
           new LogUserLogins({ user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
           ctx.body = { ok: 1, msg: 'success' } as Uart.ApolloMongoResult
         } else {
@@ -162,7 +159,7 @@ export default async (Ctx: ParameterizedContext) => {
         const data: {
           user: string;
           name: string;
-          tel: string;
+          tel: number;
           avanter: string;
         } = body as any;
 
@@ -447,7 +444,7 @@ export default async (Ctx: ParameterizedContext) => {
         if (!setup?.ProtocolSetup || setup.ProtocolSetup.findIndex(el => el.Protocol === Protocol) === -1) {
           await UserAlarmSetup.updateOne({ user }, { $push: { ProtocolSetup: { Protocol } } }, { upsert: true }).exec()
         }
-        
+
         const result = await UserAlarmSetup.updateOne(
           { user, "ProtocolSetup.Protocol": Protocol },
           { $set: Up }
@@ -534,7 +531,7 @@ export default async (Ctx: ParameterizedContext) => {
       {
         const { type, value }: { type: 'tel' | 'mail' | 'name', value: string } = body as any
         if (type === 'mail' || type === 'tel') {
-          const users = await Users.findOne({ $or: [{ tel: value }, { mail: value }] }).lean<Uart.UserInfo>()
+          const users = await Users.findOne({ $or: [{ tel: Number(value) }, { mail: value }] }).lean<Uart.UserInfo>()
           if (users && users.user !== tokenUser.user) {
             ctx.body = { ok: 0, msg: '号码已被使用，请换新的号码重试' } as Uart.ApolloMongoResult
           } else {
@@ -772,3 +769,6 @@ export default async (Ctx: ParameterizedContext) => {
       break
   }
 };
+
+
+export default Middleware

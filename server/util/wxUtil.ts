@@ -1,6 +1,5 @@
 import { createDecipheriv } from "crypto";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { Uart } from "typing";
 import { Token, Tokens } from "../mongoose";
 const wxSecret = require("../key/wxSecret.json");
 
@@ -57,7 +56,7 @@ class WX {
    */
   async get_AccessToken() {
     // 雷迪司透传平台accessToken
-    const token = await Tokens.findOne({ type: 'wxapp' }).lean<Token>();
+    const token = await Tokens.findOne({ type: 'wxapp' });
     // 如果有token和token未失效
     if (token && (token.expires * 1000) > (Date.now() - token.creatTime) + 5000) {
       this.AccessToken = token.token

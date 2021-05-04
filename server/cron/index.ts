@@ -3,7 +3,6 @@ import Event from "../event/index";
 import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst, LogDtuBusy } from "../mongoose/Log";
 import { Types } from "mongoose";
 import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
-import { Uart } from "typing";
 
 /**
  * 数据清洗,清除告警数据中连续的重复的
@@ -41,13 +40,13 @@ async function Uartterminaldatatransfinites() {
     const len = await Query.countDocuments()
     const deleteids: any[] = []
     const allids: any[] = []
-    for (let doc = await cur.next() as Uart.uartAlarmObject; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid + doc.tag
         const _id = Types.ObjectId((doc as any)._id)
         if (MapUartterminaldatatransfinites.has(tag)) {
-            const old = MapUartterminaldatatransfinites.get(tag) as Uart.uartAlarmObject
+            const old = MapUartterminaldatatransfinites.get(tag)
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
-            if (old.msg === doc.msg) {
+            if (old && old.msg === doc.msg) {
                 //await LogUartTerminalDataTransfinite.deleteOne({ _id }).exec()
                 deleteids.push(_id)
             } else {
@@ -62,7 +61,7 @@ async function Uartterminaldatatransfinites() {
     // 批量删除告警日志
     await LogUartTerminalDataTransfinite.deleteMany({ _id: { $in: deleteids } }).exec()
     // 更新标签
-    await LogUartTerminalDataTransfinite.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 } }).exec()
+    await LogUartTerminalDataTransfinite.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 as any } }).exec()
     console.timeEnd('Uartterminaldatatransfinites');
 
     return deleteids.length + '/' + len
@@ -80,13 +79,13 @@ async function CleanUserRequst() {
     const len = await Query.countDocuments()
     const deleteids: any[] = []
     const allids: any[] = []
-    for (let doc = await cur.next() as Uart.logUserRequst; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.user + doc.type
         const _id = Types.ObjectId((doc as any)._id)
         if (MapUserRequst.has(tag)) {
-            const old = MapUserRequst.get(tag) as Uart.logUserRequst
+            const old = MapUserRequst.get(tag)
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
-            if (JSON.stringify(doc.argument) === JSON.stringify(old.argument) || !doc.type) {
+            if (old && JSON.stringify(doc.argument) === JSON.stringify(old.argument) || !doc.type) {
                 //await LogUserRequst.deleteOne({ _id }).exec()
                 deleteids.push(_id)
             } else {
@@ -100,7 +99,7 @@ async function CleanUserRequst() {
     // 批量删除告警日志
     await LogUserRequst.deleteMany({ _id: { $in: deleteids } }).exec()
     // 更新标签
-    await LogUserRequst.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 } }).exec()
+    await LogUserRequst.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 as any } }).exec()
     console.timeEnd('CleanUserRequst')
     // 清除缓存
     return deleteids.length + '/' + len
@@ -125,7 +124,7 @@ async function CleanClientresults() {
     // 
     const dtus = allDtus()
 
-    for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid
         const _id = Types.ObjectId((doc as any)._id)
         if (dtus.has(tag + doc.protocol)) {
@@ -154,7 +153,7 @@ async function CleanClientresults() {
     await TerminalClientResults.deleteMany({ _id: { $in: deleteids } })//.exec().then(el => console.log(el))
     await TerminalClientResult.deleteMany({ timeStamp: { $in: timeStamps } })//.exec().then(el => console.log(el))
     // 更新标签
-    await TerminalClientResults.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 } }).exec()
+    await TerminalClientResults.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 as any } }).exec()
     console.timeEnd('CleanClientresults')
     return deleteids.length + '/' + len
 }
@@ -213,7 +212,7 @@ async function CleanClientresultcolltion() {
     const cur = Query.cursor()
     const len = await Query.countDocuments()
     // const allids: any[] = []
-    for (let doc = await cur.next() as Uart.queryResult; doc != null; doc = await cur.next()) {
+    for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid
         const _id = Types.ObjectId((doc as any)._id)
         const oldDoc = MapClientresultcolltion.get(tag)
@@ -230,9 +229,9 @@ async function CleanClientresultcolltion() {
             })
 
             // 删除数组中重复值的参数
-            await TerminalClientResult.updateOne({ _id }, { $pull: { result: { name: { $in: names } } }, $inc: { "__v": 1 } }).exec()
+            await TerminalClientResult.updateOne({ _id }, { $pull: { result: { name: { $in: names } } }, $inc: { "__v": 1 as any } }).exec()
         } else {
-            MapClientresultcolltion.set(tag, clientresultcolltionsToMap(doc))
+            MapClientresultcolltion.set(tag, clientresultcolltionsToMap(doc as any))
         }
         // console.log('CleanClientresultcolltion is run' + ` ${allids.length}/${len}, ${(allids.length / len * 100).toFixed(2)}%`);
     }

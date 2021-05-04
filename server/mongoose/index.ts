@@ -34,15 +34,15 @@ const Token = new Schema({
   creatTime: Number
 })
 
-export interface Token {
+interface Token {
   type: string,
   token: string,
   expires: number,
   creatTime: number
 }
 
-const AMapLoctionCache = mongoose.model("AMap.LoctionCache", AMapLoctionCacheScheme)
-const Tokens = mongoose.model('Token', Token)
+const AMapLoctionCache = mongoose.model<mongoose.Document & { key: string, val: string }>("AMap.LoctionCache", AMapLoctionCacheScheme)
+const Tokens = mongoose.model<Token & mongoose.Document>('Token', Token)
 
 
 import { Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table } from "./DevEc";

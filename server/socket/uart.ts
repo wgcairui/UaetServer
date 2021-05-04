@@ -3,7 +3,6 @@ import http from "http";
 import Event, { Event as event } from "../event/index";
 import tool from "../util/tool";
 import { ParseFunction } from "../util/func";
-import { Uart } from "typing";
 import { LogDtuBusy, LogInstructQuery } from "../mongoose";
 
 /**
@@ -33,7 +32,7 @@ export default class NodeSocketIO {
      * @param server http
      * @param opt socket option
      */
-    constructor(server: http.Server, opt: ServerOptions) {
+    constructor(server: http.Server, opt: Partial<ServerOptions>) {
         this.io = new Server(server, opt)
         this.Event = Event
         //this.Cache = Event.Cache.QueryTerminal
@@ -235,7 +234,7 @@ class nodeClient {
                 this.Event.savelog<any>('node', { type: "告警", ID: this.ID, IP: this.property.IP, Name: this.property.Name })
             })
             // 节点终端设备上线
-            .on('terminalOn', (data, reline = false) => {
+            .on('terminalOn', (data: string | string[], reline = false) => {
                 const DTUOnlineTime = this.Event.uartSocket.DTUOnlineTime
                 const date = new Date()
                 if (!Array.isArray(data)) data = [data]

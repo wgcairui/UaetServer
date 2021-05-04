@@ -1,4 +1,3 @@
-import { Uart } from "typing";
 import Event from "../event/index";
 import config from "../config";
 /**

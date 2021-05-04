@@ -3,13 +3,13 @@
 数据执行器部分，更新协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
 */
 import { Event as event } from "./index";
-import { Uart } from "typing";
 import { Terminal, DeviceProtocol, DevsType, NodeClient, DevConstant, UserBindDevice, Users, UserAlarmSetup, DevArgumentAlias } from "../mongoose";
+import { Socket } from "socket.io";
 
 export interface sendQuery {
   IP: string;
   Name?: string;
-  socket: SocketIO.Socket;
+  socket: Socket;
 }
 
 /**
@@ -172,7 +172,7 @@ export default class Cache {
   }
   //
   async RefreshCacheConstant(protocol?: string) {
-    const res = await DevConstant.find(protocol ? { Protocol: protocol } : {}).lean<Uart.ProtocolConstantThreshold>()
+    const res = await DevConstant.find(protocol ? { Protocol: protocol } : {})
     console.log(`更新协议常量缓存......`);
     res.forEach(el => {
       this.CacheConstant.set(el.Protocol, el)
@@ -185,7 +185,7 @@ export default class Cache {
   }
   //
   async RefreshCacheBind(user?: string) {
-    const res = await UserBindDevice.find(user ? { user } : {}).lean<Uart.BindDevice>()
+    const res = await UserBindDevice.find(user ? { user } : {})
     console.log(`更新绑定设备缓存......`, user || '');
     res.forEach(el => {
       this.CacheBind.set(el.user, el)
@@ -198,7 +198,7 @@ export default class Cache {
   //
   async RefreshCacheUser(user?: string) {
     console.log(`更新用户信息缓存......`, user || '');
-    const users = await Users.find(user ? { user } : {}).lean<Uart.UserInfo>()
+    const users = await Users.find(user ? { user } : {})
     users.forEach(u => {
       this.CacheUser.set(u.user, u)
     })
@@ -218,7 +218,7 @@ export default class Cache {
       new UserAlarmSetup(setup).save()
     }) */
     //
-    const res = await UserAlarmSetup.find(user ? { user } : {}).lean<Uart.userSetup>()
+    const res = await UserAlarmSetup.find(user ? { user } : {})
     // console.log(`更新用户个性化配置......`, user);
     res.forEach(async el => {
 
@@ -243,7 +243,7 @@ export default class Cache {
   }
   // 刷选设备参数别名缓存
   async RefreshCacheAlias(alias?: Pick<Uart.DevArgumentAlias, "mac" | "pid" | "protocol">) {
-    const res = await DevArgumentAlias.find(alias ? { mac: alias.mac, pid: alias.pid, protocol: alias.protocol } : {}).lean<Uart.DevArgumentAlias>()
+    const res = await DevArgumentAlias.find(alias ? { mac: alias.mac, pid: alias.pid, protocol: alias.protocol } : {})
     console.log(`更新设备参数别名配置......`, alias?.mac || '');
     res.forEach(el => {
       const tag = el.mac + el.pid + el.protocol

@@ -1,7 +1,6 @@
 import { Event } from "../index";
 import Tool from "../../util/tool";
 import { ParseFunctionEnd, ParseCoefficient } from "../../util/func";
-import { Uart } from "typing";
 /**
  * 解析设备查询数据
  */
@@ -124,7 +123,7 @@ class ProtocolParse {
         // 解析规则
         const instructs = InstructMap.get(el.content)!
         // 把buffer转换为utf8字符串并掐头去尾
-        const parseStr = Buffer.from(el.buffer)
+        const parseStr = Buffer.from(el.buffer.data)
           .toString("utf8", instructs.shift ? instructs.shiftNum : 0, instructs.pop ? el.buffer.data.length - instructs.popNum : el.buffer.data.length)
           .replace(/(#)/g, "")
           // 如果是utf8,分隔符为' '
@@ -196,7 +195,7 @@ class ProtocolParse {
     // 把转换处理后的数据根据协议指令对应的解析对象生成结果对象数组,赋值result属性
     return ParseInstructResultType.map(el => {
       const instructs = InstructMap.get(el.content)!
-      const buffer = Buffer.from(el.buffer)
+      const buffer = Buffer.from(el.buffer.data)
       return instructs.formResize.map(el2 => {
         // 申明结果
         const result: Uart.queryResultArgument = { name: el2.name, value: '0', parseValue: '0', unit: el2.unit, issimulate: el2.isState }
@@ -240,7 +239,7 @@ class ProtocolParse {
       // 设备请求结果,发送设备正常查询
       this.Event.setClientDtuMountDevOnline(R.mac, R.pid, true)
     }
-    return result.filter(el=>!el.issimulate || el.parseValue)
+    return result.filter(el => !el.issimulate || el.parseValue)
   }
 }
 

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { EcTerminal } from "./EnvironmentalControl";
 
-EcTerminal.update(
+EcTerminal.updateOne(
   { ECid: "mac0101002545" },
   { name: "雷迪司户外柜", model: "w220k" },
   { upsert: true }

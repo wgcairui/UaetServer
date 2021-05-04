@@ -14,7 +14,6 @@ import { JwtSign, JwtVerify } from "../util/Secret";
 import * as Cron from "../cron/index";
 import { getUserBindDev, localToUtc, validationUserPermission } from "../util/util";
 import { ParseCoefficient, ParseFunction } from "../util/func";
-import { Uart } from "typing";
 import config from "../config";
 import HF from "../util/HF";
 

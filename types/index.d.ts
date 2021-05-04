@@ -1,6 +1,4 @@
-import { Uart } from "typing";
-
-declare module "socket.io" {
+/* declare module "socket.io" {
   interface Socket extends NodeJS.EventEmitter {
     on(event: 'disconnect', listener: () => void): this
 
@@ -25,4 +23,4 @@ declare module "socket.io" {
     emit(event: 'DTUoprate', Query: Uart.DTUoprate): this
     emit(event: string, ...args: any[]): this
   }
-}
+} */

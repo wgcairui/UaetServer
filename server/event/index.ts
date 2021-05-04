@@ -8,7 +8,6 @@ import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
-import { Uart } from "typing";
 import { Terminal } from "../mongoose";
 import { getDtuInfo, getUserBindDev, parseTime } from "../util/util";
 // Cron

@@ -1,9 +1,8 @@
 import IO, { ServerOptions, Socket } from "socket.io"
-import { Server } from "http";
+import http from "http";
 import Event, { Event as event } from "../event/index";
 import { JwtVerify } from "../util/Secret";
 import { parseToken, getDtuInfo } from "../util/util";
-import { Uart } from "typing";
 
 interface socketArgument {
     IP: string
@@ -21,8 +20,8 @@ export default class webClientSocketIO {
     Event: event;
     CacheSocketidUser: Map<string, string>;
     CacheUserSocketids: Map<string, Set<string>>;
-    constructor(server: Server, opt: ServerOptions) {
-        this.io = IO(server, opt)
+    constructor(server: http.Server, opt: Partial<ServerOptions>) {
+        this.io = new IO.Server(server, opt)
         this.Event = Event
         this.CacheUserSocketids = this.Event.ClientCache.CacheUserSocketids
         this.CacheSocketidUser = this.Event.ClientCache.CacheSocketidUser
@@ -31,10 +30,10 @@ export default class webClientSocketIO {
         this.io.use((socket, next) => {
             const { qr, token } = socket.handshake.query
             // 查看参数是否带qr,是的话注册socket
-            if (qr && this.Event.ClientCache.CacheQR.has(qr)) {
+            if (qr && this.Event.ClientCache.CacheQR.has(qr as string)) {
                 next()
             } else {
-                JwtVerify(parseToken(token))
+                JwtVerify(parseToken(token as string))
                     .then(() => next())
                     .catch((err) => {
                         socket.disconnect()
@@ -48,15 +47,13 @@ export default class webClientSocketIO {
             const { qr, token } = socket.handshake.query
             // 如果是带二维码连接的就把二维码加入到房间
             if (qr) {
-                socket
-                    .join(qr)
-                    .on("disconnect", () => {
-                        socket
-                            .disconnect()
-                            .leaveAll()
-                    })
+                socket.join(qr)
+                socket.on("disconnect", () => {
+                    socket.disconnect();
+                    // socket.leaveAll()
+                })
             } else {
-                const { user }: Uart.UserInfo = await JwtVerify(parseToken(token))
+                const { user }: Uart.UserInfo = await JwtVerify(parseToken(token as string))
                 const id = socket.id
                 const ip = socket.conn.remoteAddress
                 const Node: socketArgument = { User: user as string, ID: id, socket, IP: ip }

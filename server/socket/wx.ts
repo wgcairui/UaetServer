@@ -2,7 +2,6 @@ import ws from "ws";
 import { Server } from "http";
 import { JwtVerify } from "../util/Secret";
 import { getDtuInfo } from "../util/util";
-import { Uart } from "typing";
 
 /**
  * 微信小程序使用wss服务端

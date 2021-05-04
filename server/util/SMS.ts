@@ -1,5 +1,4 @@
 import core from "@alicloud/pop-core"
-import { Uart } from "typing";
 import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
 import { getDtuInfo } from "./util";

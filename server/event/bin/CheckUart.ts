@@ -1,7 +1,6 @@
 import { Event } from "../index";
 import { getDtuInfo, localToUtc, parseTime } from "../../util/util";
 import wxUtil from "../../util/wxUtil";
-import { Uart } from "typing";
 import { SendSms } from "../../util/SMS";
 import Tool from "../../util/tool";
 import { Send } from "../../util/Mail";
@@ -272,7 +271,7 @@ class Check {
     // 4、判断UPS是否有故障信息：每1秒钟查询一下指令QGS，检测返回的信息(MMM.M HH.H LLL.L NN.N QQQ.Q DDD KKK.K VVV.V SSS.S XXX.X TTT.T b9b8b7b6b5b4b3b2b1b0<cr>,
     if (Query.type === 232 && Query.content.includes('QGS')) {
       const index = Query.contents.findIndex(el => el.content === "QGS")
-      const Res = Buffer.from(Query.contents[index].buffer).toString('utf8').split(' ')[11]
+      const Res = Buffer.from(Query.contents[index].buffer.data).toString('utf8').split(' ')[11]
       if (Res) {
         const [b9, b8, b7, b6, b5, b4, b3, b2, b1, b0, a9, a8] = Res.split('').map(el => Number(el))
         // 在 b4位置的数据位为1还是0，为1时表示UPS有故障了，则使用“QFS”故障查询指令，查询UPS故障信息。返回的信息数据				
@@ -312,7 +311,7 @@ class Check {
       this.Event.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
-      this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event,query.timeStamp)
+      this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event, query.timeStamp)
 
       return {
         mac: query.mac,
@@ -372,7 +371,7 @@ class Check {
    * @param devName 设备名称 
    * @param remind 备注信息
    */
-  private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string,timeStamp:number) => {
+  private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string, timeStamp: number) => {
     const info = getDtuInfo(mac)
     const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
     // 时间参数,长度限制20字节

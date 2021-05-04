@@ -1,10 +1,6 @@
-/* app端用api */
-import { ParameterizedContext } from "koa";
-import { Uart } from "typing";
 import * as DB from "../mongoose"
-
-export default async (Ctx: ParameterizedContext) => {
-    const ctx: Uart.KoaCtx = Ctx as any;
+import { KoaIMiddleware } from "typing";
+const Middleware:KoaIMiddleware =  async (ctx) => {
     const mac = ctx.header.mac
     ctx.assert(mac, 400, 'must submit ecMac')
     const body = ctx.method === "GET" ? ctx.query : ctx.request.body
@@ -23,3 +19,5 @@ export default async (Ctx: ParameterizedContext) => {
     }
 
 };
+
+export default Middleware

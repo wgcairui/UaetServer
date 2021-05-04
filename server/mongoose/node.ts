@@ -1,4 +1,3 @@
-import { Uart } from "typing";
 import { mongoose, Schema } from "./index";
 
 // 节点信息
@@ -137,9 +136,9 @@ const SchemaTerminalClientResultSingle = new Schema({
   useTime: Number,
   parentId: String
 }, { timestamps: true });
-const NodeClient = mongoose.model("Node.Client", SchemaNodeClient)
+const NodeClient = mongoose.model<Uart.NodeClient & mongoose.Document>("Node.Client", SchemaNodeClient)
 
-const TerminalClientResults = mongoose.model(
+const TerminalClientResults = mongoose.model<Uart.queryResult & mongoose.Document>(
   "Client.Result",
   SchemaTerminalClientResults,
 );
@@ -154,8 +153,8 @@ const TerminalClientResultSingle = mongoose.model<Uart.queryResult & mongoose.Do
   SchemaTerminalClientResultSingle,
 );
 
-const NodeRunInfo = mongoose.model("Node.RunInfo", SchemaNodeRunInfo);
+const NodeRunInfo = mongoose.model<Uart.nodeInfo & mongoose.Document>("Node.RunInfo", SchemaNodeRunInfo);
 
-const WebSocketTerminal = mongoose.model("Terminal.WebSocketinfo", SchemaWebSocketTerminal)
+const WebSocketTerminal = mongoose.model<Uart.WebSocketInfo & mongoose.Document>("Terminal.WebSocketinfo", SchemaWebSocketTerminal)
 
 export { WebSocketTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo }

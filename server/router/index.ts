@@ -1,5 +1,5 @@
-import Rout from "koa-router";
-const rout = new Rout();
+import router from "koa-router";
+const rout = new router<{}, KoaCtx>()
 import nodeApi from "./node";
 import Auth from "./auth";
 import APPs from "./app";
@@ -8,6 +8,8 @@ import wxPublic from "./wxPublic";
 import Util from "./util";
 import OPEN from "./open";
 import Ec from "./ec"
+import { KoaCtx } from "typing";
+
 
 rout.all("/api/app/:type", APPs);
 rout.post("/api/Node/:type", nodeApi);

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { Uart } from "typing";
 import { AMapLoctionCache } from "../mongoose";
 
 type apiType = 'ip' | 'geocode/geo' | 'geocode/regeo' | 'assistant/coordinate/convert'
@@ -15,7 +14,7 @@ class AMapUtil {
         this.LoctionCache = new Map()
         this.key = "0e99d0426f1afb11f2b95864ebd898d0"
         this.ApiAddress = "https://restapi.amap.com/v3/"
-        AMapLoctionCache.find({}).lean<{ key: string, val: string }>().then(el => {
+        AMapLoctionCache.find({}).then(el => {
             el.forEach(({ key, val }) => this.LoctionCache.set(key, val))
         })
     }

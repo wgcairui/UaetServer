@@ -92,10 +92,10 @@ const Schema_DevArgumentAlias = new Schema({
   protocol: String,
   alias: [alias]
 })
-const DevConstant = mongoose.model(
+const DevConstant = mongoose.model<Uart.ProtocolConstantThreshold & mongoose.Document>(
   "Device.Constant",
   Schema_DevConstant
 );
 
-const DevArgumentAlias = mongoose.model('Device.ArgumentAlia', Schema_DevArgumentAlias)
+const DevArgumentAlias = mongoose.model<Uart.DevArgumentAlias & mongoose.Document>('Device.ArgumentAlia', Schema_DevArgumentAlias)
 export { DevConstant, DevArgumentAlias }
