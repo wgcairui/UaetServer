@@ -16,8 +16,9 @@ import { getUserBindDev, localToUtc, validationUserPermission } from "../util/ut
 import { ParseCoefficient, ParseFunction } from "../util/func";
 import config from "../config";
 import HF from "../util/HF";
+import { ApolloCtx } from "typing";
 
-const resolvers: IResolvers<any, Uart.ApolloCtx> = {
+const resolvers: IResolvers<any, ApolloCtx> = {
     Query: {
         /**
          * 节点状态
@@ -134,7 +135,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          */
         TerminalOnline(root, { DevMac }, ctx) {
             const terminals = ctx.$Event.Cache.CacheTerminal.get(DevMac)
-            return terminals?.online ? terminals : null
+            return terminals && terminals.online ? terminals : null
         },
 
         /**
@@ -418,7 +419,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async lognodes(root, { start, end }: { start: Date, end: Date }) {
+        async lognodes(root, { start, end }) {
             return await LogNodes.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -428,7 +429,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async logterminals(root, { start, end }: { start: number, end: Date }) {
+        async logterminals(root, { start, end }) {
             return await LogTerminals.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -439,7 +440,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param ctx 
          * @returns 
          */
-        async userlogterminals(root, { start, end, mac }: { start: Date, end: Date, mac: string }, ctx) {
+        async userlogterminals(root, { start, end, mac }, ctx) {
             const UserBindDevice = ctx.$Event.Cache.CacheBind.get(ctx.user)?.UTs as string[]
             if (!UserBindDevice || (mac && !UserBindDevice.includes(mac))) return null
             const types = ['连接', '断开'] as any[]
@@ -449,14 +450,14 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
         /**
          * 获取短信日志
          */
-        async logsmssends(root, { start, end }: { start: number, end: number }) {
+        async logsmssends(root, { start, end }) {
             return await LogSmsSend.find().where("createdAt").gte(start).lte(end)
         },
 
         /**
          * 获取邮件日志
          */
-        async logmailsends(root, { start, end }: { start: Date, end: Date }) {
+        async logmailsends(root, { start, end }) {
             return await LogMailSend.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -467,7 +468,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param ctx 
          * @returns 
          */
-        async loguartterminaldatatransfinites(root, { start, end }: { start: Date, end: Date }, ctx) {
+        async loguartterminaldatatransfinites(root, { start, end }, ctx) {
             const query = LogUartTerminalDataTransfinite.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
             if (await query.countDocuments() > 2000) {
@@ -511,7 +512,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async loguserlogins(root, { start, end }: { start: Date, end: Date }) {
+        async loguserlogins(root, { start, end }) {
             return await LogUserLogins.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -521,7 +522,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async loguserrequsts(root, { start, end }: { start: Date, end: Date }) {
+        async loguserrequsts(root, { start, end }) {
             const query = LogUserRequst.find({ "__v": 0 }).where("createdAt").gte(start).lte(end)
             // 如果未清洗的数据查询结果的大于N条,则先清洗数据
             if (await query.countDocuments() > 2000) {
@@ -585,7 +586,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * @param param1 
          * @returns 
          */
-        async logdataclean(root, { start, end }: { start: Date, end: Date }) {
+        async logdataclean(root, { start, end }) {
             return await LogDataClean.find().where("createdAt").gte(start).lte(end).exec()
         },
 
@@ -1168,7 +1169,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             }, ctx
         ) {
             valadationRoot(ctx)
-            let Up
+            let Up: any
             switch (type) {
                 case "Constant":
                     Up = { Constant: arg }
@@ -1577,9 +1578,9 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
             let result;
             // $数组操作符需要查询匹配到数组数据，否则会报错误
             if (data && data.has(name)) {
-                result = await DevArgumentAlias.updateOne({ mac, pid, protocol, 'alias.name': name }, { $set: { 'alias.$.alias': alias } }, { multi: true })
+                result = await DevArgumentAlias.updateOne({ mac, pid: Number(pid), protocol, 'alias.name': name }, { $set: { 'alias.$.alias': alias } }, { multi: true })
             } else {
-                result = await DevArgumentAlias.updateOne({ mac, pid, protocol }, { $push: { alias: { name, alias } } }, { upsert: true })
+                result = await DevArgumentAlias.updateOne({ mac, pid: Number(pid), protocol }, { $push: { alias: { name, alias } } }, { upsert: true })
             }
             await ctx.$Event.Cache.RefreshCacheAlias({ mac, pid: Number(pid), protocol })
             return result
@@ -1601,8 +1602,8 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          * 下载设备协议
          * @param protocol 
          */
-        async downProtocol(root, arg: { protocol: [String] }, ctx) {
-            const protocols = await DeviceProtocol.find({ Protocol: { $in: arg.protocol } }).lean<Uart.protocol>()
+        async downProtocol(root, arg: { protocol: string[] }, ctx) {
+            const protocols = await DeviceProtocol.find({ Protocol: { $in: arg.protocol } })
 
             // const stream = fs.createReadStream()
         },
@@ -1613,7 +1614,7 @@ const resolvers: IResolvers<any, Uart.ApolloCtx> = {
          */
         async updateProtocol(root, arg: { protocol: Uart.protocol }, ctx) {
             const { Protocol, ProtocolType, instruct } = arg.protocol
-            const result = await DeviceProtocol.updateOne({ Protocol, ProtocolType }, { $set: { instruct } }) as Uart.ApolloMongoResult
+            const result = await DeviceProtocol.updateOne({ Protocol, ProtocolType }, { $set: { instruct } })
             if (result.ok) {
                 ctx.$Event.Cache.RefreshCacheProtocol(Protocol)
             }
@@ -1632,7 +1633,7 @@ export default resolvers
  * @param mac 设备mac
  * @returns 
  */
-function valadationMac(ctx: Uart.ApolloCtx, mac: string) {
+function valadationMac(ctx: ApolloCtx, mac: string) {
     if (validationUserPermission(ctx.user, mac)) return true
     else {
         console.log("user premission Error", ctx.userGroup, ctx.user, mac, ctx.operationName);
@@ -1645,7 +1646,7 @@ function valadationMac(ctx: Uart.ApolloCtx, mac: string) {
  * @param ctx 
  * @returns 
  */
-function valadationRoot(ctx: Uart.ApolloCtx) {
+function valadationRoot(ctx: ApolloCtx) {
     const group = ctx.userGroup!
     const g = new Set(['root', 'admin'])
     if (!g.has(group)) {

@@ -1,6 +1,6 @@
 import { createDecipheriv } from "crypto";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { Token, Tokens } from "../mongoose";
+import { Tokens } from "../mongoose";
 const wxSecret = require("../key/wxSecret.json");
 
 /**
@@ -250,7 +250,7 @@ class WX {
         "aes-128-cbc",
         sessionKey,
         BufferIv
-      );
+      ) as any
       // 设置自动 padding 为 true，删除填充补位
       decipher.setAutoPadding(true);
       const decode = decipher.update(BufferEncryptedData, "binary", "utf8");

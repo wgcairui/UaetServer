@@ -1,6 +1,6 @@
 {
   "name": "uartserver",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "LADS 物联网透传云平台",
   "author": "wgcairui",
   "private": true,

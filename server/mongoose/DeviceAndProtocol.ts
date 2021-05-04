@@ -78,5 +78,5 @@ const SchemaProtocols = new Schema({
 });
 
 const DevsType = mongoose.model<Uart.DevsType & mongoose.Document>("Device.Type", SchemaDev);
-const DeviceProtocol = mongoose.model(<Uart.protocol & mongoose.Document>"Device.Protocol", SchemaProtocols);
+const DeviceProtocol = mongoose.model<Uart.protocol & mongoose.Document>("Device.Protocol", SchemaProtocols);
 export { DeviceProtocol, DevsType };
