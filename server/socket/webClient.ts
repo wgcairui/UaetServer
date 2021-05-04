@@ -21,6 +21,10 @@ export default class webClientSocketIO {
     CacheSocketidUser: Map<string, string>;
     CacheUserSocketids: Map<string, Set<string>>;
     constructor(server: http.Server, opt: Partial<ServerOptions>) {
+        opt.cors = {
+            origin: "https://ladishb.com/WebClient/",
+            methods: ["GET", "POST"],
+        }
         this.io = new IO.Server(server, opt)
         this.Event = Event
         this.CacheUserSocketids = this.Event.ClientCache.CacheUserSocketids
