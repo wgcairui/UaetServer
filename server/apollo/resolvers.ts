@@ -1242,10 +1242,10 @@ const resolvers: IResolvers<any, ApolloCtx> = {
          */
         async SendProcotolInstructSet(root, { query, item }: { query: Uart.instructQueryArg, item: Uart.OprateInstruct }, ctx) {
             // 验证客户是否校验过权限
-            const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
+            /* const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(ctx.user as string)
             if (!juri || juri !== ctx.$token) {
                 return { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
-            }
+            } */
             // 获取协议指令
             const protocol = ctx.$Event.Cache.CacheProtocol.get(query.protocol)!
             // 携带事件名称，触发指令查询
