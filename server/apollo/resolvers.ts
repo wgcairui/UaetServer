@@ -17,6 +17,7 @@ import { ParseCoefficient, ParseFunction } from "../util/func";
 import config from "../config";
 import HF from "../util/HF";
 import { ApolloCtx } from "typing";
+import { TokenValidation } from "../mongoose";
 
 const resolvers: IResolvers<any, ApolloCtx> = {
     Query: {
@@ -739,6 +740,16 @@ const resolvers: IResolvers<any, ApolloCtx> = {
         async iotRemoteUrl(root, { mac }, ctx) {
             valadationRoot(ctx)
             return await HF.macRemote(mac)
+        },
+
+        /**
+         * 查询用户校验状态
+         */
+        async validationStat(root, arg, ctx) {
+            const result = await TokenValidation.findOne({ token: ctx.$token })
+            return {
+                ok: result ? 1 : 0,
+            } as Uart.ApolloMongoResult
         }
     },
 
@@ -1417,6 +1428,8 @@ const resolvers: IResolvers<any, ApolloCtx> = {
             if (userCode !== code) return { ok: 0, msg: '校验码不匹配,请确认校验码是否正确' } as Uart.ApolloMongoResult
             // 缓存权限
             ctx.$Event.ClientCache.CacheUserJurisdiction.set(ctx.user as string, ctx.$token)
+            //
+            new TokenValidation({ token: ctx.$token, type: 'sms' }).save()
             return { ok: 1, msg: "校验通过" } as Uart.ApolloMongoResult
         },
 

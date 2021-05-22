@@ -66,7 +66,6 @@ const Middleware:KoaIMiddleware =  async (ctx) => {
         ctx.assert(user, 406, "提交参数无效")
         const isUser = <Uart.UserInfo>await Users.findOne({ $or: [{ user }, { mail: user }] }).lean();
         ctx.assert(isUser, 400, "账号不存在");
-        console.log({ user, isUser });
 
         const hash = await JwtSign({ user, timeStamp: Date.now() });
         ctx.$Event.ClientCache.CacheUserLoginHash.set(user, hash)

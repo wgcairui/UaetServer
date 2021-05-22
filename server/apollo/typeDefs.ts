@@ -377,6 +377,8 @@ const typeDefs: DocumentNode = gql`
     ClientResults(start:Date,end:Date,id:String):JSON
     ClientResult(start:Date,end:Date,id:String):JSON
     ClientResultSingle:JSON
+    # 查询用户校验状态
+    validationStat:result
   }
 
   #mutation

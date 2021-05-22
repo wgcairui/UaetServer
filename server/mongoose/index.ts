@@ -26,6 +26,20 @@ const AMapLoctionCacheScheme = new Schema({
   val: String
 })
 
+// 记录sms校验权限
+const smsValidation = new Schema({
+  token: {
+    type: String,
+    index: { expires: 60 * 60 * 24 * 1 }
+  },
+  type: String,
+  createdAt: {
+    type: Date,
+    default: Date.now(),
+    index: { expires: 60 * 60 * 24 * 1 }
+  }
+})
+
 // 记录wx token
 const Token = new Schema({
   type: String,
@@ -33,6 +47,8 @@ const Token = new Schema({
   expires: Number,
   creatTime: Number
 })
+
+
 
 interface Token {
   type: string,
@@ -43,6 +59,7 @@ interface Token {
 
 const AMapLoctionCache = mongoose.model<mongoose.Document & { key: string, val: string }>("AMap.LoctionCache", AMapLoctionCacheScheme)
 const Tokens = mongoose.model<Token & mongoose.Document>('Token', Token)
+const TokenValidation = mongoose.model<mongoose.Document & any>("Token.Validation", smsValidation)
 
 
 import { Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table } from "./DevEc";
@@ -54,7 +71,7 @@ import { Terminal, RegisterTerminal } from "./Terminal";
 import { NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal } from "./node";
 import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout } from "./user";
 
-export { mongoose, Schema, DeviceProtocol, DevsType, Tokens, AMapLoctionCache, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table, DevConstant, DevArgumentAlias, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery, Terminal, RegisterTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout }
+export { mongoose, Schema, DeviceProtocol, DevsType, Tokens, TokenValidation, AMapLoctionCache, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table, DevConstant, DevArgumentAlias, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery, Terminal, RegisterTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout }
 
 export const DocmentCount = async () => {
   const models = [Tokens, AMapLoctionCache, DeviceProtocol, DevsType, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_Table, DevConstant, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, Terminal, RegisterTerminal, UserAlarmSetup, UserAggregation, Users, UserBindDevice, NodeRunInfo,]// NodeClient,TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, ]
