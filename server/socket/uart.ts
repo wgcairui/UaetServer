@@ -46,18 +46,24 @@ export default class NodeSocketIO {
             const ID = socket.id
             // ip由nginx代理后会变为nginx服务器的ip，重写文件头x-real-ip为远端ip
             const IP = socket.handshake.headers["x-real-ip"] || socket.conn.remoteAddress
+            // 检查连接节点是否在系统登记
             const Node = this.Event.Cache.CacheNode.get(IP)
             if (Node) {
                 const { Name } = Node
                 const client = this.CacheSocket.get(Name)
                 console.log(`new socket connect<id: ${ID},IP: ${IP},Name: ${Name}>`);
+                // 检查节点是否在缓存中,在的话激活旧的socket,否则创建新的socket
                 if (client) {
                     console.log(`${Name} 重新上线`);
                     client.socket = socket
                     // 重新注册socket事件监听
                     client.startlisten()
+                    this.Event.savelog<Uart.logNodes>('node', { ID, IP, type: "重新上线", Name })
                 }
-                else this.CacheSocket.set(Name, new nodeClient(socket, this.Event, this.CacheQueryIntruct, Node))
+                else {
+                    this.CacheSocket.set(Name, new nodeClient(socket, this.Event, this.CacheQueryIntruct, Node))
+                    this.Event.savelog<Uart.logNodes>('node', { ID, IP, type: "上线", Name })
+                }
             } else {
                 console.log(`有未登记或重复登记节点连接=>${IP}，断开连接`);
                 socket.disconnect()
@@ -66,6 +72,7 @@ export default class NodeSocketIO {
             }
         })
 
+        // 监听设备超时恢复事件,发送超时恢复短信
         this.Event.on("timeOutRestore", (mac: string, pid: string) => {
             const terminal = this.Event.Cache.CacheTerminal.get(mac)
             if (terminal) {
@@ -80,6 +87,7 @@ export default class NodeSocketIO {
                             // console.log({ mac, pid, mas: 'terminal恢复' });
                             this.Event.sendDevTimeOut2On({ mac, pid, devName: terEx.mountDev, event: '恢复' })
                             node.TimeOutMonutDevSmsSend.delete(hash)
+                            this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: node.property.IP, NodeName: node.property.Name, TerminalMac: terminal.DevMac, type: "查询恢复" })
                         }
                     }
                 }
@@ -167,8 +175,17 @@ class nodeClient {
     socket: Socket;
     cache: Map<string, Uart.TerminalMountDevsEX>;
     private Event: event;
+    /**
+     * 缓存指令
+     */
     private CacheQueryIntruct: Map<string, string>;
+    /**
+     * socketId
+     */
     private ID: string;
+    /**
+     * 轮询发送查询指令的定时器
+     */
     private interVal?: NodeJS.Timeout;
     /**
      * 查询超时告警发送模式 hash state
@@ -179,6 +196,9 @@ class nodeClient {
      * 标识每个dtu的工作是否繁忙
      */
     private dtuWorkBusy: Set<string>
+    /**
+     * node节点属性
+     */
     property: Uart.NodeClient;
     /**
      * 
@@ -211,17 +231,23 @@ class nodeClient {
             .on('register', _regster => this.socket.emit('registerSuccess', this.property))
             // 节点离线,清理缓存
             .on("disconnect", () => {
-                console.log(`${new Date().toLocaleTimeString()}## 节点：${this.property.Name}断开连接，清除定时操作`);
-                this.socket.disconnect();
-                console.log('socket disconnected Stat:', this.socket.disconnected);
+                if (this.socket) {
+                    console.log(`${new Date().toLocaleTimeString()}## 节点：${this.property.Name}断开连接，清除定时操作`);
+                    this.socket.disconnect();
+                    console.log('socket disconnected Stat:', this.socket?.disconnected);
 
-                (this.socket as any) = null
-                const macs = [...this.Event.Cache.CacheTerminal].filter(([mac, term]) => term.mountNode === this.property.Name).map(el => el[0])
-                this.Event.ChangeTerminalStat(macs, false)
-                this.cache.clear()
-                if (this.interVal) clearInterval(this.interVal)
-                // 添加日志
-                this.Event.savelog<Uart.logNodes>('node', { type: "断开", ID: this.ID, IP: this.property.IP, Name: this.property.Name })
+                    (this.socket as any) = null
+                    const macs = [...this.Event.Cache.CacheTerminal].filter(([mac, term]) => term.mountNode === this.property.Name).map(el => el[0])
+                    this.Event.ChangeTerminalStat(macs, false)
+                    this.cache.clear()
+                    if (this.interVal) clearInterval(this.interVal)
+                    // 添加日志
+                    this.Event.savelog<Uart.logNodes>('node', { type: "断开", ID: this.ID, IP: this.property.IP, Name: this.property.Name })
+                    macs.forEach(mac => {
+                        this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: mac, type: "节点断开" })
+                    })
+
+                }
             })
             // 节点启动失败
             .on('startError', (data) => {
@@ -238,27 +264,31 @@ class nodeClient {
                 const DTUOnlineTime = this.Event.uartSocket.DTUOnlineTime
                 const date = new Date()
                 if (!Array.isArray(data)) data = [data]
-                const terminal = this.Event.Cache.CacheTerminal.get(data[0])
-                if (terminal) {
-                    this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: data[0], type: "连接" })
-                }
                 this.Event.ChangeTerminalStat(data, true)
-                data.forEach(mac => this.dtuWorkBusy.delete(mac))
-                // 如果是重连，加入缓存
-                if (reline) DTUOnlineTime.set(data[0], date)
+                // 迭代macs,从busy列表删除,写入日志,在线记录更新
+                data.forEach(mac => {
+                    this.dtuWorkBusy.delete(mac)
+                    const terminal = this.Event.Cache.CacheTerminal.get(mac)
+                    if (terminal) {
+                        this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: data[0], type: reline ? "重新连接" : "连接" })
+                    }
+                    // 如果是重连，加入缓存
+                    if (reline) DTUOnlineTime.set(mac, date)
+                })
                 console.info(`${date.toLocaleTimeString()}##${this.property.Name} DTU:/${data.join("|")}/ 已上线,模式:${reline},重连设备数：${DTUOnlineTime.size}`);
             })
             // 节点终端设备掉线
-            .on('terminalOff', (mac, active) => {
+            .on('terminalOff', (mac: string, active: boolean) => {
                 this.Event.ChangeTerminalStat(mac, false)
                 console.error(`${new Date().toLocaleTimeString()}##${this.property.Name} DTU:${mac} 已${active ? '主动' : '被动'}离线`);
+                this.dtuWorkBusy.delete(mac)
                 // 添加日志
                 const terminal = this.Event.Cache.CacheTerminal.get(mac)
                 if (terminal) {
-                    this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: mac, type: "断开" })
+                    this.Event.savelog<Uart.logTerminals>('terminal', { NodeIP: this.property.IP, NodeName: this.property.Name, TerminalMac: mac, type: active ? "dtu主动断开" : "dtu断开" })
                 }
             })
-            // 设备查询指令有部分超时,
+            // 设备查询指令有部分超时,把dtu查询间隔+500ms
             .on('instructTimeOut', (mac: string, pid: number, instructNum: number) => {
                 console.log('部分指令超时', mac, pid, instructNum);
                 this.Event.setClientDtuMountDevOnline(mac, pid, true)
@@ -266,7 +296,7 @@ class nodeClient {
                 if (EX) EX.Interval += 500 * instructNum
 
             })
-            // 设备挂载节点查询超时
+            // 设备挂载节点查询超时,dtu所有查询指令超时
             .on('terminalMountDevTimeOut', async (mac: string, pid: number, timeOut: number) => {
                 const hash = mac + pid
                 const Query = this.cache.get(hash)
@@ -276,7 +306,7 @@ class nodeClient {
                     // 如果查询间隔小于五分钟则每次查询间隔修改为+10000
                     // if (Query.Interval < 3e5) Query.Interval += 10000
                     // 如果超时次数>10和短信发送状态为false
-                    if (timeOut > 10) {
+                    if (timeOut > 20) {
                         this.Event.setClientDtuMountDevOnline(mac, pid, false)
                         // 把查询超时间隔修改为10分钟
                         Query.Interval = 6e5
@@ -308,7 +338,7 @@ class nodeClient {
             .on('ready', () => {
                 // 迭代所有设备,加入缓存
                 this.Event.Cache.CacheTerminal.forEach(terminal => {
-                    if (terminal.mountNode === this.property.Name) {
+                    if (terminal.mountNode === this.property.Name && terminal.disable) {
                         terminal.mountDevs.forEach(mountDev => {
                             // 乐观估计所有设备都是在线的，
                             this.Event.setClientDtuMountDevOnline(terminal.DevMac, mountDev.pid, true)

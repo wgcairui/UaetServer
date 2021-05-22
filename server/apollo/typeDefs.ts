@@ -132,6 +132,7 @@ const typeDefs: DocumentNode = gql`
     avanter: String
     name: String
     user: String
+    userId: String
     userGroup: String
     mail: String
     company: String
@@ -414,6 +415,8 @@ const typeDefs: DocumentNode = gql`
     addUser(arg: JSON): result
     # 修改用户信息
     modifyUserInfo(arg: JSON):result
+    # 更新用户信息
+    updateUserInfo(arg: JSON):result
     # 获取验证码重置用户密码
     resetUserPasswd(user:String):result
     # 校验用户验证码

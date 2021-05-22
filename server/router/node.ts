@@ -1,7 +1,6 @@
 import _ from "lodash"
 import { Terminal, NodeRunInfo, LogUseBytes, TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose";
 import tool from "../util/tool"
-import Event from "../event";
 type DataTypes = 'UartData' | 'RunData'
 import { KoaIMiddleware } from "typing";
 const Middleware: KoaIMiddleware = async (ctx) => {
@@ -24,7 +23,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             const parentId = docResults._id
             //console.log({ el, docResults, parentId });
 
-            const parse = Event.Parse.parse(el)
+            const parse = ctx.$Event.Parse.parse(el)
             // 获得解析数据首先写入数据库
             const clientData = { ...el, parentId, result: parse }
 
@@ -34,9 +33,9 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             const { _id, parentId: id } = await new TerminalClientResult(clientData).save() as any
             // if (el.type === 232) console.log(id);
             // 如果设备有用户绑定则进入检查流程
-            const user = Event.Cache.CacheBindUart.get(el.mac);
+            const user = ctx.$Event.Cache.CacheBindUart.get(el.mac);
             if (user) {
-              Event.Check.check(user, el, parse).then(async ({ alarm, result }) => {
+              ctx.$Event.Check.check(user, el, parse).then(async ({ alarm, result }) => {
                 // 检查是否有alarm,有的话更新数据库单例
                 /* parse.forEach((val, index) => {
                   if (val.alarm) {
@@ -52,12 +51,13 @@ const Middleware: KoaIMiddleware = async (ctx) => {
                   _.omit({ ...el, parentId, result }, ['mac', 'pid']),
                   { upsert: true }
                 ).exec()
+                ctx.$Event.updateDevsData({ ...el, result })
 
                 Promise.all(alarm).then(check => {
                   // 检查告警记录
                   check.forEach(alarm => {
                     if (alarm) {
-                      Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { ...alarm, parentId: _id })
+                      ctx.$Event.savelog<Uart.uartAlarmObject>('DataTransfinite', { ...alarm, parentId: _id })
                       TerminalClientResult.findByIdAndUpdate(_id, { $inc: { hasAlarm: 1 as any } }).exec()
                       TerminalClientResults.findByIdAndUpdate(parentId, { $inc: { hasAlarm: 1 } }).exec()
                     }
@@ -70,6 +70,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
                 _.omit(clientData, ['mac', 'pid']),
                 { upsert: true }
               ).exec()
+              ctx.$Event.updateDevsData(clientData)
             }
 
 

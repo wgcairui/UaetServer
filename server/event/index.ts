@@ -199,6 +199,14 @@ export class Event extends EventEmitter.EventEmitter {
     console.log(`GetCacheFun ;; tag:${tag}`);
     return this.Cache[fun](c) as any
   } */
+
+  /**
+   * 更新设备运行数据缓存
+   * @param data 
+   */
+  updateDevsData(data: Uart.queryResult) {
+    this.Cache.CacheDevsData.set(data.mac + data.pid, data)
+  }
   /**
    *  获取用户绑定设备
    * @param user 用户名称

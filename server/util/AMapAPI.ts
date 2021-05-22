@@ -38,6 +38,7 @@ class AMapUtil {
      */
     async GPS2autonavi(loctions: string | string[], coordsys: "gps" | 'mapbar' | 'baidu' = "gps") {
         const result = await this.fecth<Uart.AMap.convert>('assistant/coordinate/convert', { locations: loctions, coordsys })
+        console.log({ GPS2autonavi: result });
         return result.locations.split(";")
     }
 

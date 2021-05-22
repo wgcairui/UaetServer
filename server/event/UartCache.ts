@@ -3,7 +3,7 @@
 数据执行器部分，更新协议，设备类型，终端，节点的缓存数据，发送终端查询指令指令
 */
 import { Event as event } from "./index";
-import { Terminal, DeviceProtocol, DevsType, NodeClient, DevConstant, UserBindDevice, Users, UserAlarmSetup, DevArgumentAlias } from "../mongoose";
+import { Terminal, DeviceProtocol, DevsType, NodeClient, DevConstant, UserBindDevice, Users, UserAlarmSetup, DevArgumentAlias, TerminalClientResultSingle } from "../mongoose";
 import { Socket } from "socket.io";
 
 export interface sendQuery {
@@ -68,7 +68,10 @@ export default class Cache {
    *  缓存设备参数别名 mac+pid+protocol => name => alias
    */
   CacheAlias: Map<string, Map<string, string>>
-
+  /**
+   * 缓存设备最新运行数据mac+pid,query
+   */
+  CacheDevsData: Map<string, Uart.queryResult>
 
   /**
      * 序列化参数单位解析
@@ -93,6 +96,7 @@ export default class Cache {
     this.CacheAlarmSendNum = new Map()
     this.CacheAlias = new Map()
     this.CacheUnit = new Map()
+    this.CacheDevsData = new Map()
   }
   //
   async start(): Promise<void> {
@@ -106,6 +110,17 @@ export default class Cache {
     await this.RefreshCacheUserSetup()
     await this.RefreshCacheUser()
     await this.RefreshCacheAlias()
+    await this.loadDevsData()
+  }
+
+  /**
+   * 载入设备运行数据
+   */
+  private async loadDevsData() {
+    const datas = await TerminalClientResultSingle.find().lean()
+    datas.forEach(el => {
+      this.CacheDevsData.set(el.mac + el.pid, el)
+    })
   }
 
   /**

@@ -24,6 +24,10 @@ const SchemaTerminal = new Schema({
     type: Boolean,
     default: false
   },
+  disable: {
+    type: Boolean,
+    default: false
+  },
   uptime: { type: String, default: new Date().toLocaleString() },
   mountNode: { type: String, required: true },
   mountDevs: [

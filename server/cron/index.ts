@@ -1,13 +1,14 @@
 import { CronJob } from "cron";
 import Event from "../event/index";
-import { LogUartTerminalDataTransfinite, LogDataClean, LogUserRequst, LogDtuBusy } from "../mongoose/Log";
-import { Types } from "mongoose";
-import { TerminalClientResults, TerminalClientResult } from "../mongoose/node";
+import { Types, Document } from "mongoose";
+import { chunk } from "lodash"
+import { LogDataClean, LogUartTerminalDataTransfinite, LogUserRequst, TerminalClientResults, TerminalClientResult, LogDtuBusy } from "../mongoose";
 
 /**
  * 数据清洗,清除告警数据中连续的重复的
  */
-const DataClean = new CronJob('0 0 19 * * *', async () => {
+// 每天凌晨3点运行清理
+const DataClean = new CronJob('0 0 3 * * *', async () => {
     console.log(`${new Date().toString()} ### start clean Data.....`);
     const count = {
         NumUserRequst: await CleanUserRequst(),
@@ -38,24 +39,19 @@ async function Uartterminaldatatransfinites() {
     const Query = LogUartTerminalDataTransfinite.find({ "__v": 0 })
     const cur = Query.cursor()
     const len = await Query.countDocuments()
-    const deleteids: any[] = []
-    const allids: any[] = []
+    const deleteids: Types.ObjectId[] = []
+    const allids: Types.ObjectId[] = []
     for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid + doc.tag
-        const _id = Types.ObjectId((doc as any)._id)
-        if (MapUartterminaldatatransfinites.has(tag)) {
-            const old = MapUartterminaldatatransfinites.get(tag)
+        const _id = Types.ObjectId(doc._id)
+        allids.push(_id)
+        const old = MapUartterminaldatatransfinites.get(tag)
+        if (old && old.msg === doc.msg) {
             // 比较同一个设备连续的告警,告警相同则删除后一个记录
-            if (old && old.msg === doc.msg) {
-                //await LogUartTerminalDataTransfinite.deleteOne({ _id }).exec()
-                deleteids.push(_id)
-            } else {
-                MapUartterminaldatatransfinites.set(tag, doc)
-            }
+            deleteids.push(_id)
         } else {
             MapUartterminaldatatransfinites.set(tag, doc)
         }
-        allids.push(_id)
     }
 
     // 批量删除告警日志
@@ -77,24 +73,18 @@ async function CleanUserRequst() {
     const Query = LogUserRequst.find({ "__v": 0 })
     const cur = Query.cursor()
     const len = await Query.countDocuments()
-    const deleteids: any[] = []
-    const allids: any[] = []
+    const deleteids: Types.ObjectId[] = []
+    const allids: Types.ObjectId[] = []
     for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.user + doc.type
-        const _id = Types.ObjectId((doc as any)._id)
-        if (MapUserRequst.has(tag)) {
-            const old = MapUserRequst.get(tag)
-            // 比较同一个设备连续的告警,告警相同则删除后一个记录
-            if (old && JSON.stringify(doc.argument) === JSON.stringify(old.argument) || !doc.type) {
-                //await LogUserRequst.deleteOne({ _id }).exec()
-                deleteids.push(_id)
-            } else {
-                MapUserRequst.set(tag, doc)
-            }
-        } else {
-            MapUserRequst.set(tag, doc)
-        }
+        const _id = Types.ObjectId(doc._id)
         allids.push(_id)
+        const old = MapUserRequst.get(tag)
+        // 比较同一个设备连续的告警,告警相同则删除后一个记录
+        if (old && JSON.stringify(doc.argument) === JSON.stringify(old.argument) || !doc.type) {
+            deleteids.push(_id)
+        }
+        else MapUserRequst.set(tag, doc)
     }
     // 批量删除告警日志
     await LogUserRequst.deleteMany({ _id: { $in: deleteids } }).exec()
@@ -113,20 +103,20 @@ async function CleanClientresults() {
     console.log('清洗设备原始Result');
     console.time('CleanClientresults')
     const MapClientresults: Map<string, clientResults> = new Map()
-    const Query = TerminalClientResults.find({ "__v": 0 })
+    // 去除不包含告警信息的文档处理
+    const Query = TerminalClientResults.find({ "__v": 0, hasAlarm: 0 })
     const cur = Query.cursor()
     const len = await Query.countDocuments()
-    const deleteids: any[] = []
-    const allids: any[] = []
-
-    // 记录文档时间戳
-    const timeStamps: number[] = []
+    const deleteids: string[] = []
+    const allids: string[] = []
     // 
     const dtus = allDtus()
 
+
+
     for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const tag = doc.mac + doc.pid
-        const _id = Types.ObjectId((doc as any)._id)
+        const _id: string = doc._id
         if (dtus.has(tag + doc.protocol)) {
             const oldDoc = MapClientresults.get(tag)
             if (oldDoc) {
@@ -138,7 +128,6 @@ async function CleanClientresults() {
                 if (isrepeat) MapClientresults.set(tag, clientResultsToMap(doc))
                 else {
                     deleteids.push(_id)
-                    timeStamps.push(doc.timeStamp)
                 }
             } else {
                 MapClientresults.set(tag, clientResultsToMap(doc))
@@ -146,14 +135,13 @@ async function CleanClientresults() {
             allids.push(_id)
         } else {
             deleteids.push(_id)
-            timeStamps.push(doc.timeStamp)
         }
     }
     // 批量删除重复的结果2081447
-    await TerminalClientResults.deleteMany({ _id: { $in: deleteids } })//.exec().then(el => console.log(el))
-    await TerminalClientResult.deleteMany({ timeStamp: { $in: timeStamps } })//.exec().then(el => console.log(el))
+    await TerminalClientResults.deleteMany({ _id: { $in: deleteids.map(el => Types.ObjectId(el)) } })//.exec().then(el => console.log(el))
+    await TerminalClientResult.deleteMany({ parentId: { $in: deleteids } })//.exec().then(el => console.log(el))
     // 更新标签
-    await TerminalClientResults.updateMany({ _id: { $in: allids } }, { $inc: { "__v": 1 as any } }).exec()
+    await TerminalClientResults.updateMany({ _id: { $in: allids.map(el => Types.ObjectId(el)) } }, { $inc: { "__v": 1 as any } }).exec()
     console.timeEnd('CleanClientresults')
     return deleteids.length + '/' + len
 }
@@ -165,13 +153,13 @@ async function CleanClientresultsTimeOut() {
     console.log('把所有一个月前的设备结果集删除');
     const lastM = Date.now() - 2.592e9
     const len = await TerminalClientResults.countDocuments()
-    const cur = TerminalClientResults.find({ "__v": 1, timeStamp: { $lte: lastM } }, { "_id": 1 }).cursor()
+    /* const cur = TerminalClientResults.find({ "__v": 1, timeStamp: { $lte: lastM } }, { "_id": 1 }).cursor()
     const ids = []
     for (let doc = await cur.next() as any; doc != null; doc = await cur.next()) {
         ids.push(doc._id)
-    }
-    const result = await TerminalClientResults.deleteMany({ _id: { $in: ids } })
-
+    } */
+    // const result = await TerminalClientResults.deleteMany({ _id: { $in: ids } })
+    const result = await TerminalClientResults.deleteMany({ timeStamp: { $lte: lastM } })
     // 删除告警记录
     await LogUartTerminalDataTransfinite.deleteMany({ timeStamp: { $lte: lastM } })
     return result.deletedCount + '/' + len
@@ -182,21 +170,26 @@ async function CleanClientresultsTimeOut() {
  */
 async function CleanDtuBusy() {
     console.log('清洗dtuBusy');
-    /* const BusyMap: Map<string, Uart.logDtuBusy> = new Map()
+    const BusyMap: Map<string, Document<any, {}> & Uart.logDtuBusy> = new Map()
     const cur = LogDtuBusy.find({ "__v": 0 }).cursor()
-    const deleteIds: any[] = []
-    const allIds: any[] = []
-    for (let doc = await cur.next() as Uart.logDtuBusy; doc != null; doc = await cur.next()) {
+    const deleteIds: Types.ObjectId[] = []
+    const allIds: Types.ObjectId[] = []
+    for (let doc = await cur.next(); doc != null; doc = await cur.next()) {
         const old = BusyMap.get(doc.mac)
-        if (old && doc.timeStamp === old.timeStamp) {
+        if (old && (doc.timeStamp === old.timeStamp || doc.stat === old.stat)) {
             deleteIds.push(old._id)
-            await LogDtuBusy.deleteOne({ _id: old._id })
+            // await LogDtuBusy.deleteOne({ _id: old._id })
             BusyMap.set(doc.mac, doc)
-        } else allIds.push(doc._id)
+        } else BusyMap.set(doc.mac, doc)
+        allIds.push(doc._id)
     }
-    // await LogDtuBusy.remove({ _id: { $in: deleteIds } })
-    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } }) */
-    await LogDtuBusy.deleteMany({})
+    //await LogDtuBusy.remove({ _id: { $in: deleteIds } })
+    const deleteChunk = chunk(deleteIds, 1000)
+    for (let del of deleteChunk) {
+        await LogDtuBusy.deleteMany({ _id: { $in: del } })
+    }
+    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } })
+    //await LogDtuBusy.deleteMany({})
 }
 
 // 清洗设备解析Result

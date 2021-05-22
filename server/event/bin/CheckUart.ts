@@ -37,7 +37,7 @@ class Check {
    * 缓存告警参数次数 tag=>number
    */
   private CacheAlarmNum: Map<string, number>
-  private Event: Event;
+  private ctx: Event;
   /**
    * 
    * @param Event 事件总线
@@ -45,7 +45,7 @@ class Check {
   constructor(Event: Event) {
     this.userSetup = new Map()
     this.CacheAlarmNum = new Map()
-    this.Event = Event
+    this.ctx = Event
     this.hashtable = {
       0x01: '规定时间内，bus电压未达到设定值',
       0x02: 'Bus电压超过上限值',
@@ -90,7 +90,7 @@ class Check {
       0x48: '控制板韧体版本不兼容'
     }
 
-    this.Event
+    this.ctx
       // 监听用户和系统的协议配置变动，有则更新缓存
       .on("updateUserSetup", (user: string, protocol: string) => this.setUserSetup(user, protocol))
       .on("updateSysSetup", (protocol: string) => {
@@ -125,9 +125,9 @@ class Check {
     // console.log('更新check缓存', user, protocol);
 
     // 获取用户个性化配置实例
-    const UserSetup = this.Event.Cache.CacheUserSetup.get(user)
+    const UserSetup = this.ctx.Cache.CacheUserSetup.get(user)
     // 协议参数阀值,状态
-    const Constant = this.Event.Cache.CacheConstant.get(protocol)
+    const Constant = this.ctx.Cache.CacheConstant.get(protocol)
     // 获取系统设置-阈值
     const sysThreshold = Constant?.Threshold || []
     // 获取系统设置-状态
@@ -175,7 +175,7 @@ class Check {
    * @returns 别名
    */
   private getProtocolAlias(mac: string, pid: string | number, protocol: string, name: string) {
-    const alias = this.Event.Cache.CacheAlias.get(mac + pid + protocol)
+    const alias = this.ctx.Cache.CacheAlias.get(mac + pid + protocol)
     return alias?.get(name) || name
   }
 
@@ -199,7 +199,7 @@ class Check {
 
     if (setup.AlarmStat.size > 0) {
       this.checkAlarm(result, setup.AlarmStat).forEach(el => {
-        const value = this.Event.parseUnit(el.unit!, el.value)
+        const value = this.ctx.parseUnit(el.unit!, el.value)
         if (value) {
           el.alarm = true
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
@@ -229,7 +229,7 @@ class Check {
           console.log('### 检查短信 checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
-          return this.sendAlarm(query, `${alias}[告警恢复]`, el, false);
+          return this.sendAlarm(query, `[告警恢复]${alias}`, el, false);
         } return undefined
       })
   }
@@ -277,7 +277,7 @@ class Check {
         // 在 b4位置的数据位为1还是0，为1时表示UPS有故障了，则使用“QFS”故障查询指令，查询UPS故障信息。返回的信息数据				
         if (b4) {
           // console.log({ b9, b8, b7, b6, b5, b4, b3, b2, b1, b0, a9, a8 });
-          const { ok, upserted } = await this.Event.DTU_OprateInstruct({ DevMac: Query.mac, protocol: Query.protocol, pid: Query.pid, type: Query.type, content: 'QFS', events: Date.now() + 'QFS' })
+          const { ok, upserted } = await this.ctx.DTU_OprateInstruct({ DevMac: Query.mac, protocol: Query.protocol, pid: Query.pid, type: Query.type, content: 'QFS', events: Date.now() + 'QFS' })
           if (ok) {
             const [kk, pp, ff, oo, ee, ll, cc, hh, nn, bb, tt, ss] = Buffer.from(upserted).toString('utf8', 1).split(' ')
             if (kk !== 'OK') {
@@ -308,7 +308,7 @@ class Check {
     this.CacheAlarmNum.set(tags, n + 1);
     // console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (!validation || n === 10) {
-      this.Event.SendUserAlarm({ mac: query.mac, msg: event })
+      this.ctx.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
       this.SendMailAlarm(query.mac, query.pid, event, tag, query.timeStamp)
       this.SmsDTUDevAlarm(query.mac, query.pid, query.mountDev, event, query.timeStamp)
@@ -337,7 +337,7 @@ class Check {
     const info = getDtuInfo(mac)
     const mails = (info.userInfo?.mails || []).filter(mail => Tool.RegexMail(mail))
     if (mails.length > 0) {
-      const Dev = this.Event.getClientDtuMountDev(mac, pid)
+      const Dev = this.ctx.getClientDtuMountDev(mac, pid)
       const setup = this.userSetup.get(info.user.user)!.get(Dev.protocol)!
       const ck = setup.Threshold.get(tag.name!)
       const str = ck ? `min=${ck.min} max=${ck.max}` : ''
@@ -373,7 +373,7 @@ class Check {
    */
   private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string, timeStamp: number) => {
     const info = getDtuInfo(mac)
-    const { userId } = this.Event.Cache.CacheUser.get(info.user.user)!
+    const { userId } = this.ctx.Cache.CacheUser.get(info.user.user)!
     // 时间参数,长度限制20字节
     const time = new Date(timeStamp)
     const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`

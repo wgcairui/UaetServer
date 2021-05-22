@@ -21,15 +21,15 @@ class ProtocolParse {
    * 缓存协议指令转换关系 010300010009abcd => 0300010009
    */
   private InstructContents: Map<string, string>
-  Event: Event;
+  private ctx: Event;
   constructor(Event: Event) {
-    this.Event = Event
+    this.ctx = Event
     this.protocolInstructMap = new Map()
     this.QueryTerminaluseTime = new Map()
     this.CacheParseRegx = new Map()
     this.InstructContents = new Map()
     // 监听协议更新事件，更新协议
-    this.Event.on("updateProtocol", (protocol: string) => this.setProtocolInstruct(protocol))
+    this.ctx.on("updateProtocol", (protocol: string) => this.setProtocolInstruct(protocol))
   }
 
   /**
@@ -48,7 +48,7 @@ class ProtocolParse {
    * @param protocol 设备协议 
    */
   private setProtocolInstruct(protocol: string) {
-    const Protocol = this.Event.Cache.CacheProtocol.get(protocol)!
+    const Protocol = this.ctx.Cache.CacheProtocol.get(protocol)!
     //console.log({protocol,Protocol});
 
     // 缓存协议方法
@@ -132,7 +132,7 @@ class ProtocolParse {
         return instructs.formResize.map<Uart.queryResultArgument>(el2 => {
           const [start] = this.getProtocolRegx(el2.regx!)
           const value = parseStr[start - 1]
-          return { name: el2.name, value, parseValue: el2.isState ? this.Event.parseUnit(el2.unit!, value) : value, unit: el2.unit, issimulate: el2.isState }
+          return { name: el2.name, value, parseValue: el2.isState ? this.ctx.parseUnit(el2.unit!, value) : value, unit: el2.unit, issimulate: el2.isState }
         });
       })
       .flat()
@@ -219,7 +219,7 @@ class ProtocolParse {
             result.value = Tool.HexToSingle(buffer.slice(start - 1, start + len - 1)).toFixed(2)
             break;
         }
-        result.parseValue = result.issimulate ? this.Event.parseUnit(result.unit!, result.value) : result.value
+        result.parseValue = result.issimulate ? this.ctx.parseUnit(result.unit!, result.value) : result.value
         return result
       })
     }).flat()
@@ -237,7 +237,7 @@ class ProtocolParse {
     const result = R.type === 232 ? this.parse232(IntructResult, R.protocol) : this.parse485(IntructResult, R)
     if (result.length > 0) {
       // 设备请求结果,发送设备正常查询
-      this.Event.setClientDtuMountDevOnline(R.mac, R.pid, true)
+      this.ctx.setClientDtuMountDevOnline(R.mac, R.pid, true)
     }
     return result.filter(el => !el.issimulate || el.parseValue)
   }

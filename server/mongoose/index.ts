@@ -67,3 +67,8 @@ export const DocmentCount = async () => {
   //
   return await Promise.all(result)
 }
+
+/**
+ * mongo ObjectId
+ */
+export const ObjectId = mongoose.Types.ObjectId

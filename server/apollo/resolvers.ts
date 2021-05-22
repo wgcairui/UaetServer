@@ -553,7 +553,10 @@ const resolvers: IResolvers<any, ApolloCtx> = {
          */
         async ClientResult(root, { start, end, id }: { start: Date, end: Date, id: string }) {
             if (id) {
-                return [await TerminalClientResult.findById(id)]
+                const result = await TerminalClientResult.findById(id)
+                console.log(id, result);
+
+                return [result]
             } else {
                 const [startStamp, endStamp] = [new Date(start).getTime(), new Date(end).getTime()]
                 return await TerminalClientResult.find().where("timeStamp").gte(startStamp).lte(endStamp)
@@ -635,16 +638,23 @@ const resolvers: IResolvers<any, ApolloCtx> = {
         async Aggregation(root, { id }, ctx) {
             const agg = await UserAggregation.findOne({ id, user: ctx.user }).lean()
             if (!agg) return agg
-
-            const query = agg.aggregations.map(async el => {
-                const constant = ctx.$Event.Cache.CacheConstant.get(el.protocol)!
-                const constantVals = new Set(Object.values(constant.Constant).map(el => Array.isArray(el) ? el : [el]).flat())
-                const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid }).lean<Uart.queryResult>()
-                el.result = ter!.result?.filter(el => constantVals.has(el.name))
+            const result = []
+            for (let el of agg.aggregations) {
+                const data = ctx.$Event.Cache.CacheDevsData.get(el.DevMac + el.pid)?.result || []
+                result.push({ ...el, result: data })
+            }
+            /* 
+            const query = agg.aggregations.map(async (el:Uart.AggregationDev) => {
+                // 获取设备协议常量
+                // const constant = ctx.$Event.Cache.CacheConstant.get(el.protocol)!
+                // const constantVals = new Set(Object.values(constant.Constant).map(el2 => Array.isArray(el2) ? el2 : [el2]).flat())
+                const ter = await TerminalClientResultSingle.findOne({ mac: el.DevMac, pid: el.pid })
+                // el.result = ter!.result?.filter(el => constantVals.has(el.name))
+                el.result = ter!.result ||[]
+                
                 return el
-            })
-            await Promise.all(query)
-            return agg
+            }) */
+            return result
         },
 
         /**
@@ -1021,8 +1031,8 @@ const resolvers: IResolvers<any, ApolloCtx> = {
          */
         async addUser(root, { arg }, ctx) {
             if (await Users.findOne({ user: arg.user })) return { ok: 0, msg: "账号有重复,请重新编写账号" };
-            if (await Users.findOne({ user: arg.tel })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
-            if (await Users.findOne({ user: arg.mail })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
+            if (await Users.findOne({ tel: arg.tel || '' })) return { ok: 0, msg: "手机号码有重复,请重新填写号码" };
+            if (await Users.findOne({ mail: arg.mail || '' })) return { ok: 0, msg: "邮箱账号有重复,请重新填写邮箱" };
             const user = Object.assign(arg, { passwd: await BcryptDo(arg.passwd) }) as Uart.UserInfo
             const User = new Users(user);
             return await User.save()
@@ -1059,6 +1069,22 @@ const resolvers: IResolvers<any, ApolloCtx> = {
             const res = await Users.updateOne({ user: ctx.user }, { $set: arg })
             ctx.$Event.Cache.RefreshCacheUser(ctx.user)
             return res
+        },
+        /**
+         * 更新用户信息
+         * @param root 
+         * @param param1 
+         * @param ctx 
+         * @returns 
+         */
+        async updateUserInfo(root, { arg }: { arg: Uart.UserInfo }, ctx) {
+            if (arg.user && arg.user === ctx.user) {
+                const res = await Users.updateOne({ user: ctx.user }, { $set: { ...arg } })
+                ctx.$Event.Cache.RefreshCacheUser(ctx.user)
+                return res
+            } else {
+                return { ok: 0, msg: '权限校验失败' }
+            }
         },
 
         /**
@@ -1538,18 +1564,29 @@ const resolvers: IResolvers<any, ApolloCtx> = {
         async deleteUser(root, { user, hash }, ctx) {
             valadationRoot(ctx)
             // 获取删除用户的信息
-            const userInfo = await Users.findOne({ user }).lean<Uart.UserInfo>()
-            if (userInfo!.userGroup == 'user' && hash === 'lgups@123') {
-                await UserAggregation.deleteOne({ user }).exec()
-                await UserAlarmSetup.deleteOne({ user }).exec()
-                await UserBindDevice.deleteOne({ user }).exec()
-                return await Users.deleteOne({ user }).exec()
-            } else {
+            const userInfo = await Users.findOne({ user })
+            if (!userInfo) {
+                return {
+                    ok: 0,
+                    msg: '没有此用户,删除失败'
+                }
+            }
+            if (userInfo.userGroup === 'root') {
                 return {
                     ok: 0,
                     msg: '只能删除用户信息'
                 }
             }
+            if (hash !== 'lgups@123') {
+                return {
+                    ok: 0,
+                    msg: '独立校验密码错误'
+                }
+            }
+            await UserAggregation.deleteOne({ user }).exec()
+            await UserAlarmSetup.deleteOne({ user }).exec()
+            await UserBindDevice.deleteOne({ user }).exec()
+            return await Users.deleteOne({ user }).exec()
 
         },
 
