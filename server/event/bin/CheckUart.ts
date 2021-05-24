@@ -137,10 +137,10 @@ class Check {
 
     //const cache = this.userSetup.has(user)?this.userSetup.get(user)!: this.userSetup.set(user, new Map())
     // 如果缓存没有用户，新建用户缓存
-    if (!this.userSetup.has(user)) {
+    /* if (!this.userSetup.has(user)) {
       this.userSetup.set(user, new Map())
-    }
-    const cache = this.userSetup.get(user)!
+    } */
+    const cache = this.userSetup.get(user) || this.userSetup.set(user, new Map()).get(user)!
     // 如果缓存没有协议，新建缓存
     if (!cache.has(protocol)) {
       cache.set(protocol, {
@@ -149,7 +149,7 @@ class Check {
       })
     }
     // 获取用户+协议 缓存实例
-    const setup = this.userSetup.get(user)!.get(protocol)!
+    const setup = cache.get(protocol)!
     // 如果用户有阈值设置&&阈值设置有protocol,迭代用户设置加入到缓存
     if (UserSetup?.ThresholdMap && UserSetup.ThresholdMap.has(protocol)) {
       UserSetup.ThresholdMap.get(protocol)!.forEach(el => {

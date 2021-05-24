@@ -184,11 +184,15 @@ async function CleanDtuBusy() {
         allIds.push(doc._id)
     }
     //await LogDtuBusy.remove({ _id: { $in: deleteIds } })
+    // 一次性处理的条目数量太多,切块后多次处理
     const deleteChunk = chunk(deleteIds, 1000)
     for (let del of deleteChunk) {
         await LogDtuBusy.deleteMany({ _id: { $in: del } })
     }
-    await LogDtuBusy.updateMany({ _id: { $in: allIds } }, { $set: { "__v": 1 } })
+    const updateChunk = chunk(allIds, 10000)
+    for (let update of updateChunk) {
+        await LogDtuBusy.updateMany({ _id: { $in: update } }, { $set: { "__v": 1 } })
+    }
     //await LogDtuBusy.deleteMany({})
 }
 
