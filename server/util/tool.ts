@@ -1,5 +1,6 @@
 import { crc16modbus } from "crc";
 import os from "os";
+import { Uart } from "types-uart";
 /**
  * tool
  */

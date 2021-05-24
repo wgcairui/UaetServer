@@ -11,6 +11,7 @@ import { SendValidation } from "../util/SMS";
 import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
 import config from "../config";
 import HF from "../util/HF";
+import { Uart } from "types-uart";
 
 type url =
   | 'getuserMountDev'

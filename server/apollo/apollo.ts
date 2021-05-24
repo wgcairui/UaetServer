@@ -4,6 +4,7 @@ import { JwtVerify } from "../util/Secret";
 import typeDefs from "./typeDefs";
 import resolvers from "./resolvers";
 import { KoaCtx } from "typing";
+import { Uart } from "types-uart";
 /* const userOprateSet = new Set(['Protocol', 'DevType', 'DevTypes', 'Terminal', 'EcTerminals',
   'BindDevice', 'userGroup', 'UartTerminalData', 'UartTerminalDatas', 'getDevState', 'getUserSetup',
   'getUserDevConstant', 'getLogTerminal', 'getUserTel', 'Aggregation', 'Aggregations',

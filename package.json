@@ -56,6 +56,6 @@
     "@types/nodemailer": "^6.4.0",
     "@types/sha1": "^1.1.2",
     "apollo-server-types": "^0.4.0",
-    "types-uart": "^1.0.7"
+    "types-uart": "^1.0.8"
   }
 }

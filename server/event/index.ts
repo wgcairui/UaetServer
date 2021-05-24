@@ -18,6 +18,8 @@ import Tool from "../util/tool";
 import { Send } from "../util/Mail";
 import Check from "./bin/CheckUart";
 import { JwtVerify } from "../util/Secret";
+import { Uart } from "types-uart";
+
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
 type RemoveNonFunctionProps<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T]

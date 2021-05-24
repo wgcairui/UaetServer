@@ -1,5 +1,7 @@
 import * as DB from "../mongoose"
 import { KoaIMiddleware } from "typing";
+import { Uart } from "types-uart";
+
 const Middleware:KoaIMiddleware =  async (ctx) => {
     const mac = ctx.header.mac
     ctx.assert(mac, 400, 'must submit ecMac')

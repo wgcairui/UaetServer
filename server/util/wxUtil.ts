@@ -1,6 +1,7 @@
 import { createDecipheriv } from "crypto";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Tokens } from "../mongoose";
+import { Uart } from "types-uart";
 const wxSecret = require("../key/wxSecret.json");
 
 /**

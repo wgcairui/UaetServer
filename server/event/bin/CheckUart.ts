@@ -4,6 +4,8 @@ import wxUtil from "../../util/wxUtil";
 import { SendSms } from "../../util/SMS";
 import Tool from "../../util/tool";
 import { Send } from "../../util/Mail";
+import { Uart } from "types-uart";
+
 // 优化方向-> 把每个用户的每条协议参数检查都缓存起来，管理员或用户更新设置的时候更新指定的缓存
 interface userSetupMap {
   Threshold: Map<string, Uart.Threshold>,

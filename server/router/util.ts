@@ -1,4 +1,5 @@
 import AMapAPI from "../util/AMapAPI";
+import { Uart } from "types-uart";
 
 type type1 = 'AMap'
 

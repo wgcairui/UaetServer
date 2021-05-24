@@ -3,6 +3,7 @@ import Event from "../event/index";
 import { LogSmsSend } from "../mongoose/Log";
 import { getDtuInfo } from "./util";
 import wxUtil from "./wxUtil";
+import { Uart } from "types-uart";
 const key = require("../key/aliSms.json")
 
 interface SmsResult {

@@ -9,7 +9,7 @@ import Util from "./util";
 import OPEN from "./open";
 import Ec from "./ec"
 import { KoaCtx } from "typing";
-
+import { Uart } from "types-uart";
 
 rout.all("/api/app/:type", APPs);
 rout.post("/api/Node/:type", nodeApi);

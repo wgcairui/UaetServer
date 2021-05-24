@@ -18,6 +18,7 @@ import config from "../config";
 import HF from "../util/HF";
 import { ApolloCtx } from "typing";
 import { TokenValidation } from "../mongoose";
+import { Uart } from "types-uart";
 
 const resolvers: IResolvers<any, ApolloCtx> = {
     Query: {

@@ -1,6 +1,8 @@
 import { Event } from "../index";
 import Tool from "../../util/tool";
 import { ParseFunctionEnd, ParseCoefficient } from "../../util/func";
+import { Uart } from "types-uart";
+
 /**
  * 解析设备查询数据
  */

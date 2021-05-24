@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import { Uart } from "types-uart";
+
 const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017/UartServer`; /** * 连接 */
 
 mongoose.connect(DB_URL, {

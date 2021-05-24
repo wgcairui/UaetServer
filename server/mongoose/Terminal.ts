@@ -1,4 +1,5 @@
 import { mongoose, Schema } from "./index";
+import { Uart } from "types-uart";
 
 const SchemaRegisterTerminal = new Schema({
   DevMac: { type: String, required: true },

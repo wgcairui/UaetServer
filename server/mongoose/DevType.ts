@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 /* jshint esversion:8 */
 import { Schema } from "./index";
+import { Uart } from "types-uart";
 
 const Schema_Dev_ups = new Schema({
   generateTime: String,

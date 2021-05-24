@@ -3,6 +3,7 @@ import Event from "../event/index";
 import { Types, Document } from "mongoose";
 import { chunk } from "lodash"
 import { LogDataClean, LogUartTerminalDataTransfinite, LogUserRequst, TerminalClientResults, TerminalClientResult, LogDtuBusy } from "../mongoose";
+import { Uart } from "types-uart";
 
 /**
  * 数据清洗,清除告警数据中连续的重复的

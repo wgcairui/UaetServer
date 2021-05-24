@@ -3,6 +3,7 @@ import http from "http";
 import Event, { Event as event } from "../event/index";
 import { JwtVerify } from "../util/Secret";
 import { parseToken, getDtuInfo } from "../util/util";
+import { Uart } from "types-uart";
 
 interface socketArgument {
     IP: string

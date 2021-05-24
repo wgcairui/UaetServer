@@ -4,6 +4,8 @@
  */
 
 import axios from 'axios'
+import { Uart } from "types-uart";
+
 const hfUser = require("../key/hf.json")
 
 interface hfRequst {

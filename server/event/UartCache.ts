@@ -5,6 +5,7 @@
 import { Event as event } from "./index";
 import { Terminal, DeviceProtocol, DevsType, NodeClient, DevConstant, UserBindDevice, Users, UserAlarmSetup, DevArgumentAlias, TerminalClientResultSingle } from "../mongoose";
 import { Socket } from "socket.io";
+import { Uart } from "types-uart";
 
 export interface sendQuery {
   IP: string;

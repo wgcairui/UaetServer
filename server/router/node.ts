@@ -1,6 +1,8 @@
 import _ from "lodash"
 import { Terminal, NodeRunInfo, LogUseBytes, TerminalClientResult, TerminalClientResults, TerminalClientResultSingle } from "../mongoose";
 import tool from "../util/tool"
+import { Uart } from "types-uart";
+
 type DataTypes = 'UartData' | 'RunData'
 import { KoaIMiddleware } from "typing";
 const Middleware: KoaIMiddleware = async (ctx) => {
