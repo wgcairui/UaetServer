@@ -227,7 +227,7 @@ class Check {
       .map(el => {
         const tags = query.mac + query.pid + el.name
         const n = this.CacheAlarmNum.get(tags)
-        if (n && n >= 10) {
+        if (n && n >= 20) {
           console.log('### 检查短信 checkSmsSend', el, this.CacheAlarmNum);
           this.CacheAlarmNum.set(tags, 0)
           const alias = this.getProtocolAlias(query.mac, query.pid, query.protocol, el.name)
@@ -286,11 +286,11 @@ class Check {
               const event = this.hashtable[Buffer.from(kk).toJSON().data[0]]
               console.log(`### 发送其他故障消息:${Query.mac}/${Query.pid}/${Query.mountDev}, event:QFS(${event})`);
               return this.sendAlarm(Query, event || '未知错误', { name: event })
-            } else return undefined
-          } else return undefined
-        } else return undefined
-      } else return undefined
-    } else return undefined
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
