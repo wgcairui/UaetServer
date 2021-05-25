@@ -1,4 +1,5 @@
 import { createTransport } from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { LogMailSend } from "../mongoose/Log";
 
 
@@ -39,8 +40,8 @@ export const Send = async (mail: string, title: string, subject: string, body: s
         html: body // 发送text或者html格式 // text: 'Hello world?', // plain text body
     };
 
-    return await new Promise<Uart.mailResponse>((res, rej) => {
-        transporter.sendMail(mailOptions, (error, info: Uart.mailResponse) => {
+    return await new Promise<SMTPTransport.SentMessageInfo>((res, rej) => {
+        transporter.sendMail(mailOptions, (error, info) => {
             if (error) rej(error);
             res(info);
         });
@@ -48,7 +49,7 @@ export const Send = async (mail: string, title: string, subject: string, body: s
         const data: Uart.logMailSend = {
             mails: mail.split(","),
             sendParams: mailOptions,
-            Success: el
+            Success: el as any
         }
         new LogMailSend(data).save()
         return data
