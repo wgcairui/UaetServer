@@ -1,5 +1,5 @@
 import { mongoose, Schema } from "./index";
-import { Uart } from "types-uart";
+
 
 // 节点信息
 const SchemaNodeClient = new Schema({

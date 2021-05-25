@@ -7,7 +7,7 @@
   }
 */
 import { mongoose, Schema } from "./index";
-import { Uart } from "types-uart";
+
 
 /**
  * 设备信息

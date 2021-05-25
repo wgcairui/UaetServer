@@ -1,6 +1,6 @@
 import { mongoose, Schema } from "./index";
 import { Schema_DevConstant } from "./DeviceParameterConstant";
-import { Uart } from "types-uart";
+
 
 // 用户信息
 const Schema_Users = new Schema({

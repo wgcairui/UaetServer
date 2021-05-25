@@ -1,5 +1,5 @@
 import sha1 from "sha1";
-import { Uart } from "types-uart";
+
 
 const Token = "6wF2e3auzFxQP4NamBCw"
 const EncodingAESKey = "jMTwdwFmxqlxnQsMjZfVhIqFcefuRjiKGGtekuNzkxf"

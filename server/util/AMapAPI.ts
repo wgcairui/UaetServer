@@ -1,6 +1,6 @@
 import axios from "axios";
 import { AMapLoctionCache } from "../mongoose";
-import { Uart } from "types-uart";
+
 
 type apiType = 'ip' | 'geocode/geo' | 'geocode/regeo' | 'assistant/coordinate/convert'
 

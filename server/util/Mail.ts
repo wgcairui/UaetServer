@@ -1,6 +1,6 @@
 import { createTransport } from "nodemailer";
 import { LogMailSend } from "../mongoose/Log";
-import { Uart } from "types-uart";
+
 
 const key = require("../key/qqMail.json");
 

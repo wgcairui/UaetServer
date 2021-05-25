@@ -2,7 +2,7 @@ import ws from "ws";
 import { Server } from "http";
 import { JwtVerify } from "../util/Secret";
 import { getDtuInfo } from "../util/util";
-import { Uart } from "types-uart";
+
 
 /**
  * 微信小程序使用wss服务端
@@ -30,6 +30,16 @@ class WXws {
                         })
                     }
                 }
+            })
+        })
+    }
+
+    close() {
+        return new Promise(resolve => {
+            this.ws.close(err => {
+                if (err) console.log({ wxWssErr: err });
+                else console.log('wxWss exit');
+                resolve(0)
             })
         })
     }

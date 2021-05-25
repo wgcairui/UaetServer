@@ -13,7 +13,7 @@ interface result {
 
 import axios from "axios";
 import { MD5 } from "crypto-js";
-import { Uart } from "types-uart";
+
 
 /**
  * 腾讯地图api

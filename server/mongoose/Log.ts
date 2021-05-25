@@ -1,5 +1,5 @@
 import { mongoose, Schema } from "./index";
-import { Uart } from "types-uart";
+
 
 // 发送短信记录
 const SchemaSmsSend = new Schema({

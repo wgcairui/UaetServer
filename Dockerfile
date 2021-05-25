@@ -7,8 +7,7 @@ COPY ["package.json", "/app/"]
 
 # Install app dependencies
 
-RUN npm install --production 
-#--registry=https://registry.npm.taobao.org
+RUN npm install --production --registry=https://registry.npm.taobao.org
 
 ENV NPM_CONFIG_LOGLEVEL warn
 ENV NODE_ENV=production

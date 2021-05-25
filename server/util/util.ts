@@ -1,6 +1,6 @@
 import Event from "../event/index";
 import config from "../config";
-import { Uart } from "types-uart";
+
 /**
  * 格式化cookie-token
  * @param token 

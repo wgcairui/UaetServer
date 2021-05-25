@@ -1,14 +1,21 @@
 {
   "name": "uartserver",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "LADS 物联网透传云平台",
-  "author": "wgcairui",
+  "author": {
+    "name": "cr",
+    "email": "wgcairui@icloud.com",
+    "url": "https://github.com/wgcairui/UartServer.git"
+  },
+  "homepage": "https://uart.ladishb.com",
+  "main": "server/app.ts",
   "private": true,
+  "license": "MIT",
   "scripts": {
-    "dev": "cross-env NODE_PORT=9002 ts-node --files ./server/index.ts",
-    "dev:9010": "cross-env NODE_PORT=9010 ts-node --files ./server/index.ts",
-    "start": "node ./server/index.js",
-    "build:docker": "tsc; sudo docker build -t uartserver . && rm server/*.js && rm server/*/*.js && rm server/*/*/*.js",
+    "dev": "cross-env NODE_PORT=9002 ts-node --files ./server/app.ts",
+    "dev:9010": "cross-env NODE_PORT=9010 ts-node --files ./server/app.ts",
+    "start": "node ./server/app.js",
+    "build:docker": "cross-env NODE_ENV=development && tsc; sudo docker build -t uartserver . && rm server/*.js && rm server/*/*.js && rm server/*/*/*.js",
     "run:docker": "sudo docker stop uartserver && sudo docker rm uartserver && sudo docker run -itd --name uartserver --restart always --init --network net -p 9010:9010 -v /etc/localtime:/etc/localtime uartserver"
   },
   "dependencies": {
@@ -56,6 +63,10 @@
     "@types/nodemailer": "^6.4.0",
     "@types/sha1": "^1.1.2",
     "apollo-server-types": "^0.4.0",
-    "types-uart": "^1.0.8"
+    "types-uart": "^1.0.9"
+  },
+  "engines": {
+    "node": ">=14",
+    "npm": ">=6"
   }
 }

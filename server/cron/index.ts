@@ -3,7 +3,7 @@ import Event from "../event/index";
 import { Types, Document } from "mongoose";
 import { chunk } from "lodash"
 import { LogDataClean, LogUartTerminalDataTransfinite, LogUserRequst, TerminalClientResults, TerminalClientResult, LogDtuBusy } from "../mongoose";
-import { Uart } from "types-uart";
+
 
 /**
  * 数据清洗,清除告警数据中连续的重复的
@@ -152,6 +152,7 @@ async function CleanClientresults() {
  */
 async function CleanClientresultsTimeOut() {
     console.log('把所有一个月前的设备结果集删除');
+    console.time("CleanClientresultsTimeOut")
     const lastM = Date.now() - 2.592e9
     const len = await TerminalClientResults.countDocuments()
     /* const cur = TerminalClientResults.find({ "__v": 1, timeStamp: { $lte: lastM } }, { "_id": 1 }).cursor()
@@ -163,6 +164,7 @@ async function CleanClientresultsTimeOut() {
     const result = await TerminalClientResults.deleteMany({ timeStamp: { $lte: lastM } })
     // 删除告警记录
     await LogUartTerminalDataTransfinite.deleteMany({ timeStamp: { $lte: lastM } })
+    console.timeEnd("CleanClientresultsTimeOut")
     return result.deletedCount + '/' + len
 }
 
@@ -171,6 +173,7 @@ async function CleanClientresultsTimeOut() {
  */
 async function CleanDtuBusy() {
     console.log('清洗dtuBusy');
+    console.time("CleanDtuBusy")
     const BusyMap: Map<string, Document<any, {}> & Uart.logDtuBusy> = new Map()
     const cur = LogDtuBusy.find({ "__v": 0 }).cursor()
     const deleteIds: Types.ObjectId[] = []
@@ -186,7 +189,7 @@ async function CleanDtuBusy() {
     }
     //await LogDtuBusy.remove({ _id: { $in: deleteIds } })
     // 一次性处理的条目数量太多,切块后多次处理
-    const deleteChunk = chunk(deleteIds, 1000)
+    const deleteChunk = chunk(deleteIds, 10000)
     for (let del of deleteChunk) {
         await LogDtuBusy.deleteMany({ _id: { $in: del } })
     }
@@ -194,6 +197,7 @@ async function CleanDtuBusy() {
     for (let update of updateChunk) {
         await LogDtuBusy.updateMany({ _id: { $in: update } }, { $set: { "__v": 1 } })
     }
+    console.timeEnd("CleanDtuBusy")
     //await LogDtuBusy.deleteMany({})
 }
 

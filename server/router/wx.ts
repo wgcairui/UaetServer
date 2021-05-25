@@ -11,7 +11,7 @@ import { SendValidation } from "../util/SMS";
 import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
 import config from "../config";
 import HF from "../util/HF";
-import { Uart } from "types-uart";
+
 
 type url =
   | 'getuserMountDev'
@@ -644,7 +644,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
     case "sendValidation":
       {
         const user = await Users.findOne({ user: tokenUser.user }).lean<Uart.UserInfo>()
-        const code = (Math.random() * 10000).toFixed(0)
+        const code = (Math.random() * 10000).toFixed(0).padStart(4,'0')
         ctx.$Event.ClientCache.CacheUserValidationCode.set(token, code)
         ctx.body = await SendValidation(String(user!.tel), code)
       }

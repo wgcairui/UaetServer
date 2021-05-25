@@ -1,5 +1,5 @@
 import { Schema, mongoose } from "./index";
-import { Uart } from "types-uart";
+
 
 // 各个类型设备的常量
 const Constant = new Schema(

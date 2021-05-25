@@ -1,9 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import { Uart } from "types-uart";
 
-const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017/UartServer`; /** * 连接 */
+import consola from "consola"
+
+const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017`; /** * 连接 */
 
 mongoose.connect(DB_URL, {
+  dbName:"UartServer",
   useUnifiedTopology: true,
   useNewUrlParser: true,
   useCreateIndex: true
@@ -12,14 +14,14 @@ mongoose.set("useUnifiedTopology", true);
 mongoose.set("useFindAndModify", false);
 mongoose.connection
   .on("connected", function () {
-    console.log("Mongoose connection open to " + DB_URL);
+    consola.success("Mongoose connection open to " + DB_URL);
   })
   .on("error", function (err) {
     console.log({ DB_URL });
-    console.log("Mongoose connection error: " + err);
+    consola.error("Mongoose connection error: " + err);
   })
   .on("disconnected", function () {
-    console.log("Mongoose connection disconnected");
+    consola.success("Mongoose connection disconnected");
   });
 
 // 记录gps解析

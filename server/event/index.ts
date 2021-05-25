@@ -3,12 +3,11 @@ import Cache from "./UartCache";
 import ClientCache from "./ClientCache"
 import { DefaultContext } from "koa";
 import { Server } from "http";
-import { LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins } from "../mongoose/Log";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
 import wxUtil from "../util/wxUtil";
-import { Terminal } from "../mongoose";
+import { Terminal, LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins, mongoose } from "../mongoose";
 import { getDtuInfo, getUserBindDev, parseTime } from "../util/util";
 // Cron
 import * as Cron from "../cron/index";
@@ -18,7 +17,8 @@ import Tool from "../util/tool";
 import { Send } from "../util/Mail";
 import Check from "./bin/CheckUart";
 import { JwtVerify } from "../util/Secret";
-import { Uart } from "types-uart";
+
+import consola from "consola"
 
 
 type eventsName = 'terminal' | 'node' | 'login' | 'request' | 'DataTransfinite'
@@ -88,6 +88,28 @@ export class Event extends EventEmitter.EventEmitter {
     //
     wxUtil.get_AccessToken()
     Cron.start()
+  }
+
+  /**
+   * 断开所有socket,ws,database数据库的连接
+   */
+  async exit() {
+    await new Promise(resolve => {
+      this.uartSocket.io.close(err => {
+        if (err) console.log({ uartsocketErr: err });
+        else consola.success('uartsocket exit');
+        resolve(0)
+      })
+    })
+    await this.wxSocket.close()
+    await new Promise(resolve => {
+      this.clientSocket.io.close(err => {
+        if (err) console.log({ clientSocketErr: err });
+        else consola.success('clientSocket exit');
+        resolve(0)
+      })
+    })
+    await mongoose.disconnect()
   }
   /**
    * 挂载监听到koa ctx
@@ -170,13 +192,13 @@ export class Event extends EventEmitter.EventEmitter {
   CreateSocketServer(Http: Server) {
     // Node_Socket节点挂载
     this.uartSocket = new NodeSocketIO(Http, { path: "/Node" })
-    console.info(`Socket Server(namespace:/Node) runing`)
+    consola.success(`Socket Server(namespace:/Node) runing`)
     //WebClient_SocketServer挂载
     this.clientSocket = new webClientSocketIO(Http, { path: "/WebClient" })
-    console.info(`Socket Server(namespace:/WebClient) runing`)
+    consola.success(`Socket Server(namespace:/WebClient) runing`)
     // wxws服务端监听
     this.wxSocket = new Wxws(Http, "/wx")
-    console.info(`WS Server(namespace:/wx) runing`)
+    consola.success(`WS Server(namespace:/wx) runing`)
   }
 
   /* // 获取Cache入口

@@ -4,7 +4,7 @@ import Event, { Event as event } from "../event/index";
 import tool from "../util/tool";
 import { ParseFunction } from "../util/func";
 import { LogDtuBusy, LogInstructQuery } from "../mongoose";
-import { Uart } from "types-uart";
+
 
 /**
  * 管理node节点socket连接

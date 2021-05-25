@@ -1,7 +1,6 @@
 import { ParameterizedContext } from "koa";
 import router from "koa-router"
 import { Event } from "../server/event/index"
-import { Uart } from "types-uart";
 // apollo server result
 /** protocol */
 type communicationType = 232 | 485;

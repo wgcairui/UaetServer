@@ -1,5 +1,5 @@
 import Tool from "../util/tool";
-import { Uart } from "types-uart";
+
 
 interface CRC {
     protocolType: number

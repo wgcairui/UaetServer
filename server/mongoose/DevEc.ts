@@ -7,7 +7,7 @@ import {
   Schema_Dev_ups
 } from "./DevType";
 import { mongoose, Schema } from "./index";
-import { Uart } from "types-uart";
+
 
 /**
  * 
