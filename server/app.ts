@@ -51,9 +51,13 @@ Http.listen(port, host, undefined, () => {
   });
 });
 
-process.on("SIGINT", async () => {
-  console.log(`监听到关闭指令`);
-  await Event.exit()
-  Http.close()
-  process.exit(1)
-})
+process
+  .on("SIGINT", async () => {
+    console.log(`监听到关闭指令`);
+    await Event.exit()
+    Http.close()
+    process.exit(1)
+  })
+  .on("uncaughtException", err => {
+    consola.error("未捕获的错误", err)
+  })

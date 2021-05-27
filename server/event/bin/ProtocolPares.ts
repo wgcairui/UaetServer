@@ -120,7 +120,10 @@ class ProtocolParse {
   private parse232(IntructResult: Uart.IntructQueryResult[], protocol: string) {
     const InstructMap = this.getProtocolInstruct(protocol)
     return IntructResult
-      .filter(el => InstructMap.has(el.content)) // 刷选出指令正确的查询，避免出错
+      // 刷选出指令正确的查询，避免出错
+      // 通过InstructMap.has(el.content)确认指令是系统所包含的
+      // 通过el.buffer.data.findIndex(el2 => el2 === 13) === el.buffer.data.length - 1 确认\r结束符在结果中只有一次且在结尾位置,确保结果没有串码
+      .filter(el => InstructMap.has(el.content) && el.buffer.data.findIndex(el2 => el2 === 13) === el.buffer.data.length - 1)
       .map(el => {
         // 解析规则
         const instructs = InstructMap.get(el.content)!

@@ -64,7 +64,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
   const token = ctx.header.token as string
   const tokenUser: Uart.UserInfo = token && token !== 'undefined' ? await JwtVerify(token) : false
   // console.log({ noCookieTypeArray, token, tokenUser });
-  ctx.$Event.savelog<Uart.logUserRequst>('request', { user: tokenUser.user, userGroup: tokenUser.userGroup || 'group', type, argument: body })
+  ctx.$Event.savelog<Uart.logUserRequst>('request', { user: tokenUser.user, userGroup: tokenUser.userGroup || 'group', type: 'wx-' + type, argument: body })
 
   if (!noCookieTypeArray.includes(type) && !token && !tokenUser) ctx.throw('用户未登陆或登陆失效')
 
@@ -75,7 +75,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
-        console.log({ wxGetseesion });
+        // console.log({ wxGetseesion });
 
         // 包含错误
         ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
@@ -88,9 +88,10 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         if (user) {
           //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
           const address = (ctx.header['x-real-ip'] || ctx.ip) as string
-          console.log({ address, a: ctx.header['x-real-ip'] });
+          // console.log({ address, a: ctx.header['x-real-ip'] });
 
           Users.updateOne({ user: user.user }, { $set: { modifyTime: new Date(), address } }).exec()
+          new LogUserLogins({ user: user.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip, msg: 'wx' } as Uart.logUserLogins).save()
           user.passwd = ''
           ctx.body = {
             ok: 1,
@@ -307,7 +308,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
       {
         const { mac, pid } = body
         ctx.assert(validationUserPermission(tokenUser.user, mac), 402, '用户越权操作dtu')
-        const data = await TerminalClientResultSingle.findOne({ mac: mac, pid }).lean<Uart.queryResult>()
+        const data = await TerminalClientResultSingle.findOne({ mac: mac, pid })
         if (data && data.result) {
           // 获取mac协议
           const protocol = ctx.$Event.getClientDtuMountDev(mac, pid).protocol
@@ -595,7 +596,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         // 验证客户是否校验过权限
         ctx.assert(validationUserPermission(tokenUser.user, query.DevMac), 402, '用户越权操作dtu')
         const juri = ctx.$Event.ClientCache.CacheUserJurisdiction.get(token)
-        console.log({ juri, a: ctx.$Event.ClientCache.CacheUserJurisdiction });
+        // console.log({ juri, a: ctx.$Event.ClientCache.CacheUserJurisdiction });
 
         if (!juri) {
           ctx.body = { ok: 4, msg: "权限校验失败,请校验身份" } as Uart.ApolloMongoResult
@@ -623,11 +624,11 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             const val = ParseCoefficient(item.bl, Number(item.val)).toString(16)
             Query.content = item.value.replace(/(%i)/, val.length < 2 ? val.padStart(2, '0') : val)
           }
-          console.log({ msg: '发送查询指令', item });
+          // console.log({ msg: '发送查询指令', item });
         }
 
         const result = await ctx.$Event.DTU_OprateInstruct(Query)
-        console.log(result);
+        // console.log(result);
         ctx.body = result
       }
       break
@@ -644,7 +645,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
     case "sendValidation":
       {
         const user = await Users.findOne({ user: tokenUser.user }).lean<Uart.UserInfo>()
-        const code = (Math.random() * 10000).toFixed(0).padStart(4,'0')
+        const code = (Math.random() * 10000).toFixed(0).padStart(4, '0')
         ctx.$Event.ClientCache.CacheUserValidationCode.set(token, code)
         ctx.body = await SendValidation(String(user!.tel), code)
       }
