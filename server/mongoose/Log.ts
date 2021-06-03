@@ -111,6 +111,77 @@ const SchemaInstructQuery = new Schema({
     content: [String],
     Interval: Number,
 })
+
+/**
+ * 记录微信推送事件
+ */
+const SchemaWXEvent = new Schema({
+    /**
+                 * 开发者 微信号
+                 */
+    ToUserName: String,
+    /**
+     * 发送方帐号（一个OpenID）
+     */
+    FromUserName: String,
+    /**
+     * 消息创建时间 （整型）
+     */
+    CreateTime: String,
+    /**
+     * 消息类型，event
+     */
+    MsgType: String,
+    /**
+     * 事件类型，VIEW
+     */
+    Event: String,
+    /**
+     * 事件KEY值，设置的跳转URL
+     */
+    EventKey: String,
+    /**
+     * 文本消息内容
+     */
+    Content: String,
+    /**
+     * 指菜单ID，如果是个性化菜单，则可以通过这个字段，知道是哪个规则的菜单被点击了
+     */
+
+    MenuID: String,
+    /**
+     * 扫描信息
+     */
+    ScanCodeInfo: String,
+    /**
+     * 扫描类型，一般是qrcode
+     */
+    ScanType: String,
+    /**
+     * 扫描结果，即二维码对应的字符串信息
+     */
+    ScanResult: String,
+    /**
+     * 发送的图片信息
+     */
+    SendPicsInfo: "Mixed",
+    /**
+     * 发送的图片数量
+     */
+    Count: Number,
+    /**
+     * 图片列表
+     */
+    PicList: ["MIxed"],
+    /**
+     * 图片的MD5值，开发者若需要，可用于验证接收到图片
+     */
+    PicMd5Sum: String,
+    /**
+     * 二维码ticket
+     */
+    Ticket: String
+}, { timestamps: true })
 export const LogSmsSend = mongoose.model<mongoose.Document & Uart.logMailSend>("Log.SmsSend", SchemaSmsSend)
 export const LogMailSend = mongoose.model<mongoose.Document & Uart.logMailSend>("Log.MailSend", SchemaMailSend)
 export const LogUartTerminalDataTransfinite = mongoose.model<mongoose.Document & Uart.uartAlarmObject>("Log.UartTerminalDataTransfinite", SchemaUartTerminalDataTransfinite)
@@ -126,3 +197,6 @@ export const LogUseBytes = mongoose.model<mongoose.Document & any>("Log.useBytes
 export const LogDtuBusy = mongoose.model<mongoose.Document & Uart.logDtuBusy>("Log.DtuBusy", SchemaDtuBusy)
 
 export const LogInstructQuery = mongoose.model<mongoose.Document & Uart.queryObject>("Log.InstructQuery", SchemaInstructQuery)
+
+
+export const LogWXEvent = mongoose.model<mongoose.Document & Uart.WX.WxEvent>("Log.WXEvent", SchemaWXEvent)

@@ -5,7 +5,7 @@ import consola from "consola"
 const DB_URL = `mongodb://${process.env.NODE_Docker === 'docker' ? 'mongo' : 'localhost'}:27017`; /** * 连接 */
 
 mongoose.connect(DB_URL, {
-  dbName:"UartServer",
+  dbName: "UartServer",
   useUnifiedTopology: true,
   useNewUrlParser: true,
   useCreateIndex: true
@@ -70,12 +70,12 @@ import { Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_lis
 import { DeviceProtocol, DevsType } from "./DeviceAndProtocol";
 import { DevConstant, DevArgumentAlias } from "./DeviceParameterConstant";
 import { EcTerminal } from "./EnvironmentalControl";
-import { LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery } from "./Log";
+import { LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery, LogWXEvent } from "./Log";
 import { Terminal, RegisterTerminal } from "./Terminal";
 import { NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal } from "./node";
-import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout } from "./user";
+import { Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout, WxUsers } from "./user";
 
-export { mongoose, Schema, DeviceProtocol, DevsType, Tokens, TokenValidation, AMapLoctionCache, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_list, Dev_Table, DevConstant, DevArgumentAlias, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery, Terminal, RegisterTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout }
+export { mongoose, Schema, DeviceProtocol, DevsType, Tokens, TokenValidation, AMapLoctionCache, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, WxUsers, Dev_list, Dev_Table, LogWXEvent, DevConstant, DevArgumentAlias, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, LogDtuBusy, LogInstructQuery, Terminal, RegisterTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout }
 
 export const DocmentCount = async () => {
   const models = [Tokens, AMapLoctionCache, DeviceProtocol, DevsType, Dev_all, Dev_ac, Dev_ups, Dev_power, Dev_io, Dev_th, Dev_Alarm, Dev_Table, DevConstant, EcTerminal, LogSmsSend, LogMailSend, LogUartTerminalDataTransfinite, LogUserRequst, LogUserLogins, LogNodes, LogTerminals, LogDataClean, LogUseBytes, Terminal, RegisterTerminal, UserAlarmSetup, UserAggregation, Users, UserBindDevice, NodeRunInfo,]// NodeClient,TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo, WebSocketTerminal, ]

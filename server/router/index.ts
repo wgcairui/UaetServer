@@ -8,6 +8,8 @@ import wxPublic from "./wxPublic";
 import Util from "./util";
 import OPEN from "./open";
 import Ec from "./ec"
+import Web from './web'
+import Root from "./root"
 import { KoaCtx } from "typing";
 
 
@@ -19,6 +21,8 @@ rout.all("/api/wxPublic", wxPublic)
 rout.all("/api/util/:type1/:type2", Util)
 rout.post("/api/open/:type", OPEN)
 rout.all("/api/ec/:type", Ec)
+rout.all("/api/web/:type", Web)
+rout.post("/api/root/:type", Root)
 
 // 微信公众号之前的服务器配置
 /* 

@@ -6,7 +6,7 @@ import { Server } from "http";
 import NodeSocketIO from "../socket/uart";
 import webClientSocketIO from "../socket/webClient";
 import Wxws from "../socket/wx";
-import wxUtil from "../util/wxUtil";
+// import wxUtil from "../util/wxUtil";
 import { Terminal, LogUartTerminalDataTransfinite, LogTerminals, LogUserRequst, LogNodes, LogUserLogins, mongoose } from "../mongoose";
 import { getDtuInfo, getUserBindDev, parseTime } from "../util/util";
 // Cron
@@ -86,7 +86,7 @@ export class Event extends EventEmitter.EventEmitter {
     this.setMaxListeners(29)
       .on("error", console.error);
     //
-    wxUtil.get_AccessToken()
+    // wxUtil.get_AccessToken()
     Cron.start()
   }
 
@@ -96,7 +96,7 @@ export class Event extends EventEmitter.EventEmitter {
   async exit() {
     await new Promise(resolve => {
       this.uartSocket.io.close(err => {
-        if (err) console.log({ uartsocketErr: err });
+        if (err) console.log({ uartsocketErr: err.message });
         else consola.success('uartsocket exit');
         resolve(0)
       })
@@ -104,7 +104,7 @@ export class Event extends EventEmitter.EventEmitter {
     await this.wxSocket.close()
     await new Promise(resolve => {
       this.clientSocket.io.close(err => {
-        if (err) console.log({ clientSocketErr: err });
+        if (err) console.log({ clientSocketErr: err.message });
         else consola.success('clientSocket exit');
         resolve(0)
       })

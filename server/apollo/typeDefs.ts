@@ -143,6 +143,9 @@ const typeDefs: DocumentNode = gql`
     status: Boolean
     messageId: String 
     rgtype: String
+    wpId: String
+    wxId: String
+    openId: String
   }
   # 用户绑定的设备
   type BindDevice {

@@ -8,7 +8,7 @@ import { getUserBindDev, validationUserPermission } from "../util/util";
 import { ParseCoefficient } from "../util/func";
 import Tool from "../util/tool";
 import { SendValidation } from "../util/SMS";
-import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
+import { DevConstant, DevsType, LogUartTerminalDataTransfinite, LogUserLogins, mongoose, RegisterTerminal, Terminal, TerminalClientResult, TerminalClientResultSingle, UserAlarmSetup, UserBindDevice, Users } from "../mongoose";
 import config from "../config";
 import HF from "../util/HF";
 
@@ -75,38 +75,57 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
-        // console.log({ wxGetseesion });
-
         // 包含错误
         ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
         // 正确的话返回sessionkey
-        const { openid, session_key } = wxGetseesion
+        const { openid, session_key, unionid } = wxGetseesion
         // 存储session
         ClientCache.CacheWXSession.set(openid, session_key);
-        // 检查openid是否为已注册用户
-        const user = await Users.findOne({ userId: openid }).lean<Uart.UserInfo>();
+        // 检查unionid是否为已注册用户,
+        const user = await Users.findOne({ userId: unionid })
+        // 检查到用户则代表用户已经绑定微信,不在检查scene字段
+        const address = (ctx.header['x-real-ip'] || ctx.ip) as string
         if (user) {
-          //ctx.cookies.set('token', await JwtSign(user), { sameSite: 'strict' })
-          const address = (ctx.header['x-real-ip'] || ctx.ip) as string
-          // console.log({ address, a: ctx.header['x-real-ip'] });
-
+          // 如果没有小程序id,更新
+          if (!user.wpId) {
+            await Users.updateOne({ user: user.user }, { $set: { wpId: openid } }).exec()
+          }
           Users.updateOne({ user: user.user }, { $set: { modifyTime: new Date(), address } }).exec()
           new LogUserLogins({ user: user.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip, msg: 'wx' } as Uart.logUserLogins).save()
           user.passwd = ''
+
           ctx.body = {
             ok: 1,
-            arg: { token: await JwtSign(user), user: user.user, userGroup: user.userGroup, name: user.name, avanter: user.avanter, tel: user.tel }
+            arg: { token: await JwtSign(user.toJSON()), user: user.user, userGroup: user.userGroup, name: user.name, avanter: user.avanter, tel: user.tel }
           } as Uart.ApolloMongoResult;
+        }
+        // 如果登录携带扫码scene值,则是绑定小程序和透传账号
+        else if (body.scene) {
+          console.log({ s: body.scene });
+          const u = await Users.findOne({ _id: mongoose.Types.ObjectId(body.scene) })
+          // 如果有用户,且用户没有绑定微信,绑定微信小程序
+          if (u && !u.userId) {
+            await Users.updateOne({ user: u.user }, { $set: { wpId: openid, userId: unionid } }).exec()
+            Users.updateOne({ user: u.user }, { $set: { modifyTime: new Date(), address } }).exec()
+            new LogUserLogins({ user: u.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip, msg: 'wx' } as Uart.logUserLogins).save()
+            u.passwd = ''
+            ctx.body = {
+              ok: 1,
+              arg: { token: await JwtSign(u.toJSON()), user: u.user, userGroup: u.userGroup, name: u.name, avanter: u.avanter, tel: u.tel }
+            } as Uart.ApolloMongoResult;
+          } else {
+            ctx.body = { ok: 0, msg: "scene参数错误,", arg: { openid, unionid } } as Uart.ApolloMongoResult;
+          }
         } else {
-          ctx.body = { ok: 0, msg: "微信未绑定平台账号，请先注册使用", arg: { openid } } as Uart.ApolloMongoResult;
+          ctx.body = { ok: 0, msg: "微信未绑定平台账号，请先注册使用", arg: { openid, unionid } } as Uart.ApolloMongoResult;
         }
       }
       break;
     // 用户登录
     case "userlogin":
       {
-        const { openid, user, passwd, avanter } = body
-        const userInfo = await Users.findOne({ user }).lean<Uart.UserInfo>()
+        const { openid, user, passwd, avanter, unionid } = body
+        const userInfo = await Users.findOne({ user })
         if (userInfo) {
           if (!await BcryptCompare(passwd, userInfo.passwd as string)) {
             ctx.body = { ok: 0, msg: "密码效验错误" } as Uart.ApolloMongoResult
@@ -116,7 +135,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             ctx.body = { ok: 0, msg: '用户已绑定其它微信账号，请先解绑' } as Uart.ApolloMongoResult
             return
           }
-          Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: (ctx.header['x-real-ip'] || ctx.ip) as string, userId: openid, avanter } }).exec()
+          await Users.updateOne({ user }, { $set: { modifyTime: new Date(), address: (ctx.header['x-real-ip'] || ctx.ip) as string, userId: unionid, wpId: openid, avanter } }).exec()
           new LogUserLogins({ user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
           ctx.body = { ok: 1, msg: 'success' } as Uart.ApolloMongoResult
         } else {
@@ -139,7 +158,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
     // 用于解绑微信和透传账号的绑定关系
     case "unbindwx":
       {
-        ctx.body = await Users.updateOne({ user: tokenUser.user, rgtype: { $ne: 'wx' } }, { $set: { userId: '', avanter: '' } })
+        ctx.body = await Users.updateOne({ user: tokenUser.user, rgtype: { $ne: 'wx' } }, { $set: { userId: '', avanter: '', wpId: '' } })
       }
       break
     // 解密手机号码
@@ -160,6 +179,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
       {
         const data: {
           user: string;
+          openid: string,
           name: string;
           tel: number;
           avanter: string;
@@ -173,6 +193,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         const user = Object.assign(
           body,
           { userId: data.user },
+          { wpId: data.openid },
           { passwd: await BcryptDo(data.user) },
           { rgtype: "wx" }
         ) as unknown as Uart.UserInfo;
@@ -193,7 +214,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
               type: "用户注册"
             } as Uart.logUserLogins).save();
             ctx.$Event.Cache.RefreshCacheUser(user.user)
-            WX.SendsubscribeMessageRegister(user.userId, user.user, user.name || '', user.creatTime as any, '欢迎使用LADS透传云平台')
+            WX.SendsubscribeMessageRegister(user.wpId!, user.user, user.name || '', user.creatTime as any, '欢迎使用LADS透传云平台')
             return { ok: 1, msg: "账号注册成功" };
           })
           .catch(e => console.log(e));

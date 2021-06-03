@@ -37,7 +37,7 @@ class WXws {
     close() {
         return new Promise(resolve => {
             this.ws.close(err => {
-                if (err) console.log({ wxWssErr: err });
+                if (err) console.log({ wxWssErr: err.message });
                 else console.log('wxWss exit');
                 resolve(0)
             })

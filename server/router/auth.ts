@@ -1,12 +1,13 @@
 import { JwtSign, JwtVerify } from "../util/Secret";
-import { BcryptCompare } from "../util/bcrypt";
-import { Users } from "../mongoose/user";
+import { BcryptCompare, BcryptDo } from "../util/bcrypt";
+import { UserAlarmSetup, Users } from "../mongoose";
 import { AES, enc } from "crypto-js";
 import { LogUserLogins } from "../mongoose/Log";
 import { KoaIMiddleware } from "typing";
+import WX from "../util/wxUtil"
 
 
-const Middleware:KoaIMiddleware =  async (ctx) => {
+const Middleware: KoaIMiddleware = async (ctx) => {
   const body = ctx.method === "GET" ? ctx.query : ctx.request.body
   const type = ctx.params.type;
   // console.log({ body });
@@ -39,6 +40,57 @@ const Middleware:KoaIMiddleware =  async (ctx) => {
         }
       }
       break
+    // 微信扫码登录
+    case "wxlogin":
+      {
+        const { code, state }: { code: string, state: string } = body
+        const ok = code || (state && state === 'e0bwU6jnO2KfIuTgBQNDVxlsy7iGtoF3A8rWpSCM5RzZ1dmYJcLHqPhXav4Ek9lIC6P4cULfktXj5Wcwa3GcCBCYRMWidUzZyJyTqu')
+        ctx.assert(ok, 404, "argument error")
+        const info = await WX.web_login(code)
+        console.log(info);
+
+        const u = await Users.findOne({ userId: info.unionid })
+        // 如果没有用户则新建
+        if (!u) {
+          const user: Uart.UserInfo = {
+            userId: info.unionid,
+            user: info.unionid,
+            name: info.nickname,
+            avanter: info.headimgurl,
+            passwd: await BcryptDo(info.unionid),
+            rgtype: "wx",
+            userGroup: "user",
+            openId: info.openid
+          }
+          await new Users(user).save()
+            .then(() => {
+              // 生成用户新的自定义配置
+              const setup: Partial<Uart.userSetup> = {
+                user: user.user,
+                tels: [],
+                mails: [],
+                ProtocolSetup: []
+              };
+              new UserAlarmSetup(setup).save();
+              // 添加日志记录
+              new LogUserLogins({
+                user: user.user,
+                type: "用户注册"
+              } as Uart.logUserLogins).save();
+              ctx.$Event.Cache.RefreshCacheUser(user.user)
+              // WX.SendsubscribeMessageRegister(user.userId, user.user, user.name || '', user.creatTime as any, '欢迎使用LADS透传云平台')
+            })
+        }
+        await Users.updateOne({ userId: info.unionid }, { $set: { modifyTime: new Date(), address: ctx.ip } })
+        const user = await Users.findOne({ userId: info.unionid }) as Uart.UserInfo
+        new LogUserLogins({ user: user.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
+        // token长度由对象的复杂度决定，edge限值header长度
+        const token = await JwtSign({ user: user.user, userGroup: user.userGroup })
+        ctx.body = { token , user: user.user}//, name: user.name, userGroup: user.userGroup, avanter: user.avanter };
+      }
+      break
+
+
     case "user":
       {
         const token = (<string>ctx.cookies.get("auth._token.local")).replace(/^bearer\%20/, "");
