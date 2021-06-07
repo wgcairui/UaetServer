@@ -1,4 +1,4 @@
-import { Schema, mongoose } from "./index";
+import { Schema } from "./index";
 
 
 // 各个类型设备的常量
@@ -72,7 +72,7 @@ const AlarmStat = new Schema({
 }, { _id: false })
 
 // 协议对应的约束配置
-export const Schema_DevConstant = new Schema({
+const Schema_DevConstant = new Schema({
   Protocol: String,
   ProtocolType: String,
   Constant: Constant,
@@ -93,10 +93,5 @@ const Schema_DevArgumentAlias = new Schema({
   protocol: String,
   alias: [alias]
 })
-const DevConstant = mongoose.model<Uart.ProtocolConstantThreshold & mongoose.Document>(
-  "Device.Constant",
-  Schema_DevConstant
-);
 
-const DevArgumentAlias = mongoose.model<Uart.DevArgumentAlias & mongoose.Document>('Device.ArgumentAlia', Schema_DevArgumentAlias)
-export { DevConstant, DevArgumentAlias }
+export { Schema_DevArgumentAlias, Schema_DevConstant }

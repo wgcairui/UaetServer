@@ -1,4 +1,4 @@
-/* 
+/*
   设备型号
   {
     设备类型
@@ -6,7 +6,7 @@
     设备协议[]
   }
 */
-import { mongoose, Schema } from "./index";
+import { Schema } from "./index";
 
 
 /**
@@ -79,6 +79,4 @@ const SchemaProtocols = new Schema({
   ]
 });
 
-const DevsType = mongoose.model<Uart.DevsType & mongoose.Document>("Device.Type", SchemaDev);
-const DeviceProtocol = mongoose.model<Uart.protocol & mongoose.Document>("Device.Protocol", SchemaProtocols);
-export { DeviceProtocol, DevsType };
+export { SchemaDev, SchemaProtocols };

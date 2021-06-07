@@ -1,8 +1,7 @@
 import { JwtSign, JwtVerify } from "../util/Secret";
 import { BcryptCompare, BcryptDo } from "../util/bcrypt";
-import { UserAlarmSetup, Users } from "../mongoose";
+import { UserAlarmSetup, Users, LogUserLogins } from "../mongoose";
 import { AES, enc } from "crypto-js";
-import { LogUserLogins } from "../mongoose/Log";
 import { KoaIMiddleware } from "typing";
 import WX from "../util/wxUtil"
 
@@ -86,7 +85,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         new LogUserLogins({ user: user.user, type: '用户登陆', address: ctx.header['x-real-ip'] || ctx.ip } as Uart.logUserLogins).save()
         // token长度由对象的复杂度决定，edge限值header长度
         const token = await JwtSign({ user: user.user, userGroup: user.userGroup })
-        ctx.body = { token , user: user.user}//, name: user.name, userGroup: user.userGroup, avanter: user.avanter };
+        ctx.body = { token, user: user.user }//, name: user.name, userGroup: user.userGroup, avanter: user.avanter };
       }
       break
 

@@ -1,6 +1,6 @@
 import core from "@alicloud/pop-core"
+import { LogSmsSend } from "../mongoose";
 import Event from "../event/index";
-import { LogSmsSend } from "../mongoose/Log";
 import { getDtuInfo } from "./util";
 import wxUtil from "./wxUtil";
 

@@ -1,4 +1,4 @@
-import { mongoose, Schema } from "./index";
+import { Schema } from "./index";
 
 
 // 节点信息
@@ -137,25 +137,5 @@ const SchemaTerminalClientResultSingle = new Schema({
   useTime: Number,
   parentId: String
 }, { timestamps: true });
-const NodeClient = mongoose.model<Uart.NodeClient & mongoose.Document>("Node.Client", SchemaNodeClient)
 
-const TerminalClientResults = mongoose.model<Uart.queryResult & mongoose.Document>(
-  "Client.Result",
-  SchemaTerminalClientResults,
-);
-
-const TerminalClientResult = mongoose.model<Uart.queryResultSave & mongoose.Document>(
-  "Client.ResultColltion",
-  SchemaTerminalClientResult,
-);
-
-const TerminalClientResultSingle = mongoose.model<Uart.queryResult & mongoose.Document>(
-  "Client.ResultSingle",
-  SchemaTerminalClientResultSingle,
-);
-
-const NodeRunInfo = mongoose.model<Uart.nodeInfo & mongoose.Document>("Node.RunInfo", SchemaNodeRunInfo);
-
-const WebSocketTerminal = mongoose.model<Uart.WebSocketInfo & mongoose.Document>("Terminal.WebSocketinfo", SchemaWebSocketTerminal)
-
-export { WebSocketTerminal, NodeClient, TerminalClientResults, TerminalClientResult, TerminalClientResultSingle, NodeRunInfo }
+export { SchemaNodeClient, SchemaWebSocketTerminal, SchemaTerminalClientResults, SchemaTerminalClientResultSingle, SchemaTerminalClientResult, SchemaNodeRunInfo }

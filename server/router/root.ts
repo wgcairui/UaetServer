@@ -1,7 +1,7 @@
 import { JwtVerify } from "../util/Secret";
 import { KoaIMiddleware } from "typing";
 import wxUtil from "../util/wxUtil";
-import { LogWXEvent, Users, WxUsers } from "../mongoose";
+import { LogWXEvent, SecretApp, Users, WxUsers } from "../mongoose";
 
 const Middleware: KoaIMiddleware = async (ctx) => {
     const body = ctx.request.body
@@ -60,6 +60,17 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             // 获取微信推送事件记录
             case "log_wxEvent":
                 ctx.body = await LogWXEvent.find()
+                break
+
+            // 设置第三方密匙信息
+            case "setSecret":
+                const { type: s, appid, secret } = body
+                ctx.body = await SecretApp.updateOne({ type: s }, { appid, secret }, { upsert: true })
+                break
+
+            // 获取第三方密匙信息
+            case "getSecret":
+                ctx.body = await SecretApp.findOne({ type: body.type })
                 break
 
         }

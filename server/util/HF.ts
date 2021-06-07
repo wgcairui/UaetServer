@@ -4,10 +4,7 @@
  */
 
 import axios from 'axios'
-
-
-const hfUser = require("../key/hf.json")
-
+import { SecretApp } from '../mongoose'
 interface hfRequst {
     message: string
     result: number
@@ -72,20 +69,27 @@ class HF {
      * @method 获取hf登录token
      */
     private async login() {
-        const url = `http://open.bridge.iotworkshop.com:8080/iotbs/api/v1/users/login?timestamp=${Date.now()}`
-        const data = await axios.post<hf_loginRequst>(url, {
-            password: hfUser.password,
-            userName: hfUser.userName
-        })
+        const secret = await SecretApp.findOne({ type: 'hf' })
+        if (secret) {
+            const url = `http://open.bridge.iotworkshop.com:8080/iotbs/api/v1/users/login?timestamp=${Date.now()}`
+            const data = await axios.post<hf_loginRequst>(url, {
+                password: secret.appid,
+                userName: secret.secret
+            })
 
-        if (data.data.result) {
-            console.error('汉枫IOT Server 脚本获取token失败,详情:',data.data.message);
+            if (data.data.result) {
+                console.error('汉枫IOT Server 脚本获取token失败,详情:', data.data.message);
+                throw new Error("data.data.message");
+            } else {
+                this.token = data.data.data.accessToken
+                setTimeout(() => {
+                    this.token = ''
+                }, data.data.data.accessTokenExpireIn - 10)
+            }
         } else {
-            this.token = data.data.data.accessToken
-            setTimeout(() => {
-                this.token = ''
-            }, data.data.data.accessTokenExpireIn - 10)
+            throw new Error("hf secret is null");
         }
+
     }
 
     /**

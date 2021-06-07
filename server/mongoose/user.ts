@@ -153,11 +153,4 @@ const SchemawxUser = new Schema({
   "qr_scene_str": String
 }, { timestamps: true })
 
-const WxUsers = mongoose.model<Uart.WX.userInfoPublic & mongoose.Document>('user.wxPubilc', SchemawxUser)
-
-const Users = mongoose.model<Uart.UserInfo & mongoose.Document>("users", Schema_Users);
-const UserBindDevice = mongoose.model<Uart.BindDevice & mongoose.Document>("User.BindDevice", SchemaUserBindDevice);
-const UserAlarmSetup = mongoose.model<Uart.userSetup & mongoose.Document>("user.AlarmSetup", SchemaUserAlarmSetup)
-const UserAggregation = mongoose.model<Uart.Aggregation & mongoose.Document>("user.aggregation", SchemaUserAggregation)
-const UserLayout = mongoose.model<Uart.userLayout & mongoose.Document>("user.Layout", SchemaUserLayout)
-export { WxUsers, Users, UserBindDevice, UserAlarmSetup, UserAggregation, UserLayout };
+export { SchemaUserAggregation, SchemaUserAlarmSetup, SchemaUserBindDevice, SchemaUserLayout, Schema_DevConstant, Schema_Users, SchemawxUser }

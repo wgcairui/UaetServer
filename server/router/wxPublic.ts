@@ -2,9 +2,6 @@ import sha1 from "sha1";
 import { parseStringPromise } from "xml2js"
 import WxUtil from "../util/wxUtil"
 
-const Token = "6wF2e3auzFxQP4NamBCw"
-const EncodingAESKey = "jMTwdwFmxqlxnQsMjZfVhIqFcefuRjiKGGtekuNzkxf"
-
 
 /**
  * xml2Js解析出来的数据格式
@@ -15,14 +12,15 @@ interface xmlObj {
     }
 }
 import { KoaIMiddleware } from "typing";
-import { LogWXEvent, mongoose, Users } from "../mongoose";
+import { LogWXEvent, mongoose, SecretApp, Users } from "../mongoose";
 const Middleware: KoaIMiddleware = async (ctx) => {
     const body: Uart.WX.wxValidation | Uart.WX.WxEvent = ctx.method === "GET" ? ctx.query : await parseStringPromise(ctx.request.body).then(el => parseXmlObj(el) as any);
     new LogWXEvent(body).save()
     // 微信校验接口
     if ('signature' in body) {
         const { signature, timestamp, nonce, echostr } = body
-        const sha = sha1([Token, timestamp, nonce].sort().join(''))
+        const secret = await SecretApp.findOne({ type: 'wxmpValidaton' })
+        const sha = sha1([secret?.appid, timestamp, nonce].sort().join(''))
         ctx.body = sha === signature ? echostr : false
         return
     }

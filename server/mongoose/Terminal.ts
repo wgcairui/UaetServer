@@ -1,4 +1,4 @@
-import { mongoose, Schema } from "./index";
+import { Schema } from "./index";
 
 
 const SchemaRegisterTerminal = new Schema({
@@ -48,7 +48,4 @@ const SchemaTerminal = new Schema({
   ]
 });
 
-export const Terminal = mongoose.model<Uart.Terminal & mongoose.Document>("Terminal", SchemaTerminal);
-
-export const RegisterTerminal = mongoose.model<Uart.RegisterTerminal & mongoose.Document>("Terminal.Register", SchemaRegisterTerminal)
-
+export { SchemaRegisterTerminal, SchemaTerminal }

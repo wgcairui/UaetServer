@@ -1,12 +1,10 @@
 /* app端用api */
 import { JwtVerify, JwtSign } from "../util/Secret";
-import { RegisterTerminal, Terminal } from "../mongoose/Terminal";
-import { Users, UserAlarmSetup } from "../mongoose/user";
 import { BcryptDo } from "../util/bcrypt";
-import { LogUserLogins } from "../mongoose/Log";
 import { SendValidation } from "../util/SMS";
 import Tool from "../util/tool";
 import { KoaIMiddleware } from "typing";
+import { RegisterTerminal, Terminal, Users, UserAlarmSetup, LogUserLogins } from "../mongoose";
 
 
 const Middleware:KoaIMiddleware =  async (ctx) => {

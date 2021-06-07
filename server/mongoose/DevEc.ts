@@ -46,4 +46,11 @@ const Schema_Dev_Table = new Schema({
   websocket_uri: String
 });
 
-export { Schema_Dev_Alarm, Schema_Dev_ups, Schema_Dev_th, Schema_Dev_power, Schema_Dev_io, Schema_Dev_all, Schema_Dev_ac, Schema_Dev_Table }
+
+const SchemaEC = new Schema({
+  ECid: String,
+  name: String,
+  model: String
+});
+
+export { SchemaEC, Schema_Dev_Alarm, Schema_Dev_ups, Schema_Dev_th, Schema_Dev_power, Schema_Dev_io, Schema_Dev_all, Schema_Dev_ac, Schema_Dev_Table }

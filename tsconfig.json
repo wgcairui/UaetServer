@@ -2,6 +2,9 @@
   "compilerOptions": {
     "target": "ES2018",
     "module": "commonjs",
+    "lib": [
+      "ES2019.Array"
+    ],
     "strict": true,
     "baseUrl": "./",
     "paths": {

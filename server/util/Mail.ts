@@ -1,6 +1,6 @@
 import { createTransport } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
-import { LogMailSend } from "../mongoose/Log";
+import { LogMailSend } from "../mongoose";
 
 
 const key = require("../key/qqMail.json");

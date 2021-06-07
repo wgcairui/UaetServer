@@ -87,7 +87,9 @@ export class Event extends EventEmitter.EventEmitter {
       .on("error", console.error);
     //
     // wxUtil.get_AccessToken()
-    Cron.start()
+    setTimeout(() => {
+      Cron.start()
+    }, 6e4);
   }
 
   /**
