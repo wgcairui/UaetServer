@@ -308,7 +308,7 @@ class Check {
     // 缓存告警记录
     const n = this.CacheAlarmNum.get(tags) || 0;
     this.CacheAlarmNum.set(tags, n + 1);
-    // console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
+    console.log('### 告警发送 sendSmsAlarm', query.mac, query.pid, query.mountDev, event, tag, n);
     if (!validation || n === 10) {
       this.ctx.SendUserAlarm({ mac: query.mac, msg: event })
       // 是否有邮件
@@ -375,35 +375,42 @@ class Check {
    */
   private SmsDTUDevAlarm = (mac: string, pid: string | number, devName: string, remind: string, timeStamp: number) => {
     const info = getDtuInfo(mac)
-    const { userId } = this.ctx.Cache.CacheUser.get(info.user.user)!
+    const { wxId } = this.ctx.Cache.CacheUser.get(info.user.user)!
     // 时间参数,长度限制20字节
     const time = new Date(timeStamp)
     const d = `${time.getMonth() + 1}/${time.getDate()} ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
-    if (userId) {
-      const Dev = info.terminalInfo.mountDevs.find(el => el.pid == pid)!
-      const content = `${info.terminalInfo.name}/${pid}/${Dev.mountDev} 运行故障，故障信息:${remind}`.slice(-20)
-      wxUtil.SendsubscribeMessageDevAlarm(userId, d, content, (info.terminalInfo.name + '/' + Dev.mountDev).slice(0, 20), info.terminalInfo.DevMac + '-' + Dev.pid, Dev.Type + '运行异常')
-    }
-    const tels = (info.userInfo?.tels || []).filter(tel => Tool.RegexTel(tel))
-    if (tels.length > 0) {
+    console.log({ wxId });
 
-      const TemplateParam = JSON.stringify({
-        name: info.user.name,
-        DTU: info.terminalInfo.name,
-        pid: pid,
-        devname: devName,
-        time: d,
-        remind
+    if (wxId) {
+      const Dev = info.terminalInfo.mountDevs.find(el => el.pid == pid)!
+      const content = `${info.terminalInfo.name}/${pid}/${Dev.mountDev} 运行故障，故障信息:${remind}`
+      wxUtil.SendsubscribeMessageDevAlarmPublic(wxId, Date.now(), content, Dev.mountDev, info.terminalInfo.name, remind).then(SendsubscribeMessageDevAlarmPublic => {
+        console.log({ SendsubscribeMessageDevAlarmPublic });
+
       })
-      const params: params = {
-        "RegionId": "cn-hangzhou",
-        "PhoneNumbers": tels.join(','),
-        "SignName": "雷迪司科技湖北有限公司",
-        "TemplateCode": 'SMS_200701342',
-        TemplateParam
+      // wxUtil.SendsubscribeMessageDevAlarm(wxId, d, content, (info.terminalInfo.name + '/' + Dev.mountDev).slice(0, 20), info.terminalInfo.DevMac + '-' + Dev.pid, Dev.Type + '运行异常')
+    } else {
+      const tels = (info.userInfo?.tels || []).filter(tel => Tool.RegexTel(tel))
+      if (tels.length > 0) {
+
+        const TemplateParam = JSON.stringify({
+          name: info.user.name,
+          DTU: info.terminalInfo.name,
+          pid: pid,
+          devname: devName,
+          time: d,
+          remind
+        })
+        const params: params = {
+          "RegionId": "cn-hangzhou",
+          "PhoneNumbers": tels.join(','),
+          "SignName": "雷迪司科技湖北有限公司",
+          "TemplateCode": 'SMS_200701342',
+          TemplateParam
+        }
+        return SendSms(params)
       }
-      return SendSms(params)
-    } else return false
+    }
   }
 
 }

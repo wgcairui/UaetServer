@@ -254,31 +254,37 @@ class WX {
    * @param Alarmtype 告警类型
    */
   async SendsubscribeMessageDevAlarmPublic(UserOpenID: string, time: string | number, content: string, Devname: string, DTUname: string, Alarmtype: string) {
-    const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${await this.get_AccessToken()}`
+    const url = `https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=${await this.get_AccessTokenPublic()}`
     const postData: Uart.WX.wxsubscribeMessage = {
       touser: UserOpenID,
       template_id: 'rIFS7MnXotNoNifuTfFpfh4vFGzCGlhh-DmWZDcXpWg',
       miniprogram: {
-        "appid": "wx38800d0139103920",
+        appid: "wx38800d0139103920",
         pagepath: 'pages/index/index',
       },
       data: {
         first: {
-          value: content
+          value: content,
+          color: "#173177"
         },
         device: {
-          value: `${DTUname}(${Devname})`
+          value: `${DTUname}(${Devname})`,
+          color: "#173177"
         },
         time: {
-          value: this._formatTime(time)
+          value: this._formatTime(time),
+          color: "#173177"
         },
         remark: {
-          value: Alarmtype
+          value: Alarmtype,
+          color: "#173177"
         }
       }
     }
     return await this.fecth<Uart.WX.wxRequest>({ url, method: 'POST', data: postData })
   }
+
+
 
   /**
    * 获取公众号用户信息
@@ -294,7 +300,7 @@ class WX {
    * @param wxIds 用户id
    */
   async getUserInfosPublic(wxIds: string[]) {
-    const url = `POST https://api.weixin.qq.com/cgi-bin/user/info/batchget?access_token=${await this.get_AccessTokenPublic()}`
+    const url = `https://api.weixin.qq.com/cgi-bin/user/info/batchget?access_token=${await this.get_AccessTokenPublic()}`
     const data = {
       user_list: wxIds.map(el => ({
         openid: el,
@@ -335,17 +341,18 @@ class WX {
    * @param openId 用户id,没有则查询所有的关注用户
    */
   async saveUserInfo(openId?: string) {
+    const now = Date.now()
     const users = [] as Uart.WX.userInfoPublic[]
     if (openId) {
       const user = await this.getUserInfoPublic(openId)
       users.push(user)
     } else {
       const { total, list } = await this.countUserListPublic()
-      for (let index = 0; index < total; index + 100) {
+      for (let index = 0; index < total; index = index + 100) {
         const ids = list.slice(index, index + 100)
-        const { errcode, user_info_list } = await this.getUserInfosPublic(ids)
+        const { user_info_list } = await this.getUserInfosPublic(ids)
         if (user_info_list) {
-          users.concat(user_info_list)
+          users.push(...user_info_list)
         }
       }
     }
@@ -355,6 +362,7 @@ class WX {
         Users.updateOne({ userId: el.unionid }, { $set: { wxId: el.openid } }).exec()
       }
     })
+    return { code: 0, count: users.length, time: Date.now() - now }
   }
 
   /**
@@ -409,6 +417,19 @@ class WX {
     const opts = Object.assign({ type: 'news', offset: 0, count: 20 }, opt)
     const url = `https://api.weixin.qq.com/cgi-bin/material/batchget_material?access_token=${await this.get_AccessTokenPublic()}`
     return await this.fecth<Uart.WX.materials_list>({ url, data: opts, method: "POST" })
+  }
+
+  /**
+   * 查询普通消息用户输入的关键字
+   * @param key 
+   */
+  async seach_user_keywords(key: string) {
+    const url = `https://www.ladishb.com/site/api/routlinks?key=${encodeURI(key)}&access_token=${await this.get_AccessTokenPublic()}`
+    const data = await axios.get(url).then(el => el.data).catch(() => []) as { rout: string, title: string }[]
+    return data.length === 0 ? '' : `匹配到如下链接\n
+    ${data.slice(0, 20).map(el => {
+      return `<a href="https://www.ladishb.com${el.rout}">${el.title.slice(0, 12).trim()}...</a>\n\n`
+    })}`.replace(/(\,|^ )/g, '')
   }
 
   /**
@@ -556,7 +577,10 @@ class WX {
     return `${year}-${month}-${day} ${hour}:${min}:${sen}`
   }
   private async fecth<T extends Uart.WX.wxRequest>(config: AxiosRequestConfig) {
-    const res: AxiosResponse<T> = await axios(config)
+    const res: AxiosResponse<T> = await axios(config).catch(err => {
+      console.log({ config, data: config.data });
+      throw new Error(err)
+    })
     if (res.data.errcode) {
       console.log({ data: res.data, config });
     }

@@ -18,7 +18,6 @@ import { KoaIMiddleware } from "typing";
 import { LogWXEvent, mongoose, Users } from "../mongoose";
 const Middleware: KoaIMiddleware = async (ctx) => {
     const body: Uart.WX.wxValidation | Uart.WX.WxEvent = ctx.method === "GET" ? ctx.query : await parseStringPromise(ctx.request.body).then(el => parseXmlObj(el) as any);
-    console.log({ body });
     new LogWXEvent(body).save()
     // 微信校验接口
     if ('signature' in body) {
@@ -27,7 +26,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         ctx.body = sha === signature ? echostr : false
         return
     }
-    const { ToUserName, FromUserName, CreateTime, Event } = body
+    const { FromUserName, Event } = body
     ctx.type = 'application/xml'
     // WxUtil.SendsubscribeMessageDevAlarmPublic(body.FromUserName, Date.now(), 'ceshitemplate', 'HS033', 'ups', 'bettry hight')
     // 进入事件处理流程
@@ -73,8 +72,17 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         ctx.body = "success"
         return
     }
-    // 自动回复信息
-    ctx.body = TextMessege(body, '详情请咨询400-6655778\n\n 招商专线18971282941')
+    // 处理普通消息
+    else {
+        let text = '详情请咨询400-6655778\n\n招商专线18971282941'
+        if (body.MsgType === 'text' && body.Content && body.Content !== '') {
+            const data = await WxUtil.seach_user_keywords(body.Content)
+            text = data + text
+        }
+        // 自动回复信息
+        ctx.body = TextMessege(body, text)
+
+    }
 
 }
 

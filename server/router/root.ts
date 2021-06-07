@@ -1,7 +1,7 @@
 import { JwtVerify } from "../util/Secret";
 import { KoaIMiddleware } from "typing";
 import wxUtil from "../util/wxUtil";
-import { LogWXEvent, WxUsers } from "../mongoose";
+import { LogWXEvent, Users, WxUsers } from "../mongoose";
 
 const Middleware: KoaIMiddleware = async (ctx) => {
     const body = ctx.request.body
@@ -24,33 +24,36 @@ const Middleware: KoaIMiddleware = async (ctx) => {
 
             // 更新公众号用户资料库
             case "update_wx_users_all":
-                await wxUtil.saveUserInfo()
-                ctx.body = await WxUsers.find()
+                ctx.body = await wxUtil.saveUserInfo()
                 break
 
             // 向指定用户推送信息
             case "wx_send_info":
                 {
                     const key = body.type || 0
-                    const userId = body.userId
-                    switch (key) {
-                        case 0:
-                            ctx.body = await wxUtil.SendsubscribeMessageDevAlarmPublic(userId, Date.now(), '测试响应', 'test1', 'ups', 'test')
-                            break;
+                    console.log({ body });
+                    if (body.openid) {
+                        switch (key) {
+                            // 公众号测试发送设备告警短信
+                            case 0:
+                                ctx.body = await wxUtil.SendsubscribeMessageDevAlarmPublic(body.openid, Date.now(), body.content || '测试响应', 'test1', 'ups', 'test')
+                                break;
 
-                        case 1:
+                            case 1:
 
-                            break;
-                        case 2:
+                                break;
+                            case 2:
 
-                            break;
-                        case 3:
+                                break;
+                            case 3:
 
-                            break;
-                        case 4:
+                                break;
+                            case 4:
 
-                            break;
+                                break;
+                        }
                     }
+
                 }
                 break
 

@@ -6,7 +6,7 @@ import {
   Schema_Dev_th,
   Schema_Dev_ups
 } from "./DevType";
-import { mongoose, Schema } from "./index";
+import { Schema } from "./index";
 
 
 /**
@@ -46,30 +46,4 @@ const Schema_Dev_Table = new Schema({
   websocket_uri: String
 });
 
-const Dev_all = mongoose.model("EC.all", Schema_Dev_all);
-const Dev_ups = mongoose.model("EC.ups", Schema_Dev_ups);
-const Dev_ac = mongoose.model("EC.ac", Schema_Dev_ac);
-const Dev_power = mongoose.model("EC.power", Schema_Dev_power);
-const Dev_io = mongoose.model("EC.io", Schema_Dev_io);
-const Dev_th = mongoose.model("EC.th", Schema_Dev_th);
-const Dev_Alarm = mongoose.model("EC.Alarm", Schema_Dev_Alarm);
-const Dev_Table = mongoose.model("EC.table", Schema_Dev_Table);
-
-const Dev_list = {
-  ups: Dev_ups,
-  ac: Dev_ac,
-  power: Dev_power,
-  io: Dev_io,
-  th: Dev_th
-};
-export {
-  Dev_all,
-  Dev_ac,
-  Dev_ups,
-  Dev_power,
-  Dev_io,
-  Dev_th,
-  Dev_Alarm,
-  Dev_list,
-  Dev_Table
-};
+export { Schema_Dev_Alarm, Schema_Dev_ups, Schema_Dev_th, Schema_Dev_power, Schema_Dev_io, Schema_Dev_all, Schema_Dev_ac, Schema_Dev_Table }
