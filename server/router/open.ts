@@ -1,5 +1,5 @@
 import Tool from "../util/tool";
-
+import { SendValidation } from "../util/SMS"
 
 interface CRC {
     protocolType: number
@@ -47,6 +47,18 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         case "protocol":
             {
                 ctx.body = [...ctx.$Event.Cache.CacheProtocol.values()]
+            }
+            break
+        // 发送校验短信
+        case "sendValidationSms":
+            {
+                const tel = body.tel
+                ctx.assert(tel, 400, 'args error')
+                const code = (Math.random() * 10000).toFixed(0).padStart(4, '0')
+                ctx.body = {
+                    code,
+                    result: await SendValidation(tel, code)
+                }
             }
             break
         default:

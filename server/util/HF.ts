@@ -73,8 +73,8 @@ class HF {
         if (secret) {
             const url = `http://open.bridge.iotworkshop.com:8080/iotbs/api/v1/users/login?timestamp=${Date.now()}`
             const data = await axios.post<hf_loginRequst>(url, {
-                password: secret.appid,
-                userName: secret.secret
+                userName: secret.appid,
+                password: secret.secret
             })
 
             if (data.data.result) {

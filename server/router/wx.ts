@@ -75,8 +75,6 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         // 没有code报错
         ctx.assert(body.js_code, 400, "需要微信code码");
         const wxGetseesion = await WX.UserOpenID(body.js_code)
-        // 包含错误
-        ctx.assert(!wxGetseesion.errcode, 401, wxGetseesion.errmsg);
         // 正确的话返回sessionkey
         const { openid, session_key, unionid } = wxGetseesion
         // 存储session

@@ -13,15 +13,13 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             // 获取公众号二维码
             case "ticketPublic":
                 {
-                    const t = await wxUtil.getTicketPublic(tokenUser.user)
-                    ctx.body = t
+                    ctx.body = await wxUtil.getTicketPublic(tokenUser.user)
                 }
                 break
             // 获取小程序二维码
             case "ticket":
                 {
-                    const t = await wxUtil.getTicket(tokenUser.user) as unknown as Buffer
-                    ctx.body = t.toString("base64")
+                    ctx.body = await wxUtil.getTicket(tokenUser.user)
                 }
                 break
         }

@@ -1,7 +1,7 @@
 import sha1 from "sha1";
 import { parseStringPromise } from "xml2js"
 import WxUtil from "../util/wxUtil"
-
+import { WxUsers } from "../mongoose"
 
 /**
  * xml2Js解析出来的数据格式
@@ -32,7 +32,9 @@ const Middleware: KoaIMiddleware = async (ctx) => {
         switch (Event) {
             // 关注公众号
             case "subscribe":
-                WxUtil.saveUserInfo(FromUserName)
+                WxUtil.mp.getUserInfo(FromUserName).then(el => {
+                    new WxUsers(el).save()
+                })
                 ctx.body = 'success'
                 break;
             // 取消关注
