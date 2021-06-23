@@ -67,7 +67,7 @@
     "@types/sha1": "^1.1.2",
     "@types/xml2js": "^0.4.8",
     "apollo-server-types": "^0.4.0",
-    "types-uart": "^1.0.19"
+    "types-uart": "^1.0.23"
   },
   "engines": {
     "node": ">=14",

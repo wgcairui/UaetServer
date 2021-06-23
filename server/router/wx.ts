@@ -703,15 +703,14 @@ const Middleware: KoaIMiddleware = async (ctx) => {
     case "bacthRegisterDTU":
       {
         const node: string = body.node
-        const dtus: string[] = body.dtus
+        const dtus: Uart.RegisterTerminal[] = body.dtus
         const terminalHasKeys = new Set(ctx.$Event.Cache.CacheTerminal.keys())
-        for (let DevMac of dtus) {
+        for (let { DevMac, bindDev } of dtus) {
           if (!terminalHasKeys.has(DevMac) && DevMac.length > 10) {
-            await RegisterTerminal.updateOne({ DevMac }, { $set: { mountNode: node } },
-              { upsert: true }).exec()//({ DevMac, mountNode: node }).save()
+            await RegisterTerminal.updateOne({ DevMac }, { $set: { mountNode: node, bindDev } }, { upsert: true }).exec()
             await Terminal.updateOne(
               { DevMac },
-              { $set: { mountNode: node, name: DevMac } },
+              { $set: { mountNode: node, name: DevMac, bindDev } },
               { upsert: true }
             ).exec()
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);

@@ -3,11 +3,13 @@ import { Schema } from "./index";
 
 const SchemaRegisterTerminal = new Schema({
   DevMac: { type: String, required: true },
+  bindDev:{ type: String, required: true },
   mountNode: { type: String, required: true },
 })
 
 const SchemaTerminal = new Schema({
   DevMac: { type: String, required: true },
+  bindDev:{ type: String, required: true },
   name: { type: String, required: true },
   ip: String,
   port: Number,
