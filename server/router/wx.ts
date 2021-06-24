@@ -710,7 +710,7 @@ const Middleware: KoaIMiddleware = async (ctx) => {
             await RegisterTerminal.updateOne({ DevMac }, { $set: { mountNode: node, bindDev } }, { upsert: true }).exec()
             await Terminal.updateOne(
               { DevMac },
-              { $set: { mountNode: node, name: DevMac, bindDev } },
+              { $set: { mountNode: node, name: DevMac.slice(DevMac.length - 4), bindDev } },
               { upsert: true }
             ).exec()
             await ctx.$Event.Cache.RefreshCacheTerminal(DevMac);
