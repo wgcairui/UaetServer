@@ -1,4 +1,4 @@
-import { ParameterizedContext } from "koa";
+import { ParameterizedContext, Request } from "koa";
 import router from "koa-router"
 import { Event } from "../server/event/index"
 // apollo server result
